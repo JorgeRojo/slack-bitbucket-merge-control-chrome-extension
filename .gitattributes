@@ -1,0 +1,15 @@
+# Set default line endings to LF for all text files
+* text=auto
+
+# Explicitly set common code files to LF
+*.js text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+
+# Treat binary files as binary (no line ending conversion)
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary

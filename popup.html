@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Slack Channel Reader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 300px;
+      padding: 10px;
+    }
+    #channelName {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+    #readChannel {
+      padding: 8px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #messages {
+      margin-top: 10px;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h2>Slack Channel Reader</h2>
+  <input type="text" id="channelName" placeholder="Enter channel name or ID">
+  <button id="readChannel">Read Channel</button>
+  <div id="messages"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
