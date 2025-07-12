@@ -1,5 +1,8 @@
 import { SLACK_CONVERSATIONS_LIST_URL, SLACK_CONVERSATIONS_HISTORY_URL } from './constants.js';
 
+
+
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'readSlackChannel') {
     const channel = request.channel;

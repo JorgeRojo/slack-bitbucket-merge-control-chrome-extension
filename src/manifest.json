@@ -11,7 +11,8 @@
   "options_page": "options.html",
   "host_permissions": [
     "https://slack.com/*",
-    "https://api.slack.com/*"
+    "https://api.slack.com/*",
+    "http://localhost:8888/*"
   ],
   "action": {
     "default_popup": "popup.html",
