@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handleConfigurationError(statusMessageDiv) {
     statusMessageDiv.innerHTML =
-      'Please configure your Slack Token and Channel Name in the <a href="#" id="openOptions">extension options</a>.';
+      'Please configure all required fields in the <a href="#" id="openOptions">extension options</a>.';
     statusMessageDiv.className = "status-error";
     document
       .getElementById("openOptions")
