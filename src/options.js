@@ -2,10 +2,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const saveButton = document.getElementById('save');
   const tokenInput = document.getElementById('slackToken');
   const channelInput = document.getElementById('channelName');
+  const disabledPhrasesInput = document.getElementById('disabledPhrases');
   const statusDiv = document.getElementById('status');
 
   // Load saved options
-  chrome.storage.sync.get(['slackToken', 'channelName'], function(result) {
+  chrome.storage.sync.get(['slackToken', 'channelName', 'disabledPhrases'], function(result) {
     if (result.slackToken) {
       tokenInput.value = result.slackToken;
     }
@@ -14,14 +15,20 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       channelInput.value = 'frontend-closure'; // Default value
     }
+    if (result.disabledPhrases) {
+      disabledPhrasesInput.value = result.disabledPhrases;
+    } else {
+      disabledPhrasesInput.value = 'Not allowed,Merge blocked,Do not merge'; // Default suggested phrases
+    }
   });
 
   saveButton.addEventListener('click', function() {
     const slackToken = tokenInput.value.trim();
     const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove leading # if present
+    const disabledPhrases = disabledPhrasesInput.value.trim();
 
     if (slackToken && channelName) {
-      chrome.storage.sync.set({ slackToken, channelName }, function() {
+      chrome.storage.sync.set({ slackToken, channelName, disabledPhrases }, function() {
         statusDiv.textContent = 'Options saved.';
         // Also, clear old data when settings change
         chrome.storage.local.remove(['channelId', 'lastFetchTs', 'messages', 'appStatus']);

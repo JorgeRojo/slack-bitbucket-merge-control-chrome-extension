@@ -3,6 +3,17 @@ import { SLACK_CONVERSATIONS_LIST_URL, SLACK_CONVERSATIONS_HISTORY_URL } from '.
 const POLLING_ALARM_NAME = 'slack-poll-alarm';
 const MAX_MESSAGES = 100;
 
+// Function to normalize text for comparison (lowercase, remove diacritics, normalize spaces)
+function normalizeText(text) {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Function to update the extension icon based on status
 function updateExtensionIcon(status) {
   let path16, path48;
@@ -40,12 +51,14 @@ async function fetchAndStoreMessages() {
   console.log('Fetching messages...');
   updateExtensionIcon('loading'); // Set icon to loading state
 
-  const { slackToken, channelName } = await chrome.storage.sync.get(['slackToken', 'channelName']);
+  const { slackToken, channelName, disabledPhrases } = await chrome.storage.sync.get(['slackToken', 'channelName', 'disabledPhrases']);
   if (!slackToken || !channelName) {
     console.log('Token or Channel Name not configured.');
     updateExtensionIcon('error'); // Set icon to error state
     return;
   }
+
+  const disabledPhrasesArray = disabledPhrases ? disabledPhrases.split(',').map(phrase => normalizeText(phrase)) : [normalizeText('Not allowed')];
 
   let { channelId, cachedChannelName } = await chrome.storage.local.get(['channelId', 'cachedChannelName']);
 
@@ -122,8 +135,10 @@ async function fetchAndStoreMessages() {
       await chrome.storage.local.set({ messages: storedMessages, lastFetchTs: newLastFetchTs });
 
       // Determine if merge is disabled and set icon accordingly
-      const lastMessageText = newMessages[0].text; // Get the very latest message
-      if (lastMessageText && lastMessageText.includes('Not allowed')) {
+      const lastMessageText = normalizeText(newMessages[0].text); // Get the very latest message
+      const isMergeDisabled = disabledPhrasesArray.some(phrase => lastMessageText.includes(phrase));
+
+      if (isMergeDisabled) {
         updateExtensionIcon('disabled');
       } else {
         updateExtensionIcon('enabled');
@@ -133,8 +148,10 @@ async function fetchAndStoreMessages() {
       console.log('No new messages.');
       // If no new messages, maintain current status or default to enabled if no previous status
       const { messages: currentMessages = [] } = await chrome.storage.local.get('messages');
-      const lastMessageText = currentMessages.length > 0 ? currentMessages[currentMessages.length - 1].text : '';
-      if (lastMessageText && lastMessageText.includes('Not allowed')) {
+      const lastMessageText = normalizeText(currentMessages.length > 0 ? currentMessages[currentMessages.length - 1].text : '');
+      const isMergeDisabled = disabledPhrasesArray.some(phrase => lastMessageText.includes(phrase));
+
+      if (isMergeDisabled) {
         updateExtensionIcon('disabled');
       } else {
         updateExtensionIcon('enabled');
@@ -148,20 +165,30 @@ async function fetchAndStoreMessages() {
     if (errorMessage.includes('channel_not_found') || errorMessage.includes('not_in_channel')) {
       await chrome.storage.local.set({ appStatus: 'CHANNEL_ERROR', messages: [], channelId: null });
     } else if (errorMessage.includes('invalid_auth') || errorMessage.includes('token_revoked')) {
-      await chrome.storage.local.set({ appStatus: 'TOKEN_ERROR', messages: [] });
+      await chrome.storage.local.set({ appStatus: 'TOKEN_TOKEN_ERROR', messages: [] });
     } else {
       await chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR', messages: [] });
     }
     updateExtensionIcon('error'); // Set icon to error state on any error
   } finally {
-    chrome.runtime.sendMessage({ action: 'updateMessages' });
-    // Send the last Slack message to the content script for Bitbucket
+    // Save current state to local storage for content script to read on page load
     const { messages: currentMessages = [] } = await chrome.storage.local.get('messages');
     const lastSlackMessage = currentMessages.length > 0 ? currentMessages[currentMessages.length - 1] : null;
+    const isMergeDisabledForContentScript = disabledPhrasesArray.some(phrase => lastSlackMessage && normalizeText(lastSlackMessage.text).includes(phrase));
 
+    await chrome.storage.local.set({
+      lastKnownMergeState: {
+        isMergeDisabled: isMergeDisabledForContentScript,
+        lastSlackMessage: lastSlackMessage,
+        channelName: channelName
+      }
+    });
+
+    chrome.runtime.sendMessage({ action: 'updateMessages' });
+    // Send the last Slack message to the content script for Bitbucket
     if (bitbucketTabId) {
       console.log("Sending message to Bitbucket tab:", bitbucketTabId);
-      chrome.tabs.sendMessage(bitbucketTabId, { action: 'updateMergeButton', lastSlackMessage: lastSlackMessage, channelName: channelName });
+      chrome.tabs.sendMessage(bitbucketTabId, { action: 'updateMergeButton', lastSlackMessage: lastSlackMessage, channelName: channelName, isMergeDisabled: isMergeDisabledForContentScript });
     } else {
       console.log("No active Bitbucket tab to send message to.");
     }
@@ -174,6 +201,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "bitbucketTabLoaded" && sender.tab && sender.tab.url.includes("bitbucket.rdpnts.com")) {
     bitbucketTabId = sender.tab.id;
     console.log("Bitbucket tab loaded and registered:", bitbucketTabId);
+
+    // Send the last known merge state immediately to the newly loaded tab
+    chrome.storage.local.get(['lastKnownMergeState'], (result) => {
+      if (result.lastKnownMergeState) {
+        const { isMergeDisabled, lastSlackMessage, channelName } = result.lastKnownMergeState;
+        chrome.tabs.sendMessage(bitbucketTabId, { action: 'updateMergeButton', lastSlackMessage: lastSlackMessage, channelName: channelName, isMergeDisabled: isMergeDisabled });
+      }
+    });
   }
 });
 

@@ -39,10 +39,12 @@ document.addEventListener("DOMContentLoaded", function () {
           const cleanedSlackMessage = lastMessageText
             .replace(/:\w+:/g, "")
             .trim();
-          displayMessage = `Merge is DISABLED from Slack.\nChannel: #${channelName}\nMessage: ${cleanedSlackMessage}`;
+          displayMessage = `Merge is <span class="status-word disabled-word">DISABLED</span> from Slack.
+Channel: #${channelName}
+Message: ${cleanedSlackMessage}`;
           messageClass = "status-disabled";
         } else {
-          displayMessage = `Merge is ENABLED.\nChannel: #${channelName}`;
+          displayMessage = `Merge is <span class="status-word enabled-word">ENABLED</span>.\nChannel: #${channelName}`;
           messageClass = "status-ok";
         }
         break;
