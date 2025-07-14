@@ -1,20 +1,59 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Slack Merge Status</title>
-  <style>
-    body { font-family: sans-serif; width: 300px; padding: 10px; text-align: center; }
-    #status-message { font-size: 16px; margin-top: 10px; }
-    .status-ok { color: green; }
-    .status-disabled { font-weight: bold; }
-    .status-error { color: orange; }
-    .status-word { font-weight: bold; }
-    .enabled-word { color: green; }
-    .disabled-word { color: red; }
-  </style>
-</head>
-<body>
-  <div id="status-message">Loading status...</div>
-  <script src="popup.js"></script>
-</body>
+  <head>
+    <title>Slack Merge Status</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        width: 320px;
+        background-color: #f0f2f5;
+        color: #333;
+        text-align: center;
+      }
+      #status-message {
+        font-size: 1.1em;
+        margin-top: 10px;
+        padding: 15px;
+        border-radius: 6px;
+        background-color: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        line-height: 1.5;
+      }
+      .status-ok {
+        color: #28a745; /* Green */
+        border: 1px solid #28a745;
+      }
+      .status-disabled {
+        color: #dc3545; /* Red */
+        font-weight: bold;
+        border: 1px solid #dc3545;
+      }
+      .status-error {
+        color: #c47500; /* Orange/Yellow */
+        border: 1px solid #c47500;
+      }
+      .status-word {
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+      .enabled-word {
+        color: #28a745;
+      }
+      .disabled-word {
+        color: #dc3545;
+      }
+      a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status-message">Loading status...</div>
+    <script src="popup.js"></script>
+  </body>
 </html>

@@ -49,7 +49,7 @@ function updateExtensionIcon(status) {
 async function getSlackConfig() {
   const { slackToken, channelName, disabledPhrases } = await chrome.storage.sync.get(['slackToken', 'channelName', 'disabledPhrases']);
   if (!slackToken || !channelName) {
-    updateExtensionIcon('error');
+    updateExtensionIcon('default');
     throw new Error('Slack token or channel name not configured.');
   }
   const disabledPhrasesArray = disabledPhrases ? disabledPhrases.split(',').map(phrase => normalizeText(phrase)) : [normalizeText('Not allowed')];
