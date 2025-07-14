@@ -1,27 +1,36 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const slackTokenInput = document.getElementById('slackToken');
-  const saveButton = document.getElementById('saveButton');
+  const saveButton = document.getElementById('save');
+  const tokenInput = document.getElementById('slackToken');
+  const channelInput = document.getElementById('channelName');
   const statusDiv = document.getElementById('status');
 
-  // Load saved token
-  chrome.storage.sync.get(['slackToken'], function(result) {
+  // Load saved options
+  chrome.storage.sync.get(['slackToken', 'channelName'], function(result) {
     if (result.slackToken) {
-      slackTokenInput.value = result.slackToken;
+      tokenInput.value = result.slackToken;
+    }
+    if (result.channelName) {
+      channelInput.value = result.channelName;
+    } else {
+      channelInput.value = 'frontend-closure'; // Default value
     }
   });
 
-  // Save token on button click
   saveButton.addEventListener('click', function() {
-    const token = slackTokenInput.value.trim();
-    if (token) {
-      chrome.storage.sync.set({ slackToken: token }, function() {
-        statusDiv.textContent = 'Token saved!';
-        setTimeout(() => { statusDiv.textContent = ''; }, 2000);
+    const slackToken = tokenInput.value.trim();
+    const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove leading # if present
+
+    if (slackToken && channelName) {
+      chrome.storage.sync.set({ slackToken, channelName }, function() {
+        statusDiv.textContent = 'Options saved.';
+        // Also, clear old data when settings change
+        chrome.storage.local.remove(['channelId', 'lastFetchTs', 'messages', 'appStatus']);
+        setTimeout(function() {
+          statusDiv.textContent = '';
+        }, 2000);
       });
     } else {
-      statusDiv.textContent = 'Please enter a token.';
-      statusDiv.style.color = 'red';
-      setTimeout(() => { statusDiv.textContent = ''; statusDiv.style.color = 'black'; }, 2000);
+      statusDiv.textContent = 'Please fill in all fields.';
     }
   });
 });

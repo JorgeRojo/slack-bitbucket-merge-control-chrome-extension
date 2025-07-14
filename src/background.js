@@ -3,11 +3,47 @@ import { SLACK_CONVERSATIONS_LIST_URL, SLACK_CONVERSATIONS_HISTORY_URL } from '.
 const POLLING_ALARM_NAME = 'slack-poll-alarm';
 const MAX_MESSAGES = 100;
 
+// Function to update the extension icon based on status
+function updateExtensionIcon(status) {
+  let path16, path48;
+  switch (status) {
+    case 'loading':
+      path16 = 'images/icon16_loading.png';
+      path48 = 'images/icon48_loading.png';
+      break;
+    case 'enabled':
+      path16 = 'images/icon16_enabled.png';
+      path48 = 'images/icon48_enabled.png';
+      break;
+    case 'disabled':
+      path16 = 'images/icon16_disabled.png';
+      path48 = 'images/icon48_disabled.png';
+      break;
+    case 'error':
+      path16 = 'images/icon16_error.png';
+      path48 = 'images/icon48_error.png';
+      break;
+    default:
+      path16 = 'images/icon16.png'; // Default icon
+      path48 = 'images/icon48.png'; // Default icon
+      break;
+  }
+  chrome.action.setIcon({
+    path: {
+      "16": path16,
+      "48": path48
+    }
+  });
+}
+
 async function fetchAndStoreMessages() {
   console.log('Fetching messages...');
+  updateExtensionIcon('loading'); // Set icon to loading state
+
   const { slackToken, channelName } = await chrome.storage.sync.get(['slackToken', 'channelName']);
   if (!slackToken || !channelName) {
     console.log('Token or Channel Name not configured.');
+    updateExtensionIcon('error'); // Set icon to error state
     return;
   }
 
@@ -84,8 +120,25 @@ async function fetchAndStoreMessages() {
       }
 
       await chrome.storage.local.set({ messages: storedMessages, lastFetchTs: newLastFetchTs });
+
+      // Determine if merge is disabled and set icon accordingly
+      const lastMessageText = newMessages[0].text; // Get the very latest message
+      if (lastMessageText && lastMessageText.includes('Not allowed')) {
+        updateExtensionIcon('disabled');
+      } else {
+        updateExtensionIcon('enabled');
+      }
+
     } else {
       console.log('No new messages.');
+      // If no new messages, maintain current status or default to enabled if no previous status
+      const { messages: currentMessages = [] } = await chrome.storage.local.get('messages');
+      const lastMessageText = currentMessages.length > 0 ? currentMessages[currentMessages.length - 1].text : '';
+      if (lastMessageText && lastMessageText.includes('Not allowed')) {
+        updateExtensionIcon('disabled');
+      } else {
+        updateExtensionIcon('enabled');
+      }
     }
 
   } catch (error) {
@@ -99,10 +152,30 @@ async function fetchAndStoreMessages() {
     } else {
       await chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR', messages: [] });
     }
+    updateExtensionIcon('error'); // Set icon to error state on any error
   } finally {
     chrome.runtime.sendMessage({ action: 'updateMessages' });
+    // Send the last Slack message to the content script for Bitbucket
+    const { messages: currentMessages = [] } = await chrome.storage.local.get('messages');
+    const lastSlackMessage = currentMessages.length > 0 ? currentMessages[currentMessages.length - 1] : null;
+
+    if (bitbucketTabId) {
+      console.log("Sending message to Bitbucket tab:", bitbucketTabId);
+      chrome.tabs.sendMessage(bitbucketTabId, { action: 'updateMergeButton', lastSlackMessage: lastSlackMessage, channelName: channelName });
+    } else {
+      console.log("No active Bitbucket tab to send message to.");
+    }
   }
 }
+
+let bitbucketTabId = null;
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "bitbucketTabLoaded" && sender.tab && sender.tab.url.includes("bitbucket.rdpnts.com")) {
+    bitbucketTabId = sender.tab.id;
+    console.log("Bitbucket tab loaded and registered:", bitbucketTabId);
+  }
+});
 
 chrome.alarms.create(POLLING_ALARM_NAME, {
   periodInMinutes: 1 / 12 // 5 seconds

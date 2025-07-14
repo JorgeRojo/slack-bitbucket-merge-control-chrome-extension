@@ -1,45 +1,86 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const readChannelButton = document.getElementById('readChannel');
-  const channelNameInput = document.getElementById('channelName');
-  const messagesDiv = document.getElementById('messages');
+document.addEventListener("DOMContentLoaded", function () {
+  const statusMessageDiv = document.getElementById("status-message");
 
-  // Check if Slack token is set
-  chrome.storage.sync.get(['slackToken'], function(result) {
-    if (!result.slackToken) {
-      messagesDiv.innerHTML = 'Please set your Slack Bot User OAuth Token in the <a href="#" id="openOptions">extension options</a>.';
-      document.getElementById('openOptions').addEventListener('click', function() {
-        chrome.runtime.openOptionsPage();
-      });
-      readChannelButton.disabled = true;
-      channelNameInput.disabled = true;
-    } else {
-      readChannelButton.disabled = false;
-      channelNameInput.disabled = false;
+  function openOptionsPage() {
+    chrome.runtime.openOptionsPage();
+  }
+
+  async function updateDisplay() {
+    const syncResult = await chrome.storage.sync.get([
+      "slackToken",
+      "channelName",
+    ]);
+    const { slackToken, channelName = "Not Set" } = syncResult;
+
+    if (!slackToken || channelName === "Not Set") {
+      statusMessageDiv.innerHTML =
+        'Please configure your Slack Token and Channel Name in the <a href="#" id="openOptions">extension options</a>.';
+      statusMessageDiv.className = "status-error";
+      document
+        .getElementById("openOptions")
+        .addEventListener("click", openOptionsPage);
+      return;
     }
-  });
 
-  readChannelButton.addEventListener('click', function() {
-    const channelName = channelNameInput.value.trim();
-    if (channelName) {
-      messagesDiv.innerHTML = 'Loading messages...';
-      chrome.runtime.sendMessage({ action: 'readSlackChannel', channel: channelName }, function(response) {
-        if (response.success) {
-          messagesDiv.innerHTML = '';
-          if (response.messages && response.messages.length > 0) {
-            response.messages.forEach(message => {
-              const p = document.createElement('p');
-              p.textContent = `${message.user}: ${message.text}`;
-              messagesDiv.appendChild(p);
-            });
-          } else {
-            messagesDiv.textContent = 'No messages found or channel is empty.';
-          }
+    const localResult = await chrome.storage.local.get([
+      "messages",
+      "appStatus",
+    ]);
+    const { messages = [], appStatus } = localResult;
+
+    let displayMessage = "";
+    let messageClass = "";
+
+    switch (appStatus) {
+      case "OK":
+        const lastMessageText =
+          messages.length > 0 ? messages[messages.length - 1].text : "";
+        if (lastMessageText.includes("Not allowed")) {
+          const cleanedSlackMessage = lastMessageText
+            .replace(/:\w+:/g, "")
+            .trim();
+          displayMessage = `Merge is DISABLED from Slack.\nChannel: #${channelName}\nMessage: ${cleanedSlackMessage}`;
+          messageClass = "status-disabled";
         } else {
-          messagesDiv.textContent = `Error: ${response.error || 'Unknown error'}`;
+          displayMessage = `Merge is ENABLED.\nChannel: #${channelName}`;
+          messageClass = "status-ok";
         }
-      });
-    } else {
-      messagesDiv.textContent = 'Please enter a channel name or ID.';
+        break;
+      case "CHANNEL_ERROR":
+        displayMessage = `Error: Channel '${channelName}' not found, or bot not a member.`;
+        messageClass = "status-error";
+        break;
+      case "TOKEN_ERROR":
+        displayMessage =
+          'Error: Invalid Slack Token. Please check <a href="#" id="openOptions">options</a>.';
+        messageClass = "status-error";
+        break;
+      case "UNKNOWN_ERROR":
+        displayMessage = "An unknown error occurred. Check extension logs.";
+        messageClass = "status-error";
+        break;
+      default:
+        displayMessage = "Loading status...";
+        messageClass = "";
+        break;
+    }
+    statusMessageDiv.innerHTML = displayMessage.replace(/\n/g, "<br>"); // Replace newlines with <br> for HTML
+    statusMessageDiv.className = messageClass;
+
+    if (displayMessage.includes("openOptions")) {
+      document
+        .getElementById("openOptions")
+        .addEventListener("click", openOptionsPage);
+    }
+  }
+
+  // Initial load
+  updateDisplay();
+
+  // Listen for updates from the background script
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "updateMessages") {
+      updateDisplay();
     }
   });
 });
