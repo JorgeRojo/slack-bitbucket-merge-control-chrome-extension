@@ -3,10 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const tokenInput = document.getElementById('slackToken');
   const channelInput = document.getElementById('channelName');
   const disabledPhrasesInput = document.getElementById('disabledPhrases');
+  const bitbucketUrlInput = document.getElementById('bitbucketUrl');
   const statusDiv = document.getElementById('status');
 
   // Load saved options
-  chrome.storage.sync.get(['slackToken', 'channelName', 'disabledPhrases'], function(result) {
+  chrome.storage.sync.get(['slackToken', 'channelName', 'disabledPhrases', 'bitbucketUrl'], function(result) {
     if (result.slackToken) {
       tokenInput.value = result.slackToken;
     }
@@ -20,15 +21,21 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       disabledPhrasesInput.value = 'Not allowed\nMerge blocked\nDo not merge'; // Default suggested phrases
     }
+    if (result.bitbucketUrl) {
+      bitbucketUrlInput.value = result.bitbucketUrl;
+    } else {
+      bitbucketUrlInput.value = 'https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*'; // Default value
+    }
   });
 
   saveButton.addEventListener('click', function() {
     const slackToken = tokenInput.value.trim();
     const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove leading # if present
     const disabledPhrases = disabledPhrasesInput.value.trim().split('\n').map(phrase => phrase.trim()).filter(phrase => phrase !== '').join(',');
+    const bitbucketUrl = bitbucketUrlInput.value.trim();
 
-    if (slackToken && channelName) {
-      chrome.storage.sync.set({ slackToken, channelName, disabledPhrases }, function() {
+    if (slackToken && channelName && bitbucketUrl) {
+      chrome.storage.sync.set({ slackToken, channelName, disabledPhrases, bitbucketUrl }, function() {
         statusDiv.textContent = 'Options saved.';
         // Also, clear old data when settings change
         chrome.storage.local.remove(['channelId', 'lastFetchTs', 'messages', 'appStatus']);
