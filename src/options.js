@@ -16,16 +16,16 @@ document.addEventListener('DOMContentLoaded', function() {
       channelInput.value = 'frontend-closure'; // Default value
     }
     if (result.disabledPhrases) {
-      disabledPhrasesInput.value = result.disabledPhrases;
+      disabledPhrasesInput.value = result.disabledPhrases.split(',').join('\n');
     } else {
-      disabledPhrasesInput.value = 'Not allowed,Merge blocked,Do not merge'; // Default suggested phrases
+      disabledPhrasesInput.value = 'Not allowed\nMerge blocked\nDo not merge'; // Default suggested phrases
     }
   });
 
   saveButton.addEventListener('click', function() {
     const slackToken = tokenInput.value.trim();
     const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove leading # if present
-    const disabledPhrases = disabledPhrasesInput.value.trim();
+    const disabledPhrases = disabledPhrasesInput.value.trim().split('\n').map(phrase => phrase.trim()).filter(phrase => phrase !== '').join(',');
 
     if (slackToken && channelName) {
       chrome.storage.sync.set({ slackToken, channelName, disabledPhrases }, function() {

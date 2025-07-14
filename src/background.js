@@ -154,9 +154,14 @@ async function handleSlackApiError(error) {
 }
 
 async function updateContentScriptMergeState(disabledPhrasesArray, channelName) {
-  const { messages: currentMessages = [] } = await chrome.storage.local.get('messages');
+  const { messages: currentMessages = [], appStatus } = await chrome.storage.local.get(['messages', 'appStatus']);
   const lastSlackMessage = currentMessages.length > 0 ? currentMessages[currentMessages.length - 1] : null;
-  const isMergeDisabledForContentScript = disabledPhrasesArray.some(phrase => lastSlackMessage && normalizeText(lastSlackMessage.text).includes(phrase));
+  let isMergeDisabledForContentScript = disabledPhrasesArray.some(phrase => lastSlackMessage && normalizeText(lastSlackMessage.text).includes(phrase));
+
+  // If there's an error status, ensure the merge button is enabled
+  if (appStatus && (appStatus.includes('ERROR') || appStatus.includes('TOKEN'))) {
+    isMergeDisabledForContentScript = false;
+  }
 
   await chrome.storage.local.set({
     lastKnownMergeState: {

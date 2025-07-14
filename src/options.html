@@ -22,8 +22,9 @@
     <input type="text" id="channelName">
   </div>
   <div>
-    <label for="disabledPhrases">Disabled Phrases (comma-separated):</label>
-    <input type="text" id="disabledPhrases">
+    <label for="disabledPhrases">Disabled Phrases (one per line):</label>
+    <p style="font-size: 0.9em; color: #666; margin-top: 5px;">If the last Slack message contains any of these phrases, the merge function in Bitbucket will be disabled.</p>
+    <textarea id="disabledPhrases" rows="5"></textarea>
   </div>
   <button id="save">Save</button>
   <div id="status"></div>

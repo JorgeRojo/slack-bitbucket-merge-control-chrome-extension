@@ -5,29 +5,16 @@ document.addEventListener("DOMContentLoaded", function () {
     chrome.runtime.openOptionsPage();
   }
 
-  async function updateDisplay() {
-    const syncResult = await chrome.storage.sync.get([
-      "slackToken",
-      "channelName",
-    ]);
-    const { slackToken, channelName = "Not Set" } = syncResult;
+  function handleConfigurationError(statusMessageDiv) {
+    statusMessageDiv.innerHTML =
+      'Please configure your Slack Token and Channel Name in the <a href="#" id="openOptions">extension options</a>.';
+    statusMessageDiv.className = "status-error";
+    document
+      .getElementById("openOptions")
+      .addEventListener("click", openOptionsPage);
+  }
 
-    if (!slackToken || channelName === "Not Set") {
-      statusMessageDiv.innerHTML =
-        'Please configure your Slack Token and Channel Name in the <a href="#" id="openOptions">extension options</a>.';
-      statusMessageDiv.className = "status-error";
-      document
-        .getElementById("openOptions")
-        .addEventListener("click", openOptionsPage);
-      return;
-    }
-
-    const localResult = await chrome.storage.local.get([
-      "messages",
-      "appStatus",
-    ]);
-    const { messages = [], appStatus } = localResult;
-
+  function getDisplayMessageAndClass(appStatus, messages, channelName) {
     let displayMessage = "";
     let messageClass = "";
 
@@ -39,9 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const cleanedSlackMessage = lastMessageText
             .replace(/:\w+:/g, "")
             .trim();
-          displayMessage = `Merge is <span class="status-word disabled-word">DISABLED</span> from Slack.
-Channel: #${channelName}
-Message: ${cleanedSlackMessage}`;
+          displayMessage = `Merge is <span class="status-word disabled-word">DISABLED</span>.\nChannel: #${channelName}\nMessage: ${cleanedSlackMessage}`;
           messageClass = "status-disabled";
         } else {
           displayMessage = `Merge is <span class="status-word enabled-word">ENABLED</span>.\nChannel: #${channelName}`;
@@ -66,6 +51,33 @@ Message: ${cleanedSlackMessage}`;
         messageClass = "";
         break;
     }
+    return { displayMessage, messageClass };
+  }
+
+  async function updateDisplay() {
+    const syncResult = await chrome.storage.sync.get([
+      "slackToken",
+      "channelName",
+    ]);
+    const { slackToken, channelName = "Not Set" } = syncResult;
+
+    if (!slackToken || channelName === "Not Set") {
+      handleConfigurationError(statusMessageDiv);
+      return;
+    }
+
+    const localResult = await chrome.storage.local.get([
+      "messages",
+      "appStatus",
+    ]);
+    const { messages = [], appStatus } = localResult;
+
+    const { displayMessage, messageClass } = getDisplayMessageAndClass(
+      appStatus,
+      messages,
+      channelName
+    );
+
     statusMessageDiv.innerHTML = displayMessage.replace(/\n/g, "<br>"); // Replace newlines with <br> for HTML
     statusMessageDiv.className = messageClass;
 
@@ -76,13 +88,17 @@ Message: ${cleanedSlackMessage}`;
     }
   }
 
-  // Initial load
-  updateDisplay();
+  function initializePopup() {
+    // Initial load
+    updateDisplay();
 
-  // Listen for updates from the background script
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "updateMessages") {
-      updateDisplay();
-    }
-  });
+    // Listen for updates from the background script
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (request.action === "updateMessages") {
+        updateDisplay();
+      }
+    });
+  }
+
+  initializePopup();
 });
