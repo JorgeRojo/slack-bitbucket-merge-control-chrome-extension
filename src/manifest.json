@@ -5,11 +5,13 @@
   "description": "Lee el contenido de un canal de Slack usando la API.",
   "permissions": [
     "storage",
-    "alarms"
+    "alarms",
+    "scripting"
   ],
   "options_page": "options.html",
   "host_permissions": [
-    "https://slack.com/api/*"
+    "https://slack.com/api/*",
+    "<all_urls>"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -22,12 +24,6 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "content_scripts": [
-    {
-      "matches": ["https://bitbucket.rdpnts.com/projects/*/repos/*/pull-requests/*/overview*"],
-      "js": ["bitbucket_content.js"]
-    }
-  ],
   "icons": {
     "128": "images/icon128.png"
   }

@@ -35,8 +35,9 @@ function enableMergeButton(mergeButton) {
   mergeButton._customMergeHandler = null;
 }
 
-function applyMergeButtonLogic(isMergeDisabled, lastSlackMessage, channelName) {
-  const mergeButton = document.querySelector(".merge-button");
+async function applyMergeButtonLogic(isMergeDisabled, lastSlackMessage, channelName) {
+  const { mergeButtonSelector } = await chrome.storage.sync.get('mergeButtonSelector');
+  const mergeButton = document.querySelector(mergeButtonSelector || '.merge-button');
 
   if (!mergeButton) {
     return;
@@ -66,12 +67,13 @@ function applyInitialMergeState() {
   });
 }
 
-function observeMergeButton() {
+async function observeMergeButton() {
   const targetNode = document.body;
   const config = { childList: true, subtree: true };
+  const { mergeButtonSelector } = await chrome.storage.sync.get('mergeButtonSelector');
 
   const callback = function (mutationsList, observer) {
-    const mergeButton = document.querySelector(".merge-button");
+    const mergeButton = document.querySelector(mergeButtonSelector || '.merge-button');
     if (mergeButton) {
       observer.disconnect();
       applyInitialMergeState();

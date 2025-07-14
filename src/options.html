@@ -12,20 +12,39 @@
   </style>
 </head>
 <body>
-  <h1>Slack Extension Options</h1>
-  <div>
-    <label for="slackToken">Slack Bot User OAuth Token:</label>
-    <input type="password" id="slackToken">
+  <h1>Extension Options</h1>
+
+  <h2>Slack Options</h2>
+  <div class="option-section">
+    <div>
+      <label for="slackToken">Slack Bot User OAuth Token:</label>
+      <input type="password" id="slackToken">
+    </div>
+    <div>
+      <label for="channelName">Channel Name:</label>
+      <input type="text" id="channelName">
+    </div>
+    <div>
+      <label for="disabledPhrases">Disabled Phrases (one per line):</label>
+      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">If the last Slack message contains any of these phrases, the merge function in Bitbucket will be disabled.</p>
+      <textarea id="disabledPhrases" rows="5"></textarea>
+    </div>
   </div>
-  <div>
-    <label for="channelName">Channel Name:</label>
-    <input type="text" id="channelName">
+
+  <h2>Bitbucket Options</h2>
+  <div class="option-section">
+    <div>
+      <label for="bitbucketUrl">Bitbucket Pull Request URL Pattern:</label>
+      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">Use '*' as a wildcard for dynamic parts of the URL.<br>Example: <code>https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code></p>
+      <input type="text" id="bitbucketUrl">
+    </div>
+    <div>
+      <label for="mergeButtonSelector">Merge Button DOM Selector:</label>
+      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">The CSS selector used to find the merge button on Bitbucket pull request pages.<br>Example: <code>.merge-button</code></p>
+      <input type="text" id="mergeButtonSelector">
+    </div>
   </div>
-  <div>
-    <label for="disabledPhrases">Disabled Phrases (one per line):</label>
-    <p style="font-size: 0.9em; color: #666; margin-top: 5px;">If the last Slack message contains any of these phrases, the merge function in Bitbucket will be disabled.</p>
-    <textarea id="disabledPhrases" rows="5"></textarea>
-  </div>
+
   <button id="save">Save</button>
   <div id="status"></div>
   <script src="options.js"></script>

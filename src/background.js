@@ -214,22 +214,32 @@ async function fetchAndStoreMessages() {
 
 let bitbucketTabId = null;
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "bitbucketTabLoaded" && sender.tab && sender.tab.url.includes("bitbucket.rdpnts.com")) {
-    bitbucketTabId = sender.tab.id;
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.action === "bitbucketTabLoaded" && sender.tab) {
+    const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
+    if (bitbucketUrl) {
+      // Convert glob to regex. This is a simplified conversion.
+      // For a full robust solution, a dedicated glob-to-regex library would be ideal.
+      const regexPattern = bitbucketUrl.replace(/\*/g, '.*'); // Escape * for regex
+      const bitbucketRegex = new RegExp(regexPattern);
 
-    // Send the last known merge state immediately to the newly loaded tab
-    chrome.storage.local.get(['lastKnownMergeState'], async (result) => {
-      if (result.lastKnownMergeState) {
-        const { isMergeDisabled, lastSlackMessage, channelName } = result.lastKnownMergeState;
-        try {
-          await chrome.tabs.sendMessage(bitbucketTabId, { action: 'updateMergeButton', lastSlackMessage: lastSlackMessage, channelName: channelName, isMergeDisabled: isMergeDisabled });
-        } catch (error) {
-          console.warn('Could not send initial message to Bitbucket tab, resetting bitbucketTabId:', error.message);
-          bitbucketTabId = null;
-        }
+      if (bitbucketRegex.test(sender.tab.url)) {
+        bitbucketTabId = sender.tab.id;
+
+        // Send the last known merge state immediately to the newly loaded tab
+        chrome.storage.local.get(['lastKnownMergeState'], async (result) => {
+          if (result.lastKnownMergeState) {
+            const { isMergeDisabled, lastSlackMessage, channelName } = result.lastKnownMergeState;
+            try {
+              await chrome.tabs.sendMessage(bitbucketTabId, { action: 'updateMergeButton', lastSlackMessage: lastSlackMessage, channelName: channelName, isMergeDisabled: isMergeDisabled });
+            } catch (error) {
+              console.warn('Could not send initial message to Bitbucket tab, resetting bitbucketTabId:', error.message);
+              bitbucketTabId = null;
+            }
+          }
+        });
       }
-    });
+    }
   }
 });
 
@@ -243,5 +253,47 @@ chrome.alarms.onAlarm.addListener(alarm => {
   }
 });
 
-chrome.runtime.onStartup.addListener(fetchAndStoreMessages);
-chrome.runtime.onInstalled.addListener(fetchAndStoreMessages);
+chrome.runtime.onInstalled.addListener(() => {
+  fetchAndStoreMessages();
+  registerBitbucketContentScript();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  fetchAndStoreMessages();
+  registerBitbucketContentScript();
+});
+
+async function registerBitbucketContentScript() {
+  const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
+
+  // Clear existing dynamic scripts to avoid duplicates or old patterns
+  try {
+    await chrome.scripting.unregisterContentScripts({
+      ids: ['bitbucket-content-script']
+    });
+  } catch (e) {
+    // Ignore error if script was not registered
+  }
+
+  if (bitbucketUrl) {
+    try {
+      await chrome.scripting.registerContentScripts([
+        {
+          id: 'bitbucket-content-script',
+          matches: [bitbucketUrl],
+          js: ['bitbucket_content.js'],
+          runAt: 'document_idle'
+        }
+      ]);
+      console.log('Bitbucket content script registered for:', bitbucketUrl);
+    } catch (error) {
+      console.error('Error registering Bitbucket content script:', error);
+    }
+  }
+}
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'sync' && changes.bitbucketUrl) {
+    registerBitbucketContentScript();
+  }
+});
