@@ -1,110 +1,131 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Slack Extension Options</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
-      width: 480px; /* Increased width to accommodate larger text */
-      background-color: #f4f7f6;
-      margin: 0 auto;
-      color: #333;
-      font-size: 1.05em; /* Base font size increased */
-    }
-    h1 {
-      font-size: 2.2em; /* Increased */
-      font-weight: bold;
-      margin-bottom: 28px; /* Adjusted margin */
-      text-align: center;
-      color: #2c3e50;
-    }
-    h2 {
-      font-size: 1.7em; /* Increased */
-      font-weight: 600;
-      margin-bottom: 18px; /* Adjusted margin */
-      color: #34495e;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 8px; /* Adjusted padding */
-    }
-    .option-section {
-      background-color: #ffffff;
-      padding: 22px; /* Adjusted padding */
-      margin-bottom: 28px; /* Adjusted margin */
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-    }
-    .option-section > div {
-      margin-bottom: 22px; /* Adjusted margin */
-    }
-    label {
-      margin-bottom: 10px; /* Adjusted margin */
-      font-size: 1.05em; /* Increased */
-    }
-    input[type="text"],
-    input[type="password"],
-    textarea {
-      width: 100%;
-      padding: 12px; /* Increased padding */
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1.05em; /* Increased */
-      box-sizing: border-box;
-      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-    p {
-      font-size: 0.95em; /* Increased */
-      margin-top: 6px; /* Adjusted margin */
-    }
-    code {
-      font-size: 0.9em; /* Increased */
-    }
-    button {
-      padding: 14px 22px; /* Increased padding */
-      font-size: 1.2em; /* Increased */
-    }
-    #status {
-      margin-top: 22px; /* Adjusted margin */
-      font-size: 1.2em; /* Increased */
-    }
-  </style>
-</head>
-<body>
-  <h1>Extension Options</h1>
+  <head>
+    <title>Slack Extension Options</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+        width: 640px; /* Increased width to accommodate larger text */
+        background-color: #f4f7f6;
+        margin: 0 auto;
+        color: #333;
+        font-size: 1.05em; /* Base font size increased */
+      }
+      h1 {
+        font-size: 2.2em; /* Increased */
+        font-weight: bold;
+        margin-bottom: 28px; /* Adjusted margin */
+        text-align: center;
+        color: #2c3e50;
+      }
+      h2 {
+        font-size: 1.7em; /* Increased */
+        font-weight: 600;
+        margin-bottom: 18px; /* Adjusted margin */
+        color: #34495e;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px; /* Adjusted padding */
+      }
+      .option-section {
+        background-color: #ffffff;
+        padding: 22px; /* Adjusted padding */
+        margin-bottom: 28px; /* Adjusted margin */
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      }
+      .option-section > div {
+        margin-bottom: 22px; /* Adjusted margin */
+      }
+      label {
+        margin-bottom: 10px; /* Adjusted margin */
+        font-size: 1.05em; /* Increased */
+      }
+      input[type="text"],
+      input[type="password"],
+      textarea {
+        width: 100%;
+        padding: 12px; /* Increased padding */
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1.05em; /* Increased */
+        box-sizing: border-box;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      }
+      p {
+        font-size: 0.95em; /* Increased */
+        margin-top: 6px; /* Adjusted margin */
+      }
+      code {
+        font-size: 0.9em; /* Increased */
+      }
+      button {
+        display: block;
+        width: 60%; /* Make it wider */
+        margin: 20px auto; /* Center horizontally and add vertical margin */
+        padding: 14px 22px; /* Increased padding */
+        background-color: #28a745; /* Green save button */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.2em; /* Increased */
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+      }
+      #status {
+        margin-top: 22px; /* Adjusted margin */
+        font-size: 1.2em; /* Increased */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Extension Options</h1>
 
-  <h2>Slack Options</h2>
-  <div class="option-section">
-    <div>
-      <label for="slackToken">Slack Bot User OAuth Token:</label>
-      <input type="password" id="slackToken">
+    <h2>Slack Options</h2>
+    <div class="option-section">
+      <div>
+        <label for="slackToken">Slack Bot User OAuth Token:</label>
+        <input type="password" id="slackToken" />
+      </div>
+      <div>
+        <label for="channelName">Channel Name:</label>
+        <input type="text" id="channelName" />
+      </div>
+      <div>
+        <label for="disabledPhrases">Disabled Phrases (one per line):</label>
+        <p style="font-size: 0.9em; color: #666; margin-top: 5px">
+          If the last Slack message contains any of these phrases, the merge
+          function in Bitbucket will be disabled.
+        </p>
+        <textarea id="disabledPhrases" rows="5"></textarea>
+      </div>
     </div>
-    <div>
-      <label for="channelName">Channel Name:</label>
-      <input type="text" id="channelName">
-    </div>
-    <div>
-      <label for="disabledPhrases">Disabled Phrases (one per line):</label>
-      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">If the last Slack message contains any of these phrases, the merge function in Bitbucket will be disabled.</p>
-      <textarea id="disabledPhrases" rows="5"></textarea>
-    </div>
-  </div>
 
-  <h2>Bitbucket Options</h2>
-  <div class="option-section">
-    <div>
-      <label for="bitbucketUrl">Bitbucket Pull Request URL Pattern:</label>
-      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">Use '*' as a wildcard for dynamic parts of the URL.<br>Example: <code>https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code></p>
-      <input type="text" id="bitbucketUrl">
+    <h2>Bitbucket Options</h2>
+    <div class="option-section">
+      <div>
+        <label for="bitbucketUrl">Bitbucket Pull Request URL Pattern:</label>
+        <p style="font-size: 0.9em; color: #666; margin-top: 5px">
+          Use '*' as a wildcard for dynamic parts of the URL.<br />Example:
+          <code
+            >https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code
+          >
+        </p>
+        <input type="text" id="bitbucketUrl" />
+      </div>
+      <div>
+        <label for="mergeButtonSelector">Merge Button DOM Selector:</label>
+        <p style="font-size: 0.9em; color: #666; margin-top: 5px">
+          The CSS selector used to find the merge button on Bitbucket pull
+          request pages.<br />Example: <code>.merge-button</code>
+        </p>
+        <input type="text" id="mergeButtonSelector" />
+      </div>
     </div>
-    <div>
-      <label for="mergeButtonSelector">Merge Button DOM Selector:</label>
-      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">The CSS selector used to find the merge button on Bitbucket pull request pages.<br>Example: <code>.merge-button</code></p>
-      <input type="text" id="mergeButtonSelector">
-    </div>
-  </div>
 
-  <button id="save">Save</button>
-  <div id="status"></div>
-  <script src="options.js"></script>
-</body>
+    <button id="save">Save</button>
+    <div id="status"></div>
+    <script src="options.js"></script>
+  </body>
 </html>
