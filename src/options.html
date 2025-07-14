@@ -2,51 +2,44 @@
 <html>
 <head>
   <title>Slack Extension Options</title>
-  <style>
-    body { font-family: sans-serif; padding: 10px; width: 420px; }
-    div { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; }
-    input { width: 400px; padding: 5px; }
-    button { padding: 8px 15px; }
-    #status { margin-top: 10px; font-weight: bold; }
-  </style>
+  <link href="tailwind.css" rel="stylesheet">
 </head>
-<body>
-  <h1>Extension Options</h1>
+<body class="p-4 bg-gray-100 font-sans">
+  <h1 class="text-2xl font-bold mb-6 text-center">Extension Options</h1>
 
-  <h2>Slack Options</h2>
-  <div class="option-section">
-    <div>
-      <label for="slackToken">Slack Bot User OAuth Token:</label>
-      <input type="password" id="slackToken">
+  <h2 class="text-xl font-semibold mb-4">Slack Options</h2>
+  <div class="mb-6 p-4 bg-white rounded-lg shadow">
+    <div class="mb-4">
+      <label for="slackToken" class="block text-gray-700 text-sm font-bold mb-2">Slack Bot User OAuth Token:</label>
+      <input type="password" id="slackToken" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
     </div>
-    <div>
-      <label for="channelName">Channel Name:</label>
-      <input type="text" id="channelName">
+    <div class="mb-4">
+      <label for="channelName" class="block text-gray-700 text-sm font-bold mb-2">Channel Name:</label>
+      <input type="text" id="channelName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
     </div>
-    <div>
-      <label for="disabledPhrases">Disabled Phrases (one per line):</label>
-      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">If the last Slack message contains any of these phrases, the merge function in Bitbucket will be disabled.</p>
-      <textarea id="disabledPhrases" rows="5"></textarea>
+    <div class="mb-4">
+      <label for="disabledPhrases" class="block text-gray-700 text-sm font-bold mb-2">Disabled Phrases (one per line):</label>
+      <p class="text-sm text-gray-600 mb-2">If the last Slack message contains any of these phrases, the merge function in Bitbucket will be disabled.</p>
+      <textarea id="disabledPhrases" rows="5" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
     </div>
   </div>
 
-  <h2>Bitbucket Options</h2>
-  <div class="option-section">
-    <div>
-      <label for="bitbucketUrl">Bitbucket Pull Request URL Pattern:</label>
-      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">Use '*' as a wildcard for dynamic parts of the URL.<br>Example: <code>https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code></p>
-      <input type="text" id="bitbucketUrl">
+  <h2 class="text-xl font-semibold mb-4">Bitbucket Options</h2>
+  <div class="mb-6 p-4 bg-white rounded-lg shadow">
+    <div class="mb-4">
+      <label for="bitbucketUrl" class="block text-gray-700 text-sm font-bold mb-2">Bitbucket Pull Request URL Pattern:</label>
+      <p class="text-sm text-gray-600 mb-2">Use '*' as a wildcard for dynamic parts of the URL.<br>Example: <code>https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code></p>
+      <input type="text" id="bitbucketUrl" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
     </div>
-    <div>
-      <label for="mergeButtonSelector">Merge Button DOM Selector:</label>
-      <p style="font-size: 0.9em; color: #666; margin-top: 5px;">The CSS selector used to find the merge button on Bitbucket pull request pages.<br>Example: <code>.merge-button</code></p>
-      <input type="text" id="mergeButtonSelector">
+    <div class="mb-4">
+      <label for="mergeButtonSelector" class="block text-gray-700 text-sm font-bold mb-2">Merge Button DOM Selector:</label>
+      <p class="text-sm text-gray-600 mb-2">The CSS selector used to find the merge button on Bitbucket pull request pages.<br>Example: <code>.merge-button</code></p>
+      <input type="text" id="mergeButtonSelector" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
     </div>
   </div>
 
-  <button id="save">Save</button>
-  <div id="status"></div>
+  <button id="save" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Save</button>
+  <div id="status" class="mt-4 text-center font-bold"></div>
   <script src="options.js"></script>
 </body>
 </html>
