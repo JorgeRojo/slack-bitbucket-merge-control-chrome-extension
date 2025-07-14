@@ -8,8 +8,8 @@ function updateExtensionIcon(status) {
   let path16, path48;
   switch (status) {
     case 'loading':
-      path16 = 'images/icon16_loading.png';
-      path48 = 'images/icon48_loading.png';
+      path16 = 'images/icon16.png';
+      path48 = 'images/icon48.png';
       break;
     case 'enabled':
       path16 = 'images/icon16_enabled.png';
