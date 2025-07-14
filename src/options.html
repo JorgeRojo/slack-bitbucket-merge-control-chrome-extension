@@ -60,13 +60,24 @@
         font-size: 0.85em; /* Slightly reduced */
       }
       button {
+        display: block;
+        width: 60%; /* Make it wider */
+        margin: 20px auto; /* Center horizontally and add vertical margin */
         padding: 12px 20px; /* Slightly reduced padding */
+        background-color: #28a745; /* Green save button */
+        color: white;
+        border: none;
+        border-radius: 5px;
         font-size: 1.1em; /* Slightly reduced */
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
       }
       #status {
         margin-top: 20px; /* Adjusted margin */
         font-size: 1.1em; /* Slightly reduced */
       }
+    </style>
   </head>
   <body>
     <h1>Slack-Bitbucket Merge Control Options</h1>
