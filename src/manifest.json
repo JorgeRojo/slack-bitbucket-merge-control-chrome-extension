@@ -14,9 +14,8 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "images/icon16.png",
-      "48": "images/icon48.png",
-      "128": "images/icon128.png"
+      "16": "images/icon16_loading.png",
+      "48": "images/icon48_loading.png"
     }
   },
   "background": {
@@ -28,10 +27,5 @@
       "matches": ["https://bitbucket.rdpnts.com/projects/*/repos/*/pull-requests/*/overview*"],
       "js": ["bitbucket_content.js"]
     }
-  ],
-  "icons": {
-    "16": "images/icon16.png",
-    "48": "images/icon48.png",
-    "128": "images/icon128.png"
-  }
+  ]
 }
