@@ -44,9 +44,13 @@
     input[type="text"],
     input[type="password"],
     textarea {
-      width: calc(100% - 24px); /* Adjusted for padding and border */
+      width: 100%;
       padding: 12px; /* Increased padding */
+      border: 1px solid #ddd;
+      border-radius: 4px;
       font-size: 1.05em; /* Increased */
+      box-sizing: border-box;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
     p {
       font-size: 0.95em; /* Increased */
