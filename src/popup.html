@@ -1,108 +1,50 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>Slack Merge Status</title>
     <style>
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        width: 350px;
-        min-height: 100px;
-        max-height: 500px;
+        width: 300px;
+        padding: 10px;
         background-color: #f0f2f5;
         color: #333;
       }
-
-      #status-message {
-        font-size: 1.1em;
-        margin-top: 10px;
-        padding: 15px;
-        border-radius: 6px;
-        background-color: #fff;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        line-height: 1.5;
-        text-align: center;
-      }
-      .status-ok {
-        color: #28a745; /* Green */
-        border: 1px solid #28a745;
-      }
-      .status-disabled {
-        color: #dc3545; /* Red */
-        font-weight: bold;
-        border: 1px solid #dc3545;
-      }
-      .status-error {
-        color: #c47500; /* Orange/Yellow */
-        border: 1px solid #c47500;
-      }
-      .status-word {
-        font-weight: bold;
-        text-transform: uppercase;
-      }
-      .enabled-word {
-        color: #28a745;
-      }
-      .disabled-word {
-        color: #dc3545;
-      }
-      a {
-        color: #007bff;
-        text-decoration: none;
-        font-weight: bold;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-      #messages-container {
+      #status-container {
         display: flex;
         flex-direction: column;
-        margin-top: 15px;
-        padding: 0 10px 10px 10px;
-        max-height: 400px;
-        overflow-y: hidden; /* Hide overflow on the container */
-        scrollbar-width: none; /* Hide scrollbar for Firefox */
-        text-align: left;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
       }
-      .message {
-        background-color: #ffffff;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 8px 12px;
-        margin-bottom: 8px;
-        font-size: 0.9em;
+      #status-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
       }
-      .message-header {
+      #status-text {
+        font-size: 1.2em;
         font-weight: bold;
-        color: #1d1c1d;
-        font-size: 0.95em;
-        margin-bottom: 4px;
       }
-      .message-body {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        color: #333;
-      }
-      .message-time {
-        font-size: 0.8em;
+      .loading {
         color: #666;
-        font-weight: normal;
-        margin-left: 8px;
       }
-      #messages-textarea {
-        width: 100%;
-        height: 100%; /* Full height of the container */
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        font-family: monospace; /* Monospace font for better readability */
-        white-space: pre-wrap; /* Preserve whitespace and line breaks */
-        resize: none; /* Disable manual resizing */
+      .allowed {
+        color: #28a745;
+      }
+      .disallowed {
+        color: #dc3545;
+      }
+      .exception {
+        color: #ffc107;
       }
     </style>
   </head>
   <body>
-    <div id="status-message">Loading status...</div>
-    <div id="messages-container"></div>
+    <div id="status-container">
+      <div id="status-icon" class="loading">⏳</div>
+      <div id="status-text" class="loading">Waiting for messages...</div>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>

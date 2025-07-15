@@ -3,16 +3,9 @@
   "name": "slack-frontend-closure",
   "version": "1.0",
   "description": "Lee el contenido de un canal de Slack usando la API.",
-  "permissions": [
-    "storage",
-    "alarms",
-    "scripting"
-  ],
+  "permissions": ["storage", "alarms", "scripting"],
   "options_page": "options.html",
-  "host_permissions": [
-    "https://slack.com/api/*",
-    "<all_urls>"
-  ],
+  "host_permissions": ["https://slack.com/api/*", "<all_urls>"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
