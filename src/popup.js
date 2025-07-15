@@ -58,16 +58,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       "channelName",
     ]);
 
-    const { channelId } = await chrome.storage.local.get("channelId");
+    const { channelId, teamId } = await chrome.storage.local.get(["channelId", "teamId"]);
 
     if (!slackToken || !channelName) {
       updateUI("config_needed", "Slack token or channel name not configured.");
       return;
     }
 
-    // Set Slack channel link if channelId is available
-    if (channelId) {
-      slackChannelLink.href = `slack://channel?team=&id=${channelId}`;
+    // Set Slack channel link if channelId and teamId are available
+    if (channelId && teamId) {
+      slackChannelLink.href = `https://app.slack.com/client/${teamId}/${channelId}`;
     }
 
     const { lastKnownMergeState } = await chrome.storage.local.get(

@@ -24,6 +24,7 @@ const DEFAULT_EXCEPTION_PHRASES = [
   "allowed to merge in all projects except",
   "merge is allowed except",
   ":alert: do not merge these projects:",
+  "you can merge:",
 ];
 
 let bitbucketTabId = null;
@@ -40,21 +41,48 @@ function normalizeText(text) {
     .trim();
 }
 
-function determineMergeStatus(messages, allowedPhrases, disallowedPhrases, exceptionPhrases) {
-  const currentAllowedPhrases = allowedPhrases.map(phrase => normalizeText(phrase));
-  const currentDisallowedPhrases = disallowedPhrases.map(phrase => normalizeText(phrase));
-  const currentExceptionPhrases = exceptionPhrases.map(phrase => normalizeText(phrase));
+function determineMergeStatus(
+  messages,
+  allowedPhrases,
+  disallowedPhrases,
+  exceptionPhrases
+) {
+  const currentAllowedPhrases = allowedPhrases.map((phrase) =>
+    normalizeText(phrase)
+  );
+  const currentDisallowedPhrases = disallowedPhrases.map((phrase) =>
+    normalizeText(phrase)
+  );
+  const currentExceptionPhrases = exceptionPhrases.map((phrase) =>
+    normalizeText(phrase)
+  );
 
   // Iterate through the last MAX_MESSAGES_TO_CHECK messages
-  for (let i = messages.length - 1; i >= Math.max(0, messages.length - MAX_MESSAGES_TO_CHECK); i--) {
+  for (
+    let i = messages.length - 1;
+    i >= Math.max(0, messages.length - MAX_MESSAGES_TO_CHECK);
+    i--
+  ) {
     const message = messages[i];
     const normalizedMessageText = normalizeText(message.text);
 
-    if (currentExceptionPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+    if (
+      currentExceptionPhrases.some((keyword) =>
+        normalizedMessageText.includes(keyword)
+      )
+    ) {
       return { status: "exception", message: message };
-    } else if (currentDisallowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+    } else if (
+      currentDisallowedPhrases.some((keyword) =>
+        normalizedMessageText.includes(keyword)
+      )
+    ) {
       return { status: "disallowed", message: message };
-    } else if (currentAllowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+    } else if (
+      currentAllowedPhrases.some((keyword) =>
+        normalizedMessageText.includes(keyword)
+      )
+    ) {
       return { status: "allowed", message: message };
     }
   }
@@ -97,8 +125,6 @@ function updateExtensionIcon(status) {
     },
   });
 }
-
-
 
 async function fetchAndCacheUserProfiles(slackToken, userIds) {
   let { userProfiles = {} } = await chrome.storage.local.get("userProfiles");
@@ -231,12 +257,13 @@ async function processAndStoreMessages(historyData, slackToken) {
       currentExceptionPhrases,
     } = await getPhrasesFromStorage();
 
-    const { status: mergeStatus, message: matchingMessage } = determineMergeStatus(
-      storedMessages,
-      currentAllowedPhrases,
-      currentDisallowedPhrases,
-      currentExceptionPhrases
-    );
+    const { status: mergeStatus, message: matchingMessage } =
+      determineMergeStatus(
+        storedMessages,
+        currentAllowedPhrases,
+        currentDisallowedPhrases,
+        currentExceptionPhrases
+      );
 
     updateExtensionIcon(mergeStatus);
     await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
@@ -251,12 +278,13 @@ async function processAndStoreMessages(historyData, slackToken) {
       currentExceptionPhrases,
     } = await getPhrasesFromStorage();
 
-    const { status: mergeStatus, message: matchingMessage } = determineMergeStatus(
-      currentMessages,
-      currentAllowedPhrases,
-      currentDisallowedPhrases,
-      currentExceptionPhrases
-    );
+    const { status: mergeStatus, message: matchingMessage } =
+      determineMergeStatus(
+        currentMessages,
+        currentAllowedPhrases,
+        currentDisallowedPhrases,
+        currentExceptionPhrases
+      );
     updateExtensionIcon(mergeStatus);
     await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
   }
@@ -396,15 +424,29 @@ async function updateContentScriptMergeState(channelName) {
   }
 }
 
+async function fetchAndStoreTeamId(slackToken) {
+  try {
+    const response = await fetch("https://slack.com/api/auth.test", {
+      headers: { Authorization: `Bearer ${slackToken}` },
+    });
+    const data = await response.json();
+    if (data.ok) {
+      await chrome.storage.local.set({ teamId: data.team_id });
+    } else {
+      console.error("Error fetching team ID:", data.error);
+    }
+  } catch (error) {
+    console.error("Error fetching team ID:", error);
+  }
+}
+
 async function fetchAndStoreMessages() {
   updateExtensionIcon("loading");
   let channelName = "";
 
   try {
-    const { slackToken, channelName: configChannelName } = await chrome.storage.sync.get([
-      "slackToken",
-      "channelName",
-    ]);
+    const { slackToken, channelName: configChannelName } =
+      await chrome.storage.sync.get(["slackToken", "channelName"]);
 
     if (!slackToken || !configChannelName) {
       await chrome.storage.local.set({
@@ -416,6 +458,9 @@ async function fetchAndStoreMessages() {
     }
 
     channelName = configChannelName;
+
+    // Fetch and store team ID
+    await fetchAndStoreTeamId(slackToken);
 
     const channelId = await resolveChannelId(slackToken, channelName);
     const { lastFetchTs } = await chrome.storage.local.get("lastFetchTs");
