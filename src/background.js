@@ -1,5 +1,3 @@
-import { normalizeText, determineMergeStatus } from "./mergeStatusLogic.js";
-
 const SLACK_CONVERSATIONS_LIST_URL = "https://slack.com/api/conversations.list";
 const SLACK_CONVERSATIONS_HISTORY_URL =
   "https://slack.com/api/conversations.history";
@@ -27,6 +25,38 @@ const DEFAULT_EXCEPTION_PHRASES = [
   "merge is allowed except",
   ":alert: do not merge these projects:",
 ];
+
+let bitbucketTabId = null;
+
+function normalizeText(text) {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function determineMergeStatus(messageText, allowedPhrases, disallowedPhrases, exceptionPhrases) {
+  const normalizedMessageText = normalizeText(messageText);
+
+  const currentAllowedPhrases = allowedPhrases.map(phrase => normalizeText(phrase));
+  const currentDisallowedPhrases = disallowedPhrases.map(phrase => normalizeText(phrase));
+  const currentExceptionPhrases = exceptionPhrases.map(phrase => normalizeText(phrase));
+
+  let status = "unknown";
+
+  if (currentExceptionPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+    status = "exception";
+  } else if (currentDisallowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+    status = "disallowed";
+  } else if (currentAllowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+    status = "allowed";
+  }
+
+  return status;
+}
 
 function updateExtensionIcon(status) {
   let path16, path48;
@@ -64,14 +94,12 @@ function updateExtensionIcon(status) {
   });
 }
 
-// New helper functions
 async function getSlackConfig() {
   const { slackToken, channelName } = await chrome.storage.sync.get([
     "slackToken",
     "channelName",
   ]);
   if (!slackToken || !channelName) {
-    updateExtensionIcon("default");
     throw new Error("Slack token or channel name not configured.");
   }
   return { slackToken, channelName };
@@ -202,24 +230,11 @@ async function processAndStoreMessages(historyData, slackToken) {
     });
 
     // Determine merge status based on the latest message and configurable phrases
-    const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
-      await chrome.storage.sync.get([
-        "allowedPhrases",
-        "disallowedPhrases",
-        "exceptionPhrases",
-      ]);
-
-    const currentAllowedPhrases = allowedPhrases
-      ? allowedPhrases.split(",")
-      : DEFAULT_ALLOWED_PHRASES;
-
-    const currentDisallowedPhrases = disallowedPhrases
-      ? disallowedPhrases.split(",")
-      : DEFAULT_DISALLOWED_PHRASES;
-
-    const currentExceptionPhrases = exceptionPhrases
-      ? exceptionPhrases.split(",")
-      : DEFAULT_EXCEPTION_PHRASES;
+    const {
+      currentAllowedPhrases,
+      currentDisallowedPhrases,
+      currentExceptionPhrases,
+    } = await getPhrasesFromStorage();
 
     const mergeStatus = determineMergeStatus(
       newMessages[0].text,
@@ -234,24 +249,11 @@ async function processAndStoreMessages(historyData, slackToken) {
     const { messages: currentMessages = [] } = await chrome.storage.local.get(
       "messages"
     );
-    const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
-      await chrome.storage.sync.get([
-        "allowedPhrases",
-        "disallowedPhrases",
-        "exceptionPhrases",
-      ]);
-
-    const currentAllowedPhrases = allowedPhrases
-      ? allowedPhrases.split(",")
-      : DEFAULT_ALLOWED_PHRASES;
-
-    const currentDisallowedPhrases = disallowedPhrases
-      ? disallowedPhrases.split(",")
-      : DEFAULT_DISALLOWED_PHRASES;
-
-    const currentExceptionPhrases = exceptionPhrases
-      ? exceptionPhrases.split(",")
-      : DEFAULT_EXCEPTION_PHRASES;
+    const {
+      currentAllowedPhrases,
+      currentDisallowedPhrases,
+      currentExceptionPhrases,
+    } = await getPhrasesFromStorage();
 
     const mergeStatus = determineMergeStatus(
       currentMessages.length > 0
@@ -263,6 +265,33 @@ async function processAndStoreMessages(historyData, slackToken) {
     );
     updateExtensionIcon(mergeStatus);
   }
+}
+
+async function getPhrasesFromStorage() {
+  const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
+    await chrome.storage.sync.get([
+      "allowedPhrases",
+      "disallowedPhrases",
+      "exceptionPhrases",
+    ]);
+
+  const currentAllowedPhrases = allowedPhrases
+    ? allowedPhrases.split(",")
+    : DEFAULT_ALLOWED_PHRASES;
+
+  const currentDisallowedPhrases = disallowedPhrases
+    ? disallowedPhrases.split(",")
+    : DEFAULT_DISALLOWED_PHRASES;
+
+  const currentExceptionPhrases = exceptionPhrases
+    ? exceptionPhrases.split(",")
+    : DEFAULT_EXCEPTION_PHRASES;
+
+  return {
+    currentAllowedPhrases,
+    currentDisallowedPhrases,
+    currentExceptionPhrases,
+  };
 }
 
 async function handleSlackApiError(error) {
@@ -303,24 +332,11 @@ async function updateContentScriptMergeState(channelName) {
       ? currentMessages[currentMessages.length - 1]
       : null;
 
-  const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
-    await chrome.storage.sync.get([
-      "allowedPhrases",
-      "disallowedPhrases",
-      "exceptionPhrases",
-    ]);
-
-  const currentAllowedPhrases = allowedPhrases
-    ? allowedPhrases.split(",")
-    : DEFAULT_ALLOWED_PHRASES;
-
-  const currentDisallowedPhrases = disallowedPhrases
-    ? disallowedPhrases.split(",")
-    : DEFAULT_DISALLOWED_PHRASES;
-
-  const currentExceptionPhrases = exceptionPhrases
-    ? exceptionPhrases.split(",")
-    : DEFAULT_EXCEPTION_PHRASES;
+  const {
+    currentAllowedPhrases,
+    currentDisallowedPhrases,
+    currentExceptionPhrases,
+  } = await getPhrasesFromStorage();
 
   let mergeStatusForContentScript = "unknown";
   if (lastSlackMessage) {
@@ -407,8 +423,6 @@ async function fetchAndStoreMessages() {
     await updateContentScriptMergeState(channelName);
   }
 }
-
-let bitbucketTabId = null;
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.action === "getDefaultPhrases") {
