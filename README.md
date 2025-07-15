@@ -2,6 +2,8 @@
 
 This is a Chrome extension designed to read messages from specified Slack channels (both public and private) and display them within the extension's popup.
 
+https://api.slack.com/apps/
+
 ## Features
 
 - Reads messages from a configurable Slack channel.
@@ -28,9 +30,9 @@ This is a Chrome extension designed to read messages from specified Slack channe
     - Go to your Slack API dashboard and create a new app or select an existing one.
     - Navigate to **OAuth & Permissions**.
     - Add the following Bot Token Scopes:
-        - `channels:read`
-        - `groups:read` (for private channels)
-        - `chat:read`
+      - `channels:read`
+      - `groups:read` (for private channels)
+      - `chat:read`
     - Install the app to your workspace to generate the Bot User OAuth Token (starts with `xoxb-`).
 2.  **Configure the Extension:**
     - Right-click on the extension icon in your Chrome toolbar and select **Options**.

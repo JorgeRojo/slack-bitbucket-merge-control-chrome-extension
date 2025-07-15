@@ -27,44 +27,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    const { messages = [] } = await chrome.storage.local.get("messages");
+    const { lastKnownMergeState } = await chrome.storage.local.get("lastKnownMergeState");
 
-    if (messages.length === 0) {
-      updateUI("loading", "Waiting for messages...");
+    if (!lastKnownMergeState || !lastKnownMergeState.mergeStatus) {
+      updateUI("loading", "Waiting for status...");
       return;
     }
 
-    // Keywords for different states
-    const exceptionKeywords = [
-      "allowed to merge this task",
-      "do not merge these projects",
-    ];
-    const disallowedKeywords = [
-      "not allowed to merge",
-      ":octagonal_sign:",
-      ":alert:",
-    ];
-    const allowedKeywords = ["allowed to merge", ":check1:"];
-
-    let status = "unknown"; // Default status
-
-    // Iterate through messages from newest to oldest
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const messageText = (messages[i].text || "").toLowerCase();
-
-      if (exceptionKeywords.some((keyword) => messageText.includes(keyword))) {
-        status = "exception";
-        break;
-      }
-      if (disallowedKeywords.some((keyword) => messageText.includes(keyword))) {
-        status = "disallowed";
-        break;
-      }
-      if (allowedKeywords.some((keyword) => messageText.includes(keyword))) {
-        status = "allowed";
-        break;
-      }
-    }
+    const status = lastKnownMergeState.mergeStatus;
 
     if (status === "exception") {
       updateUI("exception", "Allowed with exceptions");
@@ -75,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       updateUI("unknown", "Could not determine status");
     }
+
   } catch (error) {
     console.error("Error processing messages:", error);
     updateUI("disallowed", "Error processing messages");

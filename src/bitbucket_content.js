@@ -2,7 +2,7 @@ chrome.runtime.sendMessage({ action: "bitbucketTabLoaded" });
 
 let mergeButtonObserver = null;
 
-function disableMergeButton(mergeButton, lastSlackMessage, channelName) {
+function disableMergeButton(mergeButton, lastSlackMessage, channelName, mergeStatus) {
   mergeButton.style.backgroundColor = "#ef445e";
   mergeButton.style.color = "white";
   mergeButton.style.cursor = "not-allowed";
@@ -16,9 +16,16 @@ function disableMergeButton(mergeButton, lastSlackMessage, channelName) {
       .replace(/:\w+:/g, "")
       .replace(/<[^>]+>/g, "")
       .trim();
-    alert(
-      `Merge function is disabled from Slack.\nNotified from channel: #${channelName}\nSlack message: ${cleanedSlackMessage}`
-    );
+    
+    let alertMessage = `Merge function is ${mergeStatus} from Slack.`;
+    if (mergeStatus === "disallowed") {
+      alertMessage += `\nNot allowed to merge.`;
+    } else if (mergeStatus === "exception") {
+      alertMessage += `\nAllowed with specific exceptions.`;
+    }
+    alertMessage += `\nNotified from channel: #${channelName}\nSlack message: ${cleanedSlackMessage}`;
+
+    alert(alertMessage);
   };
   // Use capture phase to ensure it runs before other handlers
   mergeButton.addEventListener("click", mergeButton._customMergeHandler, true);
@@ -35,7 +42,7 @@ function enableMergeButton(mergeButton) {
   mergeButton._customMergeHandler = null;
 }
 
-async function applyMergeButtonLogic(isMergeDisabled, lastSlackMessage, channelName) {
+async function applyMergeButtonLogic(mergeStatus, lastSlackMessage, channelName) {
   const { mergeButtonSelector } = await chrome.storage.sync.get('mergeButtonSelector');
   const mergeButton = document.querySelector(mergeButtonSelector || '.merge-button');
 
@@ -43,8 +50,8 @@ async function applyMergeButtonLogic(isMergeDisabled, lastSlackMessage, channelN
     return;
   }
 
-  if (isMergeDisabled) {
-    disableMergeButton(mergeButton, lastSlackMessage, channelName);
+  if (mergeStatus === "disallowed" || mergeStatus === "exception") {
+    disableMergeButton(mergeButton, lastSlackMessage, channelName, mergeStatus);
   }
   else {
     enableMergeButton(mergeButton);
@@ -53,16 +60,16 @@ async function applyMergeButtonLogic(isMergeDisabled, lastSlackMessage, channelN
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "updateMergeButton") {
-    applyMergeButtonLogic(request.isMergeDisabled, request.lastSlackMessage, request.channelName);
+    applyMergeButtonLogic(request.mergeStatus, request.lastSlackMessage, request.channelName);
   }
 });
 
 function applyInitialMergeState() {
   chrome.storage.local.get(["lastKnownMergeState"], (result) => {
     if (result.lastKnownMergeState) {
-      const { isMergeDisabled, lastSlackMessage, channelName } =
+      const { mergeStatus, lastSlackMessage, channelName } =
         result.lastKnownMergeState;
-      applyMergeButtonLogic(isMergeDisabled, lastSlackMessage, channelName);
+      applyMergeButtonLogic(mergeStatus, lastSlackMessage, channelName);
     }
   });
 }
