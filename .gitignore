@@ -16,3 +16,6 @@ yarn-error.log*
 # Temporary files
 /temp
 /tmp
+
+
+/frontend-closure-channel-messages.*

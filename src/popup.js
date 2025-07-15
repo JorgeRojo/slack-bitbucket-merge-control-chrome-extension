@@ -1,104 +1,127 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async () => {
   const statusMessageDiv = document.getElementById("status-message");
-
-  function openOptionsPage() {
-    chrome.runtime.openOptionsPage();
-  }
-
-  function handleConfigurationError(statusMessageDiv) {
-    statusMessageDiv.innerHTML =
-      'Please configure all required fields in the <a href="#" id="openOptions">extension options</a>.';
-    statusMessageDiv.className = "status-error";
-    document
-      .getElementById("openOptions")
-      .addEventListener("click", openOptionsPage);
-  }
-
-  function getDisplayMessageAndClass(appStatus, messages, channelName) {
-    let displayMessage = "";
-    let messageClass = "";
-
-    switch (appStatus) {
-      case "OK":
-        const lastMessageText =
-          messages.length > 0 ? messages[messages.length - 1].text : "";
-        if (lastMessageText.includes("Not allowed")) {
-          const cleanedSlackMessage = lastMessageText
-            .replace(/:\w+:/g, "")
-            .trim();
-          displayMessage = `Merge is <span class="status-word disabled-word">DISABLED</span>.\nChannel: #${channelName}\nMessage: ${cleanedSlackMessage}`;
-          messageClass = "status-disabled";
-        } else {
-          displayMessage = `Merge is <span class="status-word enabled-word">ENABLED</span>.\nChannel: #${channelName}`;
-          messageClass = "status-ok";
-        }
-        break;
-      case "CHANNEL_ERROR":
-        displayMessage = `Error: Channel '${channelName}' not found, or bot not a member.`;
-        messageClass = "status-error";
-        break;
-      case "TOKEN_ERROR":
-        displayMessage =
-          'Error: Invalid Slack Token. Please check <a href="#" id="openOptions">options</a>.';
-        messageClass = "status-error";
-        break;
-      case "UNKNOWN_ERROR":
-        displayMessage = "An unknown error occurred. Check extension logs.";
-        messageClass = "status-error";
-        break;
-      default:
-        displayMessage = "Loading status...";
-        messageClass = "";
-        break;
-    }
-    return { displayMessage, messageClass };
-  }
-
-  async function updateDisplay() {
-    const syncResult = await chrome.storage.sync.get([
-      "slackToken",
-      "channelName",
-    ]);
-    const { slackToken, channelName = "Not Set" } = syncResult;
-
-    if (!slackToken || channelName === "Not Set") {
-      handleConfigurationError(statusMessageDiv);
+  const messagesContainer = document.getElementById("messages-container");
+  const messagesTextarea = document.createElement("textarea"); // Create the textarea
+  function renderStatus(state) {
+    if (!state) {
+      statusMessageDiv.textContent = "Loading...";
+      statusMessageDiv.className = "";
       return;
     }
 
-    const localResult = await chrome.storage.local.get([
-      "messages",
-      "appStatus",
-    ]);
-    const { messages = [], appStatus } = localResult;
+    const { appStatus, lastKnownMergeState } = state;
+    const { isMergeDisabled, channelName } = lastKnownMergeState || {};
 
-    const { displayMessage, messageClass } = getDisplayMessageAndClass(
-      appStatus,
-      messages,
-      channelName
-    );
+    if (appStatus && appStatus.includes("ERROR")) {
+      statusMessageDiv.className = "status-error";
+      if (appStatus === "CHANNEL_ERROR") {
+        statusMessageDiv.innerHTML = `Error: Canal no encontrado. Revisa las <a href="options.html" target="_blank">opciones</a>.`;
+      } else if (appStatus === "TOKEN_ERROR") {
+        statusMessageDiv.innerHTML = `Error: Token de Slack inválido. Revisa las <a href="options.html" target="_blank">opciones</a>.`;
+      } else {
+        statusMessageDiv.innerHTML = `Error desconocido. Revisa las <a href="options.html" target="_blank">opciones</a>.`;
+      }
+      return;
+    }
 
-    statusMessageDiv.innerHTML = displayMessage.replace(/\n/g, "<br>"); // Replace newlines with <br> for HTML
-    statusMessageDiv.className = messageClass;
+    if (isMergeDisabled === undefined) {
+      statusMessageDiv.textContent = "Awaiting first check...";
+      statusMessageDiv.className = "";
+      return;
+    }
 
-    if (displayMessage.includes("openOptions")) {
-      document
-        .getElementById("openOptions")
-        .addEventListener("click", openOptionsPage);
+    if (isMergeDisabled) {
+      statusMessageDiv.innerHTML = `Merge: <span class="status-word disabled-word">DISABLED</span> en #${channelName}`;
+      statusMessageDiv.className = "status-disabled";
+    } else {
+      statusMessageDiv.innerHTML = `Merge: <span class="status-word enabled-word">ENABLED</span> in #${channelName}`;
+      statusMessageDiv.className = "status-ok";
     }
   }
 
-  function initializePopup() {
-    // Initial load
-    updateDisplay();
+  async function renderMessages() {
+    let { messages = [], userProfiles = {} } = await chrome.storage.local.get([
+      "messages",
+      "userProfiles",
+    ]);
 
-    // Listen for updates from the background script
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.action === "updateMessages") {
-        updateDisplay();
-      }
+    messagesContainer.innerHTML = ""; // Clear previous messages
+    if (messages.length === 0) {
+      return;
+    }
+
+    messagesContainer.appendChild(messagesTextarea);
+    messagesTextarea.id = "messages-textarea"; // Set the ID for styling
+    messagesTextarea.readOnly = true; // Make it read-only
+
+    // Calculate the timestamp for 20 days ago
+    const twentyDaysAgo = new Date();
+    twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 40);
+    const twentyDaysAgoTimestamp = twentyDaysAgo.getTime() / 1000; // Slack's ts is in seconds
+
+    // Filter for recent messages and display in reverse chronological order (newest first)
+    const recentMessages = messages
+      .slice()
+      .reverse()
+      .filter((msg) => parseFloat(msg.ts) >= twentyDaysAgoTimestamp);
+
+    let allMessagesText = "";
+    recentMessages.forEach((msg) => {
+      const messageDate = new Date(parseFloat(msg.ts) * 1000);
+      const dateString = messageDate.toLocaleDateString();
+      const timeString = messageDate.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      // A simple way to replace user mentions like <@U12345>
+      const processedText = (msg.text || "").replace(
+        /<@(\w+)>/g,
+        (match, userId) => {
+          const mentionedUser = userProfiles[userId];
+          return mentionedUser ? `@${mentionedUser.name}` : match;
+        }
+      );
+
+      allMessagesText += `(${dateString} - ${timeString}):\n${processedText}\n\n`;
     });
+
+    messagesTextarea.value = allMessagesText.trim();
+
+    // Make the textarea fill the container and adjust scroll
+    messagesTextarea.style.height = `${messagesContainer.clientHeight}px`;
+
+    // Optional: Select all text when clicking inside for easy copying
+    messagesTextarea.addEventListener("focus", () => {
+      messagesTextarea.select();
+    });
+
+    // Disable scroll synchronization if you don't need it
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
-  initializePopup();
+  async function updatePopup() {
+    const { lastKnownMergeState, appStatus } = await chrome.storage.local.get([
+      "lastKnownMergeState",
+      "appStatus",
+    ]);
+    renderStatus({ lastKnownMergeState, appStatus });
+    await renderMessages();
+  }
+
+  // Add a listener for links in the status message to open the options page
+  document.body.addEventListener("click", (event) => {
+    if (
+      event.target.tagName === "A" &&
+      event.target.href.includes("options.html")
+    ) {
+      event.preventDefault();
+      chrome.runtime.openOptionsPage();
+    }
+  });
+
+  chrome.runtime.onMessage.addListener(
+    (request) => request.action === "updateMessages" && updatePopup()
+  );
+  updatePopup(); // Initial load
 });
