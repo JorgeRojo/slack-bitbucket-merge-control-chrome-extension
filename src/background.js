@@ -47,18 +47,19 @@ function determineMergeStatus(messages, allowedPhrases, disallowedPhrases, excep
 
   // Iterate through the last MAX_MESSAGES_TO_CHECK messages
   for (let i = messages.length - 1; i >= Math.max(0, messages.length - MAX_MESSAGES_TO_CHECK); i--) {
-    const normalizedMessageText = normalizeText(messages[i].text);
+    const message = messages[i];
+    const normalizedMessageText = normalizeText(message.text);
 
     if (currentExceptionPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
-      return "exception";
+      return { status: "exception", message: message };
     } else if (currentDisallowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
-      return "disallowed";
+      return { status: "disallowed", message: message };
     } else if (currentAllowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
-      return "allowed";
+      return { status: "allowed", message: message };
     }
   }
 
-  return "unknown"; // If no matching phrase is found in the last 10 messages
+  return { status: "unknown", message: null }; // If no matching phrase is found in the last 10 messages
 }
 
 function updateExtensionIcon(status) {
@@ -230,7 +231,7 @@ async function processAndStoreMessages(historyData, slackToken) {
       currentExceptionPhrases,
     } = await getPhrasesFromStorage();
 
-    const mergeStatus = determineMergeStatus(
+    const { status: mergeStatus, message: matchingMessage } = determineMergeStatus(
       storedMessages,
       currentAllowedPhrases,
       currentDisallowedPhrases,
@@ -238,6 +239,7 @@ async function processAndStoreMessages(historyData, slackToken) {
     );
 
     updateExtensionIcon(mergeStatus);
+    await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
   } else {
     // If no new messages, re-evaluate status based on existing messages
     const { messages: currentMessages = [] } = await chrome.storage.local.get(
@@ -249,13 +251,14 @@ async function processAndStoreMessages(historyData, slackToken) {
       currentExceptionPhrases,
     } = await getPhrasesFromStorage();
 
-    const mergeStatus = determineMergeStatus(
+    const { status: mergeStatus, message: matchingMessage } = determineMergeStatus(
       currentMessages,
       currentAllowedPhrases,
       currentDisallowedPhrases,
       currentExceptionPhrases
     );
     updateExtensionIcon(mergeStatus);
+    await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
   }
 }
 
@@ -331,13 +334,16 @@ async function updateContentScriptMergeState(channelName) {
   } = await getPhrasesFromStorage();
 
   let mergeStatusForContentScript = "unknown";
+  let matchingMessageForContentScript = null;
   if (currentMessages.length > 0) {
-    mergeStatusForContentScript = determineMergeStatus(
+    const { status, message } = determineMergeStatus(
       currentMessages,
       currentAllowedPhrases,
       currentDisallowedPhrases,
       currentExceptionPhrases
     );
+    mergeStatusForContentScript = status;
+    matchingMessageForContentScript = message;
   }
 
   // If there's an error status, ensure the merge button is enabled (or not disabled by the extension)
@@ -356,7 +362,7 @@ async function updateContentScriptMergeState(channelName) {
         mergeStatusForContentScript === "disallowed" ||
         mergeStatusForContentScript === "exception", // Bitbucket only cares if it's disabled or not
       mergeStatus: mergeStatusForContentScript, // New field for more granular status
-      lastSlackMessage: lastSlackMessage,
+      lastSlackMessage: matchingMessageForContentScript, // Use the matching message
       channelName: channelName,
     },
   });

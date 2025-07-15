@@ -52,12 +52,28 @@
       #open-options:hover {
         background-color: #0056b3;
       }
+      #slack-channel-link {
+        display: inline-block;
+        background-color: #4A154B; /* Slack purple */
+        color: white;
+        padding: 8px 12px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        margin-top: 10px;
+        transition: background-color 0.2s ease;
+      }
+      #slack-channel-link:hover {
+        background-color: #360A36;
+      }
     </style>
   </head>
   <body>
     <div id="status-container">
       <div id="status-icon" class="loading">⏳</div>
       <div id="status-text" class="loading">Waiting for messages...</div>
+      <div id="matching-message" style="font-size: 0.9em; color: #555; margin-top: 5px; word-wrap: break-word;"></div>
+      <a id="slack-channel-link" href="#" target="_blank" style="display: none; margin-top: 10px;">Open Slack Channel</a>
       <button id="open-options">Open Options Page</button>
     </div>
     <script src="popup.js" type="module"></script>
