@@ -28,6 +28,8 @@ const DEFAULT_EXCEPTION_PHRASES = [
 
 let bitbucketTabId = null;
 
+const MAX_MESSAGES_TO_CHECK = 10;
+
 function normalizeText(text) {
   if (!text) return "";
   return text
@@ -38,24 +40,25 @@ function normalizeText(text) {
     .trim();
 }
 
-function determineMergeStatus(messageText, allowedPhrases, disallowedPhrases, exceptionPhrases) {
-  const normalizedMessageText = normalizeText(messageText);
-
+function determineMergeStatus(messages, allowedPhrases, disallowedPhrases, exceptionPhrases) {
   const currentAllowedPhrases = allowedPhrases.map(phrase => normalizeText(phrase));
   const currentDisallowedPhrases = disallowedPhrases.map(phrase => normalizeText(phrase));
   const currentExceptionPhrases = exceptionPhrases.map(phrase => normalizeText(phrase));
 
-  let status = "unknown";
+  // Iterate through the last MAX_MESSAGES_TO_CHECK messages
+  for (let i = messages.length - 1; i >= Math.max(0, messages.length - MAX_MESSAGES_TO_CHECK); i--) {
+    const normalizedMessageText = normalizeText(messages[i].text);
 
-  if (currentExceptionPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
-    status = "exception";
-  } else if (currentDisallowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
-    status = "disallowed";
-  } else if (currentAllowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
-    status = "allowed";
+    if (currentExceptionPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+      return "exception";
+    } else if (currentDisallowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+      return "disallowed";
+    } else if (currentAllowedPhrases.some(keyword => normalizedMessageText.includes(keyword))) {
+      return "allowed";
+    }
   }
 
-  return status;
+  return "unknown"; // If no matching phrase is found in the last 10 messages
 }
 
 function updateExtensionIcon(status) {
@@ -94,16 +97,7 @@ function updateExtensionIcon(status) {
   });
 }
 
-async function getSlackConfig() {
-  const { slackToken, channelName } = await chrome.storage.sync.get([
-    "slackToken",
-    "channelName",
-  ]);
-  if (!slackToken || !channelName) {
-    throw new Error("Slack token or channel name not configured.");
-  }
-  return { slackToken, channelName };
-}
+
 
 async function fetchAndCacheUserProfiles(slackToken, userIds) {
   let { userProfiles = {} } = await chrome.storage.local.get("userProfiles");
@@ -237,7 +231,7 @@ async function processAndStoreMessages(historyData, slackToken) {
     } = await getPhrasesFromStorage();
 
     const mergeStatus = determineMergeStatus(
-      newMessages[0].text,
+      storedMessages,
       currentAllowedPhrases,
       currentDisallowedPhrases,
       currentExceptionPhrases
@@ -256,9 +250,7 @@ async function processAndStoreMessages(historyData, slackToken) {
     } = await getPhrasesFromStorage();
 
     const mergeStatus = determineMergeStatus(
-      currentMessages.length > 0
-        ? currentMessages[currentMessages.length - 1].text
-        : "",
+      currentMessages,
       currentAllowedPhrases,
       currentDisallowedPhrases,
       currentExceptionPhrases
@@ -339,9 +331,9 @@ async function updateContentScriptMergeState(channelName) {
   } = await getPhrasesFromStorage();
 
   let mergeStatusForContentScript = "unknown";
-  if (lastSlackMessage) {
+  if (currentMessages.length > 0) {
     mergeStatusForContentScript = determineMergeStatus(
-      lastSlackMessage.text,
+      currentMessages,
       currentAllowedPhrases,
       currentDisallowedPhrases,
       currentExceptionPhrases
@@ -403,8 +395,20 @@ async function fetchAndStoreMessages() {
   let channelName = "";
 
   try {
-    const config = await getSlackConfig();
-    const { slackToken, channelName: configChannelName } = config;
+    const { slackToken, channelName: configChannelName } = await chrome.storage.sync.get([
+      "slackToken",
+      "channelName",
+    ]);
+
+    if (!slackToken || !configChannelName) {
+      await chrome.storage.local.set({
+        appStatus: "CONFIG_ERROR",
+        messages: [],
+      });
+      updateExtensionIcon("default");
+      return; // Stop execution if configuration is missing
+    }
+
     channelName = configChannelName;
 
     const channelId = await resolveChannelId(slackToken, channelName);
