@@ -1,3 +1,12 @@
+import {
+  DEFAULT_ALLOWED_PHRASES,
+  DEFAULT_DISALLOWED_PHRASES,
+  DEFAULT_EXCEPTION_PHRASES,
+  DEFAULT_BITBUCKET_URL,
+  DEFAULT_MERGE_BUTTON_SELECTOR,
+  DEFAULT_CHANNEL_NAME,
+} from './constants.js';
+
 document.addEventListener('DOMContentLoaded', function() {
   const saveButton = document.getElementById('save');
   const tokenInput = document.getElementById('slackToken');
@@ -9,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const mergeButtonSelectorInput = document.getElementById('mergeButtonSelector');
   const statusDiv = document.getElementById('status');
 
-  // Default phrases will be fetched from background.js
+  
 
   // Load saved options
   chrome.storage.sync.get([
@@ -21,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     'bitbucketUrl',
     'mergeButtonSelector'
   ], async function(result) {
-    const defaultPhrases = await chrome.runtime.sendMessage({ action: "getDefaultPhrases" });
+    
 
     if (result.slackToken) {
       tokenInput.value = result.slackToken;
@@ -29,37 +38,37 @@ document.addEventListener('DOMContentLoaded', function() {
     if (result.channelName) {
       channelInput.value = result.channelName;
     } else {
-      channelInput.value = 'frontend-closure'; // Default value
+      channelInput.value = DEFAULT_CHANNEL_NAME; // Default value
     }
     if (result.allowedPhrases) {
       allowedPhrasesInput.value = result.allowedPhrases.split(',').join('\n');
     }
     else {
-      allowedPhrasesInput.value = defaultPhrases.defaultAllowedPhrases.join('\n');
+      allowedPhrasesInput.value = DEFAULT_ALLOWED_PHRASES.join('\n');
     }
     if (result.disallowedPhrases) {
       disallowedPhrasesInput.value = result.disallowedPhrases.split(',').join('\n');
     }
     else {
-      disallowedPhrasesInput.value = defaultPhrases.defaultDisallowedPhrases.join('\n');
+      disallowedPhrasesInput.value = DEFAULT_DISALLOWED_PHRASES.join('\n');
     }
     if (result.exceptionPhrases) {
       exceptionPhrasesInput.value = result.exceptionPhrases.split(',').join('\n');
     }
     else {
-      exceptionPhrasesInput.value = defaultPhrases.defaultExceptionPhrases.join('\n');
+      exceptionPhrasesInput.value = DEFAULT_EXCEPTION_PHRASES.join('\n');
     }
     if (result.bitbucketUrl) {
       bitbucketUrlInput.value = result.bitbucketUrl;
     }
     else {
-      bitbucketUrlInput.value = 'https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*'; // Default value
+      bitbucketUrlInput.value = DEFAULT_BITBUCKET_URL; // Default value
     }
     if (result.mergeButtonSelector) {
       mergeButtonSelectorInput.value = result.mergeButtonSelector;
     }
     else {
-      mergeButtonSelectorInput.value = '.merge-button'; // Default value
+      mergeButtonSelectorInput.value = DEFAULT_MERGE_BUTTON_SELECTOR; // Default value
     }
   });
 

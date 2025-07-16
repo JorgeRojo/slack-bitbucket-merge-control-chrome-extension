@@ -1,35 +1,17 @@
-const SLACK_CONVERSATIONS_LIST_URL = "https://slack.com/api/conversations.list";
-const SLACK_CONVERSATIONS_HISTORY_URL =
-  "https://slack.com/api/conversations.history";
-const SLACK_USERS_LIST_URL = "https://slack.com/api/users.list";
-
-const POLLING_ALARM_NAME = "slack-poll-alarm";
-const MAX_MESSAGES = 100;
-const DEFAULT_ALLOWED_PHRASES = [
-  ":check1: allowed to merge",
-  "it's allowed to merge",
-  "merged. no restrictions on merging.",
-];
-const DEFAULT_DISALLOWED_PHRASES = [
-  ":octagonal_sign: not allowed to merge",
-  "not allowed to merge",
-  "do not merge without consent",
-  "do not merge in",
-  "closing versions. do not merge",
-  "ask me before merging",
-];
-const DEFAULT_EXCEPTION_PHRASES = [
-  "it will be allowed to merge this task:",
-  "except everything related to:",
-  "allowed to merge in all projects except",
-  "merge is allowed except",
-  ":alert: do not merge these projects:",
-  "you can merge:",
-];
+import {
+  DEFAULT_MERGE_BUTTON_SELECTOR,
+  SLACK_CONVERSATIONS_LIST_URL,
+  SLACK_CONVERSATIONS_HISTORY_URL,
+  SLACK_USERS_LIST_URL,
+  POLLING_ALARM_NAME,
+  MAX_MESSAGES,
+  DEFAULT_ALLOWED_PHRASES,
+  DEFAULT_DISALLOWED_PHRASES,
+  DEFAULT_EXCEPTION_PHRASES,
+  MAX_MESSAGES_TO_CHECK,
+} from './constants.js';
 
 let bitbucketTabId = null;
-
-const MAX_MESSAGES_TO_CHECK = 10;
 
 function normalizeText(text) {
   if (!text) return "";
@@ -535,6 +517,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.sync.get('mergeButtonSelector', (result) => {
+    if (!result.mergeButtonSelector) {
+      chrome.storage.sync.set({ mergeButtonSelector: DEFAULT_MERGE_BUTTON_SELECTOR });
+    }
+  });
   fetchAndStoreMessages();
   registerBitbucketContentScript();
 });
@@ -562,7 +549,7 @@ async function registerBitbucketContentScript() {
         {
           id: "bitbucket-content-script",
           matches: [bitbucketUrl],
-          js: ["bitbucket_content.js"],
+          js: ["constants.js", "slack_frontend_closure_bitbucket_content.js"],
           runAt: "document_idle",
         },
       ]);
