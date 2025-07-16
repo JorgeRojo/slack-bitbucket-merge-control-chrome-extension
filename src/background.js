@@ -549,7 +549,7 @@ async function registerBitbucketContentScript() {
         {
           id: "bitbucket-content-script",
           matches: [bitbucketUrl],
-          js: ["constants.js", "slack_frontend_closure_bitbucket_content.js"],
+          js: ["slack_frontend_closure_bitbucket_content.js"],
           runAt: "document_idle",
         },
       ]);
