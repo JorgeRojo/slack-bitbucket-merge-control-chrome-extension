@@ -4,7 +4,7 @@ export const SLACK_CONVERSATIONS_HISTORY_URL =
   'https://slack.com/api/conversations.history';
 export const SLACK_USERS_LIST_URL = 'https://slack.com/api/users.list';
 
-export const POLLING_ALARM_NAME = 'slack-poll-alarm';
+export const POLLING_ALARM_NAME = 'slack-poll-alarm'; // Alarm name for periodic polling
 export const MAX_MESSAGES = 100;
 export const DEFAULT_ALLOWED_PHRASES = [
   ':check1: allowed to merge',
