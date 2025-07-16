@@ -84,7 +84,7 @@ async function applyMergeButtonLogic(
   }
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request) => {
   if (request.action === 'updateMergeButton') {
     applyMergeButtonLogic(
       request.mergeStatus,

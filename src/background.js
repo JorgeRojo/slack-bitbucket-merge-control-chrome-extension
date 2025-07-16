@@ -129,8 +129,8 @@ async function fetchAndCacheUserProfiles(slackToken, userIds) {
       });
       await chrome.storage.local.set({ userProfiles });
     }
-  } catch (error) {
-    /* console.error('Error fetching user profiles:', error); */
+  } catch {
+    /* empty */
   }
 }
 
@@ -529,7 +529,8 @@ async function registerBitbucketContentScript() {
     await chrome.scripting.unregisterContentScripts({
       ids: ['bitbucket-content-script'],
     });
-  } catch (e) {
+  } catch {
+    /* empty */
   }
 
   if (bitbucketUrl) {

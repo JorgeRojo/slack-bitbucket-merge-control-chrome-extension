@@ -23,6 +23,7 @@ export default [
       ...pluginJs.configs.recommended.rules,
       ...configPrettier.rules,
       'prettier/prettier': 'error',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
 ];
