@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
         bitbucketUrl,
         mergeButtonSelector
       }, function() {
-        statusDiv.textContent = literals.textOptionsSaved;
+        statusDiv.textContent = literals.options.textOptionsSaved;
         // Also, clear old data when settings change
         chrome.storage.local.remove(['channelId', 'lastFetchTs', 'messages', 'appStatus']);
         setTimeout(function() {
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 2000);
       });
     } else {
-      statusDiv.textContent = literals.textFillAllFields;
+      statusDiv.textContent = literals.options.textFillAllFields;
     }
   });
 });
