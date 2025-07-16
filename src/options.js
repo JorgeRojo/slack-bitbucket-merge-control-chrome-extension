@@ -131,6 +131,8 @@ document.addEventListener('DOMContentLoaded', function () {
           setTimeout(function () {
             statusDiv.textContent = '';
           }, 2000);
+          // Notify background script to reconnect
+          chrome.runtime.sendMessage({ action: 'reconnectSlack' });
         },
       );
     } else {

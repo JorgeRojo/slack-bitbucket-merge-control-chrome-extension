@@ -458,6 +458,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       defaultExceptionPhrases: DEFAULT_EXCEPTION_PHRASES,
     });
     return true;
+  } else if (request.action === 'reconnectSlack') {
+    if (rtmWebSocket) {
+      rtmWebSocket.close();
+    }
+    connectToSlackSocketMode();
   } else if (request.action === 'bitbucketTabLoaded' && sender.tab) {
     const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
     if (bitbucketUrl) {
