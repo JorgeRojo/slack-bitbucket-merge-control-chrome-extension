@@ -53,13 +53,24 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
 1.  **Obtain a Slack App-Level Token (xapp-):**
     - Go to your Slack API dashboard and create a new app or select an existing one.
     - Navigate to **Socket Mode** and enable it.
+    - Navigate to **Event Subscriptions**:
+      - Ensure **Enable Events** is toggled ON.
+      - Under **Subscribe to bot events**, add the following events:
+        - `message.channels` (for public channels)
+        - `message.groups` (for private channels)
+        - `message.im` (for direct messages, if needed)
+        - `message.mpim` (for group direct messages, if needed)
     - Navigate to **Basic Information** -> **App-Level Tokens** and generate a new token with the `connections:write` scope. This token starts with `xapp-`.
     - Navigate to **OAuth & Permissions**.
     - Add the following Bot Token Scopes:
       - `channels:read`
       - `groups:read` (for private channels)
+      - `im:read` (for direct messages, if needed)
+      - `mpim:read` (for group direct messages, if needed)
       - `channels:history`
       - `groups:history`
+      - `im:history` (for direct messages, if needed)
+      - `mpim:history` (for group direct messages, if needed)
     - Install the app to your workspace to generate the Bot User OAuth Token (starts with `xoxb-`).
 2.  **Configure the Extension:**
     - Right-click on the extension icon in your Chrome toolbar and select **Options**.
