@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "slack-frontend-closure",
+  "name": "Slack-Bitbucket Merge Control",
   "version": "1.0",
   "description": "Lee el contenido de un canal de Slack usando la API.",
   "permissions": ["storage", "alarms", "scripting"],

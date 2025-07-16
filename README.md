@@ -1,4 +1,4 @@
-# Slack Channel Reader Chrome Extension
+# Slack-Bitbucket Merge Control Chrome Extension
 
 This is a Chrome extension designed to read messages from specified Slack channels (both public and private) and display them within the extension's popup. It also integrates with Bitbucket to control merge button availability based on Slack channel messages.
 
