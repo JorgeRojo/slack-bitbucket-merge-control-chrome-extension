@@ -7,7 +7,6 @@ import {
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
-  MAX_MESSAGES_TO_CHECK,
 } from './constants.js';
 
 let bitbucketTabId = null;
@@ -55,12 +54,7 @@ function determineMergeStatus(
     normalizeText(phrase),
   );
 
-  for (
-    let i = messages.length - 1;
-    i >= Math.max(0, messages.length - MAX_MESSAGES_TO_CHECK);
-    i--
-  ) {
-    const message = messages[i];
+  for (const message of messages) {
     const normalizedMessageText = normalizeText(message.text);
 
     if (
@@ -171,20 +165,26 @@ async function resolveChannelId(slackToken, channelName) {
   return channelId;
 }
 
-async function processAndStoreMessages(historyData, _slackToken) {
-  if (!historyData.messages || historyData.messages.length === 0) {
+async function processAndStoreMessages(message, _slackToken) {
+  if (!message.ts || !message.text) {
     return; // No new messages to process
   }
 
-  const newMessages = historyData.messages.map((msg) => ({
-    text: cleanSlackMessageText(msg.text),
-    ts: msg.ts,
-  }));
-  const newLastFetchTs = newMessages[0].ts;
+  const messageTs = message.ts;
 
-  let { messages: storedMessages = [] } =
-    await chrome.storage.local.get('messages');
-  storedMessages.push(...newMessages.reverse());
+  let storedMessages =
+    (await chrome.storage.local.get('messages')).messages || [];
+
+  if (storedMessages.some((m) => m.ts === messageTs)) {
+    return; // Message already processed
+  }
+
+  storedMessages.push({
+    text: cleanSlackMessageText(message.text),
+    ts: message.ts,
+  });
+
+  storedMessages.sort((a, b) => Number(b.ts) - Number(a.ts));
 
   if (storedMessages.length > MAX_MESSAGES) {
     storedMessages = storedMessages.slice(storedMessages.length - MAX_MESSAGES);
@@ -192,7 +192,6 @@ async function processAndStoreMessages(historyData, _slackToken) {
 
   await chrome.storage.local.set({
     messages: storedMessages,
-    lastFetchTs: newLastFetchTs,
   });
 
   const {
@@ -408,13 +407,10 @@ async function connectToSlackSocketMode() {
 
     rtmWebSocket.onmessage = async (event) => {
       const envelope = JSON.parse(event.data);
-      console.log('Received WebSocket envelope:', envelope);
       if (envelope.payload && envelope.payload.event) {
         const message = envelope.payload.event;
-        if (message.type === 'message' && message.text) {
-          // Process and store the message
-          const historyData = { messages: [message] };
-          await processAndStoreMessages(historyData, slackToken);
+        if (message.type === 'message' && message.ts && message.text) {
+          await processAndStoreMessages(message, slackToken);
           await updateContentScriptMergeState(channelName);
         }
       } else if (envelope.type === 'disconnect') {
