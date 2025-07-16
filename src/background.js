@@ -11,6 +11,8 @@ import {
 
 let bitbucketTabId = null;
 
+let rtmWebSocket = null;
+
 function normalizeText(text) {
   if (!text) return '';
   return text
@@ -23,14 +25,12 @@ function normalizeText(text) {
 
 export function cleanSlackMessageText(text) {
   if (!text) return '';
+  // replace break lines
+  text = text.replace(/[\n\r\t]+/g, ' ');
   // Replace user mentions like <@U123456789> with @MENTION
   let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION');
   // Replace unnamed channel mentions like <#C123456789> with @CHANNEL
   cleanedText = cleanedText.replace(/<#[^|>]+>/g, '@CHANNEL');
-  // Replace channel mentions with name like <#C123456789|channel-name> with channel-name
-  cleanedText = cleanedText.replace(/<#[^|]+\|([^>]+)>/g, '$1');
-  // Remove other special links like <http://example.com|link text> and keep only the link text
-  cleanedText = cleanedText.replace(/<([^|]+)\|([^>]+)>/g, '$2');
   // Remove any remaining <...>
   cleanedText = cleanedText.replace(/<[^>]+>/g, '');
   // Replace multiple spaces with a single space
@@ -115,6 +115,8 @@ function updateExtensionIcon(status) {
       48: path48,
     },
   });
+
+  console.log('>>>----->> ', status);
 }
 
 async function resolveChannelId(slackToken, channelName) {
@@ -165,7 +167,7 @@ async function resolveChannelId(slackToken, channelName) {
   return channelId;
 }
 
-async function processAndStoreMessages(message, _slackToken) {
+async function processAndStoreMessage(message, _slackToken) {
   if (!message.ts || !message.text) {
     return; // No new messages to process
   }
@@ -294,6 +296,7 @@ async function updateContentScriptMergeState(channelName) {
     );
     mergeStatusForContentScript = status;
     matchingMessageForContentScript = message;
+    updateExtensionIcon(status);
   }
 
   // If there's an error status, ensure the merge button is enabled (or not disabled by the extension)
@@ -325,6 +328,7 @@ async function updateContentScriptMergeState(channelName) {
       error.message,
     );
   }
+
   if (bitbucketTabId) {
     try {
       await chrome.tabs.sendMessage(bitbucketTabId, {
@@ -362,8 +366,6 @@ async function fetchAndStoreTeamId(slackToken) {
   }
 }
 
-let rtmWebSocket = null;
-
 async function connectToSlackSocketMode() {
   const { slackToken, appToken, channelName } = await chrome.storage.sync.get([
     'slackToken',
@@ -396,12 +398,17 @@ async function connectToSlackSocketMode() {
       throw new Error(connectionsOpenData.error);
     }
 
+    const { lastKnownMergeState } =
+      (await chrome.storage.local.get('lastKnownMergeState')) ?? {};
+    if (lastKnownMergeState?.mergeStatus) {
+      updateExtensionIcon(lastKnownMergeState.mergeStatus);
+    }
+
     const wsUrl = connectionsOpenData.url;
     rtmWebSocket = new WebSocket(wsUrl);
 
     rtmWebSocket.onopen = () => {
       console.log('Connected to Slack Socket Mode WebSocket.');
-      updateExtensionIcon('default'); // Assuming connection means good status
       chrome.storage.local.set({ appStatus: 'OK' });
     };
 
@@ -410,7 +417,7 @@ async function connectToSlackSocketMode() {
       if (envelope.payload && envelope.payload.event) {
         const message = envelope.payload.event;
         if (message.type === 'message' && message.ts && message.text) {
-          await processAndStoreMessages(message, slackToken);
+          await processAndStoreMessage(message, slackToken);
           await updateContentScriptMergeState(channelName);
         }
       } else if (envelope.type === 'disconnect') {
@@ -469,30 +476,34 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       if (bitbucketRegex.test(sender.tab.url)) {
         bitbucketTabId = sender.tab.id;
 
-        chrome.storage.local.get(['lastKnownMergeState'], async (result) => {
-          if (result.lastKnownMergeState) {
-            const { isMergeDisabled, lastSlackMessage, channelName } =
-              result.lastKnownMergeState;
-            try {
-              await chrome.tabs.sendMessage(bitbucketTabId, {
-                action: 'updateMergeButton',
-                lastSlackMessage: lastSlackMessage,
-                channelName: channelName,
-                isMergeDisabled: isMergeDisabled,
-              });
-            } catch (error) {
-              console.warn(
-                'Could not send initial message to Bitbucket tab, resetting bitbucketTabId:',
-                error.message,
-              );
-              bitbucketTabId = null;
-            }
-          }
-        });
+        updateMergeButtonFromLastKnownMergeState();
       }
     }
   }
 });
+
+const updateMergeButtonFromLastKnownMergeState = () => {
+  chrome.storage.local.get(['lastKnownMergeState'], async (result) => {
+    if (result.lastKnownMergeState) {
+      const { isMergeDisabled, lastSlackMessage, channelName } =
+        result.lastKnownMergeState;
+      try {
+        await chrome.tabs.sendMessage(bitbucketTabId, {
+          action: 'updateMergeButton',
+          lastSlackMessage: lastSlackMessage,
+          channelName: channelName,
+          isMergeDisabled: isMergeDisabled,
+        });
+      } catch (error) {
+        console.warn(
+          'Could not send initial message to Bitbucket tab, resetting bitbucketTabId:',
+          error.message,
+        );
+        bitbucketTabId = null;
+      }
+    }
+  });
+};
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get('mergeButtonSelector', (result) => {
@@ -509,6 +520,12 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onStartup.addListener(() => {
   connectToSlackSocketMode();
   registerBitbucketContentScript();
+});
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'sync' && changes.bitbucketUrl) {
+    registerBitbucketContentScript();
+  }
 });
 
 async function registerBitbucketContentScript() {
@@ -538,9 +555,3 @@ async function registerBitbucketContentScript() {
     }
   }
 }
-
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'sync' && changes.bitbucketUrl) {
-    registerBitbucketContentScript();
-  }
-});
