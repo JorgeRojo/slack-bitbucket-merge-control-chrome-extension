@@ -2,6 +2,7 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   SLACK_CONVERSATIONS_LIST_URL,
   SLACK_CONVERSATIONS_HISTORY_URL,
+  SLACK_AUTH_TEST_URL,
   POLLING_ALARM_NAME,
   MAX_MESSAGES,
   DEFAULT_ALLOWED_PHRASES,
@@ -384,7 +385,7 @@ async function updateContentScriptMergeState(channelName) {
 
 async function fetchAndStoreTeamId(slackToken) {
   try {
-    const response = await fetch('https://slack.com/api/auth.test', {
+    const response = await fetch(SLACK_AUTH_TEST_URL, {
       headers: { Authorization: `Bearer ${slackToken}` },
     });
     const data = await response.json();
