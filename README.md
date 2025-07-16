@@ -58,7 +58,6 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
       - `groups:read` (for private channels)
       - `channels:history`
       - `groups:history`
-      
     - Install the app to your workspace to generate the Bot User OAuth Token (starts with `xoxb-`).
 2.  **Configure the Extension:**
     - Right-click on the extension icon in your Chrome toolbar and select **Options**.

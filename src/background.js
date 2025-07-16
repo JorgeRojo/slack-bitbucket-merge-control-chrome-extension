@@ -2,7 +2,6 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   SLACK_CONVERSATIONS_LIST_URL,
   SLACK_CONVERSATIONS_HISTORY_URL,
-
   POLLING_ALARM_NAME,
   MAX_MESSAGES,
   DEFAULT_ALLOWED_PHRASES,
@@ -23,7 +22,7 @@ function normalizeText(text) {
     .trim();
 }
 
-function cleanSlackMessageText(text) {
+export function cleanSlackMessageText(text) {
   if (!text) return '';
   // Replace user mentions like <@U123456789|username> with @MENTION
   let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION');
@@ -122,8 +121,6 @@ function updateExtensionIcon(status) {
   });
 }
 
-
-
 async function resolveChannelId(slackToken, channelName) {
   let { channelId, cachedChannelName } = await chrome.storage.local.get([
     'channelId',
@@ -188,7 +185,7 @@ async function fetchSlackHistory(slackToken, channelId, lastFetchTs) {
   return historyData;
 }
 
-async function processAndStoreMessages(historyData, slackToken) {
+async function processAndStoreMessages(historyData, _slackToken) {
   if (historyData.messages && historyData.messages.length > 0) {
     const newMessages = historyData.messages.map((msg) => ({
       text: cleanSlackMessageText(msg.text),
