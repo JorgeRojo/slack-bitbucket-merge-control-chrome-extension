@@ -2,7 +2,7 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   SLACK_CONVERSATIONS_LIST_URL,
   SLACK_CONVERSATIONS_HISTORY_URL,
-  SLACK_USERS_LIST_URL,
+
   POLLING_ALARM_NAME,
   MAX_MESSAGES,
   DEFAULT_ALLOWED_PHRASES,
@@ -21,6 +21,21 @@ function normalizeText(text) {
     .replace(/\p{Diacritic}/gu, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function cleanSlackMessageText(text) {
+  if (!text) return '';
+  // Replace user mentions like <@U123456789|username> with @MENTION
+  let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION');
+  // Remove channel mentions like <#C123456789|channel-name> and keep only the name
+  cleanedText = cleanedText.replace(/<#[^|]+\|([^>]+)>/g, '$1');
+  // Remove other special links like <http://example.com|link text> and keep only the link text
+  cleanedText = cleanedText.replace(/<([^|]+)\|([^>]+)>/g, '$2');
+  // Remove any remaining <...>
+  cleanedText = cleanedText.replace(/<[^>]+>/g, '');
+  // Replace multiple spaces with a single space
+  cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+  return cleanedText;
 }
 
 function determineMergeStatus(
@@ -107,32 +122,7 @@ function updateExtensionIcon(status) {
   });
 }
 
-async function fetchAndCacheUserProfiles(slackToken, userIds) {
-  let { userProfiles = {} } = await chrome.storage.local.get('userProfiles');
-  const newUsersToFetch = userIds.filter((id) => !userProfiles[id]);
 
-  if (newUsersToFetch.length === 0) return;
-
-  try {
-    const usersResponse = await fetch(SLACK_USERS_LIST_URL, {
-      headers: { Authorization: `Bearer ${slackToken}` },
-    });
-    const usersData = await usersResponse.json();
-    if (usersData.ok) {
-      usersData.members.forEach((user) => {
-        if (userIds.includes(user.id)) {
-          userProfiles[user.id] = {
-            name: user.real_name || user.name,
-            avatar: user.profile.image_72,
-          };
-        }
-      });
-      await chrome.storage.local.set({ userProfiles });
-    }
-  } catch {
-    /* empty */
-  }
-}
 
 async function resolveChannelId(slackToken, channelName) {
   let { channelId, cachedChannelName } = await chrome.storage.local.get([
@@ -201,16 +191,10 @@ async function fetchSlackHistory(slackToken, channelId, lastFetchTs) {
 async function processAndStoreMessages(historyData, slackToken) {
   if (historyData.messages && historyData.messages.length > 0) {
     const newMessages = historyData.messages.map((msg) => ({
-      user: msg.user,
-      text: msg.text,
+      text: cleanSlackMessageText(msg.text),
       ts: msg.ts,
     }));
     const newLastFetchTs = newMessages[0].ts;
-
-    const userIds = [
-      ...new Set(newMessages.map((msg) => msg.user).filter(Boolean)),
-    ];
-    await fetchAndCacheUserProfiles(slackToken, userIds);
 
     let { messages: storedMessages = [] } =
       await chrome.storage.local.get('messages');
