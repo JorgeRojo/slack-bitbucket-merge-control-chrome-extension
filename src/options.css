@@ -72,3 +72,17 @@ button {
   margin-top: 20px;
   font-size: 1.1em;
 }
+.info-text {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 5px;
+}
+.sub-info-text {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 5px;
+}
+#ai-status {
+  margin-top: 10px;
+  font-weight: bold;
+}
