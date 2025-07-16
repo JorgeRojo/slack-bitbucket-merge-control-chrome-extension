@@ -24,9 +24,11 @@ function normalizeText(text) {
 
 export function cleanSlackMessageText(text) {
   if (!text) return '';
-  // Replace user mentions like <@U123456789|username> with @MENTION
+  // Replace user mentions like <@U123456789> with @MENTION
   let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION');
-  // Remove channel mentions like <#C123456789|channel-name> and keep only the name
+  // Replace unnamed channel mentions like <#C123456789> with @CHANNEL
+  cleanedText = cleanedText.replace(/<#[^|>]+>/g, '@CHANNEL');
+  // Replace channel mentions with name like <#C123456789|channel-name> with channel-name
   cleanedText = cleanedText.replace(/<#[^|]+\|([^>]+)>/g, '$1');
   // Remove other special links like <http://example.com|link text> and keep only the link text
   cleanedText = cleanedText.replace(/<([^|]+)\|([^>]+)>/g, '$2');
