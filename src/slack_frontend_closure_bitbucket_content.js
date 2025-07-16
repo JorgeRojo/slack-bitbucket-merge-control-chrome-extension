@@ -5,7 +5,7 @@ let mergeButtonObserver = null;
 
 function disableMergeButton(mergeButton, lastSlackMessage, channelName, mergeStatus) {
   if (mergeStatus === "exception") {
-    mergeButton.style.backgroundColor = "#FFA500"; // Orange
+    mergeButton.style.backgroundColor = "#FFA500";
   } else {
     mergeButton.style.backgroundColor = "#ef445e";
   }
@@ -29,19 +29,16 @@ function disableMergeButton(mergeButton, lastSlackMessage, channelName, mergeSta
     message += `\nNotified from channel: #${channelName}\nSlack message: ${cleanedSlackMessage}`;
 
     if (mergeStatus === "exception") {
-      // If user cancels the confirmation, prevent the merge.
       if (!confirm(message)) {
         event.preventDefault();
         event.stopImmediatePropagation();
       }
-      // If user confirms, do nothing, allowing the event to proceed.
-    } else { // This handles the "disallowed" case
+    } else {
       alert(message);
       event.preventDefault();
       event.stopImmediatePropagation();
     }
   };
-  // Use capture phase to ensure it runs before other handlers
   mergeButton.addEventListener("click", mergeButton._customMergeHandler, true);
 }
 

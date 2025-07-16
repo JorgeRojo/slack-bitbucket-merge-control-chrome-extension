@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   
 
-  // Load saved options
   chrome.storage.sync.get([
     'slackToken',
     'channelName',
@@ -39,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (result.channelName) {
       channelInput.value = result.channelName;
     } else {
-      channelInput.value = DEFAULT_CHANNEL_NAME; // Default value
+      channelInput.value = DEFAULT_CHANNEL_NAME;
     }
     if (result.allowedPhrases) {
       allowedPhrasesInput.value = result.allowedPhrases.split(',').join('\n');
@@ -62,14 +61,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (result.bitbucketUrl) {
       bitbucketUrlInput.value = result.bitbucketUrl;
     }
-    else {
-      bitbucketUrlInput.value = DEFAULT_BITBUCKET_URL; // Default value
+    } else {
+      bitbucketUrlInput.value = DEFAULT_BITBUCKET_URL;
     }
     if (result.mergeButtonSelector) {
       mergeButtonSelectorInput.value = result.mergeButtonSelector;
     }
     else {
-      mergeButtonSelectorInput.value = DEFAULT_MERGE_BUTTON_SELECTOR; // Default value
+      mergeButtonSelectorInput.value = DEFAULT_MERGE_BUTTON_SELECTOR;
     }
   });
 

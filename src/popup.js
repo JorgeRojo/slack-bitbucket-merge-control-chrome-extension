@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     statusText.className = state;
 
     openOptionsButton.style.display = "none";
-    slackChannelLink.style.display = "none"; // Hide by default
-    matchingMessageDiv.style.display = "none"; // Hide by default
+    slackChannelLink.style.display = "none";
+    matchingMessageDiv.style.display = "none";
 
     switch (state) {
       case "allowed":
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       case "exception":
         statusIcon.textContent = literals.popup.emojiException;
         statusText.textContent = message;
-        slackChannelLink.style.display = "block"; // Show link for exceptions
+        slackChannelLink.style.display = "block";
         break;
       case "config_needed":
         statusIcon.textContent = literals.popup.emojiUnknown;
@@ -67,7 +67,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Set Slack channel link if channelId and teamId are available
     if (channelId && teamId) {
       slackChannelLink.href = `${SLACK_BASE_URL}${teamId}/${channelId}`;
     }

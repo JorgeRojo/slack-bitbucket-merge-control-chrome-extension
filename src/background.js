@@ -39,7 +39,6 @@ function determineMergeStatus(
     normalizeText(phrase)
   );
 
-  // Iterate through the last MAX_MESSAGES_TO_CHECK messages
   for (
     let i = messages.length - 1;
     i >= Math.max(0, messages.length - MAX_MESSAGES_TO_CHECK);
@@ -96,7 +95,7 @@ function updateExtensionIcon(status) {
       path48 = "images/icon48_error.png";
       break;
     default:
-      path16 = "images/icon16.png"; // Default icon
+      path16 = "images/icon16.png";
       path48 = "images/icon48.png";
       break;
   }
@@ -114,8 +113,6 @@ async function fetchAndCacheUserProfiles(slackToken, userIds) {
 
   if (newUsersToFetch.length === 0) return;
 
-  // users.list is a Tier 3 endpoint, so it's better to fetch all once
-  // than using users.info multiple times.
   try {
     const usersResponse = await fetch(SLACK_USERS_LIST_URL, {
       headers: { Authorization: `Bearer ${slackToken}` },
@@ -210,7 +207,6 @@ async function processAndStoreMessages(historyData, slackToken) {
     }));
     const newLastFetchTs = newMessages[0].ts;
 
-    // Fetch user profiles for new messages
     const userIds = [
       ...new Set(newMessages.map((msg) => msg.user).filter(Boolean)),
     ];
@@ -232,7 +228,6 @@ async function processAndStoreMessages(historyData, slackToken) {
       lastFetchTs: newLastFetchTs,
     });
 
-    // Determine merge status based on the latest message and configurable phrases
     const {
       currentAllowedPhrases,
       currentDisallowedPhrases,
@@ -436,12 +431,11 @@ async function fetchAndStoreMessages() {
         messages: [],
       });
       updateExtensionIcon("default");
-      return; // Stop execution if configuration is missing
+      return;
     }
 
     channelName = configChannelName;
 
-    // Fetch and store team ID
     await fetchAndStoreTeamId(slackToken);
 
     const channelId = await resolveChannelId(slackToken, channelName);
