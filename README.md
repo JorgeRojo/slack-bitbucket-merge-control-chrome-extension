@@ -65,7 +65,7 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
      - Add the following Bot Token Scopes:
        - `channels:history` (for public channels)
        - `groups:history` (for private channels)
-     - Install the app to your workspace to generate the tokens. Bot User OAuth Token (starts with `xoxb-`).
+     - Install the app to your workspace to generate the tokens. Bot User OAuth Token starts with `xoxb-`.
    - Navigate to **Basic Information** -> **App-Level Tokens**.
      - Generate a new token with the `connections:write` scope. This token starts with `xapp-`.
    - Navigate to **Socket Mode** and enable it.
