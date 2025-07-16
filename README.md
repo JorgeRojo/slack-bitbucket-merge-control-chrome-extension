@@ -59,7 +59,7 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
 
 ## Configuration
 
-1. **Obtain a Slack App-Level Token (xapp-):**
+1. **Configure Slack App:**
    - Go to your [Slack API dashboard](https://api.slack.com/apps) and create a new app (From scratch) or select an existing one.
    - Navigate to **OAuth & Permissions**.
      - Add the following Bot Token Scopes:
