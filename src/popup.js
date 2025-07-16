@@ -1,69 +1,73 @@
 import { SLACK_BASE_URL } from './constants.js';
 import { literals } from './literals.js';
-document.addEventListener("DOMContentLoaded", async () => {
-  const statusIcon = document.getElementById("status-icon");
-  const statusText = document.getElementById("status-text");
-  const openOptionsButton = document.getElementById("open-options");
-  const slackChannelLink = document.getElementById("slack-channel-link");
-  const matchingMessageDiv = document.getElementById("matching-message");
+document.addEventListener('DOMContentLoaded', async () => {
+  const statusIcon = document.getElementById('status-icon');
+  const statusText = document.getElementById('status-text');
+  const openOptionsButton = document.getElementById('open-options');
+  const slackChannelLink = document.getElementById('slack-channel-link');
+  const matchingMessageDiv = document.getElementById('matching-message');
 
   function updateUI(state, message, matchingMessage = null) {
     statusIcon.className = state;
     statusText.className = state;
 
-    openOptionsButton.style.display = "none";
-    slackChannelLink.style.display = "none";
-    matchingMessageDiv.style.display = "none";
+    openOptionsButton.style.display = 'none';
+    slackChannelLink.style.display = 'none';
+    matchingMessageDiv.style.display = 'none';
 
     switch (state) {
-      case "allowed":
+      case 'allowed':
         statusIcon.textContent = literals.popup.emojiAllowed;
         statusText.textContent = message;
         break;
-      case "disallowed":
+      case 'disallowed':
         statusIcon.textContent = literals.popup.emojiDisallowed;
         statusText.textContent = message;
         break;
-      case "exception":
+      case 'exception':
         statusIcon.textContent = literals.popup.emojiException;
         statusText.textContent = message;
-        slackChannelLink.style.display = "block";
+        slackChannelLink.style.display = 'block';
         break;
-      case "config_needed":
+      case 'config_needed':
         statusIcon.textContent = literals.popup.emojiUnknown;
         statusText.textContent = message;
-        openOptionsButton.style.display = "block";
+        openOptionsButton.style.display = 'block';
         break;
       default:
         statusIcon.textContent = literals.popup.emojiUnknown;
-        statusText.textContent = message || literals.popup.textCouldNotDetermine;
+        statusText.textContent =
+          message || literals.popup.textCouldNotDetermine;
         break;
     }
 
     if (matchingMessage) {
       matchingMessageDiv.textContent = `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`;
-      matchingMessageDiv.style.display = "block";
+      matchingMessageDiv.style.display = 'block';
     }
   }
 
-  openOptionsButton.addEventListener("click", () => {
+  openOptionsButton.addEventListener('click', () => {
     if (chrome.runtime.openOptionsPage) {
       chrome.runtime.openOptionsPage();
     } else {
-      window.open(chrome.runtime.getURL("options.html"));
+      window.open(chrome.runtime.getURL('options.html'));
     }
   });
 
   try {
     const { slackToken, channelName } = await chrome.storage.sync.get([
-      "slackToken",
-      "channelName",
+      'slackToken',
+      'channelName',
     ]);
 
-    const { channelId, teamId } = await chrome.storage.local.get(["channelId", "teamId"]);
+    const { channelId, teamId } = await chrome.storage.local.get([
+      'channelId',
+      'teamId',
+    ]);
 
     if (!slackToken || !channelName) {
-      updateUI("config_needed", literals.popup.textConfigNeeded);
+      updateUI('config_needed', literals.popup.textConfigNeeded);
       return;
     }
 
@@ -72,11 +76,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const { lastKnownMergeState } = await chrome.storage.local.get(
-      "lastKnownMergeState"
+      'lastKnownMergeState',
     );
 
     if (!lastKnownMergeState || !lastKnownMergeState.mergeStatus) {
-      updateUI("loading");
+      updateUI('loading');
       statusText.textContent = literals.popup.textWaitingMessages;
       return;
     }
@@ -84,17 +88,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     const status = lastKnownMergeState.mergeStatus;
     const lastSlackMessage = lastKnownMergeState.lastSlackMessage;
 
-    if (status === "exception") {
-      updateUI("exception", literals.popup.textAllowedWithExceptions, lastSlackMessage);
-    } else if (status === "allowed") {
-      updateUI("allowed", literals.popup.textMergeAllowed, lastSlackMessage);
-    } else if (status === "disallowed") {
-      updateUI("disallowed", literals.popup.textMergeNotAllowed, lastSlackMessage);
+    if (status === 'exception') {
+      updateUI(
+        'exception',
+        literals.popup.textAllowedWithExceptions,
+        lastSlackMessage,
+      );
+    } else if (status === 'allowed') {
+      updateUI('allowed', literals.popup.textMergeAllowed, lastSlackMessage);
+    } else if (status === 'disallowed') {
+      updateUI(
+        'disallowed',
+        literals.popup.textMergeNotAllowed,
+        lastSlackMessage,
+      );
     } else {
-      updateUI("unknown", literals.popup.textCouldNotDetermineStatus);
+      updateUI('unknown', literals.popup.textCouldNotDetermineStatus);
     }
   } catch (error) {
-    console.error("Error processing messages:", error);
-    updateUI("disallowed", literals.popup.textErrorProcessingMessages);
+    console.error('Error processing messages:', error);
+    updateUI('disallowed', literals.popup.textErrorProcessingMessages);
   }
 });

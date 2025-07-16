@@ -1,5 +1,5 @@
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 20px;
   width: 640px;
   background-color: #f4f7f6;
@@ -36,8 +36,8 @@ label {
   margin-bottom: 8px;
   font-size: 1em;
 }
-input[type="text"],
-input[type="password"],
+input[type='text'],
+input[type='password'],
 textarea {
   width: 100%;
   padding: 10px;
@@ -45,7 +45,9 @@ textarea {
   border-radius: 4px;
   font-size: 1em;
   box-sizing: border-box;
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 }
 p {
   font-size: 0.9em;

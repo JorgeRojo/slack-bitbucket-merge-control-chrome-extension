@@ -14,12 +14,12 @@ import {
 let bitbucketTabId = null;
 
 function normalizeText(text) {
-  if (!text) return "";
+  if (!text) return '';
   return text
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/\s+/g, " ")
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -27,16 +27,16 @@ function determineMergeStatus(
   messages,
   allowedPhrases,
   disallowedPhrases,
-  exceptionPhrases
+  exceptionPhrases,
 ) {
   const currentAllowedPhrases = allowedPhrases.map((phrase) =>
-    normalizeText(phrase)
+    normalizeText(phrase),
   );
   const currentDisallowedPhrases = disallowedPhrases.map((phrase) =>
-    normalizeText(phrase)
+    normalizeText(phrase),
   );
   const currentExceptionPhrases = exceptionPhrases.map((phrase) =>
-    normalizeText(phrase)
+    normalizeText(phrase),
   );
 
   for (
@@ -49,54 +49,54 @@ function determineMergeStatus(
 
     if (
       currentExceptionPhrases.some((keyword) =>
-        normalizedMessageText.includes(keyword)
+        normalizedMessageText.includes(keyword),
       )
     ) {
-      return { status: "exception", message: message };
+      return { status: 'exception', message: message };
     } else if (
       currentDisallowedPhrases.some((keyword) =>
-        normalizedMessageText.includes(keyword)
+        normalizedMessageText.includes(keyword),
       )
     ) {
-      return { status: "disallowed", message: message };
+      return { status: 'disallowed', message: message };
     } else if (
       currentAllowedPhrases.some((keyword) =>
-        normalizedMessageText.includes(keyword)
+        normalizedMessageText.includes(keyword),
       )
     ) {
-      return { status: "allowed", message: message };
+      return { status: 'allowed', message: message };
     }
   }
 
-  return { status: "unknown", message: null }; // If no matching phrase is found in the last 10 messages
+  return { status: 'unknown', message: null }; // If no matching phrase is found in the last 10 messages
 }
 
 function updateExtensionIcon(status) {
   let path16, path48;
   switch (status) {
-    case "loading":
-      path16 = "images/icon16.png";
-      path48 = "images/icon48.png";
+    case 'loading':
+      path16 = 'images/icon16.png';
+      path48 = 'images/icon48.png';
       break;
-    case "allowed":
-      path16 = "images/icon16_enabled.png";
-      path48 = "images/icon48_enabled.png";
+    case 'allowed':
+      path16 = 'images/icon16_enabled.png';
+      path48 = 'images/icon48_enabled.png';
       break;
-    case "disallowed":
-      path16 = "images/icon16_disabled.png";
-      path48 = "images/icon48_disabled.png";
+    case 'disallowed':
+      path16 = 'images/icon16_disabled.png';
+      path48 = 'images/icon48_disabled.png';
       break;
-    case "exception":
-      path16 = "images/icon16_exception.png";
-      path48 = "images/icon48_exception.png";
+    case 'exception':
+      path16 = 'images/icon16_exception.png';
+      path48 = 'images/icon48_exception.png';
       break;
-    case "error":
-      path16 = "images/icon16_error.png";
-      path48 = "images/icon48_error.png";
+    case 'error':
+      path16 = 'images/icon16_error.png';
+      path48 = 'images/icon48_error.png';
       break;
     default:
-      path16 = "images/icon16.png";
-      path48 = "images/icon48.png";
+      path16 = 'images/icon16.png';
+      path48 = 'images/icon48.png';
       break;
   }
   chrome.action.setIcon({
@@ -108,7 +108,7 @@ function updateExtensionIcon(status) {
 }
 
 async function fetchAndCacheUserProfiles(slackToken, userIds) {
-  let { userProfiles = {} } = await chrome.storage.local.get("userProfiles");
+  let { userProfiles = {} } = await chrome.storage.local.get('userProfiles');
   const newUsersToFetch = userIds.filter((id) => !userProfiles[id]);
 
   if (newUsersToFetch.length === 0) return;
@@ -136,8 +136,8 @@ async function fetchAndCacheUserProfiles(slackToken, userIds) {
 
 async function resolveChannelId(slackToken, channelName) {
   let { channelId, cachedChannelName } = await chrome.storage.local.get([
-    "channelId",
-    "cachedChannelName",
+    'channelId',
+    'cachedChannelName',
   ]);
 
   if (cachedChannelName !== channelName) {
@@ -146,11 +146,11 @@ async function resolveChannelId(slackToken, channelName) {
 
   if (!channelId) {
     const fetchAllChannels = async () => {
-      const channelTypes = ["public_channel", "private_channel"];
+      const channelTypes = ['public_channel', 'private_channel'];
       const promises = channelTypes.map((type) =>
         fetch(`${SLACK_CONVERSATIONS_LIST_URL}?types=${type}`, {
           headers: { Authorization: `Bearer ${slackToken}` },
-        }).then((res) => res.json())
+        }).then((res) => res.json()),
       );
 
       const results = await Promise.all(promises);
@@ -170,7 +170,7 @@ async function resolveChannelId(slackToken, channelName) {
 
     if (!foundChannel) {
       // console.error(`Channel "${channelName}" not found in public or private channels.`);
-      throw new Error("channel_not_found");
+      throw new Error('channel_not_found');
     }
 
     channelId = foundChannel.id;
@@ -184,11 +184,11 @@ async function resolveChannelId(slackToken, channelName) {
 
 async function fetchSlackHistory(slackToken, channelId, lastFetchTs) {
   const historyUrl = new URL(SLACK_CONVERSATIONS_HISTORY_URL);
-  historyUrl.searchParams.append("channel", channelId);
+  historyUrl.searchParams.append('channel', channelId);
   if (lastFetchTs) {
-    historyUrl.searchParams.append("oldest", lastFetchTs);
+    historyUrl.searchParams.append('oldest', lastFetchTs);
   }
-  historyUrl.searchParams.append("limit", 100);
+  historyUrl.searchParams.append('limit', 100);
 
   const historyResponse = await fetch(historyUrl, {
     headers: { Authorization: `Bearer ${slackToken}` },
@@ -212,14 +212,13 @@ async function processAndStoreMessages(historyData, slackToken) {
     ];
     await fetchAndCacheUserProfiles(slackToken, userIds);
 
-    let { messages: storedMessages = [] } = await chrome.storage.local.get(
-      "messages"
-    );
+    let { messages: storedMessages = [] } =
+      await chrome.storage.local.get('messages');
     storedMessages.push(...newMessages.reverse());
 
     if (storedMessages.length > MAX_MESSAGES) {
       storedMessages = storedMessages.slice(
-        storedMessages.length - MAX_MESSAGES
+        storedMessages.length - MAX_MESSAGES,
       );
     }
 
@@ -239,16 +238,15 @@ async function processAndStoreMessages(historyData, slackToken) {
         storedMessages,
         currentAllowedPhrases,
         currentDisallowedPhrases,
-        currentExceptionPhrases
+        currentExceptionPhrases,
       );
 
     updateExtensionIcon(mergeStatus);
     await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
   } else {
     // If no new messages, re-evaluate status based on existing messages
-    const { messages: currentMessages = [] } = await chrome.storage.local.get(
-      "messages"
-    );
+    const { messages: currentMessages = [] } =
+      await chrome.storage.local.get('messages');
     const {
       currentAllowedPhrases,
       currentDisallowedPhrases,
@@ -260,7 +258,7 @@ async function processAndStoreMessages(historyData, slackToken) {
         currentMessages,
         currentAllowedPhrases,
         currentDisallowedPhrases,
-        currentExceptionPhrases
+        currentExceptionPhrases,
       );
     updateExtensionIcon(mergeStatus);
     await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
@@ -270,21 +268,21 @@ async function processAndStoreMessages(historyData, slackToken) {
 async function getPhrasesFromStorage() {
   const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
     await chrome.storage.sync.get([
-      "allowedPhrases",
-      "disallowedPhrases",
-      "exceptionPhrases",
+      'allowedPhrases',
+      'disallowedPhrases',
+      'exceptionPhrases',
     ]);
 
   const currentAllowedPhrases = allowedPhrases
-    ? allowedPhrases.split(",")
+    ? allowedPhrases.split(',')
     : DEFAULT_ALLOWED_PHRASES;
 
   const currentDisallowedPhrases = disallowedPhrases
-    ? disallowedPhrases.split(",")
+    ? disallowedPhrases.split(',')
     : DEFAULT_DISALLOWED_PHRASES;
 
   const currentExceptionPhrases = exceptionPhrases
-    ? exceptionPhrases.split(",")
+    ? exceptionPhrases.split(',')
     : DEFAULT_EXCEPTION_PHRASES;
 
   return {
@@ -299,34 +297,34 @@ async function handleSlackApiError(error) {
   const errorMessage = error.message;
 
   if (
-    errorMessage.includes("channel_not_found") ||
-    errorMessage.includes("not_in_channel")
+    errorMessage.includes('channel_not_found') ||
+    errorMessage.includes('not_in_channel')
   ) {
     await chrome.storage.local.set({
-      appStatus: "CHANNEL_ERROR",
+      appStatus: 'CHANNEL_ERROR',
       messages: [],
       channelId: null,
     });
   } else if (
-    errorMessage.includes("invalid_auth") ||
-    errorMessage.includes("token_revoked")
+    errorMessage.includes('invalid_auth') ||
+    errorMessage.includes('token_revoked')
   ) {
     await chrome.storage.local.set({
-      appStatus: "TOKEN_TOKEN_ERROR",
+      appStatus: 'TOKEN_TOKEN_ERROR',
       messages: [],
     });
   } else {
     await chrome.storage.local.set({
-      appStatus: "UNKNOWN_ERROR",
+      appStatus: 'UNKNOWN_ERROR',
       messages: [],
     });
   }
-  updateExtensionIcon("error");
+  updateExtensionIcon('error');
 }
 
 async function updateContentScriptMergeState(channelName) {
   const { messages: currentMessages = [], appStatus } =
-    await chrome.storage.local.get(["messages", "appStatus"]);
+    await chrome.storage.local.get(['messages', 'appStatus']);
   const lastSlackMessage =
     currentMessages.length > 0
       ? currentMessages[currentMessages.length - 1]
@@ -338,14 +336,14 @@ async function updateContentScriptMergeState(channelName) {
     currentExceptionPhrases,
   } = await getPhrasesFromStorage();
 
-  let mergeStatusForContentScript = "unknown";
+  let mergeStatusForContentScript = 'unknown';
   let matchingMessageForContentScript = null;
   if (currentMessages.length > 0) {
     const { status, message } = determineMergeStatus(
       currentMessages,
       currentAllowedPhrases,
       currentDisallowedPhrases,
-      currentExceptionPhrases
+      currentExceptionPhrases,
     );
     mergeStatusForContentScript = status;
     matchingMessageForContentScript = message;
@@ -354,18 +352,18 @@ async function updateContentScriptMergeState(channelName) {
   // If there's an error status, ensure the merge button is enabled (or not disabled by the extension)
   if (
     appStatus &&
-    (appStatus.includes("ERROR") || appStatus.includes("TOKEN"))
+    (appStatus.includes('ERROR') || appStatus.includes('TOKEN'))
   ) {
     // If there's an error, we don't want the extension to prevent merging.
     // So, we set the status to 'allowed' for the content script.
-    mergeStatusForContentScript = "allowed";
+    mergeStatusForContentScript = 'allowed';
   }
 
   await chrome.storage.local.set({
     lastKnownMergeState: {
       isMergeDisabled:
-        mergeStatusForContentScript === "disallowed" ||
-        mergeStatusForContentScript === "exception", // Bitbucket only cares if it's disabled or not
+        mergeStatusForContentScript === 'disallowed' ||
+        mergeStatusForContentScript === 'exception', // Bitbucket only cares if it's disabled or not
       mergeStatus: mergeStatusForContentScript, // New field for more granular status
       lastSlackMessage: matchingMessageForContentScript, // Use the matching message
       channelName: channelName,
@@ -373,28 +371,28 @@ async function updateContentScriptMergeState(channelName) {
   });
 
   try {
-    await chrome.runtime.sendMessage({ action: "updateMessages" });
+    await chrome.runtime.sendMessage({ action: 'updateMessages' });
   } catch (error) {
     console.warn(
-      "Could not send message to popup, it might not be open:",
-      error.message
+      'Could not send message to popup, it might not be open:',
+      error.message,
     );
   }
   if (bitbucketTabId) {
     try {
       await chrome.tabs.sendMessage(bitbucketTabId, {
-        action: "updateMergeButton",
+        action: 'updateMergeButton',
         lastSlackMessage: lastSlackMessage,
         channelName: channelName,
         isMergeDisabled:
-          mergeStatusForContentScript === "disallowed" ||
-          mergeStatusForContentScript === "exception",
+          mergeStatusForContentScript === 'disallowed' ||
+          mergeStatusForContentScript === 'exception',
         mergeStatus: mergeStatusForContentScript, // Pass granular status to content script
       });
     } catch (error) {
       console.warn(
-        "Could not send message to Bitbucket tab, resetting bitbucketTabId:",
-        error.message
+        'Could not send message to Bitbucket tab, resetting bitbucketTabId:',
+        error.message,
       );
       bitbucketTabId = null;
     }
@@ -403,34 +401,34 @@ async function updateContentScriptMergeState(channelName) {
 
 async function fetchAndStoreTeamId(slackToken) {
   try {
-    const response = await fetch("https://slack.com/api/auth.test", {
+    const response = await fetch('https://slack.com/api/auth.test', {
       headers: { Authorization: `Bearer ${slackToken}` },
     });
     const data = await response.json();
     if (data.ok) {
       await chrome.storage.local.set({ teamId: data.team_id });
     } else {
-      console.error("Error fetching team ID:", data.error);
+      console.error('Error fetching team ID:', data.error);
     }
   } catch (error) {
-    console.error("Error fetching team ID:", error);
+    console.error('Error fetching team ID:', error);
   }
 }
 
 async function fetchAndStoreMessages() {
-  updateExtensionIcon("loading");
-  let channelName = "";
+  updateExtensionIcon('loading');
+  let channelName = '';
 
   try {
     const { slackToken, channelName: configChannelName } =
-      await chrome.storage.sync.get(["slackToken", "channelName"]);
+      await chrome.storage.sync.get(['slackToken', 'channelName']);
 
     if (!slackToken || !configChannelName) {
       await chrome.storage.local.set({
-        appStatus: "CONFIG_ERROR",
+        appStatus: 'CONFIG_ERROR',
         messages: [],
       });
-      updateExtensionIcon("default");
+      updateExtensionIcon('default');
       return;
     }
 
@@ -439,14 +437,14 @@ async function fetchAndStoreMessages() {
     await fetchAndStoreTeamId(slackToken);
 
     const channelId = await resolveChannelId(slackToken, channelName);
-    const { lastFetchTs } = await chrome.storage.local.get("lastFetchTs");
+    const { lastFetchTs } = await chrome.storage.local.get('lastFetchTs');
     const historyData = await fetchSlackHistory(
       slackToken,
       channelId,
-      lastFetchTs
+      lastFetchTs,
     );
 
-    await chrome.storage.local.set({ appStatus: "OK" });
+    await chrome.storage.local.set({ appStatus: 'OK' });
     await processAndStoreMessages(historyData, slackToken);
   } catch (error) {
     await handleSlackApiError(error);
@@ -456,40 +454,40 @@ async function fetchAndStoreMessages() {
 }
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  if (request.action === "getDefaultPhrases") {
+  if (request.action === 'getDefaultPhrases') {
     sendResponse({
       defaultAllowedPhrases: DEFAULT_ALLOWED_PHRASES,
       defaultDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,
       defaultExceptionPhrases: DEFAULT_EXCEPTION_PHRASES,
     });
     return true; // Indicates that sendResponse will be called asynchronously
-  } else if (request.action === "bitbucketTabLoaded" && sender.tab) {
-    const { bitbucketUrl } = await chrome.storage.sync.get("bitbucketUrl");
+  } else if (request.action === 'bitbucketTabLoaded' && sender.tab) {
+    const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
     if (bitbucketUrl) {
       // Convert glob to regex. This is a simplified conversion.
       // For a full robust solution, a dedicated glob-to-regex library would be ideal.
-      const regexPattern = bitbucketUrl.replace(/\*/g, ".*"); // Escape * for regex
+      const regexPattern = bitbucketUrl.replace(/\*/g, '.*'); // Escape * for regex
       const bitbucketRegex = new RegExp(regexPattern);
 
       if (bitbucketRegex.test(sender.tab.url)) {
         bitbucketTabId = sender.tab.id;
 
         // Send the last known merge state immediately to the newly loaded tab
-        chrome.storage.local.get(["lastKnownMergeState"], async (result) => {
+        chrome.storage.local.get(['lastKnownMergeState'], async (result) => {
           if (result.lastKnownMergeState) {
             const { isMergeDisabled, lastSlackMessage, channelName } =
               result.lastKnownMergeState;
             try {
               await chrome.tabs.sendMessage(bitbucketTabId, {
-                action: "updateMergeButton",
+                action: 'updateMergeButton',
                 lastSlackMessage: lastSlackMessage,
                 channelName: channelName,
                 isMergeDisabled: isMergeDisabled,
               });
             } catch (error) {
               console.warn(
-                "Could not send initial message to Bitbucket tab, resetting bitbucketTabId:",
-                error.message
+                'Could not send initial message to Bitbucket tab, resetting bitbucketTabId:',
+                error.message,
               );
               bitbucketTabId = null;
             }
@@ -513,7 +511,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get('mergeButtonSelector', (result) => {
     if (!result.mergeButtonSelector) {
-      chrome.storage.sync.set({ mergeButtonSelector: DEFAULT_MERGE_BUTTON_SELECTOR });
+      chrome.storage.sync.set({
+        mergeButtonSelector: DEFAULT_MERGE_BUTTON_SELECTOR,
+      });
     }
   });
   fetchAndStoreMessages();
@@ -526,12 +526,12 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 async function registerBitbucketContentScript() {
-  const { bitbucketUrl } = await chrome.storage.sync.get("bitbucketUrl");
+  const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
   // Clear existing dynamic scripts to avoid duplicates or old patterns
   try {
     await chrome.scripting.unregisterContentScripts({
-      ids: ["bitbucket-content-script"],
+      ids: ['bitbucket-content-script'],
     });
   } catch (e) {
     // Ignore error if script was not registered
@@ -541,21 +541,21 @@ async function registerBitbucketContentScript() {
     try {
       await chrome.scripting.registerContentScripts([
         {
-          id: "bitbucket-content-script",
+          id: 'bitbucket-content-script',
           matches: [bitbucketUrl],
-          js: ["slack_frontend_closure_bitbucket_content.js"],
-          runAt: "document_idle",
+          js: ['slack_frontend_closure_bitbucket_content.js'],
+          runAt: 'document_idle',
         },
       ]);
-      console.log("Bitbucket content script registered for:", bitbucketUrl);
+      console.log('Bitbucket content script registered for:', bitbucketUrl);
     } catch (error) {
-      console.error("Error registering Bitbucket content script:", error);
+      console.error('Error registering Bitbucket content script:', error);
     }
   }
 }
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === "sync" && changes.bitbucketUrl) {
+  if (namespace === 'sync' && changes.bitbucketUrl) {
     registerBitbucketContentScript();
   }
 });
