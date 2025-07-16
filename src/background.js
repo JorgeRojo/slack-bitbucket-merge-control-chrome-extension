@@ -68,7 +68,7 @@ function determineMergeStatus(
     }
   }
 
-  return { status: 'unknown', message: null }; // If no matching phrase is found in the last 10 messages
+  return { status: 'unknown', message: null };
 }
 
 function updateExtensionIcon(status) {
@@ -460,19 +460,16 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       defaultDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,
       defaultExceptionPhrases: DEFAULT_EXCEPTION_PHRASES,
     });
-    return true; // Indicates that sendResponse will be called asynchronously
+    return true;
   } else if (request.action === 'bitbucketTabLoaded' && sender.tab) {
     const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
     if (bitbucketUrl) {
-      // Convert glob to regex. This is a simplified conversion.
-      // For a full robust solution, a dedicated glob-to-regex library would be ideal.
-      const regexPattern = bitbucketUrl.replace(/\*/g, '.*'); // Escape * for regex
+      const regexPattern = bitbucketUrl.replace(/\*/g, '.*');
       const bitbucketRegex = new RegExp(regexPattern);
 
       if (bitbucketRegex.test(sender.tab.url)) {
         bitbucketTabId = sender.tab.id;
 
-        // Send the last known merge state immediately to the newly loaded tab
         chrome.storage.local.get(['lastKnownMergeState'], async (result) => {
           if (result.lastKnownMergeState) {
             const { isMergeDisabled, lastSlackMessage, channelName } =
@@ -499,7 +496,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 });
 
 chrome.alarms.create(POLLING_ALARM_NAME, {
-  periodInMinutes: 1 / 12, // 5 seconds
+  periodInMinutes: 1 / 12,
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -528,13 +525,11 @@ chrome.runtime.onStartup.addListener(() => {
 async function registerBitbucketContentScript() {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
-  // Clear existing dynamic scripts to avoid duplicates or old patterns
   try {
     await chrome.scripting.unregisterContentScripts({
       ids: ['bitbucket-content-script'],
     });
   } catch (e) {
-    // Ignore error if script was not registered
   }
 
   if (bitbucketUrl) {

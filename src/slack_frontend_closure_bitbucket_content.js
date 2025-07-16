@@ -1,4 +1,3 @@
-console.log('slack_frontend_closure_bitbucket_content.js loaded successfully');
 chrome.runtime.sendMessage({ action: 'bitbucketTabLoaded' });
 
 let mergeButtonObserver = null;

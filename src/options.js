@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   saveButton.addEventListener('click', function () {
     const slackToken = tokenInput.value.trim();
-    const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove leading # if present
+    const channelName = channelInput.value.trim().replace(/^#/, '');
     const allowedPhrases = allowedPhrasesInput.value
       .trim()
       .split('\n')
@@ -109,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         function () {
           statusDiv.textContent = literals.options.textOptionsSaved;
-          // Also, clear old data when settings change
           chrome.storage.local.remove([
             'channelId',
             'lastFetchTs',
