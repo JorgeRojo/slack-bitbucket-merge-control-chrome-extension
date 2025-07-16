@@ -1,74 +1,74 @@
 body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        padding: 20px;
-        width: 640px; /* Increased width to accommodate larger text */
-        background-color: #f4f7f6;
-        margin: 0 auto;
-        color: #333;
-        font-size: 1em; /* Base font size slightly reduced */
-      }
-      h1 {
-        font-size: 2em; /* Slightly reduced */
-        font-weight: bold;
-        margin-bottom: 25px; /* Adjusted margin */
-        text-align: center;
-        color: #2c3e50;
-      }
-      h2 {
-        font-size: 1.4em; /* Slightly reduced */
-        font-weight: 600;
-        margin-bottom: 15px; /* Adjusted margin */
-        color: #34495e;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 5px; /* Adjusted padding */
-      }
-      .option-section {
-        background-color: #ffffff;
-        padding: 20px; /* Adjusted padding */
-        margin-bottom: 25px; /* Adjusted margin */
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-      }
-      .option-section > div {
-        margin-bottom: 20px; /* Adjusted margin */
-      }
-      label {
-        margin-bottom: 8px; /* Adjusted margin */
-        font-size: 1em; /* Slightly reduced */
-      }
-      input[type="text"],
-      input[type="password"],
-      textarea {
-        width: 100%;
-        padding: 10px; /* Slightly reduced padding */
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1em; /* Slightly reduced */
-        box-sizing: border-box;
-        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-      }
-      p {
-        font-size: 0.9em; /* Slightly reduced */
-        margin-top: 5px; /* Adjusted margin */
-      }
-      code {
-        font-size: 0.85em; /* Slightly reduced */
-      }
-      button {
-        display: block;
-        width: 60%; /* Make it wider */
-        margin: 20px auto; /* Center horizontally and add vertical margin */
-        padding: 12px 20px; /* Slightly reduced padding */
-        background-color: #28a745; /* Green save button */
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 1.1em; /* Slightly reduced */
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
-      }
-      #status {
-        margin-top: 20px; /* Adjusted margin */
-        font-size: 1.1em; /* Slightly reduced */
-      }
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  width: 640px;
+  background-color: #f4f7f6;
+  margin: 0 auto;
+  color: #333;
+  font-size: 1em;
+}
+h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin-bottom: 25px;
+  text-align: center;
+  color: #2c3e50;
+}
+h2 {
+  font-size: 1.4em;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #34495e;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+.option-section {
+  background-color: #ffffff;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+.option-section > div {
+  margin-bottom: 20px;
+}
+label {
+  margin-bottom: 8px;
+  font-size: 1em;
+}
+input[type="text"],
+input[type="password"],
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+p {
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+code {
+  font-size: 0.85em;
+}
+button {
+  display: block;
+  width: 60%;
+  margin: 20px auto;
+  padding: 12px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+#status {
+  margin-top: 20px;
+  font-size: 1.1em;
+}
