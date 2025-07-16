@@ -1,4 +1,4 @@
-import { cleanSlackMessageText } from '../background.js';
+import { cleanSlackMessageText } from '../src/background.js';
 
 describe('cleanSlackMessageText', () => {
   test('should replace user mentions with @MENTION', () => {

@@ -5,8 +5,8 @@ const config = {
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.js'],
-  testPathIgnorePatterns: ['/node_modules/', '/src/__tests__/setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  testPathIgnorePatterns: ['/node_modules/', '/tests/setup.js'],
   transform: {},
 };
 
