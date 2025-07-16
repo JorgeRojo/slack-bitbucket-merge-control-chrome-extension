@@ -402,7 +402,7 @@ async function connectToSlackSocketMode() {
 
     rtmWebSocket.onopen = () => {
       console.log('Connected to Slack Socket Mode WebSocket.');
-      updateExtensionIcon('allowed'); // Assuming connection means good status
+      updateExtensionIcon('default'); // Assuming connection means good status
       chrome.storage.local.set({ appStatus: 'OK' });
     };
 
