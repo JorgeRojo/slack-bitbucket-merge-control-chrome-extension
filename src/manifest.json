@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Slack-Bitbucket Merge Control",
   "version": "1.0",
-  "description": "Lee el contenido de un canal de Slack usando la API.",
+  "description": "Reads Slack channel messages and controls Bitbucket merge button availability based on message content.",
   "permissions": ["storage", "alarms", "scripting"],
   "options_page": "options.html",
   "host_permissions": ["https://slack.com/api/*", "<all_urls>"],
