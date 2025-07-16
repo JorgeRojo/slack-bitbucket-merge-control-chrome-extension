@@ -408,6 +408,7 @@ async function connectToSlackSocketMode() {
 
     rtmWebSocket.onmessage = async (event) => {
       const envelope = JSON.parse(event.data);
+      console.log('Received WebSocket envelope:', envelope);
       if (envelope.payload && envelope.payload.event) {
         const message = envelope.payload.event;
         if (message.type === 'message' && message.text) {
