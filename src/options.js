@@ -11,6 +11,7 @@ import { literals } from './literals.js';
 document.addEventListener('DOMContentLoaded', function () {
   const saveButton = document.getElementById('save');
   const tokenInput = document.getElementById('slackToken');
+  const appTokenInput = document.getElementById('appToken');
   const channelInput = document.getElementById('channelName');
   const allowedPhrasesInput = document.getElementById('allowedPhrases');
   const disallowedPhrasesInput = document.getElementById('disallowedPhrases');
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
   chrome.storage.sync.get(
     [
       'slackToken',
+      'appToken',
       'channelName',
       'allowedPhrases',
       'disallowedPhrases',
@@ -34,6 +36,9 @@ document.addEventListener('DOMContentLoaded', function () {
     async function (result) {
       if (result.slackToken) {
         tokenInput.value = result.slackToken;
+      }
+      if (result.appToken) {
+        appTokenInput.value = result.appToken;
       }
       if (result.channelName) {
         channelInput.value = result.channelName;
@@ -74,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   saveButton.addEventListener('click', function () {
     const slackToken = tokenInput.value.trim();
+    const appToken = appTokenInput.value.trim();
     const channelName = channelInput.value.trim().replace(/^#/, '');
     const allowedPhrases = allowedPhrasesInput.value
       .trim()
@@ -96,10 +102,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const bitbucketUrl = bitbucketUrlInput.value.trim();
     const mergeButtonSelector = mergeButtonSelectorInput.value.trim();
 
-    if (slackToken && channelName && bitbucketUrl && mergeButtonSelector) {
+    if (
+      slackToken &&
+      appToken &&
+      channelName &&
+      bitbucketUrl &&
+      mergeButtonSelector
+    ) {
       chrome.storage.sync.set(
         {
           slackToken,
+          appToken,
           channelName,
           allowedPhrases,
           disallowedPhrases,

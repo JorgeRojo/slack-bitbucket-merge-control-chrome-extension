@@ -1,9 +1,8 @@
 import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   SLACK_CONVERSATIONS_LIST_URL,
-  SLACK_CONVERSATIONS_HISTORY_URL,
   SLACK_AUTH_TEST_URL,
-  POLLING_ALARM_NAME,
+  SLACK_CONNECTIONS_OPEN_URL,
   MAX_MESSAGES,
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
@@ -172,81 +171,46 @@ async function resolveChannelId(slackToken, channelName) {
   return channelId;
 }
 
-async function fetchSlackHistory(slackToken, channelId, lastFetchTs) {
-  const historyUrl = new URL(SLACK_CONVERSATIONS_HISTORY_URL);
-  historyUrl.searchParams.append('channel', channelId);
-  if (lastFetchTs) {
-    historyUrl.searchParams.append('oldest', lastFetchTs);
-  }
-  historyUrl.searchParams.append('limit', 100);
-
-  const historyResponse = await fetch(historyUrl, {
-    headers: { Authorization: `Bearer ${slackToken}` },
-  });
-  const historyData = await historyResponse.json();
-  if (!historyData.ok) throw new Error(historyData.error);
-  return historyData;
-}
-
 async function processAndStoreMessages(historyData, _slackToken) {
-  if (historyData.messages && historyData.messages.length > 0) {
-    const newMessages = historyData.messages.map((msg) => ({
-      text: cleanSlackMessageText(msg.text),
-      ts: msg.ts,
-    }));
-    const newLastFetchTs = newMessages[0].ts;
-
-    let { messages: storedMessages = [] } =
-      await chrome.storage.local.get('messages');
-    storedMessages.push(...newMessages.reverse());
-
-    if (storedMessages.length > MAX_MESSAGES) {
-      storedMessages = storedMessages.slice(
-        storedMessages.length - MAX_MESSAGES,
-      );
-    }
-
-    await chrome.storage.local.set({
-      messages: storedMessages,
-      lastFetchTs: newLastFetchTs,
-    });
-
-    const {
-      currentAllowedPhrases,
-      currentDisallowedPhrases,
-      currentExceptionPhrases,
-    } = await getPhrasesFromStorage();
-
-    const { status: mergeStatus, message: matchingMessage } =
-      determineMergeStatus(
-        storedMessages,
-        currentAllowedPhrases,
-        currentDisallowedPhrases,
-        currentExceptionPhrases,
-      );
-
-    updateExtensionIcon(mergeStatus);
-    await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
-  } else {
-    // If no new messages, re-evaluate status based on existing messages
-    const { messages: currentMessages = [] } =
-      await chrome.storage.local.get('messages');
-    const {
-      currentAllowedPhrases,
-      currentDisallowedPhrases,
-      currentExceptionPhrases,
-    } = await getPhrasesFromStorage();
-
-    const { status: mergeStatus, message: matchingMessage } =
-      determineMergeStatus(
-        currentMessages,
-        currentAllowedPhrases,
-        currentDisallowedPhrases,
-        currentExceptionPhrases,
-      );
-    updateExtensionIcon(mergeStatus);
-    await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
+  if (!historyData.messages || historyData.messages.length === 0) {
+    return; // No new messages to process
   }
+
+  const newMessages = historyData.messages.map((msg) => ({
+    text: cleanSlackMessageText(msg.text),
+    ts: msg.ts,
+  }));
+  const newLastFetchTs = newMessages[0].ts;
+
+  let { messages: storedMessages = [] } =
+    await chrome.storage.local.get('messages');
+  storedMessages.push(...newMessages.reverse());
+
+  if (storedMessages.length > MAX_MESSAGES) {
+    storedMessages = storedMessages.slice(storedMessages.length - MAX_MESSAGES);
+  }
+
+  await chrome.storage.local.set({
+    messages: storedMessages,
+    lastFetchTs: newLastFetchTs,
+  });
+
+  const {
+    currentAllowedPhrases,
+    currentDisallowedPhrases,
+    currentExceptionPhrases,
+  } = await getPhrasesFromStorage();
+
+  const { status: mergeStatus, message: matchingMessage } =
+    determineMergeStatus(
+      storedMessages,
+      currentAllowedPhrases,
+      currentDisallowedPhrases,
+      currentExceptionPhrases,
+    );
+
+  updateExtensionIcon(mergeStatus);
+  await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
 }
 
 async function getPhrasesFromStorage() {
@@ -399,40 +363,89 @@ async function fetchAndStoreTeamId(slackToken) {
   }
 }
 
-async function fetchAndStoreMessages() {
+let rtmWebSocket = null;
+
+async function connectToSlackSocketMode() {
+  const { slackToken, appToken, channelName } = await chrome.storage.sync.get([
+    'slackToken',
+    'appToken',
+    'channelName',
+  ]);
+
+  if (!slackToken || !appToken || !channelName) {
+    await chrome.storage.local.set({
+      appStatus: 'CONFIG_ERROR',
+      messages: [],
+    });
+    updateExtensionIcon('default');
+    return;
+  }
+
   updateExtensionIcon('loading');
-  let channelName = '';
 
   try {
-    const { slackToken, channelName: configChannelName } =
-      await chrome.storage.sync.get(['slackToken', 'channelName']);
+    await fetchAndStoreTeamId(slackToken);
+    await resolveChannelId(slackToken, channelName);
 
-    if (!slackToken || !configChannelName) {
-      await chrome.storage.local.set({
-        appStatus: 'CONFIG_ERROR',
-        messages: [],
-      });
-      updateExtensionIcon('default');
-      return;
+    const connectionsOpenResponse = await fetch(SLACK_CONNECTIONS_OPEN_URL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${appToken}` },
+    });
+    const connectionsOpenData = await connectionsOpenResponse.json();
+
+    if (!connectionsOpenData.ok) {
+      throw new Error(connectionsOpenData.error);
     }
 
-    channelName = configChannelName;
+    const wsUrl = connectionsOpenData.url;
+    rtmWebSocket = new WebSocket(wsUrl);
 
-    await fetchAndStoreTeamId(slackToken);
+    rtmWebSocket.onopen = () => {
+      console.log('Connected to Slack Socket Mode WebSocket.');
+      updateExtensionIcon('allowed'); // Assuming connection means good status
+      chrome.storage.local.set({ appStatus: 'OK' });
+    };
 
-    const channelId = await resolveChannelId(slackToken, channelName);
-    const { lastFetchTs } = await chrome.storage.local.get('lastFetchTs');
-    const historyData = await fetchSlackHistory(
-      slackToken,
-      channelId,
-      lastFetchTs,
-    );
+    rtmWebSocket.onmessage = async (event) => {
+      const envelope = JSON.parse(event.data);
+      if (envelope.payload && envelope.payload.event) {
+        const message = envelope.payload.event;
+        if (message.type === 'message' && message.text) {
+          // Process and store the message
+          const historyData = { messages: [message] };
+          await processAndStoreMessages(historyData, slackToken);
+          await updateContentScriptMergeState(channelName);
+        }
+      } else if (envelope.type === 'disconnect') {
+        console.warn(
+          'Slack Socket Mode WebSocket disconnected:',
+          envelope.reason,
+        );
+        rtmWebSocket.close(); // Close to trigger onclose and reconnect
+      }
+    };
 
-    await chrome.storage.local.set({ appStatus: 'OK' });
-    await processAndStoreMessages(historyData, slackToken);
+    rtmWebSocket.onclose = (event) => {
+      console.warn(
+        'Slack Socket Mode WebSocket closed:',
+        event.code,
+        event.reason,
+      );
+      updateExtensionIcon('error');
+      chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
+      // Attempt to reconnect after a delay
+      setTimeout(connectToSlackSocketMode, 5000);
+    };
+
+    rtmWebSocket.onerror = (error) => {
+      console.error('Slack Socket Mode WebSocket error:', error);
+      updateExtensionIcon('error');
+      chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
+      rtmWebSocket.close(); // Close to trigger onclose and reconnect
+    };
   } catch (error) {
+    console.error('Failed to connect to Slack Socket Mode:', error);
     await handleSlackApiError(error);
-  } finally {
     await updateContentScriptMergeState(channelName);
   }
 }
@@ -479,16 +492,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
 });
 
-chrome.alarms.create(POLLING_ALARM_NAME, {
-  periodInMinutes: 1 / 12,
-});
-
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === POLLING_ALARM_NAME) {
-    fetchAndStoreMessages();
-  }
-});
-
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get('mergeButtonSelector', (result) => {
     if (!result.mergeButtonSelector) {
@@ -497,12 +500,12 @@ chrome.runtime.onInstalled.addListener(() => {
       });
     }
   });
-  fetchAndStoreMessages();
+  connectToSlackSocketMode();
   registerBitbucketContentScript();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  fetchAndStoreMessages();
+  connectToSlackSocketMode();
   registerBitbucketContentScript();
 });
 

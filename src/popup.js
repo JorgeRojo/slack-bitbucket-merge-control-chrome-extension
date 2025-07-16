@@ -56,17 +56,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   try {
-    const { slackToken, channelName } = await chrome.storage.sync.get([
-      'slackToken',
-      'channelName',
-    ]);
+    const { slackToken, appToken, channelName } = await chrome.storage.sync.get(
+      ['slackToken', 'appToken', 'channelName'],
+    );
 
     const { channelId, teamId } = await chrome.storage.local.get([
       'channelId',
       'teamId',
     ]);
 
-    if (!slackToken || !channelName) {
+    if (!slackToken || !appToken || !channelName) {
       updateUI('config_needed', literals.popup.textConfigNeeded);
       return;
     }

@@ -8,7 +8,7 @@ https://api.slack.com/apps/
 
 - Reads messages from a configurable Slack channel.
 - Supports both public and private channels.
-- Fetches messages periodically.
+- Receives messages in real-time via Slack Socket Mode.
 - Displays the latest messages in the extension popup.
 - **Bitbucket Integration:** Controls the merge button on Bitbucket pull request pages based on keywords in Slack messages.
 
@@ -50,8 +50,10 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
 
 ## Configuration
 
-1.  **Obtain a Slack Bot Token:**
+1.  **Obtain a Slack App-Level Token (xapp-):**
     - Go to your Slack API dashboard and create a new app or select an existing one.
+    - Navigate to **Socket Mode** and enable it.
+    - Navigate to **Basic Information** -> **App-Level Tokens** and generate a new token with the `connections:write` scope. This token starts with `xapp-`.
     - Navigate to **OAuth & Permissions**.
     - Add the following Bot Token Scopes:
       - `channels:read`
@@ -61,7 +63,8 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
     - Install the app to your workspace to generate the Bot User OAuth Token (starts with `xoxb-`).
 2.  **Configure the Extension:**
     - Right-click on the extension icon in your Chrome toolbar and select **Options**.
-    - Enter your Slack Bot Token in the `Slack Token` field.
+    - Enter your Slack Bot Token (xoxb-) in the `Slack Token` field.
+    - Enter your Slack App-Level Token (xapp-) in the `Slack App Token` field.
     - Enter the exact name of the `Channel Name` you wish to monitor (e.g., `general`, `my-private-channel`).
     - **Bitbucket Configuration:**
       - Enter the `Bitbucket Pull Request URL Pattern` (e.g., `https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*`).
@@ -70,4 +73,4 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
 
 ## Usage
 
-Once configured, the extension will periodically fetch messages from the specified channel. Click on the extension icon in your Chrome toolbar to open the popup and view the latest messages. On Bitbucket pull request pages, the merge button will be enabled or disabled based on the configured phrases in Slack messages.
+Once configured, the extension will receive messages in real-time from the specified channel. Click on the extension icon in your Chrome toolbar to open the popup and view the latest messages. On Bitbucket pull request pages, the merge button will be enabled or disabled based on the configured phrases in Slack messages.
