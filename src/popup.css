@@ -1,0 +1,62 @@
+body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        width: 300px;
+        padding: 10px;
+        background-color: #f0f2f5;
+        color: #333;
+      }
+      #status-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      #status-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+      }
+      #status-text {
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+      .loading {
+        color: #666;
+      }
+      .allowed {
+        color: #28a745;
+      }
+      .disallowed {
+        color: #dc3545;
+      }
+      .exception {
+        color: #ffc107;
+      }
+      #open-options {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+        margin-top: 10px;
+        transition: background-color 0.2s ease;
+      }
+      #open-options:hover {
+        background-color: #0056b3;
+      }
+      #slack-channel-link {
+        display: inline-block;
+        background-color: #4A154B; /* Slack purple */
+        color: white;
+        padding: 8px 12px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        margin-top: 10px;
+        transition: background-color 0.2s ease;
+      }
+      #slack-channel-link:hover {
+        background-color: #360A36;
+      }
