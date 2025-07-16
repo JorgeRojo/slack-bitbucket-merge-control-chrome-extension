@@ -6,6 +6,7 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   DEFAULT_CHANNEL_NAME,
 } from './constants.js';
+import { literals } from './literals.js';
 
 document.addEventListener('DOMContentLoaded', function() {
   const saveButton = document.getElementById('save');
@@ -91,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
         bitbucketUrl,
         mergeButtonSelector
       }, function() {
-        statusDiv.textContent = 'Options saved.';
+        statusDiv.textContent = literals.textOptionsSaved;
         // Also, clear old data when settings change
         chrome.storage.local.remove(['channelId', 'lastFetchTs', 'messages', 'appStatus']);
         setTimeout(function() {
@@ -99,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 2000);
       });
     } else {
-      statusDiv.textContent = 'Please fill in all fields.';
+      statusDiv.textContent = literals.textFillAllFields;
     }
   });
 });

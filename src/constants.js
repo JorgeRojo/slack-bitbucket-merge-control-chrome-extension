@@ -31,3 +31,4 @@ export const MAX_MESSAGES_TO_CHECK = 10;
 export const DEFAULT_MERGE_BUTTON_SELECTOR = '.merge-button-container > .merge-button';
 export const DEFAULT_BITBUCKET_URL = 'https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*';
 export const DEFAULT_CHANNEL_NAME = 'frontend-closure';
+export const SLACK_BASE_URL = 'https://app.slack.com/client/';
