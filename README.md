@@ -66,7 +66,8 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
        - `channels:history` (for public channels)
        - `groups:history` (for private channels)
      - Install the app to your workspace to generate the tokens. Bot User OAuth Token (starts with `xoxb-`).
-   - Navigate to **Basic Information** -> **App-Level Tokens** and generate a new token with the `connections:write` scope. This token starts with `xapp-`.
+   - Navigate to **Basic Information** -> **App-Level Tokens**.
+     - Generate a new token with the `connections:write` scope. This token starts with `xapp-`.
    - Navigate to **Socket Mode** and enable it.
    - Navigate to **Event Subscriptions**:
      - Ensure **Enable Events** is toggled ON.
