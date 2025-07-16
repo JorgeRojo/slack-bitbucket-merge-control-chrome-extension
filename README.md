@@ -63,10 +63,8 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
    - Go to your [Slack API dashboard](https://api.slack.com/apps) and create a new app (From scratch) or select an existing one.
    - Navigate to **OAuth & Permissions**.
      - Add the following Bot Token Scopes:
-       - `channels:read`
-       - `groups:read`
-       - `channels:history`
-       - `groups:history`
+       - `channels:history` (for public channels)
+       - `groups:history` (for private channels)
      - Install the app to your workspace to generate the tokens. Bot User OAuth Token (starts with `xoxb-`).
    - Navigate to **Basic Information** -> **App-Level Tokens** and generate a new token with the `connections:write` scope. This token starts with `xapp-`.
    - Navigate to **Socket Mode** and enable it.
