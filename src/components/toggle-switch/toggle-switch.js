@@ -5,6 +5,7 @@ class ToggleSwitch extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this._initialized = false;
   }
 
   async connectedCallback() {
@@ -14,6 +15,7 @@ class ToggleSwitch extends HTMLElement {
 
     await this.render(checked, disabled, label);
     await this.setupEventListeners();
+    this._initialized = true;
   }
 
   async setupEventListeners() {
@@ -64,8 +66,13 @@ class ToggleSwitch extends HTMLElement {
     `;
   }
 
-  attributeChangedCallback(attributeName) {
-    if (!this.shadowRoot.querySelector('.switch-container')) return;
+  attributeChangedCallback(attributeName, _oldValue, _newValue) {
+    // Skip if the component hasn't been initialized yet
+    if (!this._initialized) return;
+
+    // Skip if the shadow DOM isn't ready yet
+    if (!this.shadowRoot || !this.shadowRoot.querySelector('.switch-container'))
+      return;
 
     const switchInput = this.shadowRoot.querySelector('input');
     const labelElement = this.shadowRoot.querySelector('.switch-label');

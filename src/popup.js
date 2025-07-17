@@ -1,5 +1,6 @@
 import { SLACK_BASE_URL } from './constants.js';
 import { literals } from './literals.js';
+import './components/toggle-switch/index.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const statusIcon = document.getElementById('status-icon');
@@ -7,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const openOptionsButton = document.getElementById('open-options');
   const slackChannelLink = document.getElementById('slack-channel-link');
   const matchingMessageDiv = document.getElementById('matching-message');
+  const featureToggle = document.getElementById('feature-toggle');
 
   function updateUI(state, message, matchingMessage = null) {
     statusIcon.className = state;
@@ -107,6 +109,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Toggle switch event listener
+  if (featureToggle) {
+    featureToggle.addEventListener('toggle', (event) => {
+      const isChecked = event.detail.checked;
+      console.log('Toggle switch changed:', isChecked);
+      console.log('Event detail:', event.detail);
+    });
+  }
+
   openOptionsButton.addEventListener('click', () => {
     if (chrome.runtime.openOptionsPage) {
       chrome.runtime.openOptionsPage();
@@ -115,7 +126,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Escuchar cambios en el storage para refrescar el popup
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (
       namespace === 'local' &&
@@ -125,6 +135,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Cargar datos inicialmente
   await loadAndDisplayData();
 });
