@@ -1,15 +1,14 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   width: 400px;
-  padding: 10px;
   background-color: #f0f2f5;
   color: #333;
   margin: 0 auto;
 }
 h1 {
-  font-size: 1.5em;
+  font-size: 16px;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 #status-container {
   display: flex;
@@ -17,7 +16,7 @@ h1 {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding-bottom: 30px;
+  padding: 16px 16px 32px 16px;
 }
 #status-icon {
   font-size: 48px;
@@ -66,4 +65,10 @@ h1 {
 }
 #slack-channel-link:hover {
   background-color: #360a36;
+}
+.control-section {
+  width: 100%;
+  padding: 0 8px;
+  background-color: #fff;
+  text-align: center;
 }
