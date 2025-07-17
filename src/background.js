@@ -55,26 +55,41 @@ function determineMergeStatus(
     normalizeText(phrase),
   );
 
+  // Debug logs
+  console.log('=== DEBUG determineMergeStatus ===');
+  console.log('Exception phrases:', currentExceptionPhrases);
+  console.log('Disallowed phrases:', currentDisallowedPhrases);
+  console.log('Allowed phrases:', currentAllowedPhrases);
+
   for (const message of messages) {
     const normalizedMessageText = normalizeText(message.text);
+    console.log('Processing message:', message.text);
+    console.log('Normalized message:', normalizedMessageText);
 
-    if (
-      currentExceptionPhrases.some((keyword) =>
-        normalizedMessageText.includes(keyword),
-      )
-    ) {
+    // Check exception phrases
+    const matchingExceptionPhrase = currentExceptionPhrases.find((keyword) =>
+      normalizedMessageText.includes(keyword),
+    );
+    if (matchingExceptionPhrase) {
+      console.log('MATCHED EXCEPTION PHRASE:', matchingExceptionPhrase);
       return { status: 'exception', message: message };
-    } else if (
-      currentDisallowedPhrases.some((keyword) =>
-        normalizedMessageText.includes(keyword),
-      )
-    ) {
+    }
+
+    // Check disallowed phrases
+    const matchingDisallowedPhrase = currentDisallowedPhrases.find((keyword) =>
+      normalizedMessageText.includes(keyword),
+    );
+    if (matchingDisallowedPhrase) {
+      console.log('MATCHED DISALLOWED PHRASE:', matchingDisallowedPhrase);
       return { status: 'disallowed', message: message };
-    } else if (
-      currentAllowedPhrases.some((keyword) =>
-        normalizedMessageText.includes(keyword),
-      )
-    ) {
+    }
+
+    // Check allowed phrases
+    const matchingAllowedPhrase = currentAllowedPhrases.find((keyword) =>
+      normalizedMessageText.includes(keyword),
+    );
+    if (matchingAllowedPhrase) {
+      console.log('MATCHED ALLOWED PHRASE:', matchingAllowedPhrase);
       return { status: 'allowed', message: message };
     }
   }
