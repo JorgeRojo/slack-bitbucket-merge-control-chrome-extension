@@ -7,16 +7,16 @@ class ToggleSwitch extends HTMLElement {
     this.attachShadow({ mode: 'open' });
   }
 
-  connectedCallback() {
+  async connectedCallback() {
     const checked = this.hasAttribute('checked');
     const disabled = this.hasAttribute('disabled');
     const label = this.getAttribute('label') || '';
 
-    this.render(checked, disabled, label);
-    this.setupEventListeners();
+    await this.render(checked, disabled, label);
+    await this.setupEventListeners();
   }
 
-  setupEventListeners() {
+  async setupEventListeners() {
     const switchInput = this.shadowRoot.querySelector('input');
     if (switchInput) {
       switchInput.addEventListener('change', (e) => {
@@ -36,11 +36,12 @@ class ToggleSwitch extends HTMLElement {
           }),
         );
       });
+    } else {
+      console.warn('Toggle switch input element not found');
     }
   }
 
   async render(checked, disabled, label) {
-    // Fetch the CSS
     const response = await fetch(
       new URL('./toggle-switch.css', import.meta.url),
     );
@@ -63,14 +64,23 @@ class ToggleSwitch extends HTMLElement {
     `;
   }
 
-  attributeChangedCallback(_name, _oldValue, _newValue) {
-    if (this.shadowRoot.querySelector('.switch-container')) {
-      const checked = this.hasAttribute('checked');
-      const disabled = this.hasAttribute('disabled');
-      const label = this.getAttribute('label') || '';
+  attributeChangedCallback(attributeName) {
+    if (!this.shadowRoot.querySelector('.switch-container')) return;
 
-      this.render(checked, disabled, label);
-      this.setupEventListeners();
+    const switchInput = this.shadowRoot.querySelector('input');
+    const labelElement = this.shadowRoot.querySelector('.switch-label');
+
+    switch (attributeName) {
+      case 'checked':
+        if (switchInput) switchInput.checked = this.hasAttribute('checked');
+        break;
+      case 'disabled':
+        if (switchInput) switchInput.disabled = this.hasAttribute('disabled');
+        break;
+      case 'label':
+        if (labelElement)
+          labelElement.textContent = this.getAttribute('label') || '';
+        break;
     }
   }
 
