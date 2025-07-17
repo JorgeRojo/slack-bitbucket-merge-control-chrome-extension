@@ -55,23 +55,14 @@ function determineMergeStatus(
     normalizeText(phrase),
   );
 
-  // Debug logs
-  console.log('=== DEBUG determineMergeStatus ===');
-  console.log('Exception phrases:', currentExceptionPhrases);
-  console.log('Disallowed phrases:', currentDisallowedPhrases);
-  console.log('Allowed phrases:', currentAllowedPhrases);
-
   for (const message of messages) {
     const normalizedMessageText = normalizeText(message.text);
-    console.log('Processing message:', message.text);
-    console.log('Normalized message:', normalizedMessageText);
 
     // Check exception phrases
     const matchingExceptionPhrase = currentExceptionPhrases.find((keyword) =>
       normalizedMessageText.includes(keyword),
     );
     if (matchingExceptionPhrase) {
-      console.log('MATCHED EXCEPTION PHRASE:', matchingExceptionPhrase);
       return { status: 'exception', message: message };
     }
 
@@ -80,7 +71,6 @@ function determineMergeStatus(
       normalizedMessageText.includes(keyword),
     );
     if (matchingDisallowedPhrase) {
-      console.log('MATCHED DISALLOWED PHRASE:', matchingDisallowedPhrase);
       return { status: 'disallowed', message: message };
     }
 
@@ -89,7 +79,6 @@ function determineMergeStatus(
       normalizedMessageText.includes(keyword),
     );
     if (matchingAllowedPhrase) {
-      console.log('MATCHED ALLOWED PHRASE:', matchingAllowedPhrase);
       return { status: 'allowed', message: message };
     }
   }
@@ -131,8 +120,6 @@ function updateExtensionIcon(status) {
       48: path48,
     },
   });
-
-  console.log('>>>----->> ', status);
 }
 
 async function resolveChannelId(slackToken, channelName) {
@@ -160,7 +147,7 @@ async function resolveChannelId(slackToken, channelName) {
         if (result.ok) {
           allChannels = allChannels.concat(result.channels);
         } else {
-          // console.error('Error fetching channels:', result.error);
+          /* empty */
         }
       }
       return allChannels;
@@ -170,7 +157,6 @@ async function resolveChannelId(slackToken, channelName) {
     const foundChannel = allChannels.find((c) => c.name === channelName);
 
     if (!foundChannel) {
-      // console.error(`Channel "${channelName}" not found in public or private channels.`);
       throw new Error('channel_not_found');
     }
 
@@ -258,7 +244,6 @@ async function getPhrasesFromStorage() {
 }
 
 async function handleSlackApiError(error) {
-  // console.error('Error fetching Slack messages:', error.message);
   const errorMessage = error.message;
 
   if (
@@ -338,11 +323,8 @@ async function updateContentScriptMergeState(channelName) {
 
   try {
     await chrome.runtime.sendMessage({ action: 'updateMessages' });
-  } catch (error) {
-    console.warn(
-      'Could not send message to popup, it might not be open:',
-      error.message,
-    );
+  } catch {
+    /* empty */
   }
 
   if (bitbucketTabId) {
@@ -356,12 +338,8 @@ async function updateContentScriptMergeState(channelName) {
           mergeStatusForContentScript === 'exception',
         mergeStatus: mergeStatusForContentScript, // Pass granular status to content script
       });
-    } catch (error) {
-      console.warn(
-        'Could not send message to Bitbucket tab, resetting bitbucketTabId:',
-        error.message,
-      );
-      bitbucketTabId = null;
+    } catch {
+      /* empty */
     }
   }
 }
@@ -374,11 +352,9 @@ async function fetchAndStoreTeamId(slackToken) {
     const data = await response.json();
     if (data.ok) {
       await chrome.storage.local.set({ teamId: data.team_id });
-    } else {
-      console.error('Error fetching team ID:', data.error);
     }
-  } catch (error) {
-    console.error('Error fetching team ID:', error);
+  } catch {
+    /* empty */
   }
 }
 
@@ -425,7 +401,6 @@ async function connectToSlackSocketMode() {
     rtmWebSocket = new WebSocket(wsUrl);
 
     rtmWebSocket.onopen = () => {
-      console.log('Connected to Slack Socket Mode WebSocket.');
       chrome.storage.local.set({ appStatus: 'OK' });
     };
 
@@ -438,35 +413,24 @@ async function connectToSlackSocketMode() {
           await updateContentScriptMergeState(channelName);
         }
       } else if (envelope.type === 'disconnect') {
-        console.warn(
-          'Slack Socket Mode WebSocket disconnected:',
-          envelope.reason,
-        );
         rtmWebSocket.close(); // Close to trigger onclose and reconnect
       }
     };
 
-    rtmWebSocket.onclose = (event) => {
-      console.warn(
-        'Slack Socket Mode WebSocket closed:',
-        event.code,
-        event.reason,
-      );
+    rtmWebSocket.onclose = () => {
       updateExtensionIcon('error');
       chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
       // Attempt to reconnect after a delay
       setTimeout(connectToSlackSocketMode, 5000);
     };
 
-    rtmWebSocket.onerror = (error) => {
-      console.error('Slack Socket Mode WebSocket error:', error);
+    rtmWebSocket.onerror = () => {
       updateExtensionIcon('error');
       chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
       rtmWebSocket.close(); // Close to trigger onclose and reconnect
     };
-  } catch (error) {
-    console.error('Failed to connect to Slack Socket Mode:', error);
-    await handleSlackApiError(error);
+  } catch {
+    await handleSlackApiError;
     await updateContentScriptMergeState(channelName);
   }
 }
@@ -587,11 +551,7 @@ const updateMergeButtonFromLastKnownMergeState = () => {
           channelName: channelName,
           isMergeDisabled: isMergeDisabled,
         });
-      } catch (error) {
-        console.warn(
-          'Could not send initial message to Bitbucket tab, resetting bitbucketTabId:',
-          error.message,
-        );
+      } catch {
         bitbucketTabId = null;
       }
     }
@@ -642,9 +602,8 @@ async function registerBitbucketContentScript() {
           runAt: 'document_idle',
         },
       ]);
-      console.log('Bitbucket content script registered for:', bitbucketUrl);
-    } catch (error) {
-      console.error('Error registering Bitbucket content script:', error);
+    } catch {
+      /* empty */
     }
   }
 }
