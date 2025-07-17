@@ -111,10 +111,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Toggle switch event listener
   if (featureToggle) {
+    // Load initial state from storage
+    chrome.storage.local.get(['featureEnabled'], (result) => {
+      // If featureEnabled is undefined, default to true (checked)
+      const isEnabled = result.featureEnabled !== false;
+      if (!isEnabled) {
+        featureToggle.removeAttribute('checked');
+      } else {
+        featureToggle.setAttribute('checked', '');
+      }
+    });
+
     featureToggle.addEventListener('toggle', (event) => {
       const isChecked = event.detail.checked;
-      console.log('Toggle switch changed:', isChecked);
-      console.log('Event detail:', event.detail);
+      // Save toggle state to storage
+      chrome.storage.local.set({ featureEnabled: isChecked });
+      
+      // Update merge button state in any open Bitbucket tabs
+      chrome.runtime.sendMessage({ 
+        action: 'featureToggleChanged', 
+        enabled: isChecked 
+      });
     });
   }
 

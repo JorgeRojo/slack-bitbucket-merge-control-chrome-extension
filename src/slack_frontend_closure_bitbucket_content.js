@@ -79,15 +79,26 @@ async function applyMergeButtonLogic(mergeStatus, channelName) {
 
 chrome.runtime.onMessage.addListener((request) => {
   if (request.action === 'updateMergeButton') {
-    applyMergeButtonLogic(request.mergeStatus, request.channelName);
+    // Si la característica está desactivada (toggle en false), siempre permitir merges
+    if (request.featureEnabled === false) {
+      applyMergeButtonLogic('allowed', request.channelName);
+    } else {
+      applyMergeButtonLogic(request.mergeStatus, request.channelName);
+    }
   }
 });
 
 function applyInitialMergeState() {
-  chrome.storage.local.get(['lastKnownMergeState'], (result) => {
+  chrome.storage.local.get(['lastKnownMergeState', 'featureEnabled'], (result) => {
     if (result.lastKnownMergeState) {
       const { mergeStatus, channelName } = result.lastKnownMergeState;
-      applyMergeButtonLogic(mergeStatus, channelName);
+      
+      // Si la característica está desactivada (toggle en false), siempre permitir merges
+      if (result.featureEnabled === false) {
+        applyMergeButtonLogic('allowed', channelName);
+      } else {
+        applyMergeButtonLogic(mergeStatus, channelName);
+      }
     }
   });
 }
