@@ -1,6 +1,7 @@
 import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   SLACK_CONVERSATIONS_LIST_URL,
+  SLACK_CONVERSATIONS_HISTORY_URL,
   SLACK_AUTH_TEST_URL,
   SLACK_CONNECTIONS_OPEN_URL,
   MAX_MESSAGES,
@@ -386,7 +387,8 @@ async function connectToSlackSocketMode() {
 
   try {
     await fetchAndStoreTeamId(slackToken);
-    await resolveChannelId(slackToken, channelName);
+    const channelId = await resolveChannelId(slackToken, channelName);
+    await fetchAndStoreMessages(slackToken, channelId);
 
     const connectionsOpenResponse = await fetch(SLACK_CONNECTIONS_OPEN_URL, {
       method: 'POST',
@@ -454,6 +456,56 @@ async function connectToSlackSocketMode() {
   }
 }
 
+async function fetchAndStoreMessages(slackToken, channelId) {
+  if (!channelId) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${SLACK_CONVERSATIONS_HISTORY_URL}?channel=${channelId}&limit=${MAX_MESSAGES}`,
+      {
+        headers: { Authorization: `Bearer ${slackToken}` },
+      },
+    );
+    const data = await response.json();
+
+    if (data.ok) {
+      const messages = data.messages.map((msg) => ({
+        text: cleanSlackMessageText(msg.text),
+        ts: msg.ts,
+      }));
+      await chrome.storage.local.set({ messages });
+
+      // Recalcular lastMatchingMessage usando las funciones existentes
+      const {
+        currentAllowedPhrases,
+        currentDisallowedPhrases,
+        currentExceptionPhrases,
+      } = await getPhrasesFromStorage();
+
+      const { status: mergeStatus, message: matchingMessage } =
+        determineMergeStatus(
+          messages,
+          currentAllowedPhrases,
+          currentDisallowedPhrases,
+          currentExceptionPhrases,
+        );
+
+      updateExtensionIcon(mergeStatus);
+      await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
+
+      // Actualizar el estado completo para el content script y popup
+      const { channelName } = await chrome.storage.sync.get('channelName');
+      await updateContentScriptMergeState(channelName);
+    } else {
+      throw new Error(data.error);
+    }
+  } catch (error) {
+    await handleSlackApiError(error);
+  }
+}
+
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.action === 'getDefaultPhrases') {
     sendResponse({
@@ -462,6 +514,21 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       defaultExceptionPhrases: DEFAULT_EXCEPTION_PHRASES,
     });
     return true;
+  } else if (request.action === 'fetchNewMessages') {
+    const { slackToken, channelName } = await chrome.storage.sync.get([
+      'slackToken',
+      'channelName',
+    ]);
+    if (slackToken && channelName) {
+      try {
+        const channelId = await resolveChannelId(slackToken, channelName);
+        await chrome.storage.local.set({ messages: [] });
+        await fetchAndStoreMessages(slackToken, channelId);
+        await updateContentScriptMergeState(channelName);
+      } catch (error) {
+        await handleSlackApiError(error);
+      }
+    }
   } else if (request.action === 'reconnectSlack') {
     if (rtmWebSocket) {
       rtmWebSocket.close();

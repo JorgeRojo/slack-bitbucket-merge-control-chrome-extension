@@ -1,5 +1,6 @@
 import { SLACK_BASE_URL } from './constants.js';
 import { literals } from './literals.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
   const statusIcon = document.getElementById('status-icon');
   const statusText = document.getElementById('status-text');
@@ -47,6 +48,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  async function loadAndDisplayData() {
+    try {
+      const { slackToken, appToken, channelName } =
+        await chrome.storage.sync.get([
+          'slackToken',
+          'appToken',
+          'channelName',
+        ]);
+
+      const { channelId, teamId } = await chrome.storage.local.get([
+        'channelId',
+        'teamId',
+      ]);
+
+      if (!slackToken || !appToken || !channelName) {
+        updateUI('config_needed', literals.popup.textConfigNeeded);
+        return;
+      }
+
+      if (channelId && teamId) {
+        slackChannelLink.href = `${SLACK_BASE_URL}${teamId}/${channelId}`;
+      }
+
+      const { lastKnownMergeState } = await chrome.storage.local.get(
+        'lastKnownMergeState',
+      );
+
+      if (!lastKnownMergeState || !lastKnownMergeState.mergeStatus) {
+        updateUI('loading');
+        statusText.textContent = literals.popup.textWaitingMessages;
+        return;
+      }
+
+      const status = lastKnownMergeState.mergeStatus;
+      const lastSlackMessage = lastKnownMergeState.lastSlackMessage;
+
+      if (status === 'exception') {
+        updateUI(
+          'exception',
+          literals.popup.textAllowedWithExceptions,
+          lastSlackMessage,
+        );
+      } else if (status === 'allowed') {
+        updateUI('allowed', literals.popup.textMergeAllowed, lastSlackMessage);
+      } else if (status === 'disallowed') {
+        updateUI(
+          'disallowed',
+          literals.popup.textMergeNotAllowed,
+          lastSlackMessage,
+        );
+      } else {
+        updateUI('unknown', literals.popup.textCouldNotDetermineStatus);
+      }
+    } catch (error) {
+      console.error('Error processing messages:', error);
+      updateUI('disallowed', literals.popup.textErrorProcessingMessages);
+    }
+  }
+
   openOptionsButton.addEventListener('click', () => {
     if (chrome.runtime.openOptionsPage) {
       chrome.runtime.openOptionsPage();
@@ -55,57 +115,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  try {
-    const { slackToken, appToken, channelName } = await chrome.storage.sync.get(
-      ['slackToken', 'appToken', 'channelName'],
-    );
-
-    const { channelId, teamId } = await chrome.storage.local.get([
-      'channelId',
-      'teamId',
-    ]);
-
-    if (!slackToken || !appToken || !channelName) {
-      updateUI('config_needed', literals.popup.textConfigNeeded);
-      return;
+  // Escuchar cambios en el storage para refrescar el popup
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (
+      namespace === 'local' &&
+      (changes.lastKnownMergeState || changes.lastMatchingMessage)
+    ) {
+      loadAndDisplayData();
     }
+  });
 
-    if (channelId && teamId) {
-      slackChannelLink.href = `${SLACK_BASE_URL}${teamId}/${channelId}`;
-    }
-
-    const { lastKnownMergeState } = await chrome.storage.local.get(
-      'lastKnownMergeState',
-    );
-
-    if (!lastKnownMergeState || !lastKnownMergeState.mergeStatus) {
-      updateUI('loading');
-      statusText.textContent = literals.popup.textWaitingMessages;
-      return;
-    }
-
-    const status = lastKnownMergeState.mergeStatus;
-    const lastSlackMessage = lastKnownMergeState.lastSlackMessage;
-
-    if (status === 'exception') {
-      updateUI(
-        'exception',
-        literals.popup.textAllowedWithExceptions,
-        lastSlackMessage,
-      );
-    } else if (status === 'allowed') {
-      updateUI('allowed', literals.popup.textMergeAllowed, lastSlackMessage);
-    } else if (status === 'disallowed') {
-      updateUI(
-        'disallowed',
-        literals.popup.textMergeNotAllowed,
-        lastSlackMessage,
-      );
-    } else {
-      updateUI('unknown', literals.popup.textCouldNotDetermineStatus);
-    }
-  } catch (error) {
-    console.error('Error processing messages:', error);
-    updateUI('disallowed', literals.popup.textErrorProcessingMessages);
-  }
+  // Cargar datos inicialmente
+  await loadAndDisplayData();
 });

@@ -22,6 +22,16 @@ document.addEventListener('DOMContentLoaded', function () {
   );
   const statusDiv = document.getElementById('status');
 
+  channelInput.addEventListener('change', function () {
+    const channelName = channelInput.value.trim().replace(/^#/, '');
+    if (channelName) {
+      chrome.runtime.sendMessage({
+        action: 'fetchNewMessages',
+        channelName: channelName,
+      });
+    }
+  });
+
   chrome.storage.sync.get(
     [
       'slackToken',
