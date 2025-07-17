@@ -270,9 +270,16 @@ async function handleSlackApiError(error) {
 }
 
 async function updateContentScriptMergeState(channelName) {
-  const { messages: currentMessages = [], appStatus, featureEnabled } =
-    await chrome.storage.local.get(['messages', 'appStatus', 'featureEnabled']);
-  
+  const {
+    messages: currentMessages = [],
+    appStatus,
+    featureEnabled,
+  } = await chrome.storage.local.get([
+    'messages',
+    'appStatus',
+    'featureEnabled',
+  ]);
+
   // If feature is disabled (toggle is off), always allow merges
   if (featureEnabled === false) {
     await chrome.storage.local.set({
@@ -281,12 +288,12 @@ async function updateContentScriptMergeState(channelName) {
         mergeStatus: 'allowed',
         lastSlackMessage: null,
         channelName: channelName,
-        featureEnabled: false
+        featureEnabled: false,
       },
     });
-    
+
     updateExtensionIcon('allowed');
-    
+
     if (bitbucketTabId) {
       try {
         await chrome.tabs.sendMessage(bitbucketTabId, {
@@ -295,16 +302,16 @@ async function updateContentScriptMergeState(channelName) {
           channelName: channelName,
           isMergeDisabled: false,
           mergeStatus: 'allowed',
-          featureEnabled: false
+          featureEnabled: false,
         });
       } catch {
         /* empty */
       }
     }
-    
+
     return;
   }
-  
+
   const lastSlackMessage =
     currentMessages.length > 0
       ? currentMessages[currentMessages.length - 1]
@@ -346,7 +353,7 @@ async function updateContentScriptMergeState(channelName) {
       mergeStatus: mergeStatusForContentScript, // New field for more granular status
       lastSlackMessage: matchingMessageForContentScript, // Use the matching message
       channelName: channelName,
-      featureEnabled: featureEnabled !== false // Include feature toggle state
+      featureEnabled: featureEnabled !== false, // Include feature toggle state
     },
   });
 
@@ -366,7 +373,7 @@ async function updateContentScriptMergeState(channelName) {
           mergeStatusForContentScript === 'disallowed' ||
           mergeStatusForContentScript === 'exception',
         mergeStatus: mergeStatusForContentScript, // Pass granular status to content script
-        featureEnabled: featureEnabled !== false // Include feature toggle state
+        featureEnabled: featureEnabled !== false, // Include feature toggle state
       });
     } catch {
       /* empty */
@@ -562,12 +569,12 @@ const messageHandlers = {
   featureToggleChanged: async (request) => {
     const { enabled } = request;
     await chrome.storage.local.set({ featureEnabled: enabled });
-    
+
     const { channelName } = await chrome.storage.sync.get('channelName');
     if (channelName) {
       await updateContentScriptMergeState(channelName);
     }
-  }
+  },
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -578,29 +585,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 const updateMergeButtonFromLastKnownMergeState = () => {
-  chrome.storage.local.get(['lastKnownMergeState', 'featureEnabled'], async (result) => {
-    if (result.lastKnownMergeState) {
-      const { isMergeDisabled, lastSlackMessage, channelName, mergeStatus } =
-        result.lastKnownMergeState;
-      
-      // If feature is disabled via toggle, always allow merges
-      const finalIsMergeDisabled = result.featureEnabled === false ? false : isMergeDisabled;
-      const finalMergeStatus = result.featureEnabled === false ? 'allowed' : mergeStatus;
-      
-      try {
-        await chrome.tabs.sendMessage(bitbucketTabId, {
-          action: 'updateMergeButton',
-          lastSlackMessage: lastSlackMessage,
-          channelName: channelName,
-          isMergeDisabled: finalIsMergeDisabled,
-          mergeStatus: finalMergeStatus,
-          featureEnabled: result.featureEnabled !== false
-        });
-      } catch {
-        bitbucketTabId = null;
+  chrome.storage.local.get(
+    ['lastKnownMergeState', 'featureEnabled'],
+    async (result) => {
+      if (result.lastKnownMergeState) {
+        const { isMergeDisabled, lastSlackMessage, channelName, mergeStatus } =
+          result.lastKnownMergeState;
+
+        // If feature is disabled via toggle, always allow merges
+        const finalIsMergeDisabled =
+          result.featureEnabled === false ? false : isMergeDisabled;
+        const finalMergeStatus =
+          result.featureEnabled === false ? 'allowed' : mergeStatus;
+
+        try {
+          await chrome.tabs.sendMessage(bitbucketTabId, {
+            action: 'updateMergeButton',
+            lastSlackMessage: lastSlackMessage,
+            channelName: channelName,
+            isMergeDisabled: finalIsMergeDisabled,
+            mergeStatus: finalMergeStatus,
+            featureEnabled: result.featureEnabled !== false,
+          });
+        } catch {
+          bitbucketTabId = null;
+        }
       }
-    }
-  });
+    },
+  );
 };
 
 chrome.runtime.onInstalled.addListener(() => {
