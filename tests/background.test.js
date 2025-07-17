@@ -29,7 +29,8 @@ describe('cleanSlackMessageText', () => {
   });
 
   test('should handle multiple types of cleaning in one string', () => {
-    const inputText = 'Hey <@U123>, check <#C456|general> about <http://foo.bar|link>.';
+    const inputText =
+      'Hey <@U123>, check <#C456|general> about <http://foo.bar|link>.';
     expect(cleanSlackMessageText(inputText)).toBe(
       'Hey @MENTION, check about .',
     );
@@ -61,7 +62,9 @@ describe('normalizeText', () => {
   });
 
   test('should handle mixed case and extra spaces', () => {
-    expect(normalizeText('  TEST  string   with   spaces  ')).toBe('test string with spaces');
+    expect(normalizeText('  TEST  string   with   spaces  ')).toBe(
+      'test string with spaces',
+    );
   });
 
   test('should return empty string for null, undefined or empty string input', () => {

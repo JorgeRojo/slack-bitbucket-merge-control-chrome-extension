@@ -14,7 +14,7 @@ let bitbucketTabId = null;
 
 let rtmWebSocket = null;
 
-function normalizeText(text) {
+export function normalizeText(text) {
   if (!text) return '';
   return text
     .toLowerCase()
@@ -58,7 +58,6 @@ function determineMergeStatus(
   for (const message of messages) {
     const normalizedMessageText = normalizeText(message.text);
 
-    // Check exception phrases
     const matchingExceptionPhrase = currentExceptionPhrases.find((keyword) =>
       normalizedMessageText.includes(keyword),
     );
@@ -66,7 +65,6 @@ function determineMergeStatus(
       return { status: 'exception', message: message };
     }
 
-    // Check disallowed phrases
     const matchingDisallowedPhrase = currentDisallowedPhrases.find((keyword) =>
       normalizedMessageText.includes(keyword),
     );
@@ -74,7 +72,6 @@ function determineMergeStatus(
       return { status: 'disallowed', message: message };
     }
 
-    // Check allowed phrases
     const matchingAllowedPhrase = currentAllowedPhrases.find((keyword) =>
       normalizedMessageText.includes(keyword),
     );
@@ -171,7 +168,7 @@ async function resolveChannelId(slackToken, channelName) {
 
 async function processAndStoreMessage(message, _slackToken) {
   if (!message.ts || !message.text) {
-    return; // No new messages to process
+    return;
   }
 
   const messageTs = message.ts;
@@ -180,7 +177,7 @@ async function processAndStoreMessage(message, _slackToken) {
     (await chrome.storage.local.get('messages')).messages || [];
 
   if (storedMessages.some((m) => m.ts === messageTs)) {
-    return; // Message already processed
+    return;
   }
 
   storedMessages.push({
@@ -305,8 +302,6 @@ async function updateContentScriptMergeState(channelName) {
     appStatus &&
     (appStatus.includes('ERROR') || appStatus.includes('TOKEN'))
   ) {
-    // If there's an error, we don't want the extension to prevent merging.
-    // So, we set the status to 'allowed' for the content script.
     mergeStatusForContentScript = 'allowed';
   }
 
@@ -474,7 +469,6 @@ async function fetchAndStoreMessages(slackToken, channelId) {
       updateExtensionIcon(mergeStatus);
       await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
 
-      // Actualizar el estado completo para el content script y popup
       const { channelName } = await chrome.storage.sync.get('channelName');
       await updateContentScriptMergeState(channelName);
     } else {
