@@ -521,15 +521,16 @@ async function fetchAndStoreMessages(slackToken, channelId) {
   }
 }
 
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  if (request.action === 'getDefaultPhrases') {
+const messageHandlers = {
+  getDefaultPhrases: (request, sender, sendResponse) => {
     sendResponse({
       defaultAllowedPhrases: DEFAULT_ALLOWED_PHRASES,
       defaultDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,
       defaultExceptionPhrases: DEFAULT_EXCEPTION_PHRASES,
     });
     return true;
-  } else if (request.action === 'fetchNewMessages') {
+  },
+  fetchNewMessages: async (_request) => {
     const { slackToken, channelName } = await chrome.storage.sync.get([
       'slackToken',
       'channelName',
@@ -544,23 +545,33 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         await handleSlackApiError(error);
       }
     }
-  } else if (request.action === 'reconnectSlack') {
+  },
+  reconnectSlack: () => {
     if (rtmWebSocket) {
       rtmWebSocket.close();
     }
     connectToSlackSocketMode();
-  } else if (request.action === 'bitbucketTabLoaded' && sender.tab) {
-    const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
-    if (bitbucketUrl) {
-      const regexPattern = bitbucketUrl.replace(/\*/g, '.*');
-      const bitbucketRegex = new RegExp(regexPattern);
+  },
+  bitbucketTabLoaded: async (request, sender) => {
+    if (sender.tab) {
+      const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
+      if (bitbucketUrl) {
+        const regexPattern = bitbucketUrl.replace(/\*/g, '.*');
+        const bitbucketRegex = new RegExp(regexPattern);
 
-      if (bitbucketRegex.test(sender.tab.url)) {
-        bitbucketTabId = sender.tab.id;
-
-        updateMergeButtonFromLastKnownMergeState();
+        if (bitbucketRegex.test(sender.tab.url)) {
+          bitbucketTabId = sender.tab.id;
+          updateMergeButtonFromLastKnownMergeState();
+        }
       }
     }
+  },
+};
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  const handler = messageHandlers[request.action];
+  if (handler) {
+    return handler(request, sender, sendResponse);
   }
 });
 
