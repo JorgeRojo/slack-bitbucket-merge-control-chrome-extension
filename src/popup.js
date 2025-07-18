@@ -70,7 +70,15 @@ export function stopAndHideCountdown(countdownElement) {
 
 export function startCountdown(targetTime, countdownElement, toggleElement) {
   // Clear any existing interval before starting a new one
-  stopAndHideCountdown(countdownElement);
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+
+  // Make sure the countdown element is visible
+  if (countdownElement) {
+    countdownElement.style.display = 'block';
+  }
 
   const updateCountdown = () => {
     const currentTime = Date.now();
