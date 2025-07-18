@@ -67,10 +67,8 @@ class ToggleSwitch extends HTMLElement {
   }
 
   attributeChangedCallback(attributeName, _oldValue, _newValue) {
-    // Skip if the component hasn't been initialized yet
     if (!this._initialized) return;
 
-    // Skip if the shadow DOM isn't ready yet
     if (!this.shadowRoot || !this.shadowRoot.querySelector('.switch-container'))
       return;
 
@@ -96,7 +94,6 @@ class ToggleSwitch extends HTMLElement {
   }
 }
 
-// Define the custom element
 customElements.define('toggle-switch', ToggleSwitch);
 
 export default ToggleSwitch;

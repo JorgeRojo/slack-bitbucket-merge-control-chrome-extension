@@ -249,6 +249,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Use message passing for communication
 - Handle errors gracefully
 - Clean up resources when not needed
+- try to minimize the number of promises into a try catch structure.
 
 ### Content Scripts
 
@@ -274,7 +275,11 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 
 - Avoid comments in code, try to describe all with good naming for functions and variables
 - Add comments in code only when you consider the logic too complicate and could be difficult to deduce from the code context.
+- Add a comment always for each line that contains regular expressions an explain que regular expression result.
+- Add a comment always for each constant tha contains milliseconds as value.
+
 - Keep README updated with new features
+-
 
 ## Version Control
 

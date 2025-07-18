@@ -79,7 +79,6 @@ async function applyMergeButtonLogic(mergeStatus, channelName) {
 
 chrome.runtime.onMessage.addListener((request) => {
   if (request.action === 'updateMergeButton') {
-    // Si la característica está desactivada (toggle en false), siempre permitir merges
     if (request.featureEnabled === false) {
       applyMergeButtonLogic('allowed', request.channelName);
     } else {
@@ -95,7 +94,6 @@ function applyInitialMergeState() {
       if (result.lastKnownMergeState) {
         const { mergeStatus, channelName } = result.lastKnownMergeState;
 
-        // Si la característica está desactivada (toggle en false), siempre permitir merges
         if (result.featureEnabled === false) {
           applyMergeButtonLogic('allowed', channelName);
         } else {

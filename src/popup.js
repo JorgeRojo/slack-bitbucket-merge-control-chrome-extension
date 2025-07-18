@@ -2,8 +2,16 @@ import { SLACK_BASE_URL, FEATURE_REACTIVATION_TIMEOUT } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
 
-// Export functions for testing
-export function updateUI(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv, state, message, matchingMessage = null) {
+export function updateUI(
+  statusIcon,
+  statusText,
+  openOptionsButton,
+  slackChannelLink,
+  matchingMessageDiv,
+  state,
+  message,
+  matchingMessage = null,
+) {
   statusIcon.className = state;
   statusText.className = state;
 
@@ -32,8 +40,7 @@ export function updateUI(statusIcon, statusText, openOptionsButton, slackChannel
       break;
     default:
       statusIcon.textContent = literals.popup.emojiUnknown;
-      statusText.textContent =
-        message || literals.popup.textCouldNotDetermine;
+      statusText.textContent = message || literals.popup.textCouldNotDetermine;
       break;
   }
 
@@ -48,8 +55,8 @@ export function getReactivationTime() {
 }
 
 export function startCountdown(targetTime, countdownElement, toggleElement) {
-  let countdownInterval; // Declare the variable first
-  
+  let countdownInterval;
+
   const updateCountdown = () => {
     const currentTime = Date.now();
     const timeLeft = Math.max(0, targetTime - currentTime);
@@ -73,7 +80,7 @@ export function startCountdown(targetTime, countdownElement, toggleElement) {
 
   updateCountdown();
   countdownInterval = setInterval(updateCountdown, 1000);
-  return countdownInterval; // Return interval for testing
+  return countdownInterval;
 }
 
 export function scheduleFeatureReactivation(toggleElement, reactivationTime) {
@@ -91,38 +98,38 @@ export function scheduleFeatureReactivation(toggleElement, reactivationTime) {
 }
 
 export function initializeFeatureToggleState(toggleElement) {
-  chrome.storage.local.get(
-    ['featureEnabled', 'reactivationTime'],
-    (result) => {
-      const isEnabled = result.featureEnabled !== false;
-      const reactivationTime = result.reactivationTime;
-      const currentTime = Date.now();
+  chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
+    const isEnabled = result.featureEnabled !== false;
+    const reactivationTime = result.reactivationTime;
+    const currentTime = Date.now();
 
-      if (isEnabled) {
-        toggleElement.setAttribute('checked', '');
-      } else {
-        toggleElement.removeAttribute('checked');
+    if (isEnabled) {
+      toggleElement.setAttribute('checked', '');
+    } else {
+      toggleElement.removeAttribute('checked');
 
-        if (reactivationTime && reactivationTime > currentTime) {
-          const countdownElement = document.getElementById('countdown-timer');
-          if (countdownElement) {
-            countdownElement.style.display = 'block';
-            startCountdown(reactivationTime, countdownElement, toggleElement);
-          }
+      if (reactivationTime && reactivationTime > currentTime) {
+        const countdownElement = document.getElementById('countdown-timer');
+        if (countdownElement) {
+          countdownElement.style.display = 'block';
+          startCountdown(reactivationTime, countdownElement, toggleElement);
         }
       }
-    },
-  );
+    }
+  });
 }
 
-export async function loadAndDisplayData(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv) {
+export async function loadAndDisplayData(
+  statusIcon,
+  statusText,
+  openOptionsButton,
+  slackChannelLink,
+  matchingMessageDiv,
+) {
   try {
-    const { slackToken, appToken, channelName } =
-      await chrome.storage.sync.get([
-        'slackToken',
-        'appToken',
-        'channelName',
-      ]);
+    const { slackToken, appToken, channelName } = await chrome.storage.sync.get(
+      ['slackToken', 'appToken', 'channelName'],
+    );
 
     const { channelId, teamId } = await chrome.storage.local.get([
       'channelId',
@@ -130,7 +137,15 @@ export async function loadAndDisplayData(statusIcon, statusText, openOptionsButt
     ]);
 
     if (!slackToken || !appToken || !channelName) {
-      updateUI(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv, 'config_needed', literals.popup.textConfigNeeded);
+      updateUI(
+        statusIcon,
+        statusText,
+        openOptionsButton,
+        slackChannelLink,
+        matchingMessageDiv,
+        'config_needed',
+        literals.popup.textConfigNeeded,
+      );
       return;
     }
 
@@ -143,7 +158,14 @@ export async function loadAndDisplayData(statusIcon, statusText, openOptionsButt
     );
 
     if (!lastKnownMergeState || !lastKnownMergeState.mergeStatus) {
-      updateUI(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv, 'loading');
+      updateUI(
+        statusIcon,
+        statusText,
+        openOptionsButton,
+        slackChannelLink,
+        matchingMessageDiv,
+        'loading',
+      );
       statusText.textContent = literals.popup.textWaitingMessages;
       return;
     }
@@ -153,26 +175,59 @@ export async function loadAndDisplayData(statusIcon, statusText, openOptionsButt
 
     if (status === 'exception') {
       updateUI(
-        statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv,
+        statusIcon,
+        statusText,
+        openOptionsButton,
+        slackChannelLink,
+        matchingMessageDiv,
         'exception',
         literals.popup.textAllowedWithExceptions,
         lastSlackMessage,
       );
     } else if (status === 'allowed') {
-      updateUI(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv, 'allowed', literals.popup.textMergeAllowed, lastSlackMessage);
+      updateUI(
+        statusIcon,
+        statusText,
+        openOptionsButton,
+        slackChannelLink,
+        matchingMessageDiv,
+        'allowed',
+        literals.popup.textMergeAllowed,
+        lastSlackMessage,
+      );
     } else if (status === 'disallowed') {
       updateUI(
-        statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv,
+        statusIcon,
+        statusText,
+        openOptionsButton,
+        slackChannelLink,
+        matchingMessageDiv,
         'disallowed',
         literals.popup.textMergeNotAllowed,
         lastSlackMessage,
       );
     } else {
-      updateUI(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv, 'unknown', literals.popup.textCouldNotDetermineStatus);
+      updateUI(
+        statusIcon,
+        statusText,
+        openOptionsButton,
+        slackChannelLink,
+        matchingMessageDiv,
+        'unknown',
+        literals.popup.textCouldNotDetermineStatus,
+      );
     }
   } catch (error) {
     console.error('Error processing messages:', error);
-    updateUI(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv, 'disallowed', literals.popup.textErrorProcessingMessages);
+    updateUI(
+      statusIcon,
+      statusText,
+      openOptionsButton,
+      slackChannelLink,
+      matchingMessageDiv,
+      'disallowed',
+      literals.popup.textErrorProcessingMessages,
+    );
   }
 }
 
@@ -220,9 +275,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       namespace === 'local' &&
       (changes.lastKnownMergeState || changes.lastMatchingMessage)
     ) {
-      loadAndDisplayData(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv);
+      loadAndDisplayData(
+        statusIcon,
+        statusText,
+        openOptionsButton,
+        slackChannelLink,
+        matchingMessageDiv,
+      );
     }
   });
 
-  await loadAndDisplayData(statusIcon, statusText, openOptionsButton, slackChannelLink, matchingMessageDiv);
+  await loadAndDisplayData(
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+  );
 });
