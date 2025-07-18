@@ -126,6 +126,27 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   }
   ```
 
+- **Use object** for more than two parameters in functions:
+
+  ```javascript
+  // Good
+  function createUser({ name, email, age, role }) {
+    // function body
+  }
+
+  createUser({
+    name: 'John',
+    email: 'john@example.com',
+    age: 30,
+    role: 'admin',
+  });
+
+  // Avoid
+  function createUser(name, email, age, role) {
+    // function body
+  }
+  ```
+
 ## HTML
 
 ### Structure
