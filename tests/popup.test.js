@@ -154,10 +154,13 @@ describe('popup.js', () => {
       });
 
       // Verify that a message was sent
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
-        action: 'featureToggleChanged',
-        enabled: true,
-      });
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+        {
+          action: 'featureToggleChanged',
+          enabled: true,
+        },
+        expect.any(Function),
+      );
     });
 
     test('should handle options button click with openOptionsPage', async () => {
