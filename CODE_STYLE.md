@@ -156,13 +156,14 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Keep nesting minimal
 - Use self-closing tags for void elements
   ```html
-  <img src="image.jpg" alt="Description" /> <input type="text" />
+  <img src="image.jpg" alt="Description" />
+  <input type="text" />
   ```
 
 ### Attributes
 
 - Use double quotes for attribute values
-- Avoid comment in html
+- Avoid comments in HTML
 - Boolean attributes should not have values
   ```html
   <input type="text" disabled />
@@ -224,7 +225,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 ### Best Practices
 
 - Avoid using `!important`
-- Avoid comment in css
+- Avoid comments in CSS
 - Use CSS variables for repeated values
 
   ```css
@@ -249,7 +250,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Use message passing for communication
 - Handle errors gracefully
 - Clean up resources when not needed
-- try to minimize the number of promises into a try catch structure.
+- Try to minimize the number of promises by using try-catch structures
 
 ### Content Scripts
 
@@ -274,13 +275,11 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 
 ## Documentation
 
-- Avoid comments in code, try to create functions and variables with descriptive names instead putting comments.
-- Add comments in code only when you consider the logic too complicate and could be difficult to deduce from the code context.
-- Add a comment always for each line that contains regular expressions an explain que regular expression result.
-- Add a comment always for each constant tha contains milliseconds as value.
-
+- Use descriptive function and variable names to make code self-documenting
+- Add comments only for complex logic that cannot be easily understood from the code context
+- Always add comments for regular expressions explaining their purpose and expected matches
+- Always add comments for constants that contain millisecond values, explaining their duration
 - Keep README updated with new features
--
 
 ## Version Control
 
