@@ -72,13 +72,14 @@ Thank you for your interest in contributing to this project! This document outli
 - Limit the first line to 72 characters or less
 - Reference issues and pull requests after the first line
 - Consider using a commit message format like:
+
   ```
   feat: add countdown timer for switch reactivation
-  
+
   - Implement 5-minute countdown timer
   - Add visual indicator in popup
   - Ensure timer persists across popup reopens
-  
+
   Fixes #123
   ```
 

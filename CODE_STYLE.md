@@ -7,18 +7,21 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 ### Naming Conventions
 
 - **Variables and Functions**: Use camelCase
+
   ```javascript
   const userName = 'John';
   function getUserData() { ... }
   ```
 
 - **Classes and Components**: Use PascalCase
+
   ```javascript
   class UserProfile { ... }
   const ToggleSwitch = { ... }
   ```
 
 - **Constants**: Use UPPER_SNAKE_CASE
+
   ```javascript
   const MAX_RETRY_COUNT = 3;
   const DEFAULT_TIMEOUT = 5000;
@@ -34,13 +37,14 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 ### Code Structure
 
 - **Imports**: Group and order imports
+
   ```javascript
   // 1. Built-in modules
   import { useState } from 'react';
-  
+
   // 2. External libraries
   import { debounce } from 'lodash';
-  
+
   // 3. Internal modules
   import { constants } from './constants.js';
   ```
@@ -48,13 +52,14 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - **Function Length**: Keep functions under 30 lines when possible
 - **Nesting**: Avoid nesting more than 3 levels deep
 - **Early Returns**: Use early returns to avoid deep nesting
+
   ```javascript
   // Good
   function example(value) {
     if (!value) return null;
     // rest of function
   }
-  
+
   // Avoid
   function example(value) {
     if (value) {
@@ -66,36 +71,42 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 ### Best Practices
 
 - **Use Destructuring**:
+
   ```javascript
   const { name, age } = user;
   ```
 
 - **Use Spread Operator** for shallow copies:
+
   ```javascript
   const newArray = [...oldArray];
   const newObject = { ...oldObject };
   ```
 
 - **Template Literals** over string concatenation:
+
   ```javascript
   // Good
   const greeting = `Hello, ${name}!`;
-  
+
   // Avoid
   const greeting = 'Hello, ' + name + '!';
   ```
 
 - **Optional Chaining** for nested properties:
+
   ```javascript
   const userName = user?.profile?.name;
   ```
 
 - **Nullish Coalescing** for defaults:
+
   ```javascript
   const count = value ?? 0;
   ```
 
 - **Async/Await** over Promise chains:
+
   ```javascript
   // Good
   async function fetchData() {
@@ -106,12 +117,12 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
       console.error(error);
     }
   }
-  
+
   // Avoid
   function fetchData() {
     return fetch(url)
-      .then(response => response.json())
-      .catch(error => console.error(error));
+      .then((response) => response.json())
+      .catch((error) => console.error(error));
   }
   ```
 
@@ -124,13 +135,13 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Keep nesting minimal
 - Use self-closing tags for void elements
   ```html
-  <img src="image.jpg" alt="Description" />
-  <input type="text" />
+  <img src="image.jpg" alt="Description" /> <input type="text" />
   ```
 
 ### Attributes
 
 - Use double quotes for attribute values
+- Avoid comment in html
 - Boolean attributes should not have values
   ```html
   <input type="text" disabled />
@@ -139,10 +150,10 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   1. id
   2. class
   3. name
-  4. data-*
+  4. data-\*
   5. src, href, etc.
   6. title, alt
-  7. aria-*, role
+  7. aria-\*, role
   8. event handlers
 
 ### Accessibility
@@ -177,10 +188,11 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   4. Visual (color, background)
   5. Misc (cursor, overflow)
 - Use shorthand properties when possible
+
   ```css
   /* Good */
   margin: 10px 20px;
-  
+
   /* Avoid when unnecessary */
   margin-top: 10px;
   margin-right: 20px;
@@ -191,16 +203,19 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 ### Best Practices
 
 - Avoid using `!important`
+- Avoid comment in css
 - Use CSS variables for repeated values
+
   ```css
   :root {
     --primary-color: #4a154b;
   }
-  
+
   .button {
     background-color: var(--primary-color);
   }
   ```
+
 - Minimize specificity
 - Use media queries for responsive design
 - Comment complex selectors or rules
@@ -236,17 +251,8 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 
 ## Documentation
 
-- Document complex functions with JSDoc
-  ```javascript
-  /**
-   * Processes a message from Slack
-   * @param {Object} message - The message object from Slack API
-   * @param {string} slackToken - The Slack API token
-   * @returns {Promise<void>}
-   */
-  async function processMessage(message, slackToken) { ... }
-  ```
-- Add comments for complex logic
+- Avoid comments in code, try to describe all with good naming for functions and variables
+- Add comments in code only when you consider the logic too complicate and could be difficult to deduce from the code context.
 - Keep README updated with new features
 
 ## Version Control
