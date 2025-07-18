@@ -1,0 +1,256 @@
+# Code Style Guide
+
+This document provides detailed coding style guidelines for the Slack-Bitbucket Merge Control Chrome Extension project.
+
+## JavaScript
+
+### Naming Conventions
+
+- **Variables and Functions**: Use camelCase
+  ```javascript
+  const userName = 'John';
+  function getUserData() { ... }
+  ```
+
+- **Classes and Components**: Use PascalCase
+  ```javascript
+  class UserProfile { ... }
+  const ToggleSwitch = { ... }
+  ```
+
+- **Constants**: Use UPPER_SNAKE_CASE
+  ```javascript
+  const MAX_RETRY_COUNT = 3;
+  const DEFAULT_TIMEOUT = 5000;
+  ```
+
+- **Private Properties/Methods**: Prefix with underscore
+  ```javascript
+  class Example {
+    _privateMethod() { ... }
+  }
+  ```
+
+### Code Structure
+
+- **Imports**: Group and order imports
+  ```javascript
+  // 1. Built-in modules
+  import { useState } from 'react';
+  
+  // 2. External libraries
+  import { debounce } from 'lodash';
+  
+  // 3. Internal modules
+  import { constants } from './constants.js';
+  ```
+
+- **Function Length**: Keep functions under 30 lines when possible
+- **Nesting**: Avoid nesting more than 3 levels deep
+- **Early Returns**: Use early returns to avoid deep nesting
+  ```javascript
+  // Good
+  function example(value) {
+    if (!value) return null;
+    // rest of function
+  }
+  
+  // Avoid
+  function example(value) {
+    if (value) {
+      // rest of function
+    }
+  }
+  ```
+
+### Best Practices
+
+- **Use Destructuring**:
+  ```javascript
+  const { name, age } = user;
+  ```
+
+- **Use Spread Operator** for shallow copies:
+  ```javascript
+  const newArray = [...oldArray];
+  const newObject = { ...oldObject };
+  ```
+
+- **Template Literals** over string concatenation:
+  ```javascript
+  // Good
+  const greeting = `Hello, ${name}!`;
+  
+  // Avoid
+  const greeting = 'Hello, ' + name + '!';
+  ```
+
+- **Optional Chaining** for nested properties:
+  ```javascript
+  const userName = user?.profile?.name;
+  ```
+
+- **Nullish Coalescing** for defaults:
+  ```javascript
+  const count = value ?? 0;
+  ```
+
+- **Async/Await** over Promise chains:
+  ```javascript
+  // Good
+  async function fetchData() {
+    try {
+      const response = await fetch(url);
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+  // Avoid
+  function fetchData() {
+    return fetch(url)
+      .then(response => response.json())
+      .catch(error => console.error(error));
+  }
+  ```
+
+## HTML
+
+### Structure
+
+- Use proper indentation (2 spaces)
+- Use semantic HTML elements
+- Keep nesting minimal
+- Use self-closing tags for void elements
+  ```html
+  <img src="image.jpg" alt="Description" />
+  <input type="text" />
+  ```
+
+### Attributes
+
+- Use double quotes for attribute values
+- Boolean attributes should not have values
+  ```html
+  <input type="text" disabled />
+  ```
+- Order attributes consistently:
+  1. id
+  2. class
+  3. name
+  4. data-*
+  5. src, href, etc.
+  6. title, alt
+  7. aria-*, role
+  8. event handlers
+
+### Accessibility
+
+- Always include alt text for images
+- Use appropriate ARIA attributes
+- Ensure proper heading hierarchy
+- Use semantic elements over generic divs when possible
+
+## CSS
+
+### Naming Conventions
+
+- Use kebab-case for class names
+  ```css
+  .user-profile { ... }
+  ```
+- Use BEM (Block Element Modifier) methodology for complex components
+  ```css
+  .card { ... }
+  .card__title { ... }
+  .card--featured { ... }
+  ```
+
+### Structure
+
+- Group related properties
+- Follow a consistent order of properties:
+  1. Positioning (position, top, z-index)
+  2. Box model (display, width, padding)
+  3. Typography (font, line-height)
+  4. Visual (color, background)
+  5. Misc (cursor, overflow)
+- Use shorthand properties when possible
+  ```css
+  /* Good */
+  margin: 10px 20px;
+  
+  /* Avoid when unnecessary */
+  margin-top: 10px;
+  margin-right: 20px;
+  margin-bottom: 10px;
+  margin-left: 20px;
+  ```
+
+### Best Practices
+
+- Avoid using `!important`
+- Use CSS variables for repeated values
+  ```css
+  :root {
+    --primary-color: #4a154b;
+  }
+  
+  .button {
+    background-color: var(--primary-color);
+  }
+  ```
+- Minimize specificity
+- Use media queries for responsive design
+- Comment complex selectors or rules
+
+## Chrome Extension Specific
+
+### Background Scripts
+
+- Keep background scripts lightweight
+- Use message passing for communication
+- Handle errors gracefully
+- Clean up resources when not needed
+
+### Content Scripts
+
+- Minimize DOM manipulation
+- Use event delegation for performance
+- Avoid conflicts with page scripts
+- Use unique class names to prevent style collisions
+
+### Manifest
+
+- Keep permissions minimal
+- Use declarative content when possible
+- Version numbers should follow semantic versioning
+
+## Testing
+
+- Write tests for all new functionality
+- Test edge cases
+- Mock external dependencies
+- Keep tests independent of each other
+
+## Documentation
+
+- Document complex functions with JSDoc
+  ```javascript
+  /**
+   * Processes a message from Slack
+   * @param {Object} message - The message object from Slack API
+   * @param {string} slackToken - The Slack API token
+   * @returns {Promise<void>}
+   */
+  async function processMessage(message, slackToken) { ... }
+  ```
+- Add comments for complex logic
+- Keep README updated with new features
+
+## Version Control
+
+- Make atomic commits (one logical change per commit)
+- Write descriptive commit messages
+- Reference issue numbers in commits when applicable
