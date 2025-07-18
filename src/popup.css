@@ -21,6 +21,9 @@ h1 {
   text-align: center;
   padding: 20px;
   background-color: var(--ft-color-lightest);
+  border-radius: 8px;
+  box-shadow: var(--ft-box-shadow-2);
+  margin: 0 16px 16px;
 }
 
 #status-icon {
@@ -115,12 +118,6 @@ h1 {
   text-align: center;
   border-top: 1px solid var(--ft-color-grey-2);
   box-sizing: border-box;
-}
-
-.control-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* Estilos para el contador de tiempo */
