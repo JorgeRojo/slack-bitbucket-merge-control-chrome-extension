@@ -21,31 +21,7 @@ function formatCommaToMultiline(text) {
   return text.split(',').join('\n');
 }
 
-/**
- * Inicializa el tema según la preferencia guardada
- */
-function initializeTheme() {
-  chrome.storage.local.get(['theme'], (result) => {
-    const theme = result.theme || 'light';
-    document.body.setAttribute('data-theme', theme);
-  });
-}
-
-/**
- * Cambia el tema entre claro y oscuro
- */
-function toggleTheme() {
-  const currentTheme = document.body.getAttribute('data-theme') || 'light';
-  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-  document.body.setAttribute('data-theme', newTheme);
-  chrome.storage.local.set({ theme: newTheme });
-}
-
 document.addEventListener('DOMContentLoaded', function () {
-  // Inicializar tema
-  initializeTheme();
-
   const saveButton = document.getElementById('save');
   const tokenInput = document.getElementById('slackToken');
   const appTokenInput = document.getElementById('appToken');
@@ -58,12 +34,6 @@ document.addEventListener('DOMContentLoaded', function () {
     'mergeButtonSelector',
   );
   const statusDiv = document.getElementById('status');
-  const themeToggle = document.getElementById('theme-toggle');
-
-  // Configurar botón de cambio de tema
-  if (themeToggle) {
-    themeToggle.addEventListener('click', toggleTheme);
-  }
 
   channelInput.addEventListener('change', function () {
     const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove leading # from channel name
