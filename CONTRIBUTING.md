@@ -67,6 +67,7 @@ Thank you for your interest in contributing to this project! This document outli
 
 ### Commit Message Guidelines
 
+- Use English
 - Use the present tense ("Add feature" not "Added feature")
 - Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
 - Limit the first line to 72 characters or less

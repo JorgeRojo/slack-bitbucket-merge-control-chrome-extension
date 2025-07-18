@@ -342,7 +342,7 @@ async function updateContentScriptMergeState(channelName) {
   }
 }
 
-async function fetchAndStoreTeamId(slackToken) {
+export async function fetchAndStoreTeamId(slackToken) {
   try {
     const response = await fetch(SLACK_AUTH_TEST_URL, {
       headers: { Authorization: `Bearer ${slackToken}` },
@@ -436,7 +436,7 @@ async function connectToSlackSocketMode() {
   }
 }
 
-async function fetchAndStoreMessages(slackToken, channelId) {
+export async function fetchAndStoreMessages(slackToken, channelId) {
   if (!channelId) {
     return;
   }
@@ -551,7 +551,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-const updateMergeButtonFromLastKnownMergeState = () => {
+export const updateMergeButtonFromLastKnownMergeState = () => {
   chrome.storage.local.get(
     ['lastKnownMergeState', 'featureEnabled'],
     async (result) => {
@@ -581,7 +581,7 @@ const updateMergeButtonFromLastKnownMergeState = () => {
   );
 };
 
-async function scheduleFeatureReactivation() {
+export async function scheduleFeatureReactivation() {
   const reactivationTime = Date.now() + FEATURE_REACTIVATION_TIMEOUT;
   await chrome.storage.local.set({ reactivationTime });
 
@@ -595,7 +595,7 @@ async function scheduleFeatureReactivation() {
   }, FEATURE_REACTIVATION_TIMEOUT);
 }
 
-async function checkScheduledReactivation() {
+export async function checkScheduledReactivation() {
   const { reactivationTime, featureEnabled } = await chrome.storage.local.get([
     'reactivationTime',
     'featureEnabled',
@@ -612,7 +612,7 @@ async function checkScheduledReactivation() {
   }
 }
 
-async function reactivateFeature() {
+export async function reactivateFeature() {
   await chrome.storage.local.set({ featureEnabled: true });
 
   const { channelName } = await chrome.storage.sync.get('channelName');
@@ -646,7 +646,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   }
 });
 
-async function registerBitbucketContentScript() {
+export async function registerBitbucketContentScript() {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
   try {

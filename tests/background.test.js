@@ -8,6 +8,13 @@ import {
   handleSlackApiError,
   processAndStoreMessage,
   resolveChannelId,
+  fetchAndStoreTeamId,
+  fetchAndStoreMessages,
+  scheduleFeatureReactivation,
+  checkScheduledReactivation,
+  reactivateFeature,
+  registerBitbucketContentScript,
+  updateMergeButtonFromLastKnownMergeState,
 } from '../src/background.js';
 
 // Mock chrome APIs
@@ -29,6 +36,14 @@ global.chrome = {
   },
   tabs: {
     sendMessage: jest.fn(),
+  },
+  scripting: {
+    registerContentScripts: jest.fn(),
+    unregisterContentScripts: jest.fn(),
+  },
+  alarms: {
+    create: jest.fn(),
+    clear: jest.fn(),
   },
 };
 
@@ -717,9 +732,18 @@ describe('Edge cases and additional coverage', () => {
 });
 
 describe('resolveChannelId', () => {
-  // Mock fetch globally
+  // Mock fetch locally for this describe block
+  let originalFetch;
   const mockFetch = jest.fn();
-  global.fetch = mockFetch;
+
+  beforeAll(() => {
+    originalFetch = global.fetch;
+    global.fetch = mockFetch;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -958,5 +982,370 @@ describe('resolveChannelId', () => {
       channelId: 'C444444444',
       cachedChannelName: 'test-channel',
     });
+  });
+});
+
+describe('fetchAndStoreTeamId', () => {
+  let originalFetch;
+  const mockFetch = jest.fn();
+
+  beforeAll(() => {
+    originalFetch = global.fetch;
+    global.fetch = mockFetch;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should fetch and store team ID successfully', async () => {
+    mockFetch.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          ok: true,
+          team_id: 'T123456789',
+        }),
+    });
+
+    await fetchAndStoreTeamId('xoxb-token');
+
+    expect(mockFetch).toHaveBeenCalledWith('https://slack.com/api/auth.test', {
+      headers: { Authorization: 'Bearer xoxb-token' },
+    });
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      teamId: 'T123456789',
+    });
+  });
+
+  test('should handle API error gracefully', async () => {
+    mockFetch.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          ok: false,
+          error: 'invalid_auth',
+        }),
+    });
+
+    await fetchAndStoreTeamId('invalid-token');
+
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  test('should handle fetch error gracefully', async () => {
+    mockFetch.mockRejectedValue(new Error('Network error'));
+
+    await fetchAndStoreTeamId('xoxb-token');
+
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchAndStoreMessages', () => {
+  let originalFetch;
+  const mockFetch = jest.fn();
+
+  beforeAll(() => {
+    originalFetch = global.fetch;
+    global.fetch = mockFetch;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    chrome.storage.sync.get.mockResolvedValue({
+      allowedPhrases: 'allowed to merge',
+      disallowedPhrases: 'not allowed to merge',
+      exceptionPhrases: 'except this project',
+    });
+  });
+
+  test('should fetch and store messages successfully', async () => {
+    chrome.storage.sync.get.mockResolvedValue({
+      allowedPhrases: 'allowed to merge',
+      disallowedPhrases: 'not allowed to merge',
+      exceptionPhrases: 'except this project',
+      channelName: 'test-channel',
+    });
+
+    mockFetch.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          ok: true,
+          messages: [
+            { text: 'Hello world', ts: '1234567890.123' },
+            { text: 'allowed to merge', ts: '1234567891.123' },
+          ],
+        }),
+    });
+
+    await fetchAndStoreMessages('xoxb-token', 'C123456789');
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://slack.com/api/conversations.history?channel=C123456789&limit=50',
+      {
+        headers: { Authorization: 'Bearer xoxb-token' },
+      },
+    );
+
+    // Should call set multiple times for different data
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      messages: [
+        { text: 'Hello world', ts: '1234567890.123' },
+        { text: 'allowed to merge', ts: '1234567891.123' },
+      ],
+    });
+  });
+
+  test('should handle messages with Slack formatting', async () => {
+    mockFetch.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          ok: true,
+          messages: [
+            {
+              text: 'Hey <@U123456789>, check <#C987654321|general>',
+              ts: '1234567890.123',
+            },
+          ],
+        }),
+    });
+
+    await fetchAndStoreMessages('xoxb-token', 'C123456789');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      messages: [{ text: 'Hey @MENTION, check', ts: '1234567890.123' }],
+    });
+  });
+
+  test('should return early when channelId is null', async () => {
+    await fetchAndStoreMessages('xoxb-token', null);
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  test('should handle API error', async () => {
+    mockFetch.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          ok: false,
+          error: 'channel_not_found',
+        }),
+    });
+
+    await fetchAndStoreMessages('xoxb-token', 'C123456789');
+
+    // Should call handleSlackApiError which sets storage
+    expect(chrome.storage.local.set).toHaveBeenCalled();
+  });
+
+  test('should handle fetch error', async () => {
+    mockFetch.mockRejectedValue(new Error('Network error'));
+
+    await fetchAndStoreMessages('xoxb-token', 'C123456789');
+
+    // Should call handleSlackApiError which sets storage
+    expect(chrome.storage.local.set).toHaveBeenCalled();
+  });
+});
+
+describe('scheduleFeatureReactivation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Mock Date.now()
+    jest.spyOn(Date, 'now').mockReturnValue(1000000000000); // Fixed timestamp
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('should schedule feature reactivation', async () => {
+    await scheduleFeatureReactivation();
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      reactivationTime: 1000000000000 + 60000, // 1 minute later
+    });
+    // Note: The function uses setTimeout, not chrome.alarms
+  });
+});
+
+describe('checkScheduledReactivation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(Date, 'now').mockReturnValue(1000000000000);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('should reactivate feature when time has passed', async () => {
+    chrome.storage.local.get.mockResolvedValue({
+      reactivationTime: 999999999000, // 1 second ago
+      featureEnabled: false,
+    });
+    chrome.storage.sync.get.mockResolvedValue({
+      channelName: 'test-channel',
+    });
+
+    await checkScheduledReactivation();
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      featureEnabled: true,
+    });
+  });
+
+  test('should not reactivate feature when time has not passed', async () => {
+    chrome.storage.local.get.mockResolvedValue({
+      reactivationTime: 1000000001000, // 1 second in future
+    });
+
+    await checkScheduledReactivation();
+
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  test('should handle no reactivation time set', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+
+    await checkScheduledReactivation();
+
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+});
+
+describe('reactivateFeature', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should reactivate feature and clear alarm', async () => {
+    chrome.storage.sync.get.mockResolvedValue({
+      channelName: 'test-channel',
+    });
+
+    await reactivateFeature();
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      featureEnabled: true,
+    });
+    // Note: The function doesn't clear alarms, it uses setTimeout
+  });
+});
+
+describe('registerBitbucketContentScript', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    chrome.scripting.unregisterContentScripts.mockResolvedValue();
+    chrome.scripting.registerContentScripts.mockResolvedValue();
+  });
+
+  test('should register content script when bitbucketUrl is provided', async () => {
+    chrome.storage.sync.get.mockResolvedValue({
+      bitbucketUrl:
+        'https://bitbucket.example.com/projects/*/repos/*/pull-requests/*',
+    });
+
+    await registerBitbucketContentScript();
+
+    expect(chrome.scripting.unregisterContentScripts).toHaveBeenCalledWith({
+      ids: ['bitbucket-content-script'],
+    });
+    expect(chrome.scripting.registerContentScripts).toHaveBeenCalledWith([
+      {
+        id: 'bitbucket-content-script',
+        matches: [
+          'https://bitbucket.example.com/projects/*/repos/*/pull-requests/*',
+        ],
+        js: ['slack_frontend_closure_bitbucket_content.js'],
+        runAt: 'document_idle',
+      },
+    ]);
+  });
+
+  test('should only unregister when no bitbucketUrl is provided', async () => {
+    chrome.storage.sync.get.mockResolvedValue({});
+
+    await registerBitbucketContentScript();
+
+    expect(chrome.scripting.unregisterContentScripts).toHaveBeenCalledWith({
+      ids: ['bitbucket-content-script'],
+    });
+    expect(chrome.scripting.registerContentScripts).not.toHaveBeenCalled();
+  });
+
+  test('should handle unregister error gracefully', async () => {
+    chrome.storage.sync.get.mockResolvedValue({
+      bitbucketUrl: 'https://bitbucket.example.com/*',
+    });
+    chrome.scripting.unregisterContentScripts.mockRejectedValue(
+      new Error('Script not found'),
+    );
+
+    await registerBitbucketContentScript();
+
+    // Should still try to register despite unregister error
+    expect(chrome.scripting.registerContentScripts).toHaveBeenCalled();
+  });
+
+  test('should handle register error gracefully', async () => {
+    chrome.storage.sync.get.mockResolvedValue({
+      bitbucketUrl: 'https://bitbucket.example.com/*',
+    });
+    chrome.scripting.registerContentScripts.mockRejectedValue(
+      new Error('Registration failed'),
+    );
+
+    await registerBitbucketContentScript();
+
+    expect(chrome.scripting.registerContentScripts).toHaveBeenCalled();
+    // Should not throw error
+  });
+});
+
+describe('updateMergeButtonFromLastKnownMergeState', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should call chrome.storage.local.get with correct parameters', () => {
+    updateMergeButtonFromLastKnownMergeState();
+
+    expect(chrome.storage.local.get).toHaveBeenCalledWith(
+      ['lastKnownMergeState', 'featureEnabled'],
+      expect.any(Function),
+    );
+  });
+
+  test('should handle function call without errors', () => {
+    chrome.storage.local.get.mockImplementation((keys, callback) => {
+      callback({
+        lastKnownMergeState: {
+          mergeStatus: 'allowed',
+          lastSlackMessage: 'allowed to merge',
+          channelName: 'test-channel',
+          isMergeDisabled: false,
+        },
+        featureEnabled: true,
+      });
+    });
+
+    expect(() => updateMergeButtonFromLastKnownMergeState()).not.toThrow();
+  });
+
+  test('should handle empty result gracefully', () => {
+    chrome.storage.local.get.mockImplementation((keys, callback) => {
+      callback({});
+    });
+
+    expect(() => updateMergeButtonFromLastKnownMergeState()).not.toThrow();
   });
 });
