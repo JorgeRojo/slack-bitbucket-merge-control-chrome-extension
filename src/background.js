@@ -36,7 +36,7 @@ export function cleanSlackMessageText(text) {
   return cleanedText;
 }
 
-function determineMergeStatus({
+export function determineMergeStatus({
   messages,
   allowedPhrases,
   disallowedPhrases,
@@ -74,7 +74,7 @@ function determineMergeStatus({
   return { status: 'unknown', message: null };
 }
 
-function updateExtensionIcon(status) {
+export function updateExtensionIcon(status) {
   let path16, path48;
   switch (status) {
     case 'loading':
@@ -154,7 +154,7 @@ async function resolveChannelId(slackToken, channelName) {
   return channelId;
 }
 
-async function processAndStoreMessage(message, _slackToken) {
+export async function processAndStoreMessage(message, _slackToken) {
   if (!message.ts || !message.text) {
     return;
   }
@@ -201,7 +201,7 @@ async function processAndStoreMessage(message, _slackToken) {
   await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
 }
 
-async function getPhrasesFromStorage() {
+export async function getPhrasesFromStorage() {
   const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
     await chrome.storage.sync.get([
       'allowedPhrases',
@@ -228,8 +228,8 @@ async function getPhrasesFromStorage() {
   };
 }
 
-async function handleSlackApiError(error) {
-  const errorMessage = error.message;
+export async function handleSlackApiError(error) {
+  const errorMessage = error?.message || '';
 
   if (
     errorMessage.includes('channel_not_found') ||

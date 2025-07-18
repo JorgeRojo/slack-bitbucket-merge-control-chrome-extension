@@ -1,4 +1,35 @@
-import { cleanSlackMessageText, normalizeText } from '../src/background.js';
+import { jest } from '@jest/globals';
+import {
+  cleanSlackMessageText,
+  normalizeText,
+  determineMergeStatus,
+  updateExtensionIcon,
+  getPhrasesFromStorage,
+  handleSlackApiError,
+  processAndStoreMessage,
+} from '../src/background.js';
+
+// Mock chrome APIs
+global.chrome = {
+  action: {
+    setIcon: jest.fn(),
+  },
+  storage: {
+    sync: {
+      get: jest.fn(),
+    },
+    local: {
+      get: jest.fn(),
+      set: jest.fn(),
+    },
+  },
+  runtime: {
+    sendMessage: jest.fn(),
+  },
+  tabs: {
+    sendMessage: jest.fn(),
+  },
+};
 
 describe('cleanSlackMessageText', () => {
   test('should replace user mentions with @MENTION', () => {
@@ -46,6 +77,16 @@ describe('cleanSlackMessageText', () => {
     const inputText = 'This is a regular message.';
     expect(cleanSlackMessageText(inputText)).toBe('This is a regular message.');
   });
+
+  test('should handle line breaks and tabs', () => {
+    const inputText = 'Line 1\nLine 2\tTabbed';
+    expect(cleanSlackMessageText(inputText)).toBe('Line 1 Line 2 Tabbed');
+  });
+
+  test('should handle multiple whitespace characters', () => {
+    const inputText = 'Text   with    multiple     spaces';
+    expect(cleanSlackMessageText(inputText)).toBe('Text with multiple spaces');
+  });
 });
 
 describe('normalizeText', () => {
@@ -71,5 +112,605 @@ describe('normalizeText', () => {
     expect(normalizeText(null)).toBe('');
     expect(normalizeText(undefined)).toBe('');
     expect(normalizeText('')).toBe('');
+  });
+
+  test('should handle accented characters from different languages', () => {
+    expect(normalizeText('Café résumé naïve')).toBe('cafe resume naive');
+  });
+
+  test('should handle special Unicode characters', () => {
+    expect(normalizeText('Ñoño piñata')).toBe('nono pinata');
+  });
+});
+
+describe('determineMergeStatus', () => {
+  const mockAllowedPhrases = ['allowed to merge'];
+  const mockDisallowedPhrases = ['not allowed to merge'];
+  const mockExceptionPhrases = ['except this project'];
+
+  test('should return allowed status when allowed phrase is found', () => {
+    const result = determineMergeStatus({
+      messages: [{ text: 'allowed to merge this', ts: '123' }],
+      allowedPhrases: mockAllowedPhrases,
+      disallowedPhrases: mockDisallowedPhrases,
+      exceptionPhrases: mockExceptionPhrases,
+    });
+
+    expect(result.status).toBe('allowed');
+    expect(result.message.text).toBe('allowed to merge this');
+  });
+
+  test('should return disallowed status when disallowed phrase is found', () => {
+    const result = determineMergeStatus({
+      messages: [{ text: 'not allowed to merge anything', ts: '123' }],
+      allowedPhrases: mockAllowedPhrases,
+      disallowedPhrases: mockDisallowedPhrases,
+      exceptionPhrases: mockExceptionPhrases,
+    });
+
+    expect(result.status).toBe('disallowed');
+    expect(result.message.text).toBe('not allowed to merge anything');
+  });
+
+  test('should return exception status when exception phrase is found', () => {
+    const result = determineMergeStatus({
+      messages: [{ text: 'allowed to merge except this project', ts: '123' }],
+      allowedPhrases: mockAllowedPhrases,
+      disallowedPhrases: mockDisallowedPhrases,
+      exceptionPhrases: mockExceptionPhrases,
+    });
+
+    expect(result.status).toBe('exception');
+    expect(result.message.text).toBe('allowed to merge except this project');
+  });
+
+  test('should return unknown status when no phrases match', () => {
+    const result = determineMergeStatus({
+      messages: [{ text: 'just a regular message', ts: '123' }],
+      allowedPhrases: mockAllowedPhrases,
+      disallowedPhrases: mockDisallowedPhrases,
+      exceptionPhrases: mockExceptionPhrases,
+    });
+
+    expect(result.status).toBe('unknown');
+    expect(result.message).toBe(null);
+  });
+
+  test('should handle empty messages array', () => {
+    const result = determineMergeStatus({
+      messages: [],
+      allowedPhrases: mockAllowedPhrases,
+      disallowedPhrases: mockDisallowedPhrases,
+      exceptionPhrases: mockExceptionPhrases,
+    });
+
+    expect(result.status).toBe('unknown');
+    expect(result.message).toBe(null);
+  });
+
+  test('should process messages in array order', () => {
+    const messages = [
+      { text: 'old allowed to merge', ts: '1234567890.123' },
+      { text: 'recent not allowed to merge', ts: '1234567891.123' },
+    ];
+
+    const result = determineMergeStatus({
+      messages,
+      allowedPhrases: mockAllowedPhrases,
+      disallowedPhrases: mockDisallowedPhrases,
+      exceptionPhrases: mockExceptionPhrases,
+    });
+
+    // Should return the first matching message (allowed)
+    expect(result.status).toBe('allowed');
+    expect(result.message.text).toBe('old allowed to merge');
+  });
+
+  test('should handle case insensitive matching', () => {
+    const result = determineMergeStatus({
+      messages: [{ text: 'ALLOWED TO MERGE this', ts: '123' }],
+      allowedPhrases: mockAllowedPhrases,
+      disallowedPhrases: mockDisallowedPhrases,
+      exceptionPhrases: mockExceptionPhrases,
+    });
+
+    expect(result.status).toBe('allowed');
+  });
+
+  test('should handle empty phrase arrays', () => {
+    const result = determineMergeStatus({
+      messages: [{ text: 'some message', ts: '123' }],
+      allowedPhrases: [],
+      disallowedPhrases: [],
+      exceptionPhrases: [],
+    });
+
+    expect(result.status).toBe('unknown');
+  });
+});
+
+describe('updateExtensionIcon', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should set allowed icon for allowed status', () => {
+    updateExtensionIcon('allowed');
+    expect(chrome.action.setIcon).toHaveBeenCalledWith({
+      path: {
+        16: 'images/icon16_enabled.png',
+        48: 'images/icon48_enabled.png',
+      },
+    });
+  });
+
+  test('should set disallowed icon for disallowed status', () => {
+    updateExtensionIcon('disallowed');
+    expect(chrome.action.setIcon).toHaveBeenCalledWith({
+      path: {
+        16: 'images/icon16_disabled.png',
+        48: 'images/icon48_disabled.png',
+      },
+    });
+  });
+
+  test('should set exception icon for exception status', () => {
+    updateExtensionIcon('exception');
+    expect(chrome.action.setIcon).toHaveBeenCalledWith({
+      path: {
+        16: 'images/icon16_exception.png',
+        48: 'images/icon48_exception.png',
+      },
+    });
+  });
+
+  test('should set error icon for error status', () => {
+    updateExtensionIcon('error');
+    expect(chrome.action.setIcon).toHaveBeenCalledWith({
+      path: {
+        16: 'images/icon16_error.png',
+        48: 'images/icon48_error.png',
+      },
+    });
+  });
+
+  test('should set loading icon for loading status', () => {
+    updateExtensionIcon('loading');
+    expect(chrome.action.setIcon).toHaveBeenCalledWith({
+      path: {
+        16: 'images/icon16.png',
+        48: 'images/icon48.png',
+      },
+    });
+  });
+
+  test('should set default icon for unknown status', () => {
+    updateExtensionIcon('unknown');
+    expect(chrome.action.setIcon).toHaveBeenCalledWith({
+      path: {
+        16: 'images/icon16.png',
+        48: 'images/icon48.png',
+      },
+    });
+  });
+
+  test('should set default icon for default status', () => {
+    updateExtensionIcon('default');
+    expect(chrome.action.setIcon).toHaveBeenCalledWith({
+      path: {
+        16: 'images/icon16.png',
+        48: 'images/icon48.png',
+      },
+    });
+  });
+});
+
+describe('getPhrasesFromStorage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should return stored phrases when available', async () => {
+    const mockStoredData = {
+      allowedPhrases: 'custom allowed,another allowed',
+      disallowedPhrases: 'custom disallowed,another disallowed',
+      exceptionPhrases: 'custom exception,another exception',
+    };
+
+    chrome.storage.sync.get.mockResolvedValue(mockStoredData);
+
+    const result = await getPhrasesFromStorage();
+
+    expect(chrome.storage.sync.get).toHaveBeenCalledWith([
+      'allowedPhrases',
+      'disallowedPhrases',
+      'exceptionPhrases',
+    ]);
+    expect(result.currentAllowedPhrases).toEqual([
+      'custom allowed',
+      'another allowed',
+    ]);
+    expect(result.currentDisallowedPhrases).toEqual([
+      'custom disallowed',
+      'another disallowed',
+    ]);
+    expect(result.currentExceptionPhrases).toEqual([
+      'custom exception',
+      'another exception',
+    ]);
+  });
+
+  test('should return default phrases when storage is empty', async () => {
+    chrome.storage.sync.get.mockResolvedValue({});
+
+    const result = await getPhrasesFromStorage();
+
+    expect(result.currentAllowedPhrases).toEqual([
+      'allowed to merge',
+      'no restrictions on merging.',
+    ]);
+    expect(result.currentDisallowedPhrases).toEqual([
+      'not allowed to merge',
+      'do not merge without consent',
+      'closing versions. do not merge',
+      'ask me before merging',
+    ]);
+    expect(result.currentExceptionPhrases).toEqual([
+      'allowed to merge this task',
+      'except everything related to',
+      'allowed to merge in all projects except',
+      'merge is allowed except',
+      'do not merge these projects',
+      'you can merge:',
+      'do not merge in',
+    ]);
+  });
+
+  test('should handle partial storage data', async () => {
+    const mockStoredData = {
+      allowedPhrases: 'custom allowed',
+      // disallowedPhrases and exceptionPhrases missing
+    };
+
+    chrome.storage.sync.get.mockResolvedValue(mockStoredData);
+
+    const result = await getPhrasesFromStorage();
+
+    expect(result.currentAllowedPhrases).toEqual(['custom allowed']);
+    expect(result.currentDisallowedPhrases).toEqual([
+      'not allowed to merge',
+      'do not merge without consent',
+      'closing versions. do not merge',
+      'ask me before merging',
+    ]);
+    expect(result.currentExceptionPhrases).toEqual([
+      'allowed to merge this task',
+      'except everything related to',
+      'allowed to merge in all projects except',
+      'merge is allowed except',
+      'do not merge these projects',
+      'you can merge:',
+      'do not merge in',
+    ]);
+  });
+});
+
+describe('handleSlackApiError', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should handle channel_not_found error', async () => {
+    const error = { message: 'channel_not_found' };
+
+    await handleSlackApiError(error);
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      appStatus: 'CHANNEL_ERROR',
+      messages: [],
+      channelId: null,
+    });
+  });
+
+  test('should handle not_in_channel error', async () => {
+    const error = { message: 'not_in_channel' };
+
+    await handleSlackApiError(error);
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      appStatus: 'CHANNEL_ERROR',
+      messages: [],
+      channelId: null,
+    });
+  });
+
+  test('should handle invalid_auth error', async () => {
+    const error = { message: 'invalid_auth' };
+
+    await handleSlackApiError(error);
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      appStatus: 'TOKEN_TOKEN_ERROR',
+      messages: [],
+    });
+  });
+
+  test('should handle token_revoked error', async () => {
+    const error = { message: 'token_revoked' };
+
+    await handleSlackApiError(error);
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      appStatus: 'TOKEN_TOKEN_ERROR',
+      messages: [],
+    });
+  });
+
+  test('should handle unknown error', async () => {
+    const error = { message: 'some_unknown_error' };
+
+    await handleSlackApiError(error);
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      appStatus: 'UNKNOWN_ERROR',
+      messages: [],
+    });
+  });
+
+  test('should handle error without message property', async () => {
+    const error = { error: 'some error' };
+
+    await handleSlackApiError(error);
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      appStatus: 'UNKNOWN_ERROR',
+      messages: [],
+    });
+  });
+
+  test('should handle null error', async () => {
+    await handleSlackApiError(null);
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      appStatus: 'UNKNOWN_ERROR',
+      messages: [],
+    });
+  });
+});
+
+describe('processAndStoreMessage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Mock getPhrasesFromStorage
+    chrome.storage.sync.get.mockResolvedValue({
+      allowedPhrases: 'allowed to merge',
+      disallowedPhrases: 'not allowed to merge',
+      exceptionPhrases: 'except this project',
+    });
+    chrome.storage.local.get.mockResolvedValue({
+      messages: [],
+      channelName: 'test-channel',
+    });
+  });
+
+  test('should process and store new message', async () => {
+    const mockMessage = {
+      text: 'allowed to merge this project',
+      ts: '1234567890.123',
+    };
+
+    await processAndStoreMessage(mockMessage, 'mock-token');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      messages: [
+        {
+          text: 'allowed to merge this project',
+          ts: '1234567890.123',
+        },
+      ],
+    });
+  });
+
+  test('should handle message with Slack formatting', async () => {
+    const mockMessage = {
+      text: 'Hey <@U123456789>, allowed to merge <#C987654321|general>',
+      ts: '1234567890.123',
+    };
+
+    await processAndStoreMessage(mockMessage, 'mock-token');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      messages: [
+        {
+          text: 'Hey @MENTION, allowed to merge',
+          ts: '1234567890.123',
+        },
+      ],
+    });
+  });
+
+  test('should update existing messages array', async () => {
+    const existingMessages = [{ text: 'old message', ts: '1234567889.123' }];
+    chrome.storage.local.get.mockResolvedValue({
+      messages: existingMessages,
+      channelName: 'test-channel',
+    });
+
+    const mockMessage = {
+      text: 'new message',
+      ts: '1234567890.123',
+    };
+
+    await processAndStoreMessage(mockMessage, 'mock-token');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      messages: [
+        { text: 'new message', ts: '1234567890.123' },
+        { text: 'old message', ts: '1234567889.123' },
+      ],
+    });
+  });
+
+  test('should update extension icon based on message content', async () => {
+    const mockMessage = {
+      text: 'allowed to merge this project',
+      ts: '1234567890.123',
+    };
+
+    await processAndStoreMessage(mockMessage, 'mock-token');
+
+    expect(chrome.action.setIcon).toHaveBeenCalled();
+  });
+
+  test('should store lastMatchingMessage', async () => {
+    const mockMessage = {
+      text: 'allowed to merge this project',
+      ts: '1234567890.123',
+    };
+
+    await processAndStoreMessage(mockMessage, 'mock-token');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      lastMatchingMessage: expect.objectContaining({
+        text: 'allowed to merge this project',
+        ts: '1234567890.123',
+      }),
+    });
+  });
+
+  test('should not process message without timestamp', async () => {
+    const mockMessage = {
+      text: 'test message',
+      // ts missing
+    };
+
+    await processAndStoreMessage(mockMessage, 'mock-token');
+
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  test('should not process message without text', async () => {
+    const mockMessage = {
+      ts: '1234567890.123',
+      // text missing
+    };
+
+    await processAndStoreMessage(mockMessage, 'mock-token');
+
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  test('should not process duplicate message', async () => {
+    const existingMessages = [
+      { text: 'existing message', ts: '1234567890.123' },
+    ];
+    chrome.storage.local.get.mockResolvedValue({
+      messages: existingMessages,
+      channelName: 'test-channel',
+    });
+
+    const mockMessage = {
+      text: 'duplicate message',
+      ts: '1234567890.123', // Same timestamp
+    };
+
+    await processAndStoreMessage(mockMessage, 'mock-token');
+
+    // Should not call set again for duplicate
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+});
+
+describe('Edge cases and additional coverage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('determineMergeStatus should handle messages with special characters', () => {
+    const messages = [{ text: 'Allowed to merge! 🎉 @everyone', ts: '123' }];
+    const result = determineMergeStatus({
+      messages,
+      allowedPhrases: ['allowed to merge'],
+      disallowedPhrases: ['not allowed'],
+      exceptionPhrases: ['except'],
+    });
+
+    expect(result.status).toBe('allowed');
+  });
+
+  test('determineMergeStatus should prioritize exception over disallowed', () => {
+    const messages = [
+      { text: 'not allowed to merge except this project', ts: '123' },
+    ];
+    const result = determineMergeStatus({
+      messages,
+      allowedPhrases: ['allowed to merge'],
+      disallowedPhrases: ['not allowed to merge'],
+      exceptionPhrases: ['except this project'],
+    });
+
+    expect(result.status).toBe('exception');
+  });
+
+  test('determineMergeStatus should prioritize disallowed over allowed', () => {
+    const messages = [
+      { text: 'allowed to merge but not allowed to merge', ts: '123' },
+    ];
+    const result = determineMergeStatus({
+      messages,
+      allowedPhrases: ['allowed to merge'],
+      disallowedPhrases: ['not allowed to merge'],
+      exceptionPhrases: ['except'],
+    });
+
+    expect(result.status).toBe('disallowed');
+  });
+
+  test('normalizeText should handle empty strings and whitespace', () => {
+    expect(normalizeText('   ')).toBe('');
+    expect(normalizeText('\n\t\r')).toBe('');
+    expect(normalizeText('  hello  world  ')).toBe('hello world');
+  });
+
+  test('cleanSlackMessageText should handle complex Slack formatting', () => {
+    const complexText =
+      'Check <@U123|user> in <#C456|channel> at <http://example.com|link> with <special> tags';
+    const result = cleanSlackMessageText(complexText);
+    expect(result).toBe('Check @MENTION in at with tags');
+  });
+
+  test('updateExtensionIcon should handle all status cases', () => {
+    const statuses = [
+      'allowed',
+      'disallowed',
+      'exception',
+      'error',
+      'loading',
+      'unknown',
+      'default',
+      'invalid',
+    ];
+
+    statuses.forEach((status) => {
+      jest.clearAllMocks();
+      updateExtensionIcon(status);
+      expect(chrome.action.setIcon).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  test('getPhrasesFromStorage should handle empty string values', async () => {
+    chrome.storage.sync.get.mockResolvedValue({
+      allowedPhrases: '',
+      disallowedPhrases: '',
+      exceptionPhrases: '',
+    });
+
+    const result = await getPhrasesFromStorage();
+
+    // Empty strings should fall back to defaults
+    expect(result.currentAllowedPhrases).toEqual([
+      'allowed to merge',
+      'no restrictions on merging.',
+    ]);
   });
 });
