@@ -9,25 +9,20 @@ import {
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
   FEATURE_REACTIVATION_TIMEOUT,
+  RECONNECTION_DELAY_MS,
+  WEBSOCKET_CHECK_INTERVAL,
+  WEBSOCKET_CHECK_ALARM,
+  WEBSOCKET_MAX_AGE,
 } from './constants.js';
 
 let bitbucketTabId = null;
 
 let rtmWebSocket = null;
 
-// Expresiones regulares para normalización y limpieza de texto
-const DIACRITICAL_MARKS_REGEX = /\p{Diacritic}/gu;
-const MULTIPLE_WHITESPACE_REGEX = /\s+/g;
-const NEWLINES_AND_TABS_REGEX = /[\n\r\t]+/g;
-const USER_MENTION_REGEX = /<@[^>]+>/g;
-const CHANNEL_MENTION_REGEX = /<#[^|>]+>/g;
-const REMAINING_BRACKETS_REGEX = /<[^>]+>/g;
-
-// Tiempo de reconexión en milisegundos
-const RECONNECTION_DELAY_MS = 5000;
-
 function normalizeText(text) {
   if (!text) return '';
+  const DIACRITICAL_MARKS_REGEX = /\p{Diacritic}/gu;
+  const MULTIPLE_WHITESPACE_REGEX = /\s+/g;
   return text
     .toLowerCase()
     .normalize('NFD')
@@ -38,6 +33,12 @@ function normalizeText(text) {
 
 function cleanSlackMessageText(text) {
   if (!text) return '';
+
+  const NEWLINES_AND_TABS_REGEX = /[\n\r\t]+/g;
+  const USER_MENTION_REGEX = /<@[^>]+>/g;
+  const CHANNEL_MENTION_REGEX = /<#[^|>]+>/g;
+  const REMAINING_BRACKETS_REGEX = /<[^>]+>/g;
+  const MULTIPLE_WHITESPACE_REGEX = /\s+/g;
 
   text = text.replace(NEWLINES_AND_TABS_REGEX, ' ');
   let cleanedText = text.replace(USER_MENTION_REGEX, '@MENTION');
@@ -413,7 +414,14 @@ async function connectToSlackSocketMode() {
     rtmWebSocket = new WebSocket(wsUrl);
 
     rtmWebSocket.onopen = () => {
-      chrome.storage.local.set({ appStatus: 'OK' });
+      chrome.storage.local.set({
+        appStatus: 'OK',
+        lastWebSocketConnectTime: Date.now(),
+      });
+      console.log('WebSocket conectado exitosamente');
+
+      // Asegurarse de que la alarma esté configurada cuando la conexión se establece
+      setupWebSocketCheckAlarm();
     };
 
     rtmWebSocket.onmessage = async (event) => {
@@ -432,17 +440,72 @@ async function connectToSlackSocketMode() {
     rtmWebSocket.onclose = () => {
       updateExtensionIcon('error');
       chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
+      console.log('WebSocket cerrado. Programando reconexión...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
-    rtmWebSocket.onerror = () => {
+    rtmWebSocket.onerror = (error) => {
       updateExtensionIcon('error');
       chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
+      console.error('Error en WebSocket:', error);
       rtmWebSocket.close();
     };
-  } catch {
-    await handleSlackApiError;
+  } catch (error) {
+    console.error('Error al conectar con Slack:', error);
+    await handleSlackApiError(error);
     await updateContentScriptMergeState(channelName);
+  }
+}
+
+// Función para configurar la alarma que verifica periódicamente el estado del WebSocket
+function setupWebSocketCheckAlarm() {
+  // Primero eliminar cualquier alarma existente con el mismo nombre
+  chrome.alarms.clear(WEBSOCKET_CHECK_ALARM, () => {
+    // Crear una nueva alarma que se ejecute periódicamente
+    chrome.alarms.create(WEBSOCKET_CHECK_ALARM, {
+      periodInMinutes: WEBSOCKET_CHECK_INTERVAL,
+    });
+    console.log(
+      `Alarma configurada para verificar WebSocket cada ${WEBSOCKET_CHECK_INTERVAL} minutos`,
+    );
+  });
+}
+
+// Función para verificar el estado del WebSocket y reconectar si es necesario
+async function checkWebSocketConnection() {
+  console.log('Verificando estado de la conexión WebSocket...');
+
+  // Verificar si el WebSocket existe y está conectado
+  if (!rtmWebSocket || rtmWebSocket.readyState !== WebSocket.OPEN) {
+    console.log('WebSocket no está conectado. Intentando reconectar...');
+    connectToSlackSocketMode();
+    return;
+  }
+
+  // Verificar cuánto tiempo ha pasado desde la última conexión
+  const { lastWebSocketConnectTime } = await chrome.storage.local.get(
+    'lastWebSocketConnectTime',
+  );
+  const currentTime = Date.now();
+  const connectionAge = currentTime - (lastWebSocketConnectTime || 0);
+
+  // Si la conexión tiene más de WEBSOCKET_MAX_AGE, reconectar para refrescarla
+  if (connectionAge > WEBSOCKET_MAX_AGE) {
+    console.log('Conexión WebSocket antigua. Reconectando para refrescarla...');
+    rtmWebSocket.close();
+    setTimeout(connectToSlackSocketMode, 1000);
+  } else {
+    console.log('Conexión WebSocket activa y reciente.');
+
+    // Enviar un ping para mantener la conexión activa
+    try {
+      rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
+      console.log('Ping enviado al servidor de Slack');
+    } catch (error) {
+      console.error('Error al enviar ping:', error);
+      rtmWebSocket.close();
+      setTimeout(connectToSlackSocketMode, 1000);
+    }
   }
 }
 
@@ -717,12 +780,25 @@ chrome.runtime.onInstalled.addListener(() => {
   connectToSlackSocketMode();
   registerBitbucketContentScript();
   checkScheduledReactivation();
+
+  // Configurar la alarma para verificar el WebSocket
+  setupWebSocketCheckAlarm();
 });
 
 chrome.runtime.onStartup.addListener(() => {
   connectToSlackSocketMode();
   registerBitbucketContentScript();
   checkScheduledReactivation();
+
+  // Configurar la alarma para verificar el WebSocket
+  setupWebSocketCheckAlarm();
+});
+
+// Manejar eventos de alarma
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === WEBSOCKET_CHECK_ALARM) {
+    checkWebSocketConnection();
+  }
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
