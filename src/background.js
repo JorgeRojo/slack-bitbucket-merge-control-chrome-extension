@@ -20,19 +20,19 @@ export function normalizeText(text) {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/\s+/g, ' ')
+    .replace(/\p{Diacritic}/gu, '') // Remove diacritical marks (accents, tildes, etc.)
+    .replace(/\s+/g, ' ') // Replace multiple whitespace characters with single space
     .trim();
 }
 
 export function cleanSlackMessageText(text) {
   if (!text) return '';
 
-  text = text.replace(/[\n\r\t]+/g, ' ');
-  let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION');
-  cleanedText = cleanedText.replace(/<#[^|>]+>/g, '@CHANNEL');
-  cleanedText = cleanedText.replace(/<[^>]+>/g, '');
-  cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+  text = text.replace(/[\n\r\t]+/g, ' '); // Replace line breaks and tabs with spaces
+  let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION'); // Replace user mentions like <@U123456789> with @MENTION
+  cleanedText = cleanedText.replace(/<#[^|>]+>/g, '@CHANNEL'); // Replace unnamed channel mentions like <#C123456789> with @CHANNEL
+  cleanedText = cleanedText.replace(/<[^>]+>/g, ''); // Remove any remaining angle bracket content
+  cleanedText = cleanedText.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space and trim
   return cleanedText;
 }
 
@@ -375,9 +375,13 @@ async function connectToSlackSocketMode() {
   updateExtensionIcon('loading');
 
   try {
-    await fetchAndStoreTeamId(slackToken);
-    const channelId = await resolveChannelId(slackToken, channelName);
-    await fetchAndStoreMessages(slackToken, channelId);
+    // Group related async operations
+    await Promise.all([
+      fetchAndStoreTeamId(slackToken),
+      resolveChannelId(slackToken, channelName).then((channelId) =>
+        fetchAndStoreMessages(slackToken, channelId),
+      ),
+    ]);
 
     const connectionsOpenResponse = await fetch(SLACK_CONNECTIONS_OPEN_URL, {
       method: 'POST',
@@ -418,7 +422,7 @@ async function connectToSlackSocketMode() {
     rtmWebSocket.onclose = () => {
       updateExtensionIcon('error');
       chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
-      setTimeout(connectToSlackSocketMode, 5000);
+      setTimeout(connectToSlackSocketMode, 5000); // Reconnect after 5 seconds
     };
 
     rtmWebSocket.onerror = () => {
@@ -515,7 +519,7 @@ const messageHandlers = {
     if (sender.tab) {
       const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
       if (bitbucketUrl) {
-        const regexPattern = bitbucketUrl.replace(/\*/g, '.*');
+        const regexPattern = bitbucketUrl.replace(/\*/g, '.*'); // Replace wildcards (*) with regex pattern (.*)
         const bitbucketRegex = new RegExp(regexPattern);
 
         if (bitbucketRegex.test(sender.tab.url)) {

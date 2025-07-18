@@ -79,7 +79,7 @@ export function startCountdown(targetTime, countdownElement, toggleElement) {
   };
 
   updateCountdown();
-  countdownInterval = setInterval(updateCountdown, 1000);
+  countdownInterval = setInterval(updateCountdown, 1000); // Update countdown every 1 second
   return countdownInterval;
 }
 

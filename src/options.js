@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const statusDiv = document.getElementById('status');
 
   channelInput.addEventListener('change', function () {
-    const channelName = channelInput.value.trim().replace(/^#/, '');
+    const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove leading # from channel name
     if (channelName) {
       chrome.runtime.sendMessage({
         action: 'fetchNewMessages',
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
   saveButton.addEventListener('click', function () {
     const slackToken = tokenInput.value.trim();
     const appToken = appTokenInput.value.trim();
-    const channelName = channelInput.value.trim().replace(/^#/, '');
+    const channelName = channelInput.value.trim().replace(/^#/, ''); // Remove leading # from channel name
     const allowedPhrases = formatMultilineInput(allowedPhrasesInput.value);
     const disallowedPhrases = formatMultilineInput(
       disallowedPhrasesInput.value,
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
           ]);
           setTimeout(function () {
             statusDiv.textContent = '';
-          }, 2000);
+          }, 2000); // Clear status message after 2 seconds
           chrome.runtime.sendMessage({ action: 'reconnectSlack' });
         },
       );
