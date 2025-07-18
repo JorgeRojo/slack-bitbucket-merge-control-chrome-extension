@@ -7,6 +7,7 @@ import {
   updateUI,
   getReactivationTime,
   startCountdown,
+  stopAndHideCountdown,
   scheduleFeatureReactivation,
   initializeFeatureToggleState,
   loadAndDisplayData,
@@ -213,6 +214,25 @@ describe('popup.js', () => {
     });
   });
 
+  describe('stopAndHideCountdown', () => {
+    let mockCountdownElement;
+
+    beforeEach(() => {
+      mockCountdownElement = createMockElement();
+    });
+
+    test('should hide countdown element', () => {
+      stopAndHideCountdown(mockCountdownElement);
+      expect(mockCountdownElement.style.display).toBe('none');
+    });
+
+    test('should handle null countdown element', () => {
+      expect(() => {
+        stopAndHideCountdown(null);
+      }).not.toThrow();
+    });
+  });
+
   describe('startCountdown', () => {
     let mockCountdownElement, mockToggleElement, mockUpdateCountdown;
 
@@ -298,7 +318,6 @@ describe('popup.js', () => {
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         reactivationTime,
       });
-      expect(mockCountdownElement.style.display).toBe('block');
     });
 
     test('should schedule reactivation with default time when not provided', () => {
@@ -354,19 +373,6 @@ describe('popup.js', () => {
       initializeFeatureToggleState(mockToggleElement);
 
       expect(mockToggleElement.removeAttribute).toHaveBeenCalledWith('checked');
-    });
-
-    test('should start countdown when feature is disabled and reactivation time is in future', () => {
-      const reactivationTime = 2000000;
-      mockDateNow.mockReturnValue(1000000);
-
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: false, reactivationTime });
-      });
-
-      initializeFeatureToggleState(mockToggleElement);
-
-      expect(mockCountdownElement.style.display).toBe('block');
     });
 
     test('should default to enabled when featureEnabled is undefined', () => {

@@ -57,12 +57,20 @@ export function getReactivationTime() {
 // Global variable to track the countdown interval
 let countdownInterval;
 
-export function startCountdown(targetTime, countdownElement, toggleElement) {
-  // Clear any existing interval before starting a new one
+export function stopAndHideCountdown(countdownElement) {
   if (countdownInterval) {
     clearInterval(countdownInterval);
     countdownInterval = null;
   }
+
+  if (countdownElement) {
+    countdownElement.style.display = 'none';
+  }
+}
+
+export function startCountdown(targetTime, countdownElement, toggleElement) {
+  // Clear any existing interval before starting a new one
+  stopAndHideCountdown(countdownElement);
 
   const updateCountdown = () => {
     const currentTime = Date.now();
@@ -110,14 +118,16 @@ export function initializeFeatureToggleState(toggleElement) {
     const isEnabled = result.featureEnabled !== false;
     const reactivationTime = result.reactivationTime;
     const currentTime = Date.now();
+    const countdownElement = document.getElementById('countdown-timer');
 
     if (isEnabled) {
       toggleElement.setAttribute('checked', '');
+      // If feature is enabled, stop and hide the countdown
+      stopAndHideCountdown(countdownElement);
     } else {
       toggleElement.removeAttribute('checked');
 
       if (reactivationTime && reactivationTime > currentTime) {
-        const countdownElement = document.getElementById('countdown-timer');
         if (countdownElement) {
           countdownElement.style.display = 'block';
           startCountdown(reactivationTime, countdownElement, toggleElement);
@@ -264,7 +274,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         enabled: isChecked,
       });
 
-      if (!isChecked) {
+      const countdownElement = document.getElementById('countdown-timer');
+      if (isChecked) {
+        // If feature is enabled, stop and hide the countdown
+        stopAndHideCountdown(countdownElement);
+      } else {
         scheduleFeatureReactivation(featureToggle, getReactivationTime());
       }
     });
