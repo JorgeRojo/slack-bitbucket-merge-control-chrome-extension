@@ -222,6 +222,9 @@ describe('popup.js', () => {
     });
 
     test('should hide countdown element', () => {
+      // Set display to block initially to simulate a visible element
+      mockCountdownElement.style.display = 'block';
+
       stopAndHideCountdown(mockCountdownElement);
       expect(mockCountdownElement.style.display).toBe('none');
     });
@@ -230,6 +233,27 @@ describe('popup.js', () => {
       expect(() => {
         stopAndHideCountdown(null);
       }).not.toThrow();
+    });
+
+    test('should hide countdown when feature is enabled', () => {
+      // Set up for initializeFeatureToggleState test
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        callback({ featureEnabled: true });
+      });
+
+      const mockToggleElement = createMockElement();
+      const mockCountdownElement = createMockElement();
+      mockCountdownElement.style.display = 'block'; // Start with visible countdown
+
+      global.document.getElementById = jest.fn((id) => {
+        if (id === 'countdown-timer') return mockCountdownElement;
+        return null;
+      });
+
+      initializeFeatureToggleState(mockToggleElement);
+
+      // Verify countdown is hidden when feature is enabled
+      expect(mockCountdownElement.style.display).toBe('none');
     });
   });
 
@@ -284,6 +308,20 @@ describe('popup.js', () => {
       expect(global.clearInterval).toHaveBeenCalledWith(123);
     });
 
+    test('should ensure countdown element is displayed when starting countdown', () => {
+      const targetTime = 1000000 + 65000; // 1 minute 5 seconds from now
+      mockDateNow.mockReturnValue(1000000);
+
+      // Set display to none initially to simulate a hidden element
+      mockCountdownElement.style.display = 'none';
+
+      startCountdown(targetTime, mockCountdownElement, mockToggleElement);
+
+      // Verify the countdown element is displayed
+      expect(mockCountdownElement.style.display).toBe('block');
+      expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:05');
+    });
+
     test('should handle negative time left', () => {
       const targetTime = 999000; // in the past
       mockDateNow.mockReturnValue(1000000);
@@ -294,6 +332,42 @@ describe('popup.js', () => {
         'checked',
         '',
       );
+    });
+  });
+
+  describe('toggle event listener', () => {
+    let mockToggleElement, mockCountdownElement;
+
+    beforeEach(() => {
+      mockToggleElement = createMockElement();
+      mockCountdownElement = createMockElement();
+
+      global.document.getElementById = jest.fn((id) => {
+        if (id === 'countdown-timer') return mockCountdownElement;
+        return null;
+      });
+    });
+
+    test('should hide countdown when calling stopAndHideCountdown', () => {
+      // Set display to block initially to simulate a visible element
+      mockCountdownElement.style.display = 'block';
+
+      // Call the function directly to test it
+      stopAndHideCountdown(mockCountdownElement);
+
+      // Verify the countdown is hidden
+      expect(mockCountdownElement.style.display).toBe('none');
+    });
+
+    test('should display countdown when starting countdown', () => {
+      // Set display to none initially to simulate a hidden element
+      mockCountdownElement.style.display = 'none';
+
+      // Call startCountdown directly
+      startCountdown(1000000 + 60000, mockCountdownElement, mockToggleElement);
+
+      // Verify the countdown is displayed
+      expect(mockCountdownElement.style.display).toBe('block');
     });
   });
 
