@@ -301,7 +301,7 @@ describe('popup.js', () => {
         featureEnabled: true,
       });
       expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
-        action: 'featureToggleChanged',
+        action: 'countdownCompleted',
         enabled: true,
       });
       expect(mockCountdownElement.style.display).toBe('none');

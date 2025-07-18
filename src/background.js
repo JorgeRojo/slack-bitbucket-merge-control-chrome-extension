@@ -542,6 +542,18 @@ const messageHandlers = {
       await updateContentScriptMergeState(channelName);
     }
   },
+
+  countdownCompleted: async (request) => {
+    const { enabled } = request;
+    await chrome.storage.local.set({ featureEnabled: enabled });
+
+    // When countdown completes, we need to update the merge button state
+    // according to the current merge status
+    const { channelName } = await chrome.storage.sync.get('channelName');
+    if (channelName) {
+      await updateContentScriptMergeState(channelName);
+    }
+  },
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

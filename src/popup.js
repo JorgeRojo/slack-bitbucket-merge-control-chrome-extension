@@ -88,7 +88,7 @@ export function startCountdown(targetTime, countdownElement, toggleElement) {
       toggleElement.setAttribute('checked', '');
       chrome.storage.local.set({ featureEnabled: true });
       chrome.runtime.sendMessage({
-        action: 'featureToggleChanged',
+        action: 'countdownCompleted',
         enabled: true,
       });
       countdownElement.style.display = 'none';
