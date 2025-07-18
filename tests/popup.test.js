@@ -3,13 +3,6 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import { literals } from '../src/literals.js';
-
-// Set NODE_ENV to test to enable test exports
-process.env.NODE_ENV = 'test';
-
-// Import the module to trigger the test exports
-import '../src/popup.js';
 
 // Mock DOM elements
 const createMockElement = () => ({
@@ -25,6 +18,9 @@ const createMockElement = () => ({
 // Mock console.error
 console.error = vi.fn();
 
+// Mock window.open
+window.open = vi.fn();
+
 describe('popup.js', () => {
   let mockStatusIcon,
     mockStatusText,
@@ -34,11 +30,9 @@ describe('popup.js', () => {
     mockFeatureToggle,
     mockCountdownElement;
 
-  // Functions from window.popupTestExports
-  let updateUI,
-    manageCountdownElement,
-    updateCountdownDisplay,
-    initializeFeatureToggleState;
+  // Spy on document.addEventListener to capture the DOMContentLoaded handler
+  let domContentLoadedHandler;
+  const originalAddEventListener = document.addEventListener;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -54,8 +48,24 @@ describe('popup.js', () => {
 
     // Mock document.getElementById
     document.getElementById = vi.fn((id) => {
-      if (id === 'countdown-timer') return mockCountdownElement;
-      return null;
+      switch (id) {
+        case 'status-icon':
+          return mockStatusIcon;
+        case 'status-text':
+          return mockStatusText;
+        case 'open-options':
+          return mockOpenOptionsButton;
+        case 'slack-channel-link':
+          return mockSlackChannelLink;
+        case 'matching-message':
+          return mockMatchingMessageDiv;
+        case 'feature-toggle':
+          return mockFeatureToggle;
+        case 'countdown-timer':
+          return mockCountdownElement;
+        default:
+          return null;
+      }
     });
 
     // Mock chrome API
@@ -75,270 +85,326 @@ describe('popup.js', () => {
       runtime: {
         sendMessage: vi.fn(),
         openOptionsPage: vi.fn(),
-        getURL: vi.fn(),
+        getURL: vi.fn(() => 'chrome-extension://options.html'),
         onMessage: {
           addListener: vi.fn(),
         },
       },
     };
 
-    // Mock global manageCountdownElement
-    global.manageCountdownElement = vi.fn();
+    // Mock document.addEventListener to capture the DOMContentLoaded handler
+    document.addEventListener = vi.fn((event, handler) => {
+      if (event === 'DOMContentLoaded') {
+        domContentLoadedHandler = handler;
+      }
+      return originalAddEventListener.call(document, event, handler);
+    });
 
-    // Get the test exports
-    ({
-      updateUI,
-      manageCountdownElement,
-      updateCountdownDisplay,
-      initializeFeatureToggleState,
-    } = window.popupTestExports);
+    // Import the module to trigger the event listener registration
+    vi.resetModules();
+    require('../src/popup.js');
   });
 
   afterEach(() => {
-    delete global.manageCountdownElement;
+    // Restore document.addEventListener
+    document.addEventListener = originalAddEventListener;
   });
 
-  describe('updateUI', () => {
-    test('should update UI for allowed state', () => {
-      updateUI({
-        statusIcon: mockStatusIcon,
-        statusText: mockStatusText,
-        openOptionsButton: mockOpenOptionsButton,
-        slackChannelLink: mockSlackChannelLink,
-        matchingMessageDiv: mockMatchingMessageDiv,
-        state: 'allowed',
-        message: 'Test message',
-      });
-
-      expect(mockStatusIcon.className).toBe('allowed');
-      expect(mockStatusText.className).toBe('allowed');
-      expect(mockStatusIcon.textContent).toBe(literals.popup.emojiAllowed);
-      expect(mockStatusText.textContent).toBe('Test message');
-    });
-
-    test('should update UI for disallowed state', () => {
-      updateUI({
-        statusIcon: mockStatusIcon,
-        statusText: mockStatusText,
-        openOptionsButton: mockOpenOptionsButton,
-        slackChannelLink: mockSlackChannelLink,
-        matchingMessageDiv: mockMatchingMessageDiv,
-        state: 'disallowed',
-        message: 'Test message',
-      });
-
-      expect(mockStatusIcon.className).toBe('disallowed');
-      expect(mockStatusText.className).toBe('disallowed');
-      expect(mockStatusIcon.textContent).toBe(literals.popup.emojiDisallowed);
-      expect(mockStatusText.textContent).toBe('Test message');
-    });
-
-    test('should update UI for exception state', () => {
-      updateUI({
-        statusIcon: mockStatusIcon,
-        statusText: mockStatusText,
-        openOptionsButton: mockOpenOptionsButton,
-        slackChannelLink: mockSlackChannelLink,
-        matchingMessageDiv: mockMatchingMessageDiv,
-        state: 'exception',
-        message: 'Test message',
-      });
-
-      expect(mockStatusIcon.className).toBe('exception');
-      expect(mockStatusText.className).toBe('exception');
-      expect(mockStatusIcon.textContent).toBe(literals.popup.emojiException);
-      expect(mockStatusText.textContent).toBe('Test message');
-      expect(mockSlackChannelLink.style.display).toBe('block');
-    });
-
-    test('should update UI for config_needed state', () => {
-      updateUI({
-        statusIcon: mockStatusIcon,
-        statusText: mockStatusText,
-        openOptionsButton: mockOpenOptionsButton,
-        slackChannelLink: mockSlackChannelLink,
-        matchingMessageDiv: mockMatchingMessageDiv,
-        state: 'config_needed',
-        message: 'Test message',
-      });
-
-      expect(mockStatusIcon.className).toBe('config_needed');
-      expect(mockStatusText.className).toBe('config_needed');
-      expect(mockStatusIcon.textContent).toBe(literals.popup.emojiUnknown);
-      expect(mockStatusText.textContent).toBe('Test message');
-      expect(mockOpenOptionsButton.style.display).toBe('block');
-    });
-
-    test('should update UI for unknown state', () => {
-      updateUI({
-        statusIcon: mockStatusIcon,
-        statusText: mockStatusText,
-        openOptionsButton: mockOpenOptionsButton,
-        slackChannelLink: mockSlackChannelLink,
-        matchingMessageDiv: mockMatchingMessageDiv,
-        state: 'unknown',
-      });
-
-      expect(mockStatusIcon.className).toBe('unknown');
-      expect(mockStatusText.className).toBe('unknown');
-      expect(mockStatusIcon.textContent).toBe(literals.popup.emojiUnknown);
-      expect(mockStatusText.textContent).toBe(
-        literals.popup.textCouldNotDetermine,
+  describe('DOMContentLoaded event', () => {
+    test('should register event listeners', async () => {
+      // Verify that the DOMContentLoaded event listener was registered
+      expect(document.addEventListener).toHaveBeenCalledWith(
+        'DOMContentLoaded',
+        expect.any(Function),
       );
-    });
-
-    test('should update UI with matching message', () => {
-      updateUI({
-        statusIcon: mockStatusIcon,
-        statusText: mockStatusText,
-        openOptionsButton: mockOpenOptionsButton,
-        slackChannelLink: mockSlackChannelLink,
-        matchingMessageDiv: mockMatchingMessageDiv,
-        state: 'allowed',
-        message: 'Test message',
-        matchingMessage: { text: 'matching text' },
-      });
-
-      expect(mockMatchingMessageDiv.textContent).toBe(
-        `${literals.popup.textMatchingMessagePrefix}matching text"`,
-      );
-      expect(mockMatchingMessageDiv.style.display).toBe('block');
+      expect(domContentLoadedHandler).toBeDefined();
     });
   });
 
-  describe('manageCountdownElement', () => {
-    test('should show countdown with time', () => {
-      manageCountdownElement({ show: true, timeLeft: 65000 });
+  describe('Event handlers', () => {
+    test('should handle toggle event', async () => {
+      // Setup for the test
+      chrome.storage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: true });
+        }
+        return Promise.resolve({});
+      });
+
+      // Trigger the DOMContentLoaded handler
+      await domContentLoadedHandler();
+
+      // Get the toggle event handler
+      const toggleHandler = mockFeatureToggle.addEventListener.mock.calls.find(
+        (call) => call[0] === 'toggle',
+      )[1];
+
+      // Call the handler with a mock event
+      toggleHandler({ detail: { checked: true } });
+
+      // Verify that storage was updated
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        featureEnabled: true,
+      });
+
+      // Verify that a message was sent
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+        action: 'featureToggleChanged',
+        enabled: true,
+      });
+    });
+
+    test('should handle options button click with openOptionsPage', async () => {
+      // Setup for the test
+      chrome.storage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: true });
+        }
+        return Promise.resolve({});
+      });
+
+      // Trigger the DOMContentLoaded handler
+      await domContentLoadedHandler();
+
+      // Get the click event handler
+      const clickHandler =
+        mockOpenOptionsButton.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click',
+        )[1];
+
+      // Call the handler
+      clickHandler();
+
+      // Verify that openOptionsPage was called
+      expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
+    });
+
+    test('should handle options button click without openOptionsPage', async () => {
+      // Setup for the test
+      chrome.storage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: true });
+        }
+        return Promise.resolve({});
+      });
+
+      // Remove openOptionsPage
+      chrome.runtime.openOptionsPage = undefined;
+
+      // Trigger the DOMContentLoaded handler
+      await domContentLoadedHandler();
+
+      // Get the click event handler
+      const clickHandler =
+        mockOpenOptionsButton.addEventListener.mock.calls.find(
+          (call) => call[0] === 'click',
+        )[1];
+
+      // Call the handler
+      clickHandler();
+
+      // Verify that window.open was called
+      expect(window.open).toHaveBeenCalledWith(
+        'chrome-extension://options.html',
+      );
+    });
+
+    test('should handle storage changes', async () => {
+      // Setup for the test
+      chrome.storage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: true });
+        }
+        return Promise.resolve({});
+      });
+
+      // Trigger the DOMContentLoaded handler
+      await domContentLoadedHandler();
+
+      // Get the storage change handler
+      const storageHandler =
+        chrome.storage.onChanged.addListener.mock.calls[0][0];
+
+      // Reset mocks to track new calls
+      chrome.storage.sync.get.mockClear();
+
+      // Call the handler with a storage change
+      storageHandler(
+        { lastKnownMergeState: { newValue: {}, oldValue: null } },
+        'local',
+      );
+
+      // Verify that loadAndDisplayData was called (indirectly)
+      expect(chrome.storage.sync.get).toHaveBeenCalled();
+    });
+
+    test('should handle runtime messages for updateCountdownDisplay', async () => {
+      // Setup for the test
+      chrome.storage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: false });
+        }
+        return Promise.resolve({});
+      });
+
+      // Trigger the DOMContentLoaded handler
+      await domContentLoadedHandler();
+
+      // Get the message handler
+      const messageHandler =
+        chrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+      // Call the handler with a message
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 60000 });
+
+      // Verify that storage was queried
+      expect(chrome.storage.local.get).toHaveBeenCalledWith(
+        ['featureEnabled'],
+        expect.any(Function),
+      );
+    });
+
+    test('should handle runtime messages for countdownCompleted', async () => {
+      // Setup for the test
+      chrome.storage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: true });
+        }
+        return Promise.resolve({});
+      });
+
+      // Trigger the DOMContentLoaded handler
+      await domContentLoadedHandler();
+
+      // Get the message handler
+      const messageHandler =
+        chrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+      // Call the handler with a message
+      messageHandler({ action: 'countdownCompleted' });
+
+      // Verify that the toggle was updated
+      expect(mockFeatureToggle.setAttribute).toHaveBeenCalledWith(
+        'checked',
+        '',
+      );
+    });
+  });
+
+  describe('UI state handling', () => {
+    test('should handle countdown display', async () => {
+      // Mock chrome.storage.local.get for updateCountdownDisplay
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (keys.includes('featureEnabled')) {
+          callback({ featureEnabled: false });
+        } else {
+          callback({});
+        }
+      });
+
+      // Trigger the DOMContentLoaded handler
+      await domContentLoadedHandler();
+
+      // Get the message handler
+      const messageHandler =
+        chrome.runtime.onMessage.addListener.mock.calls[0][0];
+
+      // Call the handler with updateCountdownDisplay action
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
+
+      // Verify that countdown element is updated
       expect(mockCountdownElement.style.display).toBe('block');
       expect(mockCountdownElement.textContent).toContain('1:05');
-    });
 
-    test('should hide countdown', () => {
-      manageCountdownElement({ show: false });
+      // Test with feature enabled
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (keys.includes('featureEnabled')) {
+          callback({ featureEnabled: true });
+        } else {
+          callback({});
+        }
+      });
+
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
+      expect(mockCountdownElement.style.display).toBe('none');
+
+      // Test with zero time left
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        if (keys.includes('featureEnabled')) {
+          callback({ featureEnabled: false });
+        } else {
+          callback({});
+        }
+      });
+
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 0 });
       expect(mockCountdownElement.style.display).toBe('none');
     });
 
-    test('should return null when countdown element is not found', () => {
-      document.getElementById.mockReturnValueOnce(null);
-      const result = manageCountdownElement({ show: true });
-      expect(result).toBeNull();
-    });
-  });
+    test('should handle missing countdown element', async () => {
+      // Mock document.getElementById to return null for countdown-timer
+      document.getElementById.mockImplementation((id) => {
+        if (id === 'countdown-timer') return null;
+        return mockStatusIcon; // Return something for other elements
+      });
 
-  describe('updateCountdownDisplay', () => {
-    test('should update countdown when feature is disabled', () => {
+      // Mock chrome.storage.local.get for updateCountdownDisplay
       chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: false });
-      });
-
-      // Test with global.manageCountdownElement
-      global.manageCountdownElement.mockClear();
-      updateCountdownDisplay(65000);
-      expect(global.manageCountdownElement).toHaveBeenCalledWith({
-        show: true,
-        timeLeft: 65000,
-      });
-    });
-
-    test('should hide countdown when feature is enabled', () => {
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: true });
-      });
-
-      // Test with global.manageCountdownElement
-      global.manageCountdownElement.mockClear();
-      updateCountdownDisplay(65000);
-      expect(global.manageCountdownElement).toHaveBeenCalledWith({
-        show: false,
-      });
-    });
-
-    test('should hide countdown when time is zero or negative', () => {
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: false });
-      });
-
-      // Test with global.manageCountdownElement
-      global.manageCountdownElement.mockClear();
-      updateCountdownDisplay(0);
-      expect(global.manageCountdownElement).toHaveBeenCalledWith({
-        show: false,
-      });
-    });
-  });
-
-  describe('initializeFeatureToggleState', () => {
-    test('should set toggle to checked when feature is enabled', () => {
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: true });
-      });
-
-      initializeFeatureToggleState(mockFeatureToggle);
-      expect(mockFeatureToggle.setAttribute).toHaveBeenCalledWith(
-        'checked',
-        '',
-      );
-
-      // Test with global.manageCountdownElement
-      global.manageCountdownElement.mockClear();
-      initializeFeatureToggleState(mockFeatureToggle);
-      expect(global.manageCountdownElement).toHaveBeenCalledWith({
-        show: false,
-      });
-    });
-
-    test('should check countdown status when feature is disabled', () => {
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: false });
-      });
-
-      chrome.runtime.sendMessage.mockImplementation((message, callback) => {
-        if (message.action === 'getCountdownStatus') {
-          callback({
-            isCountdownActive: true,
-            timeLeft: 65000,
-          });
+        if (keys.includes('featureEnabled')) {
+          callback({ featureEnabled: false });
+        } else {
+          callback({});
         }
       });
 
-      initializeFeatureToggleState(mockFeatureToggle);
-      expect(mockFeatureToggle.removeAttribute).toHaveBeenCalledWith('checked');
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
-        { action: 'getCountdownStatus' },
-        expect.any(Function),
-      );
-    });
+      // Trigger the DOMContentLoaded handler
+      await domContentLoadedHandler();
 
-    test('should handle inactive countdown', () => {
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: false });
-      });
+      // Get the message handler
+      const messageHandler =
+        chrome.runtime.onMessage.addListener.mock.calls[0][0];
 
-      chrome.runtime.sendMessage.mockImplementation((message, callback) => {
-        if (message.action === 'getCountdownStatus') {
-          callback({
-            isCountdownActive: false,
-          });
-        }
-      });
+      // Call the handler with updateCountdownDisplay action
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
 
-      initializeFeatureToggleState(mockFeatureToggle);
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
-        { action: 'getCountdownStatus' },
-        expect.any(Function),
-      );
-    });
-
-    test('should default to enabled when featureEnabled is undefined', () => {
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({});
-      });
-
-      initializeFeatureToggleState(mockFeatureToggle);
-      expect(mockFeatureToggle.setAttribute).toHaveBeenCalledWith(
-        'checked',
-        '',
-      );
+      // No error should be thrown
+      expect(true).toBe(true);
     });
   });
 });

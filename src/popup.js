@@ -158,19 +158,11 @@ function updateCountdownDisplay(timeLeft) {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled || timeLeft <= 0) {
-      if (typeof global !== 'undefined' && global.manageCountdownElement) {
-        global.manageCountdownElement({ show: false });
-      } else {
-        manageCountdownElement({ show: false });
-      }
+      manageCountdownElement({ show: false });
       return;
     }
 
-    if (typeof global !== 'undefined' && global.manageCountdownElement) {
-      global.manageCountdownElement({ show: true, timeLeft });
-    } else {
-      manageCountdownElement({ show: true, timeLeft });
-    }
+    manageCountdownElement({ show: true, timeLeft });
   });
 }
 
@@ -184,11 +176,7 @@ function initializeFeatureToggleState(toggleElement) {
 
     if (isEnabled) {
       toggleElement.setAttribute('checked', '');
-      if (typeof global !== 'undefined' && global.manageCountdownElement) {
-        global.manageCountdownElement({ show: false });
-      } else {
-        manageCountdownElement({ show: false });
-      }
+      manageCountdownElement({ show: false });
       return;
     }
 
@@ -503,15 +491,4 @@ function setupEventListeners({
   chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
     handleBackgroundMessages(request, { featureToggle });
   });
-}
-
-// Expose functions for testing only when in test environment
-if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-  window.popupTestExports = {
-    updateUI,
-    manageCountdownElement,
-    updateCountdownDisplay,
-    initializeFeatureToggleState,
-    loadAndDisplayData,
-  };
 }
