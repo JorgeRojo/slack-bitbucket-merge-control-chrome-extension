@@ -1,15 +1,7 @@
 // Imports organizados según CODE_STYLE
-import { SLACK_BASE_URL, FEATURE_REACTIVATION_TIMEOUT } from './constants.js';
+import { SLACK_BASE_URL } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
-
-/**
- * Returns the time when the feature should be reactivated
- * @returns {number} - Timestamp in milliseconds
- */
-export function getReactivationTime() {
-  return Date.now() + FEATURE_REACTIVATION_TIMEOUT;
-}
 
 /**
  * Updates the UI elements based on the current merge status
@@ -142,21 +134,6 @@ export function updateCountdownDisplay(timeLeft) {
     }
 
     manageCountdownElement({ show: true, timeLeft });
-  });
-}
-
-/**
- * Schedules feature reactivation by sending a message to the background script
- * @param {HTMLElement} _toggleElement - The toggle element (no usado actualmente)
- * @param {number} [_reactivationTime] - Optional reactivation time (no usado actualmente)
- */
-export function scheduleFeatureReactivation(_toggleElement, _reactivationTime) {
-  // Los parámetros no se usan actualmente, pero se mantienen para compatibilidad futura
-  // El tiempo de reactivación lo maneja el script de fondo
-
-  chrome.runtime.sendMessage({
-    action: 'featureToggleChanged',
-    enabled: false,
   });
 }
 

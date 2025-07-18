@@ -5,17 +5,13 @@
 import { jest } from '@jest/globals';
 import {
   updateUI,
-  getReactivationTime,
   manageCountdownElement,
   updateCountdownDisplay,
   initializeFeatureToggleState,
   loadAndDisplayData,
 } from '../src/popup.js';
 import { literals } from '../src/literals.js';
-import {
-  SLACK_BASE_URL,
-  FEATURE_REACTIVATION_TIMEOUT,
-} from '../src/constants.js';
+import { SLACK_BASE_URL } from '../src/constants.js';
 
 // Mock DOM elements
 const createMockElement = () => ({
@@ -84,15 +80,15 @@ describe('popup.js', () => {
     test('should update UI for allowed state', () => {
       const message = 'Test message';
 
-      updateUI(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-        'allowed',
+      updateUI({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+        state: 'allowed',
         message,
-      );
+      });
 
       expect(mockStatusIcon.className).toBe('allowed');
       expect(mockStatusText.className).toBe('allowed');
@@ -106,15 +102,15 @@ describe('popup.js', () => {
     test('should update UI for disallowed state', () => {
       const message = 'Test message';
 
-      updateUI(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-        'disallowed',
+      updateUI({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+        state: 'disallowed',
         message,
-      );
+      });
 
       expect(mockStatusIcon.className).toBe('disallowed');
       expect(mockStatusText.className).toBe('disallowed');
@@ -125,15 +121,15 @@ describe('popup.js', () => {
     test('should update UI for exception state', () => {
       const message = 'Test message';
 
-      updateUI(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-        'exception',
+      updateUI({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+        state: 'exception',
         message,
-      );
+      });
 
       expect(mockStatusIcon.className).toBe('exception');
       expect(mockStatusText.className).toBe('exception');
@@ -145,15 +141,15 @@ describe('popup.js', () => {
     test('should update UI for config_needed state', () => {
       const message = 'Test message';
 
-      updateUI(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-        'config_needed',
+      updateUI({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+        state: 'config_needed',
         message,
-      );
+      });
 
       expect(mockStatusIcon.className).toBe('config_needed');
       expect(mockStatusText.className).toBe('config_needed');
@@ -163,14 +159,14 @@ describe('popup.js', () => {
     });
 
     test('should update UI for unknown state with default message', () => {
-      updateUI(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-        'unknown',
-      );
+      updateUI({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+        state: 'unknown',
+      });
 
       expect(mockStatusIcon.className).toBe('unknown');
       expect(mockStatusText.className).toBe('unknown');
@@ -184,32 +180,21 @@ describe('popup.js', () => {
       const message = 'Test message';
       const matchingMessage = { text: 'matching text' };
 
-      updateUI(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-        'allowed',
+      updateUI({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+        state: 'allowed',
         message,
         matchingMessage,
-      );
+      });
 
       expect(mockMatchingMessageDiv.textContent).toBe(
         `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`,
       );
       expect(mockMatchingMessageDiv.style.display).toBe('block');
-    });
-  });
-
-  describe('getReactivationTime', () => {
-    test('should return current time plus reactivation timeout', () => {
-      const currentTime = 1000000;
-      mockDateNow.mockReturnValue(currentTime);
-
-      const result = getReactivationTime();
-
-      expect(result).toBe(currentTime + FEATURE_REACTIVATION_TIMEOUT);
     });
   });
 
@@ -421,13 +406,13 @@ describe('popup.js', () => {
         channelName: null,
       });
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(mockStatusIcon.className).toBe('config_needed');
       expect(mockStatusText.textContent).toBe(literals.popup.textConfigNeeded);
@@ -448,13 +433,13 @@ describe('popup.js', () => {
         .mockResolvedValueOnce({ channelId, teamId })
         .mockResolvedValueOnce({ lastKnownMergeState: null });
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(mockSlackChannelLink.href).toBe(
         `${SLACK_BASE_URL}${teamId}/${channelId}`,
@@ -472,13 +457,13 @@ describe('popup.js', () => {
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce({ lastKnownMergeState: null });
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(mockStatusIcon.className).toBe('loading');
       expect(mockStatusText.textContent).toBe(
@@ -502,13 +487,13 @@ describe('popup.js', () => {
         },
       });
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(mockStatusIcon.className).toBe('exception');
       expect(mockStatusText.textContent).toBe(
@@ -533,13 +518,13 @@ describe('popup.js', () => {
         },
       });
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(mockStatusIcon.className).toBe('allowed');
       expect(mockStatusText.textContent).toBe(literals.popup.textMergeAllowed);
@@ -561,13 +546,13 @@ describe('popup.js', () => {
         },
       });
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(mockStatusIcon.className).toBe('disallowed');
       expect(mockStatusText.textContent).toBe(
@@ -588,13 +573,13 @@ describe('popup.js', () => {
         },
       });
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(mockStatusIcon.className).toBe('unknown');
       expect(mockStatusText.textContent).toBe(
@@ -605,13 +590,13 @@ describe('popup.js', () => {
     test('should handle errors gracefully', async () => {
       chrome.storage.sync.get.mockRejectedValue(new Error('Storage error'));
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(console.error).toHaveBeenCalledWith(
         'Error processing messages:',
@@ -634,13 +619,13 @@ describe('popup.js', () => {
         lastKnownMergeState: {}, // empty merge state
       });
 
-      await loadAndDisplayData(
-        mockStatusIcon,
-        mockStatusText,
-        mockOpenOptionsButton,
-        mockSlackChannelLink,
-        mockMatchingMessageDiv,
-      );
+      await loadAndDisplayData({
+        statusIcon: mockStatusIcon,
+        statusText: mockStatusText,
+        openOptionsButton: mockOpenOptionsButton,
+        slackChannelLink: mockSlackChannelLink,
+        matchingMessageDiv: mockMatchingMessageDiv,
+      });
 
       expect(mockStatusIcon.className).toBe('loading');
       expect(mockStatusText.textContent).toBe(
