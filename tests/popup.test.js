@@ -5,12 +5,17 @@
 import { jest } from '@jest/globals';
 import {
   updateUI,
+  getReactivationTime,
+  manageCountdownElement,
   updateCountdownDisplay,
   initializeFeatureToggleState,
   loadAndDisplayData,
 } from '../src/popup.js';
 import { literals } from '../src/literals.js';
-import { SLACK_BASE_URL } from '../src/constants.js';
+import {
+  SLACK_BASE_URL,
+  FEATURE_REACTIVATION_TIMEOUT,
+} from '../src/constants.js';
 
 // Mock DOM elements
 const createMockElement = () => ({
@@ -197,6 +202,57 @@ describe('popup.js', () => {
     });
   });
 
+  describe('getReactivationTime', () => {
+    test('should return current time plus reactivation timeout', () => {
+      const currentTime = 1000000;
+      mockDateNow.mockReturnValue(currentTime);
+
+      const result = getReactivationTime();
+
+      expect(result).toBe(currentTime + FEATURE_REACTIVATION_TIMEOUT);
+    });
+  });
+
+  describe('manageCountdownElement', () => {
+    let mockCountdownElement;
+
+    beforeEach(() => {
+      mockCountdownElement = createMockElement();
+      global.document.getElementById = jest.fn((id) => {
+        if (id === 'countdown-timer') return mockCountdownElement;
+        return null;
+      });
+    });
+
+    test('should show countdown with correct time format', () => {
+      const timeLeft = 65000; // 1 minute 5 seconds
+
+      const result = manageCountdownElement({ show: true, timeLeft });
+
+      expect(result).toBe(mockCountdownElement);
+      expect(mockCountdownElement.style.display).toBe('block');
+      expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:05');
+    });
+
+    test('should hide countdown when show is false', () => {
+      // Set display to block initially
+      mockCountdownElement.style.display = 'block';
+
+      const result = manageCountdownElement({ show: false });
+
+      expect(result).toBe(mockCountdownElement);
+      expect(mockCountdownElement.style.display).toBe('none');
+    });
+
+    test('should return null when countdown element is not found', () => {
+      global.document.getElementById = jest.fn(() => null);
+
+      const result = manageCountdownElement({ show: true });
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe('updateCountdownDisplay', () => {
     let mockCountdownElement;
 
@@ -206,51 +262,64 @@ describe('popup.js', () => {
       chrome.storage.local.get.mockImplementation((keys, callback) => {
         callback({ featureEnabled: false }); // Simular que la función está deshabilitada
       });
+
+      // Mock manageCountdownElement
+      global.manageCountdownElement = jest.fn((options) => {
+        if (options.show) {
+          mockCountdownElement.style.display = 'block';
+          if (options.timeLeft) {
+            const minutes = Math.floor(options.timeLeft / 60000);
+            const seconds = Math.floor((options.timeLeft % 60000) / 1000);
+            mockCountdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+          }
+        } else {
+          mockCountdownElement.style.display = 'none';
+        }
+        return mockCountdownElement;
+      });
+    });
+
+    afterEach(() => {
+      delete global.manageCountdownElement;
     });
 
     test('should update countdown display with correct time format when feature is disabled', () => {
       const timeLeft = 65000; // 1 minute 5 seconds
 
-      updateCountdownDisplay(timeLeft, mockCountdownElement);
+      updateCountdownDisplay(timeLeft);
 
       // Ejecutar el callback de chrome.storage.local.get
       const callback = chrome.storage.local.get.mock.calls[0][1];
       callback({ featureEnabled: false });
 
-      expect(mockCountdownElement.style.display).toBe('block');
-      expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:05');
+      expect(global.manageCountdownElement).toHaveBeenCalledWith({
+        show: true,
+        timeLeft: 65000,
+      });
     });
 
     test('should hide countdown when time is zero or negative', () => {
-      // Set display to block initially
-      mockCountdownElement.style.display = 'block';
-
-      updateCountdownDisplay(0, mockCountdownElement);
+      updateCountdownDisplay(0);
 
       // Ejecutar el callback de chrome.storage.local.get
       const callback = chrome.storage.local.get.mock.calls[0][1];
       callback({ featureEnabled: false });
 
-      expect(mockCountdownElement.style.display).toBe('none');
+      expect(global.manageCountdownElement).toHaveBeenCalledWith({
+        show: false,
+      });
     });
 
     test('should hide countdown when feature is enabled', () => {
-      // Set display to block initially
-      mockCountdownElement.style.display = 'block';
-
-      updateCountdownDisplay(65000, mockCountdownElement);
+      updateCountdownDisplay(65000);
 
       // Ejecutar el callback de chrome.storage.local.get con featureEnabled = true
       const callback = chrome.storage.local.get.mock.calls[0][1];
       callback({ featureEnabled: true });
 
-      expect(mockCountdownElement.style.display).toBe('none');
-    });
-
-    test('should handle null countdown element', () => {
-      expect(() => {
-        updateCountdownDisplay(65000, null);
-      }).not.toThrow();
+      expect(global.manageCountdownElement).toHaveBeenCalledWith({
+        show: false,
+      });
     });
   });
 
@@ -265,6 +334,13 @@ describe('popup.js', () => {
         if (id === 'countdown-timer') return mockCountdownElement;
         return null;
       });
+
+      // Mock manageCountdownElement
+      global.manageCountdownElement = jest.fn(() => mockCountdownElement);
+    });
+
+    afterEach(() => {
+      delete global.manageCountdownElement;
     });
 
     test('should set toggle to checked when feature is enabled', () => {
@@ -279,7 +355,9 @@ describe('popup.js', () => {
         '',
       );
       // When feature is enabled, countdown should be hidden
-      expect(mockCountdownElement.style.display).toBe('none');
+      expect(global.manageCountdownElement).toHaveBeenCalledWith({
+        show: false,
+      });
     });
 
     test('should set toggle to unchecked when feature is disabled', () => {

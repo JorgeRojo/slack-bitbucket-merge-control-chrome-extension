@@ -15,6 +15,11 @@ let bitbucketTabId = null;
 
 let rtmWebSocket = null;
 
+/**
+ * Normalizes text by converting to lowercase, removing diacritical marks, and standardizing whitespace
+ * @param {string} text - The text to normalize
+ * @returns {string} - The normalized text
+ */
 export function normalizeText(text) {
   if (!text) return '';
   return text
@@ -25,6 +30,11 @@ export function normalizeText(text) {
     .trim();
 }
 
+/**
+ * Cleans Slack message text by removing formatting, mentions, and standardizing whitespace
+ * @param {string} text - The Slack message text to clean
+ * @returns {string} - The cleaned text
+ */
 export function cleanSlackMessageText(text) {
   if (!text) return '';
 
@@ -36,6 +46,15 @@ export function cleanSlackMessageText(text) {
   return cleanedText;
 }
 
+/**
+ * Determines the merge status based on Slack messages and configured phrases
+ * @param {Object} params - Parameters for determining merge status
+ * @param {Array<Object>} params.messages - Array of Slack messages
+ * @param {Array<string>} params.allowedPhrases - Phrases that indicate merging is allowed
+ * @param {Array<string>} params.disallowedPhrases - Phrases that indicate merging is not allowed
+ * @param {Array<string>} params.exceptionPhrases - Phrases that indicate exceptions to the merge rules
+ * @returns {Object} - Object containing merge status information
+ */
 export function determineMergeStatus({
   messages,
   allowedPhrases,
@@ -588,6 +607,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
+/**
+ * Updates the merge button state in the Bitbucket tab based on the last known merge state
+ * @returns {void}
+ */
 export const updateMergeButtonFromLastKnownMergeState = () => {
   chrome.storage.local.get(
     ['lastKnownMergeState', 'featureEnabled'],
@@ -618,9 +641,14 @@ export const updateMergeButtonFromLastKnownMergeState = () => {
   );
 };
 
-// Global variable to track the countdown interval
+/**
+ * Global variable to track the countdown interval
+ */
 let countdownInterval;
 
+/**
+ * Stops the countdown by clearing the interval
+ */
 export function stopCountdown() {
   if (countdownInterval) {
     clearInterval(countdownInterval);
@@ -628,6 +656,11 @@ export function stopCountdown() {
   }
 }
 
+/**
+ * Starts a countdown to a target time and updates the UI
+ * @param {number} targetTime - The target time in milliseconds since epoch
+ * @returns {Promise<void>}
+ */
 export async function startCountdown(targetTime) {
   // Clear any existing interval before starting a new one
   stopCountdown();
@@ -660,6 +693,10 @@ export async function startCountdown(targetTime) {
   countdownInterval = setInterval(updateCountdown, 1000);
 }
 
+/**
+ * Schedules feature reactivation after a timeout
+ * @returns {Promise<void>}
+ */
 export async function scheduleFeatureReactivation() {
   const reactivationTime = Date.now() + FEATURE_REACTIVATION_TIMEOUT;
   await chrome.storage.local.set({ reactivationTime });
@@ -668,6 +705,10 @@ export async function scheduleFeatureReactivation() {
   await startCountdown(reactivationTime);
 }
 
+/**
+ * Checks if there's a scheduled reactivation and handles it
+ * @returns {Promise<void>}
+ */
 export async function checkScheduledReactivation() {
   const { reactivationTime, featureEnabled } = await chrome.storage.local.get([
     'reactivationTime',
@@ -686,6 +727,10 @@ export async function checkScheduledReactivation() {
   }
 }
 
+/**
+ * Reactivates the feature and notifies the popup
+ * @returns {Promise<void>}
+ */
 export async function reactivateFeature() {
   await chrome.storage.local.set({ featureEnabled: true });
 

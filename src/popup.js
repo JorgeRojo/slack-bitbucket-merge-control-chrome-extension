@@ -10,6 +10,17 @@ export function getReactivationTime() {
   return Date.now() + FEATURE_REACTIVATION_TIMEOUT;
 }
 
+/**
+ * Updates the UI elements based on the current merge status
+ * @param {HTMLElement} statusIcon - The status icon element
+ * @param {HTMLElement} statusText - The status text element
+ * @param {HTMLElement} openOptionsButton - The options button element
+ * @param {HTMLElement} slackChannelLink - The Slack channel link element
+ * @param {HTMLElement} matchingMessageDiv - The matching message div element
+ * @param {string} state - The current merge state ('allowed', 'disallowed', 'exception', 'config_needed', 'unknown')
+ * @param {string} message - The message to display
+ * @param {Object} [matchingMessage=null] - The matching Slack message object
+ */
 export function updateUI(
   statusIcon,
   statusText,
@@ -85,19 +96,19 @@ export function manageCountdownElement(options) {
   return countdownElement;
 }
 
-// Function to update the countdown display in the popup
+/**
+ * Updates the countdown display based on the current feature state and time left
+ * @param {number} timeLeft - Time left in milliseconds
+ */
 export function updateCountdownDisplay(timeLeft) {
-  // Verificar primero si la función está deshabilitada
   chrome.storage.local.get(['featureEnabled'], (result) => {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled || timeLeft <= 0) {
-      // Si la función está habilitada o el tiempo ha terminado, ocultar el contador
       manageCountdownElement({ show: false });
       return;
     }
 
-    // Solo mostrar el contador si la función está deshabilitada y hay tiempo restante
     manageCountdownElement({ show: true, timeLeft });
   });
 }
@@ -121,18 +132,20 @@ export function scheduleFeatureReactivation(toggleElement, reactivationTime) {
   // The background script will handle the countdown and notify the popup
 }
 
+/**
+ * Initializes the feature toggle state based on stored settings
+ * @param {HTMLElement} toggleElement - The toggle element to initialize
+ */
 export function initializeFeatureToggleState(toggleElement) {
   chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled) {
       toggleElement.setAttribute('checked', '');
-      // If feature is enabled, hide the countdown
       manageCountdownElement({ show: false });
     } else {
       toggleElement.removeAttribute('checked');
 
-      // Check with background script for countdown status
       chrome.runtime.sendMessage(
         { action: 'getCountdownStatus' },
         (response) => {
@@ -145,6 +158,15 @@ export function initializeFeatureToggleState(toggleElement) {
   });
 }
 
+/**
+ * Loads and displays data from storage in the popup UI
+ * @param {HTMLElement} statusIcon - The status icon element
+ * @param {HTMLElement} statusText - The status text element
+ * @param {HTMLElement} openOptionsButton - The options button element
+ * @param {HTMLElement} slackChannelLink - The Slack channel link element
+ * @param {HTMLElement} matchingMessageDiv - The matching message div element
+ * @returns {Promise<void>}
+ */
 export async function loadAndDisplayData(
   statusIcon,
   statusText,
@@ -283,10 +305,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (isChecked) {
-        // If feature is enabled, hide the countdown
         manageCountdownElement({ show: false });
       }
-      // If feature is disabled, the background script will handle starting the countdown
     });
   }
 
@@ -313,21 +333,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Listen for countdown updates from background script
   chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
     if (request.action === 'updateCountdownDisplay') {
-      // Verificar primero si la función está deshabilitada antes de mostrar el contador
       chrome.storage.local.get(['featureEnabled'], (result) => {
         const isEnabled = result.featureEnabled !== false;
 
         if (!isEnabled) {
-          // Solo mostrar el contador si la función está deshabilitada
-          updateCountdownDisplay(
-            request.timeLeft,
-            manageCountdownElement({ show: true }),
-          );
+          // Just pass the timeLeft parameter, manageCountdownElement is called inside updateCountdownDisplay
+          updateCountdownDisplay(request.timeLeft);
         } else {
-          // Si la función está habilitada, asegurarse de que el contador esté oculto
           manageCountdownElement({ show: false });
         }
       });

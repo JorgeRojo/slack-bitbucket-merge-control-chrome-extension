@@ -126,7 +126,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   }
   ```
 
-- **Use object** for more than two parameters in functions:
+- **Use an object** for functions with more than two parameters:
 
   ```javascript
   // Good
