@@ -189,11 +189,25 @@ function initializeFeatureToggleState(toggleElement) {
  * Checks the countdown status and updates the display
  */
 function checkCountdownStatus() {
-  chrome.runtime.sendMessage({ action: 'getCountdownStatus' }, (response) => {
-    if (!response?.isCountdownActive) return;
+  // Envolvemos el sendMessage en un try-catch para manejar el error de puerto cerrado
+  try {
+    chrome.runtime.sendMessage({ action: 'getCountdownStatus' }, (response) => {
+      // Verificamos si hay un error de runtime.lastError
+      if (chrome.runtime.lastError) {
+        console.log(
+          'Error al recibir respuesta:',
+          chrome.runtime.lastError.message,
+        );
+        return;
+      }
 
-    updateCountdownDisplay(response.timeLeft);
-  });
+      if (!response?.isCountdownActive) return;
+
+      updateCountdownDisplay(response.timeLeft);
+    });
+  } catch (error) {
+    console.log('Error al enviar mensaje:', error);
+  }
 }
 
 /**
@@ -455,10 +469,26 @@ function setupEventListeners({
     const isChecked = event.detail.checked;
     chrome.storage.local.set({ featureEnabled: isChecked });
 
-    chrome.runtime.sendMessage({
-      action: 'featureToggleChanged',
-      enabled: isChecked,
-    });
+    try {
+      chrome.runtime.sendMessage(
+        {
+          action: 'featureToggleChanged',
+          enabled: isChecked,
+        },
+        (_response) => {
+          // Verificamos si hay un error de runtime.lastError
+          if (chrome.runtime.lastError) {
+            console.log(
+              'Error al recibir respuesta de featureToggleChanged:',
+              chrome.runtime.lastError.message,
+            );
+            return;
+          }
+        },
+      );
+    } catch (error) {
+      console.log('Error al enviar mensaje de featureToggleChanged:', error);
+    }
 
     if (isChecked) {
       manageCountdownElement({ show: false });
