@@ -1,12 +1,12 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
-import { jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import '../src/components/toggle-switch/toggle-switch.js';
 
 // Mock fetch for CSS loading
-global.fetch = jest.fn(() =>
+global.fetch = vi.fn(() =>
   Promise.resolve({
     text: () => Promise.resolve('/* mocked CSS */'),
   }),
@@ -106,7 +106,7 @@ describe('ToggleSwitch Component', () => {
     const input = toggleSwitch.shadowRoot.querySelector('input');
 
     // Set up event listener
-    const toggleHandler = jest.fn();
+    const toggleHandler = vi.fn();
     toggleSwitch.addEventListener('toggle', toggleHandler);
 
     // Mock the change event

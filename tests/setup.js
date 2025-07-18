@@ -1,3 +1,6 @@
+// Este archivo se usará para configurar el entorno de pruebas para Vitest
+// No necesitamos cambiar nada ya que Vitest puede usar el mismo setup que Jest
+
 global.chrome = {
   runtime: {
     onMessage: {
