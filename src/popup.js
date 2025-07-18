@@ -54,8 +54,15 @@ export function getReactivationTime() {
   return Date.now() + FEATURE_REACTIVATION_TIMEOUT;
 }
 
+// Global variable to track the countdown interval
+let countdownInterval;
+
 export function startCountdown(targetTime, countdownElement, toggleElement) {
-  let countdownInterval;
+  // Clear any existing interval before starting a new one
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
 
   const updateCountdown = () => {
     const currentTime = Date.now();
@@ -70,6 +77,7 @@ export function startCountdown(targetTime, countdownElement, toggleElement) {
       });
       countdownElement.style.display = 'none';
       clearInterval(countdownInterval);
+      countdownInterval = null;
       return;
     }
 
