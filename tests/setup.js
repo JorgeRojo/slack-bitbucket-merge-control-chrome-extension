@@ -31,6 +31,7 @@ global.chrome = {
   },
   alarms: {
     create: () => {},
+    clear: () => {},
     onAlarm: {
       addListener: () => {},
     },

@@ -47,12 +47,21 @@ const mockScripting = {
   unregisterContentScripts: vi.fn(),
 };
 
+const mockAlarms = {
+  create: vi.fn(),
+  clear: vi.fn(),
+  onAlarm: {
+    addListener: vi.fn(),
+  },
+};
+
 global.chrome = {
   storage: mockStorage,
   runtime: mockRuntime,
   action: mockAction,
   tabs: mockTabs,
   scripting: mockScripting,
+  alarms: mockAlarms,
 };
 
 // Mock Date.now
