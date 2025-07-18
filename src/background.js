@@ -8,6 +8,7 @@ import {
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
+  FEATURE_REACTIVATION_TIMEOUT,
 } from './constants.js';
 
 let bitbucketTabId = null;
@@ -469,7 +470,6 @@ async function fetchAndStoreMessages(slackToken, channelId) {
       }));
       await chrome.storage.local.set({ messages });
 
-      // Recalcular lastMatchingMessage usando las funciones existentes
       const {
         currentAllowedPhrases,
         currentDisallowedPhrases,
@@ -528,7 +528,7 @@ const messageHandlers = {
     }
     connectToSlackSocketMode();
   },
-  bitbucketTabLoaded: async (request, sender) => {
+  bitbucketTabLoaded: async (_request, sender) => {
     if (sender.tab) {
       const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
       if (bitbucketUrl) {
@@ -545,6 +545,10 @@ const messageHandlers = {
   featureToggleChanged: async (request) => {
     const { enabled } = request;
     await chrome.storage.local.set({ featureEnabled: enabled });
+
+    if (!enabled) {
+      await scheduleFeatureReactivation();
+    }
 
     const { channelName } = await chrome.storage.sync.get('channelName');
     if (channelName) {
@@ -591,6 +595,46 @@ const updateMergeButtonFromLastKnownMergeState = () => {
   );
 };
 
+async function scheduleFeatureReactivation() {
+  const reactivationTime = Date.now() + FEATURE_REACTIVATION_TIMEOUT;
+  await chrome.storage.local.set({ reactivationTime });
+
+  setTimeout(async () => {
+    await chrome.storage.local.set({ featureEnabled: true });
+
+    const { channelName } = await chrome.storage.sync.get('channelName');
+    if (channelName) {
+      await updateContentScriptMergeState(channelName);
+    }
+  }, FEATURE_REACTIVATION_TIMEOUT);
+}
+
+async function checkScheduledReactivation() {
+  const { reactivationTime, featureEnabled } = await chrome.storage.local.get([
+    'reactivationTime',
+    'featureEnabled',
+  ]);
+
+  if (featureEnabled === false && reactivationTime) {
+    const timeLeft = Math.max(0, reactivationTime - Date.now());
+
+    if (timeLeft > 0) {
+      setTimeout(reactivateFeature, timeLeft);
+    } else {
+      await reactivateFeature();
+    }
+  }
+}
+
+async function reactivateFeature() {
+  await chrome.storage.local.set({ featureEnabled: true });
+
+  const { channelName } = await chrome.storage.sync.get('channelName');
+  if (channelName) {
+    await updateContentScriptMergeState(channelName);
+  }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.get('mergeButtonSelector', (result) => {
     if (!result.mergeButtonSelector) {
@@ -601,11 +645,13 @@ chrome.runtime.onInstalled.addListener(() => {
   });
   connectToSlackSocketMode();
   registerBitbucketContentScript();
+  checkScheduledReactivation();
 });
 
 chrome.runtime.onStartup.addListener(() => {
   connectToSlackSocketMode();
   registerBitbucketContentScript();
+  checkScheduledReactivation();
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {

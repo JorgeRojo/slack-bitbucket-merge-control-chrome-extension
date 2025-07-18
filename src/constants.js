@@ -41,3 +41,5 @@ export const DEFAULT_BITBUCKET_URL =
 export const DEFAULT_CHANNEL_NAME = 'frontend-closure';
 
 export const SLACK_BASE_URL = 'https://app.slack.com/client/';
+
+export const FEATURE_REACTIVATION_TIMEOUT = 1 * 60 * 1000; // 1 minutes in milliseconds

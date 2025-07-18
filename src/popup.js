@@ -1,4 +1,4 @@
-import { SLACK_BASE_URL } from './constants.js';
+import { SLACK_BASE_URL, FEATURE_REACTIVATION_TIMEOUT } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
 
@@ -9,46 +9,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const slackChannelLink = document.getElementById('slack-channel-link');
   const matchingMessageDiv = document.getElementById('matching-message');
   const featureToggle = document.getElementById('feature-toggle');
-
-  function updateUI(state, message, matchingMessage = null) {
-    statusIcon.className = state;
-    statusText.className = state;
-
-    openOptionsButton.style.display = 'none';
-    slackChannelLink.style.display = 'none';
-    matchingMessageDiv.style.display = 'none';
-
-    switch (state) {
-      case 'allowed':
-        statusIcon.textContent = literals.popup.emojiAllowed;
-        statusText.textContent = message;
-        break;
-      case 'disallowed':
-        statusIcon.textContent = literals.popup.emojiDisallowed;
-        statusText.textContent = message;
-        break;
-      case 'exception':
-        statusIcon.textContent = literals.popup.emojiException;
-        statusText.textContent = message;
-        slackChannelLink.style.display = 'block';
-        break;
-      case 'config_needed':
-        statusIcon.textContent = literals.popup.emojiUnknown;
-        statusText.textContent = message;
-        openOptionsButton.style.display = 'block';
-        break;
-      default:
-        statusIcon.textContent = literals.popup.emojiUnknown;
-        statusText.textContent =
-          message || literals.popup.textCouldNotDetermine;
-        break;
-    }
-
-    if (matchingMessage) {
-      matchingMessageDiv.textContent = `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`;
-      matchingMessageDiv.style.display = 'block';
-    }
-  }
 
   async function loadAndDisplayData() {
     try {
@@ -109,22 +69,122 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  if (featureToggle) {
-    const initializeToggle = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+  function updateUI(state, message, matchingMessage = null) {
+    statusIcon.className = state;
+    statusText.className = state;
 
-      chrome.storage.local.get(['featureEnabled'], (result) => {
+    openOptionsButton.style.display = 'none';
+    slackChannelLink.style.display = 'none';
+    matchingMessageDiv.style.display = 'none';
+
+    switch (state) {
+      case 'allowed':
+        statusIcon.textContent = literals.popup.emojiAllowed;
+        statusText.textContent = message;
+        break;
+      case 'disallowed':
+        statusIcon.textContent = literals.popup.emojiDisallowed;
+        statusText.textContent = message;
+        break;
+      case 'exception':
+        statusIcon.textContent = literals.popup.emojiException;
+        statusText.textContent = message;
+        slackChannelLink.style.display = 'block';
+        break;
+      case 'config_needed':
+        statusIcon.textContent = literals.popup.emojiUnknown;
+        statusText.textContent = message;
+        openOptionsButton.style.display = 'block';
+        break;
+      default:
+        statusIcon.textContent = literals.popup.emojiUnknown;
+        statusText.textContent =
+          message || literals.popup.textCouldNotDetermine;
+        break;
+    }
+
+    if (matchingMessage) {
+      matchingMessageDiv.textContent = `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`;
+      matchingMessageDiv.style.display = 'block';
+    }
+  }
+
+  async function initializeToggle() {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    initializeFeatureToggleState(featureToggle);
+  }
+
+  function initializeFeatureToggleState(toggleElement) {
+    chrome.storage.local.get(
+      ['featureEnabled', 'reactivationTime'],
+      (result) => {
         const isEnabled = result.featureEnabled !== false;
+        const reactivationTime = result.reactivationTime;
+        const currentTime = Date.now();
 
         if (isEnabled) {
-          featureToggle.setAttribute('checked', '');
+          toggleElement.setAttribute('checked', '');
         } else {
-          featureToggle.removeAttribute('checked');
+          toggleElement.removeAttribute('checked');
+
+          if (reactivationTime && reactivationTime > currentTime) {
+            const countdownElement = document.getElementById('countdown-timer');
+            if (countdownElement) {
+              countdownElement.style.display = 'block';
+              startCountdown(reactivationTime, countdownElement, toggleElement);
+            }
+          }
         }
-      });
+      },
+    );
+  }
+
+  function getReactivationTime() {
+    return Date.now() + FEATURE_REACTIVATION_TIMEOUT;
+  }
+
+  function scheduleFeatureReactivation(toggleElement, reactivationTime) {
+    if (!reactivationTime) {
+      reactivationTime = getReactivationTime();
+    }
+
+    chrome.storage.local.set({ reactivationTime });
+
+    const countdownElement = document.getElementById('countdown-timer');
+    if (countdownElement) {
+      countdownElement.style.display = 'block';
+      startCountdown(reactivationTime, countdownElement, toggleElement);
+    }
+  }
+
+  function startCountdown(targetTime, countdownElement, toggleElement) {
+    const updateCountdown = () => {
+      const currentTime = Date.now();
+      const timeLeft = Math.max(0, targetTime - currentTime);
+
+      if (timeLeft <= 0) {
+        toggleElement.setAttribute('checked', '');
+        chrome.storage.local.set({ featureEnabled: true });
+        chrome.runtime.sendMessage({
+          action: 'featureToggleChanged',
+          enabled: true,
+        });
+        countdownElement.style.display = 'none';
+        clearInterval(countdownInterval);
+        return;
+      }
+
+      const minutes = Math.floor(timeLeft / 60000);
+      const seconds = Math.floor((timeLeft % 60000) / 1000);
+      countdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    initializeToggle();
+    updateCountdown();
+    const countdownInterval = setInterval(updateCountdown, 1000);
+  }
+
+  if (featureToggle) {
+    await initializeToggle();
 
     featureToggle.addEventListener('toggle', (event) => {
       const isChecked = event.detail.checked;
@@ -134,6 +194,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         action: 'featureToggleChanged',
         enabled: isChecked,
       });
+
+      if (!isChecked) {
+        scheduleFeatureReactivation(featureToggle, getReactivationTime());
+      }
     });
   }
 

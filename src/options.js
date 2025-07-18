@@ -8,6 +8,19 @@ import {
 } from './constants.js';
 import { literals } from './literals.js';
 
+function formatMultilineInput(text) {
+  return text
+    .trim()
+    .split('\n')
+    .map((phrase) => phrase.trim())
+    .filter((phrase) => phrase !== '')
+    .join(',');
+}
+
+function formatCommaToMultiline(text) {
+  return text.split(',').join('\n');
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const saveButton = document.getElementById('save');
   const tokenInput = document.getElementById('slackToken');
@@ -56,21 +69,23 @@ document.addEventListener('DOMContentLoaded', function () {
         channelInput.value = DEFAULT_CHANNEL_NAME;
       }
       if (result.allowedPhrases) {
-        allowedPhrasesInput.value = result.allowedPhrases.split(',').join('\n');
+        allowedPhrasesInput.value = formatCommaToMultiline(
+          result.allowedPhrases,
+        );
       } else {
         allowedPhrasesInput.value = DEFAULT_ALLOWED_PHRASES.join('\n');
       }
       if (result.disallowedPhrases) {
-        disallowedPhrasesInput.value = result.disallowedPhrases
-          .split(',')
-          .join('\n');
+        disallowedPhrasesInput.value = formatCommaToMultiline(
+          result.disallowedPhrases,
+        );
       } else {
         disallowedPhrasesInput.value = DEFAULT_DISALLOWED_PHRASES.join('\n');
       }
       if (result.exceptionPhrases) {
-        exceptionPhrasesInput.value = result.exceptionPhrases
-          .split(',')
-          .join('\n');
+        exceptionPhrasesInput.value = formatCommaToMultiline(
+          result.exceptionPhrases,
+        );
       } else {
         exceptionPhrasesInput.value = DEFAULT_EXCEPTION_PHRASES.join('\n');
       }
@@ -91,24 +106,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const slackToken = tokenInput.value.trim();
     const appToken = appTokenInput.value.trim();
     const channelName = channelInput.value.trim().replace(/^#/, '');
-    const allowedPhrases = allowedPhrasesInput.value
-      .trim()
-      .split('\n')
-      .map((phrase) => phrase.trim())
-      .filter((phrase) => phrase !== '')
-      .join(',');
-    const disallowedPhrases = disallowedPhrasesInput.value
-      .trim()
-      .split('\n')
-      .map((phrase) => phrase.trim())
-      .filter((phrase) => phrase !== '')
-      .join(',');
-    const exceptionPhrases = exceptionPhrasesInput.value
-      .trim()
-      .split('\n')
-      .map((phrase) => phrase.trim())
-      .filter((phrase) => phrase !== '')
-      .join(',');
+    const allowedPhrases = formatMultilineInput(allowedPhrasesInput.value);
+    const disallowedPhrases = formatMultilineInput(
+      disallowedPhrasesInput.value,
+    );
+    const exceptionPhrases = formatMultilineInput(exceptionPhrasesInput.value);
     const bitbucketUrl = bitbucketUrlInput.value.trim();
     const mergeButtonSelector = mergeButtonSelectorInput.value.trim();
 
