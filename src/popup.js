@@ -54,15 +54,22 @@ export function updateUI(
 export function updateCountdownDisplay(timeLeft, countdownElement) {
   if (!countdownElement) return;
 
-  if (timeLeft <= 0) {
-    countdownElement.style.display = 'none';
-    return;
-  }
+  // Verificar primero si la función está deshabilitada
+  chrome.storage.local.get(['featureEnabled'], (result) => {
+    const isEnabled = result.featureEnabled !== false;
 
-  countdownElement.style.display = 'block';
-  const minutes = Math.floor(timeLeft / 60000);
-  const seconds = Math.floor((timeLeft % 60000) / 1000);
-  countdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+    if (isEnabled || timeLeft <= 0) {
+      // Si la función está habilitada o el tiempo ha terminado, ocultar el contador
+      countdownElement.style.display = 'none';
+      return;
+    }
+
+    // Solo mostrar el contador si la función está deshabilitada y hay tiempo restante
+    countdownElement.style.display = 'block';
+    const minutes = Math.floor(timeLeft / 60000);
+    const seconds = Math.floor((timeLeft % 60000) / 1000);
+    countdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+  });
 }
 
 export function initializeFeatureToggleState(toggleElement) {
@@ -264,10 +271,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Listen for countdown updates from background script
   chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
     if (request.action === 'updateCountdownDisplay') {
-      const countdownElement = document.getElementById('countdown-timer');
-      if (countdownElement) {
-        updateCountdownDisplay(request.timeLeft, countdownElement);
-      }
+      // Verificar primero si la función está deshabilitada antes de mostrar el contador
+      chrome.storage.local.get(['featureEnabled'], (result) => {
+        const isEnabled = result.featureEnabled !== false;
+        const countdownElement = document.getElementById('countdown-timer');
+
+        if (!isEnabled && countdownElement) {
+          // Solo mostrar el contador si la función está deshabilitada
+          updateCountdownDisplay(request.timeLeft, countdownElement);
+        } else if (countdownElement) {
+          // Si la función está habilitada, asegurarse de que el contador esté oculto
+          countdownElement.style.display = 'none';
+        }
+      });
     } else if (request.action === 'countdownCompleted') {
       const countdownElement = document.getElementById('countdown-timer');
       if (countdownElement) {

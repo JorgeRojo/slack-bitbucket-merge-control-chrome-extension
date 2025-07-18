@@ -202,12 +202,20 @@ describe('popup.js', () => {
 
     beforeEach(() => {
       mockCountdownElement = createMockElement();
+      // Mock chrome.storage.local.get para las pruebas
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        callback({ featureEnabled: false }); // Simular que la función está deshabilitada
+      });
     });
 
-    test('should update countdown display with correct time format', () => {
+    test('should update countdown display with correct time format when feature is disabled', () => {
       const timeLeft = 65000; // 1 minute 5 seconds
 
       updateCountdownDisplay(timeLeft, mockCountdownElement);
+
+      // Ejecutar el callback de chrome.storage.local.get
+      const callback = chrome.storage.local.get.mock.calls[0][1];
+      callback({ featureEnabled: false });
 
       expect(mockCountdownElement.style.display).toBe('block');
       expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:05');
@@ -218,6 +226,23 @@ describe('popup.js', () => {
       mockCountdownElement.style.display = 'block';
 
       updateCountdownDisplay(0, mockCountdownElement);
+
+      // Ejecutar el callback de chrome.storage.local.get
+      const callback = chrome.storage.local.get.mock.calls[0][1];
+      callback({ featureEnabled: false });
+
+      expect(mockCountdownElement.style.display).toBe('none');
+    });
+
+    test('should hide countdown when feature is enabled', () => {
+      // Set display to block initially
+      mockCountdownElement.style.display = 'block';
+
+      updateCountdownDisplay(65000, mockCountdownElement);
+
+      // Ejecutar el callback de chrome.storage.local.get con featureEnabled = true
+      const callback = chrome.storage.local.get.mock.calls[0][1];
+      callback({ featureEnabled: true });
 
       expect(mockCountdownElement.style.display).toBe('none');
     });
