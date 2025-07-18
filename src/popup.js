@@ -1,6 +1,14 @@
-import { SLACK_BASE_URL } from './constants.js';
+import { SLACK_BASE_URL, FEATURE_REACTIVATION_TIMEOUT } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
+
+/**
+ * Returns the time when the feature should be reactivated
+ * @returns {number} - Timestamp in milliseconds
+ */
+export function getReactivationTime() {
+  return Date.now() + FEATURE_REACTIVATION_TIMEOUT;
+}
 
 export function updateUI(
   statusIcon,
@@ -50,39 +58,77 @@ export function updateUI(
   }
 }
 
-// Function to update the countdown display in the popup
-export function updateCountdownDisplay(timeLeft, countdownElement) {
-  if (!countdownElement) return;
+/**
+ * Manages the countdown timer element display and content
+ * @param {Object} options - Configuration options
+ * @param {boolean} options.show - Whether to show or hide the countdown element
+ * @param {number} [options.timeLeft] - Time left in milliseconds (required when show is true)
+ * @returns {HTMLElement|null} - The countdown element or null if not found
+ */
+export function manageCountdownElement(options) {
+  const countdownElement = document.getElementById('countdown-timer');
+  if (!countdownElement) return null;
 
+  if (!options.show) {
+    countdownElement.style.display = 'none';
+  } else {
+    countdownElement.style.display = 'block';
+
+    // Only update the text content if timeLeft is provided
+    if (options.timeLeft !== undefined) {
+      const minutes = Math.floor(options.timeLeft / 60000);
+      const seconds = Math.floor((options.timeLeft % 60000) / 1000);
+      countdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+  }
+
+  return countdownElement;
+}
+
+// Function to update the countdown display in the popup
+export function updateCountdownDisplay(timeLeft) {
   // Verificar primero si la función está deshabilitada
   chrome.storage.local.get(['featureEnabled'], (result) => {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled || timeLeft <= 0) {
       // Si la función está habilitada o el tiempo ha terminado, ocultar el contador
-      countdownElement.style.display = 'none';
+      manageCountdownElement({ show: false });
       return;
     }
 
     // Solo mostrar el contador si la función está deshabilitada y hay tiempo restante
-    countdownElement.style.display = 'block';
-    const minutes = Math.floor(timeLeft / 60000);
-    const seconds = Math.floor((timeLeft % 60000) / 1000);
-    countdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+    manageCountdownElement({ show: true, timeLeft });
   });
+}
+
+/**
+ * Schedules feature reactivation by sending a message to the background script
+ * @param {HTMLElement} toggleElement - The toggle element
+ * @param {number} [reactivationTime] - Optional reactivation time, defaults to getReactivationTime()
+ */
+export function scheduleFeatureReactivation(toggleElement, reactivationTime) {
+  if (!reactivationTime) {
+    reactivationTime = getReactivationTime();
+  }
+
+  // Send message to background script to start the countdown
+  chrome.runtime.sendMessage({
+    action: 'featureToggleChanged',
+    enabled: false,
+  });
+
+  // The background script will handle the countdown and notify the popup
 }
 
 export function initializeFeatureToggleState(toggleElement) {
   chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
     const isEnabled = result.featureEnabled !== false;
-    const countdownElement = document.getElementById('countdown-timer');
 
     if (isEnabled) {
       toggleElement.setAttribute('checked', '');
       // If feature is enabled, hide the countdown
-      if (countdownElement) {
-        countdownElement.style.display = 'none';
-      }
+      manageCountdownElement({ show: false });
     } else {
       toggleElement.removeAttribute('checked');
 
@@ -90,8 +136,8 @@ export function initializeFeatureToggleState(toggleElement) {
       chrome.runtime.sendMessage(
         { action: 'getCountdownStatus' },
         (response) => {
-          if (response && response.isCountdownActive && countdownElement) {
-            updateCountdownDisplay(response.timeLeft, countdownElement);
+          if (response && response.isCountdownActive) {
+            updateCountdownDisplay(response.timeLeft);
           }
         },
       );
@@ -236,10 +282,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         enabled: isChecked,
       });
 
-      const countdownElement = document.getElementById('countdown-timer');
-      if (isChecked && countdownElement) {
+      if (isChecked) {
         // If feature is enabled, hide the countdown
-        countdownElement.style.display = 'none';
+        manageCountdownElement({ show: false });
       }
       // If feature is disabled, the background script will handle starting the countdown
     });
@@ -274,21 +319,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Verificar primero si la función está deshabilitada antes de mostrar el contador
       chrome.storage.local.get(['featureEnabled'], (result) => {
         const isEnabled = result.featureEnabled !== false;
-        const countdownElement = document.getElementById('countdown-timer');
 
-        if (!isEnabled && countdownElement) {
+        if (!isEnabled) {
           // Solo mostrar el contador si la función está deshabilitada
-          updateCountdownDisplay(request.timeLeft, countdownElement);
-        } else if (countdownElement) {
+          updateCountdownDisplay(
+            request.timeLeft,
+            manageCountdownElement({ show: true }),
+          );
+        } else {
           // Si la función está habilitada, asegurarse de que el contador esté oculto
-          countdownElement.style.display = 'none';
+          manageCountdownElement({ show: false });
         }
       });
     } else if (request.action === 'countdownCompleted') {
-      const countdownElement = document.getElementById('countdown-timer');
-      if (countdownElement) {
-        countdownElement.style.display = 'none';
-      }
+      manageCountdownElement({ show: false });
       featureToggle.setAttribute('checked', '');
     }
   });
