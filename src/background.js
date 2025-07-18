@@ -15,24 +15,35 @@ let bitbucketTabId = null;
 
 let rtmWebSocket = null;
 
+// Expresiones regulares para normalización y limpieza de texto
+const DIACRITICAL_MARKS_REGEX = /\p{Diacritic}/gu;
+const MULTIPLE_WHITESPACE_REGEX = /\s+/g;
+const NEWLINES_AND_TABS_REGEX = /[\n\r\t]+/g;
+const USER_MENTION_REGEX = /<@[^>]+>/g;
+const CHANNEL_MENTION_REGEX = /<#[^|>]+>/g;
+const REMAINING_BRACKETS_REGEX = /<[^>]+>/g;
+
+// Tiempo de reconexión en milisegundos
+const RECONNECTION_DELAY_MS = 5000;
+
 function normalizeText(text) {
   if (!text) return '';
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '') // Remove diacritical marks (accents, tildes, etc.)
-    .replace(/\s+/g, ' ') // Replace multiple whitespace characters with single space
+    .replace(DIACRITICAL_MARKS_REGEX, '')
+    .replace(MULTIPLE_WHITESPACE_REGEX, ' ')
     .trim();
 }
 
 function cleanSlackMessageText(text) {
   if (!text) return '';
 
-  text = text.replace(/[\n\r\t]+/g, ' '); // Replace line breaks and tabs with spaces
-  let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION'); // Replace user mentions like <@U123456789> with @MENTION
-  cleanedText = cleanedText.replace(/<#[^|>]+>/g, '@CHANNEL'); // Replace unnamed channel mentions like <#C123456789> with @CHANNEL
-  cleanedText = cleanedText.replace(/<[^>]+>/g, ''); // Remove any remaining angle bracket content
-  cleanedText = cleanedText.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space and trim
+  text = text.replace(NEWLINES_AND_TABS_REGEX, ' ');
+  let cleanedText = text.replace(USER_MENTION_REGEX, '@MENTION');
+  cleanedText = cleanedText.replace(CHANNEL_MENTION_REGEX, '@CHANNEL');
+  cleanedText = cleanedText.replace(REMAINING_BRACKETS_REGEX, '');
+  cleanedText = cleanedText.replace(MULTIPLE_WHITESPACE_REGEX, ' ').trim();
   return cleanedText;
 }
 
@@ -75,37 +86,37 @@ function determineMergeStatus({
 }
 
 function updateExtensionIcon(status) {
-  let path16, path48;
+  let smallIconPath, largeIconPath;
   switch (status) {
     case 'loading':
-      path16 = 'images/icon16.png';
-      path48 = 'images/icon48.png';
+      smallIconPath = 'images/icon16.png';
+      largeIconPath = 'images/icon48.png';
       break;
     case 'allowed':
-      path16 = 'images/icon16_enabled.png';
-      path48 = 'images/icon48_enabled.png';
+      smallIconPath = 'images/icon16_enabled.png';
+      largeIconPath = 'images/icon48_enabled.png';
       break;
     case 'disallowed':
-      path16 = 'images/icon16_disabled.png';
-      path48 = 'images/icon48_disabled.png';
+      smallIconPath = 'images/icon16_disabled.png';
+      largeIconPath = 'images/icon48_disabled.png';
       break;
     case 'exception':
-      path16 = 'images/icon16_exception.png';
-      path48 = 'images/icon48_exception.png';
+      smallIconPath = 'images/icon16_exception.png';
+      largeIconPath = 'images/icon48_exception.png';
       break;
     case 'error':
-      path16 = 'images/icon16_error.png';
-      path48 = 'images/icon48_error.png';
+      smallIconPath = 'images/icon16_error.png';
+      largeIconPath = 'images/icon48_error.png';
       break;
     default:
-      path16 = 'images/icon16.png';
-      path48 = 'images/icon48.png';
+      smallIconPath = 'images/icon16.png';
+      largeIconPath = 'images/icon48.png';
       break;
   }
   chrome.action.setIcon({
     path: {
-      16: path16,
-      48: path48,
+      16: smallIconPath,
+      48: largeIconPath,
     },
   });
 }
@@ -375,7 +386,6 @@ async function connectToSlackSocketMode() {
   updateExtensionIcon('loading');
 
   try {
-    // Group related async operations
     await Promise.all([
       fetchAndStoreTeamId(slackToken),
       resolveChannelId(slackToken, channelName).then((channelId) =>
@@ -422,7 +432,7 @@ async function connectToSlackSocketMode() {
     rtmWebSocket.onclose = () => {
       updateExtensionIcon('error');
       chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
-      setTimeout(connectToSlackSocketMode, 5000); // Reconnect after 5 seconds
+      setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
     rtmWebSocket.onerror = () => {
@@ -519,8 +529,8 @@ const messageHandlers = {
     if (sender.tab) {
       const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
       if (bitbucketUrl) {
-        const regexPattern = bitbucketUrl.replace(/\*/g, '.*'); // Replace wildcards (*) with regex pattern (.*)
-        const bitbucketRegex = new RegExp(regexPattern);
+        const wildcardToRegexPattern = bitbucketUrl.replace(/\*/g, '.*');
+        const bitbucketRegex = new RegExp(wildcardToRegexPattern);
 
         if (bitbucketRegex.test(sender.tab.url)) {
           bitbucketTabId = sender.tab.id;
@@ -547,8 +557,6 @@ const messageHandlers = {
     const { enabled } = request;
     await chrome.storage.local.set({ featureEnabled: enabled });
 
-    // When countdown completes, we need to update the merge button state
-    // according to the current merge status
     const { channelName } = await chrome.storage.sync.get('channelName');
     if (channelName) {
       await updateContentScriptMergeState(channelName);
@@ -569,14 +577,14 @@ const messageHandlers = {
         timeLeft: timeLeft,
         reactivationTime: reactivationTime,
       });
-      return true; // Keep the message channel open for the async response
+      return true;
     } else {
       sendResponse({
         isCountdownActive: false,
         timeLeft: 0,
         reactivationTime: null,
       });
-      return true; // Keep the message channel open for the async response
+      return true;
     }
   },
 };
@@ -588,10 +596,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-/**
- * Updates the merge button state in the Bitbucket tab based on the last known merge state
- * @returns {void}
- */
 const updateMergeButtonFromLastKnownMergeState = () => {
   chrome.storage.local.get(
     ['lastKnownMergeState', 'featureEnabled'],
@@ -622,14 +626,8 @@ const updateMergeButtonFromLastKnownMergeState = () => {
   );
 };
 
-/**
- * Global variable to track the countdown interval
- */
 let countdownInterval;
 
-/**
- * Stops the countdown by clearing the interval
- */
 function stopCountdown() {
   if (countdownInterval) {
     clearInterval(countdownInterval);
@@ -637,28 +635,14 @@ function stopCountdown() {
   }
 }
 
-/**
- * Starts a countdown to a target time and updates the UI
- * @param {number} targetTime - The target time in milliseconds since epoch
- * @returns {Promise<void>}
- */
 async function startCountdown(targetTime) {
-  // Clear any existing interval before starting a new one
   stopCountdown();
 
   const updateCountdown = async () => {
     const currentTime = Date.now();
     const timeLeft = Math.max(0, targetTime - currentTime);
 
-    // Notify popup to update the countdown display
-    try {
-      await chrome.runtime.sendMessage({
-        action: 'updateCountdownDisplay',
-        timeLeft: timeLeft,
-      });
-    } catch {
-      // Popup might not be open, ignore the error
-    }
+    await notifyPopupAboutCountdown(timeLeft);
 
     if (timeLeft <= 0) {
       await reactivateFeature();
@@ -667,29 +651,27 @@ async function startCountdown(targetTime) {
     }
   };
 
-  // Initial update
   await updateCountdown();
-
-  // Set interval for updates
   countdownInterval = setInterval(updateCountdown, 1000);
 }
 
-/**
- * Schedules feature reactivation after a timeout
- * @returns {Promise<void>}
- */
+async function notifyPopupAboutCountdown(timeLeft) {
+  try {
+    await chrome.runtime.sendMessage({
+      action: 'updateCountdownDisplay',
+      timeLeft,
+    });
+  } catch {
+    // Esta excepción es esperada cuando el popup no está abierto
+  }
+}
+
 async function scheduleFeatureReactivation() {
   const reactivationTime = Date.now() + FEATURE_REACTIVATION_TIMEOUT;
   await chrome.storage.local.set({ reactivationTime });
-
-  // Start the countdown
   await startCountdown(reactivationTime);
 }
 
-/**
- * Checks if there's a scheduled reactivation and handles it
- * @returns {Promise<void>}
- */
 async function checkScheduledReactivation() {
   const { reactivationTime, featureEnabled } = await chrome.storage.local.get([
     'reactivationTime',
@@ -699,30 +681,23 @@ async function checkScheduledReactivation() {
   if (featureEnabled === false && reactivationTime) {
     const currentTime = Date.now();
     if (reactivationTime > currentTime) {
-      // Start the countdown with the remaining time
       await startCountdown(reactivationTime);
     } else {
-      // If the reactivation time has already passed, reactivate immediately
       await reactivateFeature();
     }
   }
 }
 
-/**
- * Reactivates the feature and notifies the popup
- * @returns {Promise<void>}
- */
 async function reactivateFeature() {
   await chrome.storage.local.set({ featureEnabled: true });
 
-  // Notify popup that feature has been reactivated
   try {
     await chrome.runtime.sendMessage({
       action: 'countdownCompleted',
       enabled: true,
     });
   } catch {
-    // Popup might not be open, ignore the error
+    // Esta excepción es esperada cuando el popup no está abierto
   }
 
   const { channelName } = await chrome.storage.sync.get('channelName');

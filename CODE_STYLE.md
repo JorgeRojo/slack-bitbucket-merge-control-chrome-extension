@@ -156,8 +156,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Keep nesting minimal
 - Use self-closing tags for void elements
   ```html
-  <img src="image.jpg" alt="Description" />
-  <input type="text" />
+  <img src="image.jpg" alt="Description" /> <input type="text" />
   ```
 
 ### Attributes
