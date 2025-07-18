@@ -72,3 +72,19 @@ h1 {
   background-color: #fff;
   text-align: center;
 }
+
+/* Estilos para el contador de tiempo */
+#countdown-timer {
+  display: none;
+  margin-top: 5px;
+  color: #e74c3c;
+  font-size: 0.9em;
+}
+
+/* Estilos para el mensaje coincidente */
+#matching-message {
+  font-size: 0.9em;
+  color: #555;
+  margin-top: 5px;
+  word-wrap: break-word;
+}

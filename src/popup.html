@@ -10,27 +10,13 @@
     <div class="control-section">
       <toggle-switch id="feature-toggle" label="Merge control enabled">
       </toggle-switch>
-      <div id="countdown-timer" style="display: none; margin-top: 5px; color: #e74c3c; font-size: 0.9em;"></div>
+      <div id="countdown-timer"></div>
     </div>
     <div id="status-container">
       <div id="status-icon" class="loading">⏳</div>
       <div id="status-text" class="loading"></div>
-      <div
-        id="matching-message"
-        style="
-          font-size: 0.9em;
-          color: #555;
-          margin-top: 5px;
-          word-wrap: break-word;
-        "
-      ></div>
-      <a
-        id="slack-channel-link"
-        href="#"
-        target="_blank"
-        style="display: none; margin-top: 10px"
-        >Open Slack Channel</a
-      >
+      <div id="matching-message"></div>
+      <a id="slack-channel-link" href="#" target="_blank">Open Slack Channel</a>
       <button id="open-options">Open Options Page</button>
     </div>
     <script src="popup.js" type="module"></script>
