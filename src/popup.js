@@ -2,6 +2,40 @@ import { SLACK_BASE_URL } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
 
+// Inicialización cuando el DOM está listo
+document.addEventListener('DOMContentLoaded', async () => {
+  const uiElements = {
+    statusIcon: document.getElementById('status-icon'),
+    statusText: document.getElementById('status-text'),
+    openOptionsButton: document.getElementById('open-options'),
+    slackChannelLink: document.getElementById('slack-channel-link'),
+    matchingMessageDiv: document.getElementById('matching-message'),
+    featureToggle: document.getElementById('feature-toggle'),
+  };
+
+  const {
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+    featureToggle,
+  } = uiElements;
+
+  if (featureToggle) {
+    await initializeToggle(featureToggle);
+    setupEventListeners(uiElements);
+  }
+
+  await loadAndDisplayData({
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+  });
+});
+
 /**
  * Updates the UI elements based on the current merge status
  * @param {Object} params - UI update parameters
@@ -408,39 +442,6 @@ function handleCountdownCompleted(featureToggle) {
   featureToggle.setAttribute('checked', '');
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const uiElements = {
-    statusIcon: document.getElementById('status-icon'),
-    statusText: document.getElementById('status-text'),
-    openOptionsButton: document.getElementById('open-options'),
-    slackChannelLink: document.getElementById('slack-channel-link'),
-    matchingMessageDiv: document.getElementById('matching-message'),
-    featureToggle: document.getElementById('feature-toggle'),
-  };
-
-  const {
-    statusIcon,
-    statusText,
-    openOptionsButton,
-    slackChannelLink,
-    matchingMessageDiv,
-    featureToggle,
-  } = uiElements;
-
-  if (featureToggle) {
-    await initializeToggle(featureToggle);
-    setupEventListeners(uiElements);
-  }
-
-  await loadAndDisplayData({
-    statusIcon,
-    statusText,
-    openOptionsButton,
-    slackChannelLink,
-    matchingMessageDiv,
-  });
-});
-
 /**
  * Inicializa el toggle con un pequeño retraso
  * @param {HTMLElement} featureToggle - Elemento de toggle
@@ -504,12 +505,13 @@ function setupEventListeners({
   });
 }
 
-// Export functions only for testing purposes
-// This allows us to test the functions without exposing them in the public API
-export {
-  updateUI,
-  manageCountdownElement,
-  updateCountdownDisplay,
-  initializeFeatureToggleState,
-  loadAndDisplayData,
-};
+// Expose functions for testing only when in test environment
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+  window.popupTestExports = {
+    updateUI,
+    manageCountdownElement,
+    updateCountdownDisplay,
+    initializeFeatureToggleState,
+    loadAndDisplayData,
+  };
+}

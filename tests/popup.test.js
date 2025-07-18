@@ -5,16 +5,11 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { literals } from '../src/literals.js';
 
-// Import the functions
-import * as popupModule from '../src/popup.js';
+// Set NODE_ENV to test to enable test exports
+process.env.NODE_ENV = 'test';
 
-// Extract the exported functions
-const {
-  updateUI,
-  manageCountdownElement,
-  updateCountdownDisplay,
-  initializeFeatureToggleState,
-} = popupModule;
+// Import the module to trigger the test exports
+import '../src/popup.js';
 
 // Mock DOM elements
 const createMockElement = () => ({
@@ -38,6 +33,12 @@ describe('popup.js', () => {
     mockMatchingMessageDiv,
     mockFeatureToggle,
     mockCountdownElement;
+
+  // Functions from window.popupTestExports
+  let updateUI,
+    manageCountdownElement,
+    updateCountdownDisplay,
+    initializeFeatureToggleState;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -83,6 +84,14 @@ describe('popup.js', () => {
 
     // Mock global manageCountdownElement
     global.manageCountdownElement = vi.fn();
+
+    // Get the test exports
+    ({
+      updateUI,
+      manageCountdownElement,
+      updateCountdownDisplay,
+      initializeFeatureToggleState,
+    } = window.popupTestExports);
   });
 
   afterEach(() => {
