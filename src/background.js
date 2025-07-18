@@ -554,6 +554,31 @@ const messageHandlers = {
       await updateContentScriptMergeState(channelName);
     }
   },
+
+  getCountdownStatus: async (request, sender, sendResponse) => {
+    const { reactivationTime, featureEnabled } = await chrome.storage.local.get(
+      ['reactivationTime', 'featureEnabled'],
+    );
+
+    if (featureEnabled === false && reactivationTime) {
+      const currentTime = Date.now();
+      const timeLeft = Math.max(0, reactivationTime - currentTime);
+
+      sendResponse({
+        isCountdownActive: true,
+        timeLeft: timeLeft,
+        reactivationTime: reactivationTime,
+      });
+      return true; // Keep the message channel open for the async response
+    } else {
+      sendResponse({
+        isCountdownActive: false,
+        timeLeft: 0,
+        reactivationTime: null,
+      });
+      return true; // Keep the message channel open for the async response
+    }
+  },
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -593,18 +618,54 @@ export const updateMergeButtonFromLastKnownMergeState = () => {
   );
 };
 
+// Global variable to track the countdown interval
+let countdownInterval;
+
+export function stopCountdown() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+}
+
+export async function startCountdown(targetTime) {
+  // Clear any existing interval before starting a new one
+  stopCountdown();
+
+  const updateCountdown = async () => {
+    const currentTime = Date.now();
+    const timeLeft = Math.max(0, targetTime - currentTime);
+
+    // Notify popup to update the countdown display
+    try {
+      await chrome.runtime.sendMessage({
+        action: 'updateCountdownDisplay',
+        timeLeft: timeLeft,
+      });
+    } catch {
+      // Popup might not be open, ignore the error
+    }
+
+    if (timeLeft <= 0) {
+      await reactivateFeature();
+      stopCountdown();
+      return;
+    }
+  };
+
+  // Initial update
+  await updateCountdown();
+
+  // Set interval for updates
+  countdownInterval = setInterval(updateCountdown, 1000);
+}
+
 export async function scheduleFeatureReactivation() {
   const reactivationTime = Date.now() + FEATURE_REACTIVATION_TIMEOUT;
   await chrome.storage.local.set({ reactivationTime });
 
-  setTimeout(async () => {
-    await chrome.storage.local.set({ featureEnabled: true });
-
-    const { channelName } = await chrome.storage.sync.get('channelName');
-    if (channelName) {
-      await updateContentScriptMergeState(channelName);
-    }
-  }, FEATURE_REACTIVATION_TIMEOUT);
+  // Start the countdown
+  await startCountdown(reactivationTime);
 }
 
 export async function checkScheduledReactivation() {
@@ -614,11 +675,12 @@ export async function checkScheduledReactivation() {
   ]);
 
   if (featureEnabled === false && reactivationTime) {
-    const timeLeft = Math.max(0, reactivationTime - Date.now());
-
-    if (timeLeft > 0) {
-      setTimeout(reactivateFeature, timeLeft);
+    const currentTime = Date.now();
+    if (reactivationTime > currentTime) {
+      // Start the countdown with the remaining time
+      await startCountdown(reactivationTime);
     } else {
+      // If the reactivation time has already passed, reactivate immediately
       await reactivateFeature();
     }
   }
@@ -626,6 +688,16 @@ export async function checkScheduledReactivation() {
 
 export async function reactivateFeature() {
   await chrome.storage.local.set({ featureEnabled: true });
+
+  // Notify popup that feature has been reactivated
+  try {
+    await chrome.runtime.sendMessage({
+      action: 'countdownCompleted',
+      enabled: true,
+    });
+  } catch {
+    // Popup might not be open, ignore the error
+  }
 
   const { channelName } = await chrome.storage.sync.get('channelName');
   if (channelName) {

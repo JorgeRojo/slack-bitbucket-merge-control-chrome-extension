@@ -5,18 +5,12 @@
 import { jest } from '@jest/globals';
 import {
   updateUI,
-  getReactivationTime,
-  startCountdown,
-  stopAndHideCountdown,
-  scheduleFeatureReactivation,
+  updateCountdownDisplay,
   initializeFeatureToggleState,
   loadAndDisplayData,
 } from '../src/popup.js';
 import { literals } from '../src/literals.js';
-import {
-  SLACK_BASE_URL,
-  FEATURE_REACTIVATION_TIMEOUT,
-} from '../src/constants.js';
+import { SLACK_BASE_URL } from '../src/constants.js';
 
 // Mock DOM elements
 const createMockElement = () => ({
@@ -203,212 +197,34 @@ describe('popup.js', () => {
     });
   });
 
-  describe('getReactivationTime', () => {
-    test('should return current time plus reactivation timeout', () => {
-      const currentTime = 1000000;
-      mockDateNow.mockReturnValue(currentTime);
-
-      const result = getReactivationTime();
-
-      expect(result).toBe(currentTime + FEATURE_REACTIVATION_TIMEOUT);
-    });
-  });
-
-  describe('stopAndHideCountdown', () => {
+  describe('updateCountdownDisplay', () => {
     let mockCountdownElement;
 
     beforeEach(() => {
       mockCountdownElement = createMockElement();
     });
 
-    test('should hide countdown element', () => {
-      // Set display to block initially to simulate a visible element
+    test('should update countdown display with correct time format', () => {
+      const timeLeft = 65000; // 1 minute 5 seconds
+
+      updateCountdownDisplay(timeLeft, mockCountdownElement);
+
+      expect(mockCountdownElement.style.display).toBe('block');
+      expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:05');
+    });
+
+    test('should hide countdown when time is zero or negative', () => {
+      // Set display to block initially
       mockCountdownElement.style.display = 'block';
 
-      stopAndHideCountdown(mockCountdownElement);
+      updateCountdownDisplay(0, mockCountdownElement);
+
       expect(mockCountdownElement.style.display).toBe('none');
     });
 
     test('should handle null countdown element', () => {
       expect(() => {
-        stopAndHideCountdown(null);
-      }).not.toThrow();
-    });
-
-    test('should hide countdown when feature is enabled', () => {
-      // Set up for initializeFeatureToggleState test
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: true });
-      });
-
-      const mockToggleElement = createMockElement();
-      const mockCountdownElement = createMockElement();
-      mockCountdownElement.style.display = 'block'; // Start with visible countdown
-
-      global.document.getElementById = jest.fn((id) => {
-        if (id === 'countdown-timer') return mockCountdownElement;
-        return null;
-      });
-
-      initializeFeatureToggleState(mockToggleElement);
-
-      // Verify countdown is hidden when feature is enabled
-      expect(mockCountdownElement.style.display).toBe('none');
-    });
-  });
-
-  describe('startCountdown', () => {
-    let mockCountdownElement, mockToggleElement, mockUpdateCountdown;
-
-    beforeEach(() => {
-      mockCountdownElement = createMockElement();
-      mockToggleElement = createMockElement();
-
-      // Mock setInterval to capture the callback
-      global.setInterval = jest.fn((callback) => {
-        mockUpdateCountdown = callback;
-        return 123; // mock interval ID
-      });
-    });
-
-    test('should start countdown and update display', () => {
-      const targetTime = 1000000 + 65000; // 1 minute 5 seconds from now
-      mockDateNow.mockReturnValue(1000000);
-
-      startCountdown(targetTime, mockCountdownElement, mockToggleElement);
-
-      expect(global.setInterval).toHaveBeenCalledWith(
-        expect.any(Function),
-        1000,
-      );
-      expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:05');
-    });
-
-    test('should reactivate toggle when countdown reaches zero', () => {
-      const targetTime = 1000000; // same as current time
-      mockDateNow.mockReturnValue(1000000);
-
-      startCountdown(targetTime, mockCountdownElement, mockToggleElement);
-
-      // Simulate countdown reaching zero
-      mockUpdateCountdown();
-
-      expect(mockToggleElement.setAttribute).toHaveBeenCalledWith(
-        'checked',
-        '',
-      );
-      expect(chrome.storage.local.set).toHaveBeenCalledWith({
-        featureEnabled: true,
-      });
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
-        action: 'countdownCompleted',
-        enabled: true,
-      });
-      expect(mockCountdownElement.style.display).toBe('none');
-      expect(global.clearInterval).toHaveBeenCalledWith(123);
-    });
-
-    test('should ensure countdown element is displayed when starting countdown', () => {
-      const targetTime = 1000000 + 65000; // 1 minute 5 seconds from now
-      mockDateNow.mockReturnValue(1000000);
-
-      // Set display to none initially to simulate a hidden element
-      mockCountdownElement.style.display = 'none';
-
-      startCountdown(targetTime, mockCountdownElement, mockToggleElement);
-
-      // Verify the countdown element is displayed
-      expect(mockCountdownElement.style.display).toBe('block');
-      expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:05');
-    });
-
-    test('should handle negative time left', () => {
-      const targetTime = 999000; // in the past
-      mockDateNow.mockReturnValue(1000000);
-
-      startCountdown(targetTime, mockCountdownElement, mockToggleElement);
-
-      expect(mockToggleElement.setAttribute).toHaveBeenCalledWith(
-        'checked',
-        '',
-      );
-    });
-  });
-
-  describe('toggle event listener', () => {
-    let mockToggleElement, mockCountdownElement;
-
-    beforeEach(() => {
-      mockToggleElement = createMockElement();
-      mockCountdownElement = createMockElement();
-
-      global.document.getElementById = jest.fn((id) => {
-        if (id === 'countdown-timer') return mockCountdownElement;
-        return null;
-      });
-    });
-
-    test('should hide countdown when calling stopAndHideCountdown', () => {
-      // Set display to block initially to simulate a visible element
-      mockCountdownElement.style.display = 'block';
-
-      // Call the function directly to test it
-      stopAndHideCountdown(mockCountdownElement);
-
-      // Verify the countdown is hidden
-      expect(mockCountdownElement.style.display).toBe('none');
-    });
-
-    test('should display countdown when starting countdown', () => {
-      // Set display to none initially to simulate a hidden element
-      mockCountdownElement.style.display = 'none';
-
-      // Call startCountdown directly
-      startCountdown(1000000 + 60000, mockCountdownElement, mockToggleElement);
-
-      // Verify the countdown is displayed
-      expect(mockCountdownElement.style.display).toBe('block');
-    });
-  });
-
-  describe('scheduleFeatureReactivation', () => {
-    let mockToggleElement, mockCountdownElement;
-
-    beforeEach(() => {
-      mockToggleElement = createMockElement();
-      mockCountdownElement = createMockElement();
-
-      global.document.getElementById = jest.fn((id) => {
-        if (id === 'countdown-timer') return mockCountdownElement;
-        return null;
-      });
-    });
-
-    test('should schedule reactivation with provided time', () => {
-      const reactivationTime = 2000000;
-
-      scheduleFeatureReactivation(mockToggleElement, reactivationTime);
-
-      expect(chrome.storage.local.set).toHaveBeenCalledWith({
-        reactivationTime,
-      });
-    });
-
-    test('should schedule reactivation with default time when not provided', () => {
-      mockDateNow.mockReturnValue(1000000);
-
-      scheduleFeatureReactivation(mockToggleElement);
-
-      expect(chrome.storage.local.set).toHaveBeenCalledWith({
-        reactivationTime: 1000000 + FEATURE_REACTIVATION_TIMEOUT,
-      });
-    });
-
-    test('should handle missing countdown element', () => {
-      global.document.getElementById = jest.fn(() => null);
-
-      expect(() => {
-        scheduleFeatureReactivation(mockToggleElement, 2000000);
+        updateCountdownDisplay(65000, null);
       }).not.toThrow();
     });
   });
@@ -437,6 +253,8 @@ describe('popup.js', () => {
         'checked',
         '',
       );
+      // When feature is enabled, countdown should be hidden
+      expect(mockCountdownElement.style.display).toBe('none');
     });
 
     test('should set toggle to unchecked when feature is disabled', () => {
@@ -447,6 +265,30 @@ describe('popup.js', () => {
       initializeFeatureToggleState(mockToggleElement);
 
       expect(mockToggleElement.removeAttribute).toHaveBeenCalledWith('checked');
+    });
+
+    test('should check countdown status when feature is disabled', () => {
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        callback({ featureEnabled: false });
+      });
+
+      // Mock the sendMessage to simulate getting countdown status
+      chrome.runtime.sendMessage.mockImplementation((message, callback) => {
+        if (message.action === 'getCountdownStatus') {
+          callback({
+            isCountdownActive: true,
+            timeLeft: 65000,
+            reactivationTime: 1065000,
+          });
+        }
+      });
+
+      initializeFeatureToggleState(mockToggleElement);
+
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+        { action: 'getCountdownStatus' },
+        expect.any(Function),
+      );
     });
 
     test('should default to enabled when featureEnabled is undefined', () => {

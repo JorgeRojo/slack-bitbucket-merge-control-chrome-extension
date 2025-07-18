@@ -1,4 +1,4 @@
-import { SLACK_BASE_URL, FEATURE_REACTIVATION_TIMEOUT } from './constants.js';
+import { SLACK_BASE_URL } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
 
@@ -50,97 +50,44 @@ export function updateUI(
   }
 }
 
-export function getReactivationTime() {
-  return Date.now() + FEATURE_REACTIVATION_TIMEOUT;
-}
+// Function to update the countdown display in the popup
+export function updateCountdownDisplay(timeLeft, countdownElement) {
+  if (!countdownElement) return;
 
-// Global variable to track the countdown interval
-let countdownInterval;
-
-export function stopAndHideCountdown(countdownElement) {
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
-    countdownInterval = null;
-  }
-
-  if (countdownElement) {
+  if (timeLeft <= 0) {
     countdownElement.style.display = 'none';
-  }
-}
-
-export function startCountdown(targetTime, countdownElement, toggleElement) {
-  // Clear any existing interval before starting a new one
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
-    countdownInterval = null;
+    return;
   }
 
-  // Make sure the countdown element is visible
-  if (countdownElement) {
-    countdownElement.style.display = 'block';
-  }
-
-  const updateCountdown = () => {
-    const currentTime = Date.now();
-    const timeLeft = Math.max(0, targetTime - currentTime);
-
-    if (timeLeft <= 0) {
-      toggleElement.setAttribute('checked', '');
-      chrome.storage.local.set({ featureEnabled: true });
-      chrome.runtime.sendMessage({
-        action: 'countdownCompleted',
-        enabled: true,
-      });
-      countdownElement.style.display = 'none';
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-      return;
-    }
-
-    const minutes = Math.floor(timeLeft / 60000);
-    const seconds = Math.floor((timeLeft % 60000) / 1000);
-    countdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  updateCountdown();
-  countdownInterval = setInterval(updateCountdown, 1000); // Update countdown every 1 second
-  return countdownInterval;
-}
-
-export function scheduleFeatureReactivation(toggleElement, reactivationTime) {
-  if (!reactivationTime) {
-    reactivationTime = getReactivationTime();
-  }
-
-  chrome.storage.local.set({ reactivationTime });
-
-  const countdownElement = document.getElementById('countdown-timer');
-  if (countdownElement) {
-    countdownElement.style.display = 'block';
-    startCountdown(reactivationTime, countdownElement, toggleElement);
-  }
+  countdownElement.style.display = 'block';
+  const minutes = Math.floor(timeLeft / 60000);
+  const seconds = Math.floor((timeLeft % 60000) / 1000);
+  countdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
 export function initializeFeatureToggleState(toggleElement) {
   chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
     const isEnabled = result.featureEnabled !== false;
-    const reactivationTime = result.reactivationTime;
-    const currentTime = Date.now();
     const countdownElement = document.getElementById('countdown-timer');
 
     if (isEnabled) {
       toggleElement.setAttribute('checked', '');
-      // If feature is enabled, stop and hide the countdown
-      stopAndHideCountdown(countdownElement);
+      // If feature is enabled, hide the countdown
+      if (countdownElement) {
+        countdownElement.style.display = 'none';
+      }
     } else {
       toggleElement.removeAttribute('checked');
 
-      if (reactivationTime && reactivationTime > currentTime) {
-        if (countdownElement) {
-          countdownElement.style.display = 'block';
-          startCountdown(reactivationTime, countdownElement, toggleElement);
-        }
-      }
+      // Check with background script for countdown status
+      chrome.runtime.sendMessage(
+        { action: 'getCountdownStatus' },
+        (response) => {
+          if (response && response.isCountdownActive && countdownElement) {
+            updateCountdownDisplay(response.timeLeft, countdownElement);
+          }
+        },
+      );
     }
   });
 }
@@ -283,12 +230,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       const countdownElement = document.getElementById('countdown-timer');
-      if (isChecked) {
-        // If feature is enabled, stop and hide the countdown
-        stopAndHideCountdown(countdownElement);
-      } else {
-        scheduleFeatureReactivation(featureToggle, getReactivationTime());
+      if (isChecked && countdownElement) {
+        // If feature is enabled, hide the countdown
+        countdownElement.style.display = 'none';
       }
+      // If feature is disabled, the background script will handle starting the countdown
     });
   }
 
@@ -312,6 +258,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         slackChannelLink,
         matchingMessageDiv,
       );
+    }
+  });
+
+  // Listen for countdown updates from background script
+  chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
+    if (request.action === 'updateCountdownDisplay') {
+      const countdownElement = document.getElementById('countdown-timer');
+      if (countdownElement) {
+        updateCountdownDisplay(request.timeLeft, countdownElement);
+      }
+    } else if (request.action === 'countdownCompleted') {
+      const countdownElement = document.getElementById('countdown-timer');
+      if (countdownElement) {
+        countdownElement.style.display = 'none';
+      }
+      featureToggle.setAttribute('checked', '');
     }
   });
 
