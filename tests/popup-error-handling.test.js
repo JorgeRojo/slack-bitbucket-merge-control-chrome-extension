@@ -119,9 +119,15 @@ describe('Popup.js Runtime Error Handling', () => {
 
     // Simulate runtime.lastError when sendMessage is called
     chrome.runtime.sendMessage.mockImplementation((message, callback) => {
-      if (message.action === 'getCountdownStatus' && callback && typeof callback === 'function') {
+      if (
+        message.action === 'getCountdownStatus' &&
+        callback &&
+        typeof callback === 'function'
+      ) {
         // Set runtime.lastError before calling the callback
-        chrome.runtime.lastError = { message: 'The message port closed before a response was received.' };
+        chrome.runtime.lastError = {
+          message: 'The message port closed before a response was received.',
+        };
         callback(null);
         // Clear runtime.lastError after callback
         delete chrome.runtime.lastError;
@@ -132,8 +138,9 @@ describe('Popup.js Runtime Error Handling', () => {
     await domContentLoadedHandler();
 
     // Get the message handler
-    const messageHandler = chrome.runtime.onMessage.addListener.mock.calls[0][0];
-    
+    const messageHandler =
+      chrome.runtime.onMessage.addListener.mock.calls[0][0];
+
     // Call the handler with countdownCompleted to trigger checkCountdownStatus
     messageHandler({ action: 'countdownCompleted' }, {}, () => {});
 
@@ -167,9 +174,15 @@ describe('Popup.js Runtime Error Handling', () => {
 
     // Simulate runtime.lastError when sendMessage is called
     chrome.runtime.sendMessage.mockImplementation((message, callback) => {
-      if (message.action === 'featureToggleChanged' && callback && typeof callback === 'function') {
+      if (
+        message.action === 'featureToggleChanged' &&
+        callback &&
+        typeof callback === 'function'
+      ) {
         // Set runtime.lastError before calling the callback
-        chrome.runtime.lastError = { message: 'The message port closed before a response was received.' };
+        chrome.runtime.lastError = {
+          message: 'The message port closed before a response was received.',
+        };
         callback(null);
         // Clear runtime.lastError after callback
         delete chrome.runtime.lastError;
@@ -229,8 +242,9 @@ describe('Popup.js Runtime Error Handling', () => {
     await domContentLoadedHandler();
 
     // Get the message handler
-    const messageHandler = chrome.runtime.onMessage.addListener.mock.calls[0][0];
-    
+    const messageHandler =
+      chrome.runtime.onMessage.addListener.mock.calls[0][0];
+
     // Call the handler with countdownCompleted to trigger checkCountdownStatus
     messageHandler({ action: 'countdownCompleted' }, {}, () => {});
 

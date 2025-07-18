@@ -15,11 +15,6 @@ let bitbucketTabId = null;
 
 let rtmWebSocket = null;
 
-/**
- * Normalizes text by converting to lowercase, removing diacritical marks, and standardizing whitespace
- * @param {string} text - The text to normalize
- * @returns {string} - The normalized text
- */
 export function normalizeText(text) {
   if (!text) return '';
   return text
@@ -30,11 +25,6 @@ export function normalizeText(text) {
     .trim();
 }
 
-/**
- * Cleans Slack message text by removing formatting, mentions, and standardizing whitespace
- * @param {string} text - The Slack message text to clean
- * @returns {string} - The cleaned text
- */
 export function cleanSlackMessageText(text) {
   if (!text) return '';
 
@@ -46,15 +36,6 @@ export function cleanSlackMessageText(text) {
   return cleanedText;
 }
 
-/**
- * Determines the merge status based on Slack messages and configured phrases
- * @param {Object} params - Parameters for determining merge status
- * @param {Array<Object>} params.messages - Array of Slack messages
- * @param {Array<string>} params.allowedPhrases - Phrases that indicate merging is allowed
- * @param {Array<string>} params.disallowedPhrases - Phrases that indicate merging is not allowed
- * @param {Array<string>} params.exceptionPhrases - Phrases that indicate exceptions to the merge rules
- * @returns {Object} - Object containing merge status information
- */
 export function determineMergeStatus({
   messages,
   allowedPhrases,

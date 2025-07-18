@@ -273,7 +273,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 
 ## Documentation
 
-- Avoid comments in code, try to describe all with good naming for functions and variables
+- Avoid comments in code, try to create functions and variables with descriptive names instead putting comments.
 - Add comments in code only when you consider the logic too complicate and could be difficult to deduce from the code context.
 - Add a comment always for each line that contains regular expressions an explain que regular expression result.
 - Add a comment always for each constant tha contains milliseconds as value.

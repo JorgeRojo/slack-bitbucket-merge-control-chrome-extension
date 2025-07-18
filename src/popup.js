@@ -2,7 +2,6 @@ import { SLACK_BASE_URL } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
 
-// Inicialización cuando el DOM está listo
 document.addEventListener('DOMContentLoaded', async () => {
   const uiElements = {
     statusIcon: document.getElementById('status-icon'),
@@ -36,18 +35,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-/**
- * Updates the UI elements based on the current merge status
- * @param {Object} params - UI update parameters
- * @param {HTMLElement} params.statusIcon - The status icon element
- * @param {HTMLElement} params.statusText - The status text element
- * @param {HTMLElement} params.openOptionsButton - The options button element
- * @param {HTMLElement} params.slackChannelLink - The Slack channel link element
- * @param {HTMLElement} params.matchingMessageDiv - The matching message div element
- * @param {string} params.state - The current merge state ('allowed', 'disallowed', 'exception', 'config_needed', 'unknown')
- * @param {string} params.message - The message to display
- * @param {Object} [params.matchingMessage=null] - The matching Slack message object
- */
 function updateUI({
   statusIcon,
   statusText,
@@ -80,10 +67,6 @@ function updateUI({
   }
 }
 
-/**
- * Actualiza el contenido de los elementos según el estado
- * @param {Object} params - Parámetros para actualizar el contenido
- */
 function updateContentByState({
   statusIcon,
   statusText,
@@ -118,13 +101,6 @@ function updateContentByState({
   }
 }
 
-/**
- * Manages the countdown timer element display and content
- * @param {Object} options - Configuration options
- * @param {boolean} options.show - Whether to show or hide the countdown element
- * @param {number} [options.timeLeft] - Time left in milliseconds (required when show is true)
- * @returns {HTMLElement|null} - The countdown element or null if not found
- */
 function manageCountdownElement({ show, timeLeft }) {
   const countdownElement = document.getElementById('countdown-timer');
   if (!countdownElement) return null;
@@ -149,10 +125,6 @@ function updateCountdownText(element, timeLeft) {
   element.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-/**
- * Updates the countdown display based on the current feature state and time left
- * @param {number} timeLeft - Time left in milliseconds
- */
 function updateCountdownDisplay(timeLeft) {
   chrome.storage.local.get(['featureEnabled'], (result) => {
     const isEnabled = result.featureEnabled !== false;
@@ -166,10 +138,6 @@ function updateCountdownDisplay(timeLeft) {
   });
 }
 
-/**
- * Initializes the feature toggle state based on stored settings
- * @param {HTMLElement} toggleElement - The toggle element to initialize
- */
 function initializeFeatureToggleState(toggleElement) {
   chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
     const isEnabled = result.featureEnabled !== false;
@@ -189,10 +157,8 @@ function initializeFeatureToggleState(toggleElement) {
  * Checks the countdown status and updates the display
  */
 function checkCountdownStatus() {
-  // Envolvemos el sendMessage en un try-catch para manejar el error de puerto cerrado
   try {
     chrome.runtime.sendMessage({ action: 'getCountdownStatus' }, (response) => {
-      // Verificamos si hay un error de runtime.lastError
       if (chrome.runtime.lastError) {
         console.log(
           'Error al recibir respuesta:',
@@ -453,10 +419,6 @@ async function initializeToggle(featureToggle) {
   initializeFeatureToggleState(featureToggle);
 }
 
-/**
- * Configura los event listeners
- * @param {Object} uiElements - Elementos de la UI
- */
 function setupEventListeners({
   statusIcon,
   statusText,
@@ -476,7 +438,6 @@ function setupEventListeners({
           enabled: isChecked,
         },
         (_response) => {
-          // Verificamos si hay un error de runtime.lastError
           if (chrome.runtime.lastError) {
             console.log(
               'Error al recibir respuesta de featureToggleChanged:',
