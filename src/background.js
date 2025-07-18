@@ -110,7 +110,7 @@ export function updateExtensionIcon(status) {
   });
 }
 
-async function resolveChannelId(slackToken, channelName) {
+export async function resolveChannelId(slackToken, channelName) {
   let { channelId, cachedChannelName } = await chrome.storage.local.get([
     'channelId',
     'cachedChannelName',

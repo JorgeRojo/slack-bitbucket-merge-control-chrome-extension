@@ -7,6 +7,7 @@ import {
   getPhrasesFromStorage,
   handleSlackApiError,
   processAndStoreMessage,
+  resolveChannelId,
 } from '../src/background.js';
 
 // Mock chrome APIs
@@ -712,5 +713,250 @@ describe('Edge cases and additional coverage', () => {
       'allowed to merge',
       'no restrictions on merging.',
     ]);
+  });
+});
+
+describe('resolveChannelId', () => {
+  // Mock fetch globally
+  const mockFetch = jest.fn();
+  global.fetch = mockFetch;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    chrome.storage.local.get.mockResolvedValue({});
+    chrome.storage.local.set.mockResolvedValue();
+  });
+
+  test('should return cached channelId when channel name matches', async () => {
+    chrome.storage.local.get.mockResolvedValue({
+      channelId: 'C123456789',
+      cachedChannelName: 'test-channel',
+    });
+
+    const result = await resolveChannelId('xoxb-token', 'test-channel');
+
+    expect(result).toBe('C123456789');
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  test('should fetch new channelId when cached channel name differs', async () => {
+    chrome.storage.local.get.mockResolvedValue({
+      channelId: 'C123456789',
+      cachedChannelName: 'old-channel',
+    });
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [{ id: 'C987654321', name: 'new-channel' }],
+          }),
+      })
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [],
+          }),
+      });
+
+    const result = await resolveChannelId('xoxb-token', 'new-channel');
+
+    expect(result).toBe('C987654321');
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      channelId: 'C987654321',
+      cachedChannelName: 'new-channel',
+    });
+  });
+
+  test('should fetch channelId when no cache exists', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [
+              { id: 'C111111111', name: 'general' },
+              { id: 'C222222222', name: 'random' },
+            ],
+          }),
+      })
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [{ id: 'C333333333', name: 'private-channel' }],
+          }),
+      });
+
+    const result = await resolveChannelId('xoxb-token', 'private-channel');
+
+    expect(result).toBe('C333333333');
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://slack.com/api/conversations.list?types=public_channel',
+      {
+        headers: { Authorization: 'Bearer xoxb-token' },
+      },
+    );
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://slack.com/api/conversations.list?types=private_channel',
+      {
+        headers: { Authorization: 'Bearer xoxb-token' },
+      },
+    );
+  });
+
+  test('should find channel in public channels', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [
+              { id: 'C111111111', name: 'general' },
+              { id: 'C222222222', name: 'target-channel' },
+            ],
+          }),
+      })
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [],
+          }),
+      });
+
+    const result = await resolveChannelId('xoxb-token', 'target-channel');
+
+    expect(result).toBe('C222222222');
+  });
+
+  test('should throw error when channel not found', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [{ id: 'C111111111', name: 'general' }],
+          }),
+      })
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [],
+          }),
+      });
+
+    await expect(
+      resolveChannelId('xoxb-token', 'nonexistent-channel'),
+    ).rejects.toThrow('channel_not_found');
+  });
+
+  test('should handle API errors gracefully', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: false,
+            error: 'invalid_auth',
+          }),
+      })
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: false,
+            error: 'invalid_auth',
+          }),
+      });
+
+    await expect(
+      resolveChannelId('invalid-token', 'any-channel'),
+    ).rejects.toThrow('channel_not_found');
+  });
+
+  test('should handle mixed API responses', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: false,
+            error: 'some_error',
+          }),
+      })
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [{ id: 'C333333333', name: 'private-channel' }],
+          }),
+      });
+
+    const result = await resolveChannelId('xoxb-token', 'private-channel');
+
+    expect(result).toBe('C333333333');
+  });
+
+  test('should handle empty channel lists', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [],
+          }),
+      })
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [],
+          }),
+      });
+
+    await expect(resolveChannelId('xoxb-token', 'any-channel')).rejects.toThrow(
+      'channel_not_found',
+    );
+  });
+
+  test('should cache channelId after successful fetch', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+
+    mockFetch
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [{ id: 'C444444444', name: 'test-channel' }],
+          }),
+      })
+      .mockResolvedValueOnce({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [],
+          }),
+      });
+
+    await resolveChannelId('xoxb-token', 'test-channel');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      channelId: 'C444444444',
+      cachedChannelName: 'test-channel',
+    });
   });
 });
