@@ -7,7 +7,7 @@
   --ft-font-size: 14px;
 
   /* Colores de marca */
-  --ft-brand-color: #4a154b; /* Color principal de Slack */
+  --ft-brand-color: #4a154b;
   --ft-brand-text-1: #333333;
 
   /* Paleta de colores */
@@ -107,23 +107,12 @@
   --ft-tertiary-hover-border-bottom-color: rgba(0, 0, 0, 0.3);
 
   /* Tamaños de botones */
-  --ft-button-smaller-font-size: 12px;
   --ft-button-small-font-size: 14px;
   --ft-button-default-font-size: 16px;
-  --ft-button-medium-font-size: var(--ft-button-default-font-size);
-  --ft-button-large-font-size: 18px;
-
-  --ft-button-smaller-height: 30px;
   --ft-button-small-height: 36px;
   --ft-button-default-height: 42px;
-  --ft-button-medium-height: var(--ft-button-default-height);
-  --ft-button-large-height: 50px;
-
-  --ft-button-smaller-padding-x: 8px;
   --ft-button-small-padding-x: 12px;
   --ft-button-default-padding-x: 16px;
-  --ft-button-medium-padding-x: var(--ft-button-default-padding-x);
-  --ft-button-large-padding-x: 24px;
 
   /* Formularios */
   --ft-form-item-border-radius: 4px;

@@ -1,4 +1,3 @@
-// Imports organizados según CODE_STYLE
 import { SLACK_BASE_URL } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
@@ -25,16 +24,13 @@ export function updateUI({
   message,
   matchingMessage = null,
 }) {
-  // Establecer clases
   statusIcon.className = state;
   statusText.className = state;
 
-  // Ocultar elementos por defecto
   openOptionsButton.style.display = 'none';
   slackChannelLink.style.display = 'none';
   matchingMessageDiv.style.display = 'none';
 
-  // Actualizar contenido según el estado
   updateContentByState({
     statusIcon,
     statusText,
@@ -44,7 +40,6 @@ export function updateUI({
     message,
   });
 
-  // Mostrar mensaje coincidente si existe
   if (matchingMessage) {
     matchingMessageDiv.textContent = `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`;
     matchingMessageDiv.style.display = 'block';
@@ -129,7 +124,6 @@ export function updateCountdownDisplay(timeLeft) {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled || timeLeft <= 0) {
-      // Use global mock in tests or local function in production
       if (typeof global !== 'undefined' && global.manageCountdownElement) {
         global.manageCountdownElement({ show: false });
       } else {
@@ -138,7 +132,6 @@ export function updateCountdownDisplay(timeLeft) {
       return;
     }
 
-    // Use global mock in tests or local function in production
     if (typeof global !== 'undefined' && global.manageCountdownElement) {
       global.manageCountdownElement({ show: true, timeLeft });
     } else {
@@ -157,7 +150,6 @@ export function initializeFeatureToggleState(toggleElement) {
 
     if (isEnabled) {
       toggleElement.setAttribute('checked', '');
-      // Use global mock in tests or local function in production
       if (typeof global !== 'undefined' && global.manageCountdownElement) {
         global.manageCountdownElement({ show: false });
       } else {
@@ -200,12 +192,10 @@ export async function loadAndDisplayData({
   matchingMessageDiv,
 }) {
   try {
-    // Obtener configuración
     const { slackToken, appToken, channelName } = await chrome.storage.sync.get(
       ['slackToken', 'appToken', 'channelName'],
     );
 
-    // Verificar si se necesita configuración
     if (!slackToken || !appToken || !channelName) {
       showConfigNeededUI({
         statusIcon,
@@ -217,10 +207,8 @@ export async function loadAndDisplayData({
       return;
     }
 
-    // Configurar enlace al canal de Slack
     await setupSlackChannelLink(slackChannelLink);
 
-    // Obtener y mostrar el estado de fusión
     await showMergeStatus({
       statusIcon,
       statusText,
@@ -420,9 +408,7 @@ function handleCountdownCompleted(featureToggle) {
   featureToggle.setAttribute('checked', '');
 }
 
-// Inicialización cuando el DOM está listo
 document.addEventListener('DOMContentLoaded', async () => {
-  // Obtener referencias a elementos del DOM
   const uiElements = {
     statusIcon: document.getElementById('status-icon'),
     statusText: document.getElementById('status-text'),
@@ -441,13 +427,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     featureToggle,
   } = uiElements;
 
-  // Inicializar toggle
   if (featureToggle) {
     await initializeToggle(featureToggle);
     setupEventListeners(uiElements);
   }
 
-  // Cargar y mostrar datos
   await loadAndDisplayData({
     statusIcon,
     statusText,
@@ -478,7 +462,6 @@ function setupEventListeners({
   matchingMessageDiv,
   featureToggle,
 }) {
-  // Event listener para el toggle
   featureToggle.addEventListener('toggle', (event) => {
     const isChecked = event.detail.checked;
     chrome.storage.local.set({ featureEnabled: isChecked });
@@ -493,7 +476,6 @@ function setupEventListeners({
     }
   });
 
-  // Event listener para el botón de opciones
   openOptionsButton.addEventListener('click', () => {
     if (chrome.runtime.openOptionsPage) {
       chrome.runtime.openOptionsPage();
@@ -502,7 +484,6 @@ function setupEventListeners({
     }
   });
 
-  // Event listener para cambios en el storage
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (
       namespace === 'local' &&
@@ -518,7 +499,6 @@ function setupEventListeners({
     }
   });
 
-  // Event listener para mensajes del background script
   chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
     handleBackgroundMessages(request, { featureToggle });
   });

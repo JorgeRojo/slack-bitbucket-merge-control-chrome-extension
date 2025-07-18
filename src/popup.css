@@ -19,11 +19,7 @@ h1 {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 20px;
-  background-color: var(--ft-color-lightest);
-  border-radius: 8px;
-  box-shadow: var(--ft-box-shadow-2);
-  margin: 0 16px 16px;
+  padding: 32px;
 }
 
 #status-icon {
@@ -87,8 +83,8 @@ h1 {
   justify-content: center;
   background-color: var(--ft-primary-default-bg-color);
   color: var(--ft-primary-default-color);
-  padding: 0 var(--ft-button-small-padding-x);
-  height: var(--ft-button-small-height);
+  padding: 0 var(--ft-button-default-padding-x);
+  line-height: var(--ft-button-default-height);
   border-radius: var(--ft-button-default-border-radius);
   text-decoration: none;
   font-weight: var(--ft-button-default-font-weight);
@@ -120,7 +116,6 @@ h1 {
   box-sizing: border-box;
 }
 
-/* Estilos para el contador de tiempo */
 #countdown-timer {
   display: none;
   margin-top: 10px;
@@ -129,20 +124,17 @@ h1 {
   font-weight: var(--ft-font-weight-bold);
 }
 
-/* Estilos para el mensaje coincidente */
 #matching-message {
   font-size: 14px;
   color: var(--ft-color-text);
-  margin-top: 10px;
+  margin-top: 16px;
   word-wrap: break-word;
-  background-color: var(--ft-color-grey-3);
-  padding: 10px;
+  background-color: var(--ft-color-grey-2);
+  padding: 16px;
   border-radius: var(--ft-form-item-border-radius);
-  border-left: 3px solid var(--ft-color-primary);
   max-width: 100%;
 }
 
-/* Toggle switch */
 .toggle-switch {
   margin-top: 10px;
 }
