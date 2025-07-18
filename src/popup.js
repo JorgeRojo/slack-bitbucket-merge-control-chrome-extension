@@ -405,8 +405,32 @@ function handleCountdownCompleted(featureToggle) {
   featureToggle.setAttribute('checked', '');
 }
 
+/**
+ * Inicializa el tema según la preferencia guardada
+ */
+function initializeTheme() {
+  chrome.storage.local.get(['theme'], (result) => {
+    const theme = result.theme || 'light';
+    document.body.setAttribute('data-theme', theme);
+  });
+}
+
+/**
+ * Cambia el tema entre claro y oscuro
+ */
+function toggleTheme() {
+  const currentTheme = document.body.getAttribute('data-theme') || 'light';
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+  document.body.setAttribute('data-theme', newTheme);
+  chrome.storage.local.set({ theme: newTheme });
+}
+
 // Inicialización cuando el DOM está listo
 document.addEventListener('DOMContentLoaded', async () => {
+  // Inicializar tema
+  initializeTheme();
+
   // Obtener referencias a elementos del DOM
   const uiElements = {
     statusIcon: document.getElementById('status-icon'),
@@ -415,6 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     slackChannelLink: document.getElementById('slack-channel-link'),
     matchingMessageDiv: document.getElementById('matching-message'),
     featureToggle: document.getElementById('feature-toggle'),
+    themeToggle: document.getElementById('theme-toggle'),
   };
 
   const {
@@ -424,12 +449,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     slackChannelLink,
     matchingMessageDiv,
     featureToggle,
+    themeToggle,
   } = uiElements;
 
   // Inicializar toggle
   if (featureToggle) {
     await initializeToggle(featureToggle);
     setupEventListeners(uiElements);
+  }
+
+  // Configurar botón de cambio de tema
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
   }
 
   // Cargar y mostrar datos

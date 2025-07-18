@@ -1,0 +1,260 @@
+@import url('./variables.css');
+
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--ft-color-text);
+  background-color: var(--ft-color-background);
+  font-family: var(--ft-font-family);
+  font-size: var(--ft-font-size);
+  font-weight: var(--ft-font-weight-normal);
+}
+
+::selection {
+  color: var(--ft-color-text);
+  background: var(--ft-select-color);
+}
+
+h1 {
+  font-size: 1.8em;
+  margin-bottom: 16px;
+  text-align: center;
+  color: var(--ft-color-darkest);
+}
+
+h2 {
+  font-size: 1.6em;
+  margin-bottom: 15px;
+  color: var(--ft-color-darkest);
+  border-bottom: 1px solid var(--ft-color-grey-2);
+  padding-bottom: 5px;
+}
+
+h3 {
+  font-size: 1.4em;
+}
+
+h4 {
+  font-size: 1.2em;
+}
+
+h5 {
+  font-size: 1em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+b,
+strong {
+  font-weight: var(--ft-font-weight-bold);
+}
+
+a {
+  color: var(--ft-color-link);
+  text-decoration: none;
+  transition: color var(--ft-transition-duration) ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ft-button-default-border-radius);
+  border: none;
+  letter-spacing: var(--ft-button-default-letter-spacing);
+  font-family: var(--ft-button-default-font-family);
+  font-size: var(--ft-button-default-font-size);
+  font-weight: var(--ft-button-default-font-weight);
+  padding: 0 var(--ft-button-default-padding-x);
+  height: var(--ft-button-default-height);
+  background-color: var(--ft-button-default-bg-color);
+  color: var(--ft-button-default-color);
+  box-shadow:
+    var(--ft-box-shadow-2),
+    inset 0 1px 0 0 var(--ft-button-border-top-color),
+    inset 0 -1px 0 0 var(--ft-button-border-bottom-color);
+  cursor: pointer;
+  transition:
+    box-shadow var(--ft-transition-duration) ease-out,
+    background-color var(--ft-transition-duration) ease-out;
+}
+
+button:hover {
+  background-color: var(--ft-button-hover-bg-color);
+  color: var(--ft-button-hover-color);
+  box-shadow:
+    var(--ft-box-shadow-2),
+    inset 0 1px 0 0 var(--ft-button-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-button-hover-border-bottom-color);
+}
+
+button:active {
+  background-color: var(--ft-button-active-bg-color);
+}
+
+button:disabled {
+  filter: saturate(0.5) brightness(135%) contrast(80%);
+  cursor: not-allowed;
+}
+
+input[type='text'],
+input[type='password'],
+textarea {
+  width: 100%;
+  padding: var(--ft-form-item-padding-y) var(--ft-form-item-padding-x);
+  border-radius: var(--ft-form-item-border-radius);
+  border: var(--ft-form-item-border);
+  background-color: var(--ft-form-item-bg-color);
+  font-family: var(--ft-font-family);
+  font-size: var(--ft-font-size);
+  color: var(--ft-color-text);
+  box-sizing: border-box;
+  transition:
+    border-color var(--ft-transition-duration) ease-in-out,
+    box-shadow var(--ft-transition-duration) ease-in-out;
+}
+
+input[type='text']:focus,
+input[type='password']:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--ft-color-primary);
+  box-shadow: 0 0 0 2px rgba(74, 21, 75, 0.2);
+}
+
+.primary-button {
+  background-color: var(--ft-primary-default-bg-color);
+  color: var(--ft-primary-default-color);
+  box-shadow:
+    0 1px 4px 0 var(--ft-primary-shadow-color),
+    inset 0 1px 0 0 var(--ft-primary-border-top-color),
+    inset 0 -1px 0 0 var(--ft-primary-border-bottom-color);
+}
+
+.primary-button:hover {
+  background-color: var(--ft-primary-hover-bg-color);
+  color: var(--ft-primary-hover-color);
+  box-shadow:
+    0 3px 16px 0 var(--ft-primary-hover-shadow-color),
+    inset 0 1px 0 0 var(--ft-primary-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-primary-hover-border-bottom-color);
+}
+
+.primary-button:active {
+  background-color: var(--ft-primary-active-bg-color);
+}
+
+.secondary-button {
+  background-color: var(--ft-secondary-default-bg-color);
+  color: var(--ft-secondary-default-color);
+  box-shadow:
+    0 1px 4px 0 var(--ft-secondary-shadow-color),
+    inset 0 1px 0 0 var(--ft-secondary-border-top-color),
+    inset 0 -1px 0 0 var(--ft-secondary-border-bottom-color);
+}
+
+.secondary-button:hover {
+  background-color: var(--ft-secondary-hover-bg-color);
+  color: var(--ft-secondary-hover-color);
+  box-shadow:
+    0 3px 16px 0 var(--ft-secondary-hover-shadow-color),
+    inset 0 1px 0 0 var(--ft-secondary-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-secondary-hover-border-bottom-color);
+}
+
+.secondary-button:active {
+  background-color: var(--ft-secondary-active-bg-color);
+}
+
+.tertiary-button {
+  background-color: var(--ft-tertiary-default-bg-color);
+  color: var(--ft-tertiary-default-color);
+  box-shadow:
+    0 1px 4px 0 var(--ft-tertiary-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
+}
+
+.tertiary-button:hover {
+  background-color: var(--ft-tertiary-hover-bg-color);
+  color: var(--ft-tertiary-hover-color);
+  box-shadow:
+    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
+}
+
+.tertiary-button:active {
+  background-color: var(--ft-tertiary-active-bg-color);
+}
+
+.small-button {
+  font-size: var(--ft-button-small-font-size);
+  padding: 0 var(--ft-button-small-padding-x);
+  height: var(--ft-button-small-height);
+}
+
+.large-button {
+  font-size: var(--ft-button-large-font-size);
+  padding: 0 var(--ft-button-large-padding-x);
+  height: var(--ft-button-large-height);
+}
+
+.container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.card {
+  background-color: var(--ft-color-lightest);
+  border-radius: 8px;
+  box-shadow: var(--ft-box-shadow-2);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.success-text {
+  color: var(--ft-color-success);
+}
+
+.error-text {
+  color: var(--ft-color-error);
+}
+
+.warning-text {
+  color: var(--ft-color-warning);
+}
+
+.info-text {
+  color: var(--ft-color-info);
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mb-10 {
+  margin-bottom: 10px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}

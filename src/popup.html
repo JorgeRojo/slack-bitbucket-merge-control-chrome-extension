@@ -8,8 +8,17 @@
   <body>
     <h1>Slack-Bitbucket Merge Control</h1>
     <div class="control-section">
-      <toggle-switch id="feature-toggle" label="Merge control enabled">
-      </toggle-switch>
+      <div class="control-row">
+        <toggle-switch id="feature-toggle" label="Merge control enabled">
+        </toggle-switch>
+        <button
+          id="theme-toggle"
+          class="theme-toggle small-button"
+          title="Toggle dark/light theme"
+        >
+          🌓
+        </button>
+      </div>
       <div id="countdown-timer"></div>
     </div>
     <div id="status-container">

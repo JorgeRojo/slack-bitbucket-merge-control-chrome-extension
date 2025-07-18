@@ -6,7 +6,16 @@
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <h1>Slack-Bitbucket Merge Control Options</h1>
+    <div class="header">
+      <h1>Slack-Bitbucket Merge Control Options</h1>
+      <button
+        id="theme-toggle"
+        class="theme-toggle small-button"
+        title="Toggle dark/light theme"
+      >
+        🌓
+      </button>
+    </div>
 
     <h2>Slack Options</h2>
     <div class="option-section">
@@ -90,7 +99,7 @@
       </div>
     </div>
 
-    <button id="save">Save</button>
+    <button id="save" class="secondary-button">Save</button>
     <div id="status"></div>
     <div id="ai-status"></div>
     <script type="module" src="options.js"></script>
