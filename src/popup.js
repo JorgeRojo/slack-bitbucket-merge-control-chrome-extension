@@ -1,3 +1,4 @@
+// Imports organizados según CODE_STYLE
 import { SLACK_BASE_URL, FEATURE_REACTIVATION_TIMEOUT } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
@@ -32,13 +33,44 @@ export function updateUI({
   message,
   matchingMessage = null,
 }) {
+  // Establecer clases
   statusIcon.className = state;
   statusText.className = state;
 
+  // Ocultar elementos por defecto
   openOptionsButton.style.display = 'none';
   slackChannelLink.style.display = 'none';
   matchingMessageDiv.style.display = 'none';
 
+  // Actualizar contenido según el estado
+  updateContentByState({
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    state,
+    message,
+  });
+
+  // Mostrar mensaje coincidente si existe
+  if (matchingMessage) {
+    matchingMessageDiv.textContent = `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`;
+    matchingMessageDiv.style.display = 'block';
+  }
+}
+
+/**
+ * Actualiza el contenido de los elementos según el estado
+ * @param {Object} params - Parámetros para actualizar el contenido
+ */
+function updateContentByState({
+  statusIcon,
+  statusText,
+  openOptionsButton,
+  slackChannelLink,
+  state,
+  message,
+}) {
   switch (state) {
     case 'allowed':
       statusIcon.textContent = literals.popup.emojiAllowed;
@@ -60,13 +92,8 @@ export function updateUI({
       break;
     default:
       statusIcon.textContent = literals.popup.emojiUnknown;
-      statusText.textContent = message || literals.popup.textCouldNotDetermine;
+      statusText.textContent = message ?? literals.popup.textCouldNotDetermine;
       break;
-  }
-
-  if (matchingMessage) {
-    matchingMessageDiv.textContent = `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`;
-    matchingMessageDiv.style.display = 'block';
   }
 }
 
@@ -77,24 +104,28 @@ export function updateUI({
  * @param {number} [options.timeLeft] - Time left in milliseconds (required when show is true)
  * @returns {HTMLElement|null} - The countdown element or null if not found
  */
-export function manageCountdownElement(options) {
+export function manageCountdownElement({ show, timeLeft }) {
   const countdownElement = document.getElementById('countdown-timer');
   if (!countdownElement) return null;
 
-  if (!options.show) {
-    countdownElement.style.display = 'none';
-  } else {
-    countdownElement.style.display = 'block';
+  countdownElement.style.display = show ? 'block' : 'none';
 
-    // Only update the text content if timeLeft is provided
-    if (options.timeLeft !== undefined) {
-      const minutes = Math.floor(options.timeLeft / 60000);
-      const seconds = Math.floor((options.timeLeft % 60000) / 1000);
-      countdownElement.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
+  if (show && timeLeft !== undefined) {
+    updateCountdownText(countdownElement, timeLeft);
   }
 
   return countdownElement;
+}
+
+/**
+ * Updates the text content of the countdown element
+ * @param {HTMLElement} element - The countdown element
+ * @param {number} timeLeft - Time left in milliseconds
+ */
+function updateCountdownText(element, timeLeft) {
+  const minutes = Math.floor(timeLeft / 60000);
+  const seconds = Math.floor((timeLeft % 60000) / 1000);
+  element.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
 /**
@@ -116,21 +147,17 @@ export function updateCountdownDisplay(timeLeft) {
 
 /**
  * Schedules feature reactivation by sending a message to the background script
- * @param {HTMLElement} toggleElement - The toggle element
- * @param {number} [reactivationTime] - Optional reactivation time, defaults to getReactivationTime()
+ * @param {HTMLElement} _toggleElement - The toggle element (no usado actualmente)
+ * @param {number} [_reactivationTime] - Optional reactivation time (no usado actualmente)
  */
-export function scheduleFeatureReactivation(toggleElement, reactivationTime) {
-  if (!reactivationTime) {
-    reactivationTime = getReactivationTime();
-  }
+export function scheduleFeatureReactivation(_toggleElement, _reactivationTime) {
+  // Los parámetros no se usan actualmente, pero se mantienen para compatibilidad futura
+  // El tiempo de reactivación lo maneja el script de fondo
 
-  // Send message to background script to start the countdown
   chrome.runtime.sendMessage({
     action: 'featureToggleChanged',
     enabled: false,
   });
-
-  // The background script will handle the countdown and notify the popup
 }
 
 /**
@@ -144,18 +171,22 @@ export function initializeFeatureToggleState(toggleElement) {
     if (isEnabled) {
       toggleElement.setAttribute('checked', '');
       manageCountdownElement({ show: false });
-    } else {
-      toggleElement.removeAttribute('checked');
-
-      chrome.runtime.sendMessage(
-        { action: 'getCountdownStatus' },
-        (response) => {
-          if (response && response.isCountdownActive) {
-            updateCountdownDisplay(response.timeLeft);
-          }
-        },
-      );
+      return;
     }
+
+    toggleElement.removeAttribute('checked');
+    checkCountdownStatus();
+  });
+}
+
+/**
+ * Checks the countdown status and updates the display
+ */
+function checkCountdownStatus() {
+  chrome.runtime.sendMessage({ action: 'getCountdownStatus' }, (response) => {
+    if (!response?.isCountdownActive) return;
+
+    updateCountdownDisplay(response.timeLeft);
   });
 }
 
@@ -177,141 +208,300 @@ export async function loadAndDisplayData({
   matchingMessageDiv,
 }) {
   try {
+    // Obtener configuración
     const { slackToken, appToken, channelName } = await chrome.storage.sync.get(
       ['slackToken', 'appToken', 'channelName'],
     );
 
-    const { channelId, teamId } = await chrome.storage.local.get([
-      'channelId',
-      'teamId',
-    ]);
-
+    // Verificar si se necesita configuración
     if (!slackToken || !appToken || !channelName) {
-      updateUI({
+      showConfigNeededUI({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
-        state: 'config_needed',
-        message: literals.popup.textConfigNeeded,
       });
       return;
     }
 
-    if (channelId && teamId) {
-      slackChannelLink.href = `${SLACK_BASE_URL}${teamId}/${channelId}`;
-    }
+    // Configurar enlace al canal de Slack
+    await setupSlackChannelLink(slackChannelLink);
 
-    const { lastKnownMergeState } = await chrome.storage.local.get(
-      'lastKnownMergeState',
-    );
-
-    if (!lastKnownMergeState || !lastKnownMergeState.mergeStatus) {
-      updateUI({
-        statusIcon,
-        statusText,
-        openOptionsButton,
-        slackChannelLink,
-        matchingMessageDiv,
-        state: 'loading',
-      });
-      statusText.textContent = literals.popup.textWaitingMessages;
-      return;
-    }
-
-    const status = lastKnownMergeState.mergeStatus;
-    const lastSlackMessage = lastKnownMergeState.lastSlackMessage;
-
-    if (status === 'exception') {
-      updateUI({
-        statusIcon,
-        statusText,
-        openOptionsButton,
-        slackChannelLink,
-        matchingMessageDiv,
-        state: 'exception',
-        message: literals.popup.textAllowedWithExceptions,
-        matchingMessage: lastSlackMessage,
-      });
-    } else if (status === 'allowed') {
-      updateUI({
-        statusIcon,
-        statusText,
-        openOptionsButton,
-        slackChannelLink,
-        matchingMessageDiv,
-        state: 'allowed',
-        message: literals.popup.textMergeAllowed,
-        matchingMessage: lastSlackMessage,
-      });
-    } else if (status === 'disallowed') {
-      updateUI({
-        statusIcon,
-        statusText,
-        openOptionsButton,
-        slackChannelLink,
-        matchingMessageDiv,
-        state: 'disallowed',
-        message: literals.popup.textMergeNotAllowed,
-        matchingMessage: lastSlackMessage,
-      });
-    } else {
-      updateUI({
-        statusIcon,
-        statusText,
-        openOptionsButton,
-        slackChannelLink,
-        matchingMessageDiv,
-        state: 'unknown',
-        message: literals.popup.textCouldNotDetermineStatus,
-      });
-    }
-  } catch (error) {
-    console.error('Error processing messages:', error);
-    updateUI({
+    // Obtener y mostrar el estado de fusión
+    await showMergeStatus({
       statusIcon,
       statusText,
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
-      state: 'disallowed',
-      message: literals.popup.textErrorProcessingMessages,
+    });
+  } catch (error) {
+    console.error('Error processing messages:', error);
+    showErrorUI({
+      statusIcon,
+      statusText,
+      openOptionsButton,
+      slackChannelLink,
+      matchingMessageDiv,
     });
   }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const statusIcon = document.getElementById('status-icon');
-  const statusText = document.getElementById('status-text');
-  const openOptionsButton = document.getElementById('open-options');
-  const slackChannelLink = document.getElementById('slack-channel-link');
-  const matchingMessageDiv = document.getElementById('matching-message');
-  const featureToggle = document.getElementById('feature-toggle');
+/**
+ * Muestra la UI de configuración necesaria
+ * @param {Object} elements - Elementos de la UI
+ */
+function showConfigNeededUI({
+  statusIcon,
+  statusText,
+  openOptionsButton,
+  slackChannelLink,
+  matchingMessageDiv,
+}) {
+  updateUI({
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+    state: 'config_needed',
+    message: literals.popup.textConfigNeeded,
+  });
+}
 
-  async function initializeToggle() {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    initializeFeatureToggleState(featureToggle);
+/**
+ * Configura el enlace al canal de Slack
+ * @param {HTMLElement} slackChannelLink - Elemento de enlace al canal
+ */
+async function setupSlackChannelLink(slackChannelLink) {
+  const { channelId, teamId } = await chrome.storage.local.get([
+    'channelId',
+    'teamId',
+  ]);
+
+  if (channelId && teamId) {
+    slackChannelLink.href = `${SLACK_BASE_URL}${teamId}/${channelId}`;
   }
+}
 
-  if (featureToggle) {
-    await initializeToggle();
+/**
+ * Muestra el estado de fusión
+ * @param {Object} elements - Elementos de la UI
+ */
+async function showMergeStatus({
+  statusIcon,
+  statusText,
+  openOptionsButton,
+  slackChannelLink,
+  matchingMessageDiv,
+}) {
+  const { lastKnownMergeState } = await chrome.storage.local.get(
+    'lastKnownMergeState',
+  );
 
-    featureToggle.addEventListener('toggle', (event) => {
-      const isChecked = event.detail.checked;
-      chrome.storage.local.set({ featureEnabled: isChecked });
-
-      chrome.runtime.sendMessage({
-        action: 'featureToggleChanged',
-        enabled: isChecked,
-      });
-
-      if (isChecked) {
-        manageCountdownElement({ show: false });
-      }
+  if (!lastKnownMergeState?.mergeStatus) {
+    showLoadingUI({
+      statusIcon,
+      statusText,
+      openOptionsButton,
+      slackChannelLink,
+      matchingMessageDiv,
     });
+    return;
   }
 
+  const { mergeStatus: status, lastSlackMessage } = lastKnownMergeState;
+
+  const stateUIMap = {
+    exception: {
+      state: 'exception',
+      message: literals.popup.textAllowedWithExceptions,
+    },
+    allowed: {
+      state: 'allowed',
+      message: literals.popup.textMergeAllowed,
+    },
+    disallowed: {
+      state: 'disallowed',
+      message: literals.popup.textMergeNotAllowed,
+    },
+    default: {
+      state: 'unknown',
+      message: literals.popup.textCouldNotDetermineStatus,
+    },
+  };
+
+  const { state, message } = stateUIMap[status] ?? stateUIMap.default;
+
+  updateUI({
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+    state,
+    message,
+    matchingMessage: lastSlackMessage,
+  });
+}
+
+/**
+ * Muestra la UI de carga
+ * @param {Object} elements - Elementos de la UI
+ */
+function showLoadingUI({
+  statusIcon,
+  statusText,
+  openOptionsButton,
+  slackChannelLink,
+  matchingMessageDiv,
+}) {
+  updateUI({
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+    state: 'loading',
+  });
+  statusText.textContent = literals.popup.textWaitingMessages;
+}
+
+/**
+ * Muestra la UI de error
+ * @param {Object} elements - Elementos de la UI
+ */
+function showErrorUI({
+  statusIcon,
+  statusText,
+  openOptionsButton,
+  slackChannelLink,
+  matchingMessageDiv,
+}) {
+  updateUI({
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+    state: 'disallowed',
+    message: literals.popup.textErrorProcessingMessages,
+  });
+}
+
+/**
+ * Maneja los mensajes recibidos del script de fondo
+ * @param {Object} request - Solicitud recibida
+ * @param {Object} uiElements - Elementos de la UI
+ */
+function handleBackgroundMessages(request, { featureToggle }) {
+  if (request.action === 'updateCountdownDisplay') {
+    handleCountdownUpdate(request);
+  } else if (request.action === 'countdownCompleted') {
+    handleCountdownCompleted(featureToggle);
+  }
+}
+
+/**
+ * Maneja las actualizaciones del contador
+ * @param {Object} request - Solicitud recibida
+ */
+function handleCountdownUpdate(request) {
+  chrome.storage.local.get(['featureEnabled'], (result) => {
+    const isEnabled = result.featureEnabled !== false;
+
+    if (!isEnabled) {
+      updateCountdownDisplay(request.timeLeft);
+    } else {
+      manageCountdownElement({ show: false });
+    }
+  });
+}
+
+/**
+ * Maneja la finalización del contador
+ * @param {HTMLElement} featureToggle - Elemento de toggle
+ */
+function handleCountdownCompleted(featureToggle) {
+  manageCountdownElement({ show: false });
+  featureToggle.setAttribute('checked', '');
+}
+
+// Inicialización cuando el DOM está listo
+document.addEventListener('DOMContentLoaded', async () => {
+  // Obtener referencias a elementos del DOM
+  const uiElements = {
+    statusIcon: document.getElementById('status-icon'),
+    statusText: document.getElementById('status-text'),
+    openOptionsButton: document.getElementById('open-options'),
+    slackChannelLink: document.getElementById('slack-channel-link'),
+    matchingMessageDiv: document.getElementById('matching-message'),
+    featureToggle: document.getElementById('feature-toggle'),
+  };
+
+  const {
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+    featureToggle,
+  } = uiElements;
+
+  // Inicializar toggle
+  if (featureToggle) {
+    await initializeToggle(featureToggle);
+    setupEventListeners(uiElements);
+  }
+
+  // Cargar y mostrar datos
+  await loadAndDisplayData({
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+  });
+});
+
+/**
+ * Inicializa el toggle con un pequeño retraso
+ * @param {HTMLElement} featureToggle - Elemento de toggle
+ */
+async function initializeToggle(featureToggle) {
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  initializeFeatureToggleState(featureToggle);
+}
+
+/**
+ * Configura los event listeners
+ * @param {Object} uiElements - Elementos de la UI
+ */
+function setupEventListeners({
+  statusIcon,
+  statusText,
+  openOptionsButton,
+  slackChannelLink,
+  matchingMessageDiv,
+  featureToggle,
+}) {
+  // Event listener para el toggle
+  featureToggle.addEventListener('toggle', (event) => {
+    const isChecked = event.detail.checked;
+    chrome.storage.local.set({ featureEnabled: isChecked });
+
+    chrome.runtime.sendMessage({
+      action: 'featureToggleChanged',
+      enabled: isChecked,
+    });
+
+    if (isChecked) {
+      manageCountdownElement({ show: false });
+    }
+  });
+
+  // Event listener para el botón de opciones
   openOptionsButton.addEventListener('click', () => {
     if (chrome.runtime.openOptionsPage) {
       chrome.runtime.openOptionsPage();
@@ -320,6 +510,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Event listener para cambios en el storage
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (
       namespace === 'local' &&
@@ -335,29 +526,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Event listener para mensajes del background script
   chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
-    if (request.action === 'updateCountdownDisplay') {
-      chrome.storage.local.get(['featureEnabled'], (result) => {
-        const isEnabled = result.featureEnabled !== false;
-
-        if (!isEnabled) {
-          // Just pass the timeLeft parameter, manageCountdownElement is called inside updateCountdownDisplay
-          updateCountdownDisplay(request.timeLeft);
-        } else {
-          manageCountdownElement({ show: false });
-        }
-      });
-    } else if (request.action === 'countdownCompleted') {
-      manageCountdownElement({ show: false });
-      featureToggle.setAttribute('checked', '');
-    }
+    handleBackgroundMessages(request, { featureToggle });
   });
-
-  await loadAndDisplayData({
-    statusIcon,
-    statusText,
-    openOptionsButton,
-    slackChannelLink,
-    matchingMessageDiv,
-  });
-});
+}
