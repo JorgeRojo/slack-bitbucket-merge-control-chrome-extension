@@ -12,16 +12,17 @@ export function getReactivationTime() {
 
 /**
  * Updates the UI elements based on the current merge status
- * @param {HTMLElement} statusIcon - The status icon element
- * @param {HTMLElement} statusText - The status text element
- * @param {HTMLElement} openOptionsButton - The options button element
- * @param {HTMLElement} slackChannelLink - The Slack channel link element
- * @param {HTMLElement} matchingMessageDiv - The matching message div element
- * @param {string} state - The current merge state ('allowed', 'disallowed', 'exception', 'config_needed', 'unknown')
- * @param {string} message - The message to display
- * @param {Object} [matchingMessage=null] - The matching Slack message object
+ * @param {Object} params - UI update parameters
+ * @param {HTMLElement} params.statusIcon - The status icon element
+ * @param {HTMLElement} params.statusText - The status text element
+ * @param {HTMLElement} params.openOptionsButton - The options button element
+ * @param {HTMLElement} params.slackChannelLink - The Slack channel link element
+ * @param {HTMLElement} params.matchingMessageDiv - The matching message div element
+ * @param {string} params.state - The current merge state ('allowed', 'disallowed', 'exception', 'config_needed', 'unknown')
+ * @param {string} params.message - The message to display
+ * @param {Object} [params.matchingMessage=null] - The matching Slack message object
  */
-export function updateUI(
+export function updateUI({
   statusIcon,
   statusText,
   openOptionsButton,
@@ -30,7 +31,7 @@ export function updateUI(
   state,
   message,
   matchingMessage = null,
-) {
+}) {
   statusIcon.className = state;
   statusText.className = state;
 
@@ -160,20 +161,21 @@ export function initializeFeatureToggleState(toggleElement) {
 
 /**
  * Loads and displays data from storage in the popup UI
- * @param {HTMLElement} statusIcon - The status icon element
- * @param {HTMLElement} statusText - The status text element
- * @param {HTMLElement} openOptionsButton - The options button element
- * @param {HTMLElement} slackChannelLink - The Slack channel link element
- * @param {HTMLElement} matchingMessageDiv - The matching message div element
+ * @param {Object} params - UI elements and configuration
+ * @param {HTMLElement} params.statusIcon - The status icon element
+ * @param {HTMLElement} params.statusText - The status text element
+ * @param {HTMLElement} params.openOptionsButton - The options button element
+ * @param {HTMLElement} params.slackChannelLink - The Slack channel link element
+ * @param {HTMLElement} params.matchingMessageDiv - The matching message div element
  * @returns {Promise<void>}
  */
-export async function loadAndDisplayData(
+export async function loadAndDisplayData({
   statusIcon,
   statusText,
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
-) {
+}) {
   try {
     const { slackToken, appToken, channelName } = await chrome.storage.sync.get(
       ['slackToken', 'appToken', 'channelName'],
@@ -185,15 +187,15 @@ export async function loadAndDisplayData(
     ]);
 
     if (!slackToken || !appToken || !channelName) {
-      updateUI(
+      updateUI({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
-        'config_needed',
-        literals.popup.textConfigNeeded,
-      );
+        state: 'config_needed',
+        message: literals.popup.textConfigNeeded,
+      });
       return;
     }
 
@@ -206,14 +208,14 @@ export async function loadAndDisplayData(
     );
 
     if (!lastKnownMergeState || !lastKnownMergeState.mergeStatus) {
-      updateUI(
+      updateUI({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
-        'loading',
-      );
+        state: 'loading',
+      });
       statusText.textContent = literals.popup.textWaitingMessages;
       return;
     }
@@ -222,60 +224,60 @@ export async function loadAndDisplayData(
     const lastSlackMessage = lastKnownMergeState.lastSlackMessage;
 
     if (status === 'exception') {
-      updateUI(
+      updateUI({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
-        'exception',
-        literals.popup.textAllowedWithExceptions,
-        lastSlackMessage,
-      );
+        state: 'exception',
+        message: literals.popup.textAllowedWithExceptions,
+        matchingMessage: lastSlackMessage,
+      });
     } else if (status === 'allowed') {
-      updateUI(
+      updateUI({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
-        'allowed',
-        literals.popup.textMergeAllowed,
-        lastSlackMessage,
-      );
+        state: 'allowed',
+        message: literals.popup.textMergeAllowed,
+        matchingMessage: lastSlackMessage,
+      });
     } else if (status === 'disallowed') {
-      updateUI(
+      updateUI({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
-        'disallowed',
-        literals.popup.textMergeNotAllowed,
-        lastSlackMessage,
-      );
+        state: 'disallowed',
+        message: literals.popup.textMergeNotAllowed,
+        matchingMessage: lastSlackMessage,
+      });
     } else {
-      updateUI(
+      updateUI({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
-        'unknown',
-        literals.popup.textCouldNotDetermineStatus,
-      );
+        state: 'unknown',
+        message: literals.popup.textCouldNotDetermineStatus,
+      });
     }
   } catch (error) {
     console.error('Error processing messages:', error);
-    updateUI(
+    updateUI({
       statusIcon,
       statusText,
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
-      'disallowed',
-      literals.popup.textErrorProcessingMessages,
-    );
+      state: 'disallowed',
+      message: literals.popup.textErrorProcessingMessages,
+    });
   }
 }
 
@@ -323,13 +325,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       namespace === 'local' &&
       (changes.lastKnownMergeState || changes.lastMatchingMessage)
     ) {
-      loadAndDisplayData(
+      loadAndDisplayData({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
-      );
+      });
     }
   });
 
@@ -351,11 +353,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  await loadAndDisplayData(
+  await loadAndDisplayData({
     statusIcon,
     statusText,
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
-  );
+  });
 });
