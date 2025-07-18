@@ -1,8 +1,8 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
-import { jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { literals } from '../src/literals.js';
 
 // Import the functions
@@ -22,13 +22,13 @@ const createMockElement = () => ({
   textContent: '',
   style: { display: '' },
   href: '',
-  setAttribute: jest.fn(),
-  removeAttribute: jest.fn(),
-  addEventListener: jest.fn(),
+  setAttribute: vi.fn(),
+  removeAttribute: vi.fn(),
+  addEventListener: vi.fn(),
 });
 
 // Mock console.error
-console.error = jest.fn();
+console.error = vi.fn();
 
 describe('popup.js', () => {
   let mockStatusIcon,
@@ -40,7 +40,7 @@ describe('popup.js', () => {
     mockCountdownElement;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup mock elements
     mockStatusIcon = createMockElement();
@@ -52,7 +52,7 @@ describe('popup.js', () => {
     mockCountdownElement = createMockElement();
 
     // Mock document.getElementById
-    document.getElementById = jest.fn((id) => {
+    document.getElementById = vi.fn((id) => {
       if (id === 'countdown-timer') return mockCountdownElement;
       return null;
     });
@@ -61,28 +61,28 @@ describe('popup.js', () => {
     global.chrome = {
       storage: {
         sync: {
-          get: jest.fn(),
+          get: vi.fn(),
         },
         local: {
-          get: jest.fn(),
-          set: jest.fn(),
+          get: vi.fn(),
+          set: vi.fn(),
         },
         onChanged: {
-          addListener: jest.fn(),
+          addListener: vi.fn(),
         },
       },
       runtime: {
-        sendMessage: jest.fn(),
-        openOptionsPage: jest.fn(),
-        getURL: jest.fn(),
+        sendMessage: vi.fn(),
+        openOptionsPage: vi.fn(),
+        getURL: vi.fn(),
         onMessage: {
-          addListener: jest.fn(),
+          addListener: vi.fn(),
         },
       },
     };
 
     // Mock global manageCountdownElement
-    global.manageCountdownElement = jest.fn();
+    global.manageCountdownElement = vi.fn();
   });
 
   afterEach(() => {
