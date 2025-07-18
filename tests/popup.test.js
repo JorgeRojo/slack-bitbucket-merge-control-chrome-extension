@@ -3,15 +3,23 @@
  */
 
 import { jest } from '@jest/globals';
-import {
+import { literals } from '../src/literals.js';
+import { SLACK_BASE_URL } from '../src/constants.js';
+
+// Set NODE_ENV to test to enable exports in popup.js
+process.env.NODE_ENV = 'test';
+
+// Import the functions after setting NODE_ENV
+import * as popupModule from '../src/popup.js';
+
+// Extract the exported functions
+const {
   updateUI,
   manageCountdownElement,
   updateCountdownDisplay,
   initializeFeatureToggleState,
   loadAndDisplayData,
-} from '../src/popup.js';
-import { literals } from '../src/literals.js';
-import { SLACK_BASE_URL } from '../src/constants.js';
+} = popupModule;
 
 // Mock DOM elements
 const createMockElement = () => ({

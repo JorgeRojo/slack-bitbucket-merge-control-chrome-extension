@@ -14,7 +14,7 @@ import './components/toggle-switch/index.js';
  * @param {string} params.message - The message to display
  * @param {Object} [params.matchingMessage=null] - The matching Slack message object
  */
-export function updateUI({
+function updateUI({
   statusIcon,
   statusText,
   openOptionsButton,
@@ -91,7 +91,7 @@ function updateContentByState({
  * @param {number} [options.timeLeft] - Time left in milliseconds (required when show is true)
  * @returns {HTMLElement|null} - The countdown element or null if not found
  */
-export function manageCountdownElement({ show, timeLeft }) {
+function manageCountdownElement({ show, timeLeft }) {
   const countdownElement = document.getElementById('countdown-timer');
   if (!countdownElement) return null;
 
@@ -119,7 +119,7 @@ function updateCountdownText(element, timeLeft) {
  * Updates the countdown display based on the current feature state and time left
  * @param {number} timeLeft - Time left in milliseconds
  */
-export function updateCountdownDisplay(timeLeft) {
+function updateCountdownDisplay(timeLeft) {
   chrome.storage.local.get(['featureEnabled'], (result) => {
     const isEnabled = result.featureEnabled !== false;
 
@@ -144,7 +144,7 @@ export function updateCountdownDisplay(timeLeft) {
  * Initializes the feature toggle state based on stored settings
  * @param {HTMLElement} toggleElement - The toggle element to initialize
  */
-export function initializeFeatureToggleState(toggleElement) {
+function initializeFeatureToggleState(toggleElement) {
   chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
     const isEnabled = result.featureEnabled !== false;
 
@@ -184,7 +184,7 @@ function checkCountdownStatus() {
  * @param {HTMLElement} params.matchingMessageDiv - The matching message div element
  * @returns {Promise<void>}
  */
-export async function loadAndDisplayData({
+async function loadAndDisplayData({
   statusIcon,
   statusText,
   openOptionsButton,
@@ -503,3 +503,13 @@ function setupEventListeners({
     handleBackgroundMessages(request, { featureToggle });
   });
 }
+
+// Export functions only for testing purposes
+// This allows us to test the functions without exposing them in the public API
+export {
+  updateUI,
+  manageCountdownElement,
+  updateCountdownDisplay,
+  initializeFeatureToggleState,
+  loadAndDisplayData,
+};
