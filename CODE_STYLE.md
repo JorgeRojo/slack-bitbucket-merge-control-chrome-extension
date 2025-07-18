@@ -270,6 +270,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Test edge cases
 - Mock external dependencies
 - Keep tests independent of each other
+- Don't modify code only for testing purposes, improve the mocks instead
 
 ## Documentation
 

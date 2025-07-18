@@ -15,7 +15,7 @@ let bitbucketTabId = null;
 
 let rtmWebSocket = null;
 
-export function normalizeText(text) {
+function normalizeText(text) {
   if (!text) return '';
   return text
     .toLowerCase()
@@ -25,7 +25,7 @@ export function normalizeText(text) {
     .trim();
 }
 
-export function cleanSlackMessageText(text) {
+function cleanSlackMessageText(text) {
   if (!text) return '';
 
   text = text.replace(/[\n\r\t]+/g, ' '); // Replace line breaks and tabs with spaces
@@ -36,7 +36,7 @@ export function cleanSlackMessageText(text) {
   return cleanedText;
 }
 
-export function determineMergeStatus({
+function determineMergeStatus({
   messages,
   allowedPhrases,
   disallowedPhrases,
@@ -74,7 +74,7 @@ export function determineMergeStatus({
   return { status: 'unknown', message: null };
 }
 
-export function updateExtensionIcon(status) {
+function updateExtensionIcon(status) {
   let path16, path48;
   switch (status) {
     case 'loading':
@@ -110,7 +110,7 @@ export function updateExtensionIcon(status) {
   });
 }
 
-export async function resolveChannelId(slackToken, channelName) {
+async function resolveChannelId(slackToken, channelName) {
   let { channelId, cachedChannelName } = await chrome.storage.local.get([
     'channelId',
     'cachedChannelName',
@@ -154,7 +154,7 @@ export async function resolveChannelId(slackToken, channelName) {
   return channelId;
 }
 
-export async function processAndStoreMessage(message, _slackToken) {
+async function processAndStoreMessage(message, _slackToken) {
   if (!message.ts || !message.text) {
     return;
   }
@@ -201,7 +201,7 @@ export async function processAndStoreMessage(message, _slackToken) {
   await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
 }
 
-export async function getPhrasesFromStorage() {
+async function getPhrasesFromStorage() {
   const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
     await chrome.storage.sync.get([
       'allowedPhrases',
@@ -228,7 +228,7 @@ export async function getPhrasesFromStorage() {
   };
 }
 
-export async function handleSlackApiError(error) {
+async function handleSlackApiError(error) {
   const errorMessage = error?.message || '';
 
   if (
@@ -342,7 +342,7 @@ async function updateContentScriptMergeState(channelName) {
   }
 }
 
-export async function fetchAndStoreTeamId(slackToken) {
+async function fetchAndStoreTeamId(slackToken) {
   try {
     const response = await fetch(SLACK_AUTH_TEST_URL, {
       headers: { Authorization: `Bearer ${slackToken}` },
@@ -436,7 +436,7 @@ async function connectToSlackSocketMode() {
   }
 }
 
-export async function fetchAndStoreMessages(slackToken, channelId) {
+async function fetchAndStoreMessages(slackToken, channelId) {
   if (!channelId) {
     return;
   }
@@ -592,7 +592,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  * Updates the merge button state in the Bitbucket tab based on the last known merge state
  * @returns {void}
  */
-export const updateMergeButtonFromLastKnownMergeState = () => {
+const updateMergeButtonFromLastKnownMergeState = () => {
   chrome.storage.local.get(
     ['lastKnownMergeState', 'featureEnabled'],
     async (result) => {
@@ -630,7 +630,7 @@ let countdownInterval;
 /**
  * Stops the countdown by clearing the interval
  */
-export function stopCountdown() {
+function stopCountdown() {
   if (countdownInterval) {
     clearInterval(countdownInterval);
     countdownInterval = null;
@@ -642,7 +642,7 @@ export function stopCountdown() {
  * @param {number} targetTime - The target time in milliseconds since epoch
  * @returns {Promise<void>}
  */
-export async function startCountdown(targetTime) {
+async function startCountdown(targetTime) {
   // Clear any existing interval before starting a new one
   stopCountdown();
 
@@ -678,7 +678,7 @@ export async function startCountdown(targetTime) {
  * Schedules feature reactivation after a timeout
  * @returns {Promise<void>}
  */
-export async function scheduleFeatureReactivation() {
+async function scheduleFeatureReactivation() {
   const reactivationTime = Date.now() + FEATURE_REACTIVATION_TIMEOUT;
   await chrome.storage.local.set({ reactivationTime });
 
@@ -690,7 +690,7 @@ export async function scheduleFeatureReactivation() {
  * Checks if there's a scheduled reactivation and handles it
  * @returns {Promise<void>}
  */
-export async function checkScheduledReactivation() {
+async function checkScheduledReactivation() {
   const { reactivationTime, featureEnabled } = await chrome.storage.local.get([
     'reactivationTime',
     'featureEnabled',
@@ -712,7 +712,7 @@ export async function checkScheduledReactivation() {
  * Reactivates the feature and notifies the popup
  * @returns {Promise<void>}
  */
-export async function reactivateFeature() {
+async function reactivateFeature() {
   await chrome.storage.local.set({ featureEnabled: true });
 
   // Notify popup that feature has been reactivated
@@ -756,7 +756,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   }
 });
 
-export async function registerBitbucketContentScript() {
+async function registerBitbucketContentScript() {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
   try {
