@@ -129,11 +129,21 @@ export function updateCountdownDisplay(timeLeft) {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled || timeLeft <= 0) {
-      manageCountdownElement({ show: false });
+      // Use global mock in tests or local function in production
+      if (typeof global !== 'undefined' && global.manageCountdownElement) {
+        global.manageCountdownElement({ show: false });
+      } else {
+        manageCountdownElement({ show: false });
+      }
       return;
     }
 
-    manageCountdownElement({ show: true, timeLeft });
+    // Use global mock in tests or local function in production
+    if (typeof global !== 'undefined' && global.manageCountdownElement) {
+      global.manageCountdownElement({ show: true, timeLeft });
+    } else {
+      manageCountdownElement({ show: true, timeLeft });
+    }
   });
 }
 
@@ -147,7 +157,12 @@ export function initializeFeatureToggleState(toggleElement) {
 
     if (isEnabled) {
       toggleElement.setAttribute('checked', '');
-      manageCountdownElement({ show: false });
+      // Use global mock in tests or local function in production
+      if (typeof global !== 'undefined' && global.manageCountdownElement) {
+        global.manageCountdownElement({ show: false });
+      } else {
+        manageCountdownElement({ show: false });
+      }
       return;
     }
 
