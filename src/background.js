@@ -841,11 +841,3 @@ async function registerBitbucketContentScript() {
     }
   }
 }
-
-// Export functions for testing
-export {
-  updateContentScriptMergeState,
-  getPhrasesFromStorage,
-  determineMergeStatus,
-  updateExtensionIcon,
-};
