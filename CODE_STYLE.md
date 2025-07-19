@@ -274,6 +274,64 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Don't export functions or variables solely to make them testable
 - Aim for 80% code coverage when possible without overly complicating test logic
 
+### Testing Approach
+
+- **Prefer Integration Testing**: Test the behavior of the code through its public interfaces rather than testing internal functions directly.
+  ```javascript
+  // Good: Test through message passing (integration approach)
+  await chrome.runtime.sendMessage({ 
+    action: 'updateContentScriptMergeState', 
+    channelName: 'test-channel' 
+  });
+  
+  // Avoid: Creating duplicates of internal functions for testing
+  const updateContentScriptMergeState = function() { ... };
+  await updateContentScriptMergeState('test-channel');
+  ```
+
+- **Mock Chrome API**: Create comprehensive mocks of the Chrome API that simulate the actual behavior.
+  ```javascript
+  global.chrome = {
+    runtime: {
+      sendMessage: vi.fn(),
+      onMessage: {
+        addListener: vi.fn(),
+        dispatch: (message) => {
+          // Simulate message dispatch to listeners
+          const listeners = chrome.runtime.onMessage.addListener.mock.calls.map(call => call[0]);
+          listeners.forEach(listener => listener(message, {}, () => {}));
+        }
+      }
+    }
+  };
+  ```
+
+- **Test State Changes**: Focus on testing the resulting state changes rather than implementation details.
+  ```javascript
+  // Good: Test the resulting state
+  expect(chrome.storage.local.set).toHaveBeenCalledWith(
+    expect.objectContaining({
+      lastKnownMergeState: expect.objectContaining({
+        mergeStatus: MERGE_STATUS.ERROR,
+      }),
+    }),
+  );
+  
+  // Avoid: Testing implementation details
+  expect(someInternalFunction).toHaveBeenCalledWith(...);
+  ```
+
+- **Use Realistic Test Data**: Create test data that closely resembles real-world scenarios.
+  ```javascript
+  const mockMessages = [
+    {
+      text: "not allowed to merge today",
+      user: "U12345",
+      ts: "1609459200.000100"
+    }
+  ];
+  ```
+
 ## Documentation
 
 - Use descriptive function and variable names to make code self-documenting

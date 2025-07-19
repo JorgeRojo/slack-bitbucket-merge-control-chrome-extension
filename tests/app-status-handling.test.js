@@ -5,28 +5,6 @@
 import { describe, beforeEach, test, expect, vi } from 'vitest';
 import { APP_STATUS, MERGE_STATUS } from '../src/constants';
 
-// Mock the chrome API
-global.chrome = {
-  storage: {
-    local: {
-      get: vi.fn(),
-      set: vi.fn(),
-    },
-    sync: {
-      get: vi.fn(),
-    },
-  },
-  action: {
-    setIcon: vi.fn(),
-  },
-  tabs: {
-    sendMessage: vi.fn(),
-  },
-  runtime: {
-    sendMessage: vi.fn(),
-  },
-};
-
 // Esta función es una réplica exacta de la función en background.js
 // Usamos la misma lógica para probar el comportamiento real
 async function updateContentScriptMergeState(channelName) {
@@ -76,6 +54,28 @@ async function updateContentScriptMergeState(channelName) {
     },
   });
 }
+
+// Mock the chrome API
+global.chrome = {
+  storage: {
+    local: {
+      get: vi.fn(),
+      set: vi.fn(),
+    },
+    sync: {
+      get: vi.fn(),
+    },
+  },
+  action: {
+    setIcon: vi.fn(),
+  },
+  tabs: {
+    sendMessage: vi.fn(),
+  },
+  runtime: {
+    sendMessage: vi.fn(),
+  },
+};
 
 describe('App Status Error Handling', () => {
   beforeEach(() => {
@@ -203,50 +203,50 @@ describe('App Status Error Handling', () => {
       }),
     );
   });
-});
 
-test('should set merge status to ERROR when app status is CHANNEL_NOT_FOUND', async () => {
-  chrome.storage.local.get.mockImplementation(() => {
-    return Promise.resolve({
-      messages: [],
-      appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
-      featureEnabled: true,
-    });
-  });
-
-  await updateContentScriptMergeState('test-channel');
-
-  expect(chrome.storage.local.set).toHaveBeenCalledWith(
-    expect.objectContaining({
-      lastKnownMergeState: expect.objectContaining({
-        mergeStatus: MERGE_STATUS.ERROR,
-      }),
-    }),
-  );
-});
-
-test('should include appStatus in lastKnownMergeState', async () => {
-  chrome.storage.local.get.mockImplementation(() => {
-    return Promise.resolve({
-      messages: [],
-      appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
-      featureEnabled: true,
-    });
-  });
-
-  await updateContentScriptMergeState('test-channel');
-
-  expect(chrome.storage.local.set).toHaveBeenCalledWith(
-    expect.objectContaining({
-      lastKnownMergeState: expect.objectContaining({
+  test('should set merge status to ERROR when app status is CHANNEL_NOT_FOUND', async () => {
+    chrome.storage.local.get.mockImplementation(() => {
+      return Promise.resolve({
+        messages: [],
         appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
-      }),
-    }),
-  );
-});
+        featureEnabled: true,
+      });
+    });
 
-test('should handle CONFIG_NEEDED as a valid MERGE_STATUS', async () => {
-  // Verify that CONFIG_NEEDED is defined in MERGE_STATUS
-  expect(MERGE_STATUS.CONFIG_NEEDED).toBeDefined();
-  expect(MERGE_STATUS.CONFIG_NEEDED).toBe('config_needed');
+    await updateContentScriptMergeState('test-channel');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lastKnownMergeState: expect.objectContaining({
+          mergeStatus: MERGE_STATUS.ERROR,
+        }),
+      }),
+    );
+  });
+
+  test('should include appStatus in lastKnownMergeState', async () => {
+    chrome.storage.local.get.mockImplementation(() => {
+      return Promise.resolve({
+        messages: [],
+        appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
+        featureEnabled: true,
+      });
+    });
+
+    await updateContentScriptMergeState('test-channel');
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lastKnownMergeState: expect.objectContaining({
+          appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
+        }),
+      }),
+    );
+  });
+
+  test('should handle CONFIG_NEEDED as a valid MERGE_STATUS', async () => {
+    // Verify that CONFIG_NEEDED is defined in MERGE_STATUS
+    expect(MERGE_STATUS.CONFIG_NEEDED).toBeDefined();
+    expect(MERGE_STATUS.CONFIG_NEEDED).toBe('config_needed');
+  });
 });
