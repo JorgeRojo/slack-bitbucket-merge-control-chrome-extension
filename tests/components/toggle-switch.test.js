@@ -5,16 +5,13 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import '../../src/components/toggle-switch/toggle-switch.js';
 
-// Mock fetch for CSS loading
 global.fetch = vi.fn(() =>
   Promise.resolve({
     text: () => Promise.resolve('/* mocked CSS */'),
   }),
 );
 
-// Helper function to wait for component to render
 const waitForRender = async () => {
-  // Wait for the component's async operations to complete
   return new Promise((resolve) => setTimeout(resolve, 50));
 };
 
@@ -22,19 +19,15 @@ describe('ToggleSwitch Component', () => {
   let toggleSwitch;
 
   beforeEach(async () => {
-    // Reset fetch mock
     fetch.mockClear();
 
-    // Create a new toggle switch element before each test
     toggleSwitch = document.createElement('toggle-switch');
     document.body.appendChild(toggleSwitch);
 
-    // Wait for component to fully initialize
     await waitForRender();
   });
 
   afterEach(() => {
-    // Clean up after each test
     document.body.removeChild(toggleSwitch);
   });
 

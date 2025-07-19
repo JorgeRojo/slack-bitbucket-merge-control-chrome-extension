@@ -5,8 +5,6 @@
 import { describe, beforeEach, test, expect, vi } from 'vitest';
 import { APP_STATUS, MERGE_STATUS } from '../../src/constants';
 
-// Esta función es una réplica exacta de la función en background.js
-// Usamos la misma lógica para probar el comportamiento real
 async function updateContentScriptMergeState(channelName) {
   const {
     // eslint-disable-next-line no-unused-vars
@@ -19,7 +17,6 @@ async function updateContentScriptMergeState(channelName) {
     'featureEnabled',
   ]);
 
-  // Simulamos la obtención de frases desde el almacenamiento
   await chrome.storage.sync.get([
     'allowedPhrases',
     'disallowedPhrases',
@@ -57,7 +54,6 @@ async function updateContentScriptMergeState(channelName) {
 
 describe('App Status Error Handling', () => {
   beforeEach(() => {
-    // Reset mocks before each test
     vi.spyOn(chrome.storage.local, 'get').mockImplementation((keys) => {
       if (Array.isArray(keys) && keys.includes('messages')) {
         return Promise.resolve({

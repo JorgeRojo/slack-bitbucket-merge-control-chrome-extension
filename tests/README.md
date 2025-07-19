@@ -17,7 +17,7 @@ The project uses a global Chrome mock defined in `tests/setup.js` to simulate th
 ```javascript
 beforeEach(() => {
   vi.clearAllMocks();
-  
+
   // Set up spies on the global chrome mock
   vi.spyOn(chrome.storage.local, 'get');
   vi.spyOn(chrome.storage.local, 'set');

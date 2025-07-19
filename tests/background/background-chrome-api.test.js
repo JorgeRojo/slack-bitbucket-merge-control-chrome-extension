@@ -6,7 +6,6 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
 } from '../../src/constants.js';
 
-// Mock chrome APIs
 const mockStorage = {
   sync: {
     get: vi.fn(),
@@ -64,10 +63,8 @@ global.chrome = {
   alarms: mockAlarms,
 };
 
-// Mock Date.now
 global.Date.now = vi.fn(() => 1626262626262);
 
-// Helper to trigger chrome events
 function triggerChromeEvent(eventName, ...args) {
   const listeners = mockRuntime[eventName].addListener.mock.calls.map(
     (call) => call[0],
@@ -75,7 +72,6 @@ function triggerChromeEvent(eventName, ...args) {
   listeners.forEach((listener) => listener(...args));
 }
 
-// Helper to trigger chrome message
 function triggerChromeMessage(message, sender = {}, sendResponse = vi.fn()) {
   const listeners = mockRuntime.onMessage.addListener.mock.calls.map(
     (call) => call[0],
@@ -88,7 +84,6 @@ describe('Background Script via Chrome API', () => {
   beforeEach(async () => {
     vi.resetAllMocks();
 
-    // Configurar mocks para evitar errores de null
     mockStorage.local.get.mockImplementation((keys) => {
       if (typeof keys === 'string') {
         if (keys === 'messages') {

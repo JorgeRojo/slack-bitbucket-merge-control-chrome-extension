@@ -1,38 +1,26 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 
-// Dado que ya no podemos importar directamente las funciones del background.js,
-// vamos a crear versiones de prueba de las funciones que necesitamos probar
-
-/**
- * Normaliza el texto eliminando acentos, convirtiendo a minúsculas y eliminando espacios extra
- */
 function normalizeText(text) {
   if (!text) return '';
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '') // Remove diacritical marks (accents, tildes, etc.)
-    .replace(/\s+/g, ' ') // Replace multiple whitespace characters with single space
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
-/**
- * Limpia el texto de un mensaje de Slack, eliminando menciones y formatos especiales
- */
 function cleanSlackMessageText(text) {
   if (!text) return '';
 
-  text = text.replace(/[\n\r\t]+/g, ' '); // Replace line breaks and tabs with spaces
-  let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION'); // Replace user mentions like <@U123456789> with @MENTION
-  cleanedText = cleanedText.replace(/<#[^|>]+>/g, '@CHANNEL'); // Replace unnamed channel mentions like <#C123456789> with @CHANNEL
-  cleanedText = cleanedText.replace(/<[^>]+>/g, ''); // Remove any remaining angle bracket content
-  cleanedText = cleanedText.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with single space and trim
+  text = text.replace(/[\n\r\t]+/g, ' ');
+  let cleanedText = text.replace(/<@[^>]+>/g, '@MENTION');
+  cleanedText = cleanedText.replace(/<#[^|>]+>/g, '@CHANNEL');
+  cleanedText = cleanedText.replace(/<[^>]+>/g, '');
+  cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
   return cleanedText;
 }
 
-/**
- * Determina el estado de merge basado en los mensajes y frases configuradas
- */
 function determineMergeStatus({
   messages,
   allowedPhrases,

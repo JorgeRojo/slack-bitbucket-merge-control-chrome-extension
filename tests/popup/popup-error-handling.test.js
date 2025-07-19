@@ -4,7 +4,6 @@
 
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 
-// Mock DOM elements
 const createMockElement = () => ({
   className: '',
   textContent: '',
@@ -29,7 +28,6 @@ describe('Popup.js Runtime Error Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Setup mock elements
     mockStatusIcon = createMockElement();
     mockStatusText = createMockElement();
     mockOpenOptionsButton = createMockElement();
@@ -38,7 +36,6 @@ describe('Popup.js Runtime Error Handling', () => {
     mockFeatureToggle = createMockElement();
     mockCountdownElement = createMockElement();
 
-    // Mock document.getElementById
     document.getElementById = vi.fn((id) => {
       switch (id) {
         case 'status-icon':
@@ -60,7 +57,6 @@ describe('Popup.js Runtime Error Handling', () => {
       }
     });
 
-    // Mock chrome API
     global.chrome = {
       storage: {
         sync: {
@@ -85,10 +81,8 @@ describe('Popup.js Runtime Error Handling', () => {
       },
     };
 
-    // Mock console.log
     console.log = vi.fn();
 
-    // Mock document.addEventListener to capture the DOMContentLoaded handler
     const originalAddEventListener = document.addEventListener;
     document.addEventListener = vi.fn((event, handler) => {
       if (event === 'DOMContentLoaded') {

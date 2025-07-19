@@ -4,7 +4,6 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock DOM elements
 const createMockElement = () => ({
   className: '',
   textContent: '',
@@ -15,10 +14,8 @@ const createMockElement = () => ({
   addEventListener: vi.fn(),
 });
 
-// Mock console.error
 console.error = vi.fn();
 
-// Mock window.open
 window.open = vi.fn();
 
 describe('popup.js', () => {
@@ -30,14 +27,12 @@ describe('popup.js', () => {
     mockFeatureToggle,
     mockCountdownElement;
 
-  // Spy on document.addEventListener to capture the DOMContentLoaded handler
   let domContentLoadedHandler;
   const originalAddEventListener = document.addEventListener;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Setup mock elements
     mockStatusIcon = createMockElement();
     mockStatusText = createMockElement();
     mockOpenOptionsButton = createMockElement();
@@ -46,7 +41,6 @@ describe('popup.js', () => {
     mockFeatureToggle = createMockElement();
     mockCountdownElement = createMockElement();
 
-    // Mock document.getElementById
     document.getElementById = vi.fn((id) => {
       switch (id) {
         case 'status-icon':
@@ -68,7 +62,6 @@ describe('popup.js', () => {
       }
     });
 
-    // Mock chrome API
     global.chrome = {
       storage: {
         sync: {
@@ -92,7 +85,6 @@ describe('popup.js', () => {
       },
     };
 
-    // Mock document.addEventListener to capture the DOMContentLoaded handler
     document.addEventListener = vi.fn((event, handler) => {
       if (event === 'DOMContentLoaded') {
         domContentLoadedHandler = handler;
