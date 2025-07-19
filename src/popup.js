@@ -108,7 +108,6 @@ function updateContentByState({
       break;
   }
 
-  // Show options link only when the options button is not visible
   if (openOptionsButton.style.display === 'none') {
     optionsLinkContainer.style.display = 'block';
   } else {
@@ -129,11 +128,6 @@ function manageCountdownElement({ show, timeLeft }) {
   return countdownElement;
 }
 
-/**
- * Updates the text content of the countdown element
- * @param {HTMLElement} element - The countdown element
- * @param {number} timeLeft - Time left in milliseconds
- */
 function updateCountdownText(element, timeLeft) {
   const minutes = Math.floor(timeLeft / 60000);
   const seconds = Math.floor((timeLeft % 60000) / 1000);
@@ -168,9 +162,6 @@ function initializeFeatureToggleState(toggleElement) {
   });
 }
 
-/**
- * Checks the countdown status and updates the display
- */
 function checkCountdownStatus() {
   try {
     chrome.runtime.sendMessage({ action: 'getCountdownStatus' }, (response) => {
@@ -191,16 +182,6 @@ function checkCountdownStatus() {
   }
 }
 
-/**
- * Loads and displays data from storage in the popup UI
- * @param {Object} params - UI elements and configuration
- * @param {HTMLElement} params.statusIcon - The status icon element
- * @param {HTMLElement} params.statusText - The status text element
- * @param {HTMLElement} params.openOptionsButton - The options button element
- * @param {HTMLElement} params.slackChannelLink - The Slack channel link element
- * @param {HTMLElement} params.matchingMessageDiv - The matching message div element
- * @returns {Promise<void>}
- */
 async function loadAndDisplayData({
   statusIcon,
   statusText,
@@ -249,10 +230,6 @@ async function loadAndDisplayData({
   }
 }
 
-/**
- * Muestra la UI de configuración necesaria con mensajes de error detallados
- * @param {Object} elements - Elementos de la UI
- */
 function showConfigNeededUI({
   statusIcon,
   statusText,
@@ -261,18 +238,14 @@ function showConfigNeededUI({
   matchingMessageDiv,
   optionsLinkContainer,
 }) {
-  // Crear un div para mostrar mensajes de error detallados
   const errorDetailsDiv = document.createElement('div');
   errorDetailsDiv.id = 'error-details';
   errorDetailsDiv.className = 'error-details';
 
-  // Obtener la configuración actual
   chrome.storage.sync.get(
     ['slackToken', 'appToken', 'channelName'],
     (result) => {
       const { slackToken, appToken, channelName } = result;
-
-      // Crear una lista de errores
       const errors = [];
 
       if (!slackToken) {
@@ -287,12 +260,10 @@ function showConfigNeededUI({
         errors.push(literals.popup.errorDetails.channelNameMissing);
       }
 
-      // Si no hay errores específicos, mostrar mensaje genérico
       if (errors.length === 0) {
         errors.push(literals.popup.errorDetails.configurationIncomplete);
       }
 
-      // Crear el contenido HTML para los errores
       errorDetailsDiv.innerHTML = `
       <h3>Configuration Issues:</h3>
       <ul>
@@ -300,21 +271,17 @@ function showConfigNeededUI({
       </ul>
     `;
 
-      // Añadir el div de errores al DOM
       const popupContent = document.querySelector('.popup-content');
-
-      // Eliminar el div de errores anterior si existe
       const existingErrorDetails = document.getElementById('error-details');
+
       if (existingErrorDetails) {
         existingErrorDetails.remove();
       }
 
-      // Añadir el nuevo div de errores
       if (popupContent) {
         popupContent.appendChild(errorDetailsDiv);
       }
 
-      // Actualizar la UI
       updateUI({
         statusIcon,
         statusText,
@@ -344,10 +311,6 @@ async function setupSlackChannelLink(slackChannelLink) {
   }
 }
 
-/**
- * Muestra el estado de fusión
- * @param {Object} elements - Elementos de la UI
- */
 async function showMergeStatus({
   statusIcon,
   statusText,
@@ -378,7 +341,6 @@ async function showMergeStatus({
     appStatus,
   } = lastKnownMergeState;
 
-  // Si el appStatus es CHANNEL_NOT_FOUND, mostrar mensaje específico
   if (appStatus === APP_STATUS.CHANNEL_NOT_FOUND) {
     updateUI({
       statusIcon,
@@ -427,10 +389,6 @@ async function showMergeStatus({
   });
 }
 
-/**
- * Muestra la UI de carga
- * @param {Object} elements - Elementos de la UI
- */
 function showLoadingUI({
   statusIcon,
   statusText,
@@ -451,10 +409,6 @@ function showLoadingUI({
   statusText.textContent = literals.popup.textWaitingMessages;
 }
 
-/**
- * Muestra la UI de error
- * @param {Object} elements - Elementos de la UI
- */
 function showErrorUI({
   statusIcon,
   statusText,
@@ -475,11 +429,6 @@ function showErrorUI({
   });
 }
 
-/**
- * Maneja los mensajes recibidos del script de fondo
- * @param {Object} request - Solicitud recibida
- * @param {Object} uiElements - Elementos de la UI
- */
 function handleBackgroundMessages(request, { featureToggle }) {
   if (request.action === 'updateCountdownDisplay') {
     handleCountdownUpdate(request);
@@ -488,10 +437,6 @@ function handleBackgroundMessages(request, { featureToggle }) {
   }
 }
 
-/**
- * Maneja las actualizaciones del contador
- * @param {Object} request - Solicitud recibida
- */
 function handleCountdownUpdate(request) {
   chrome.storage.local.get(['featureEnabled'], (result) => {
     const isEnabled = result.featureEnabled !== false;
@@ -504,19 +449,11 @@ function handleCountdownUpdate(request) {
   });
 }
 
-/**
- * Maneja la finalización del contador
- * @param {HTMLElement} featureToggle - Elemento de toggle
- */
 function handleCountdownCompleted(featureToggle) {
   manageCountdownElement({ show: false });
   featureToggle.setAttribute('checked', '');
 }
 
-/**
- * Inicializa el toggle con un pequeño retraso
- * @param {HTMLElement} featureToggle - Elemento de toggle
- */
 async function initializeToggle(featureToggle) {
   await new Promise((resolve) => setTimeout(resolve, 100));
   initializeFeatureToggleState(featureToggle);
