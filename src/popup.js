@@ -50,12 +50,25 @@ function updateUI({
   message,
   matchingMessage = null,
 }) {
-  statusIcon.className = state;
-  statusText.className = state;
+  if (statusIcon) {
+    statusIcon.className = state;
+  }
 
-  openOptionsButton.style.display = 'none';
-  slackChannelLink.style.display = 'none';
-  matchingMessageDiv.style.display = 'none';
+  if (statusText) {
+    statusText.className = state;
+  }
+
+  if (openOptionsButton) {
+    openOptionsButton.style.display = 'none';
+  }
+
+  if (slackChannelLink) {
+    slackChannelLink.style.display = 'none';
+  }
+
+  if (matchingMessageDiv) {
+    matchingMessageDiv.style.display = 'none';
+  }
 
   updateContentByState({
     statusIcon,
@@ -67,7 +80,7 @@ function updateUI({
     message,
   });
 
-  if (matchingMessage) {
+  if (matchingMessage && matchingMessageDiv) {
     matchingMessageDiv.textContent = `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`;
     matchingMessageDiv.style.display = 'block';
   }
@@ -94,13 +107,19 @@ function updateContentByState({
     case MERGE_STATUS.EXCEPTION:
       statusIcon.textContent = literals.popup.emojiException;
       statusText.textContent = message;
-      slackChannelLink.style.display = 'block';
+      if (slackChannelLink) {
+        slackChannelLink.style.display = 'block';
+      }
       break;
     case MERGE_STATUS.CONFIG_NEEDED:
       statusIcon.textContent = literals.popup.emojiUnknown;
       statusText.textContent = message;
-      openOptionsButton.style.display = 'block';
-      optionsLinkContainer.style.display = 'none';
+      if (openOptionsButton) {
+        openOptionsButton.style.display = 'block';
+      }
+      if (optionsLinkContainer) {
+        optionsLinkContainer.style.display = 'none';
+      }
       break;
     default:
       statusIcon.textContent = literals.popup.emojiUnknown;
@@ -108,10 +127,14 @@ function updateContentByState({
       break;
   }
 
-  if (openOptionsButton.style.display === 'none') {
-    optionsLinkContainer.style.display = 'block';
+  if (openOptionsButton && openOptionsButton.style.display === 'none') {
+    if (optionsLinkContainer) {
+      optionsLinkContainer.style.display = 'block';
+    }
   } else {
-    optionsLinkContainer.style.display = 'none';
+    if (optionsLinkContainer) {
+      optionsLinkContainer.style.display = 'none';
+    }
   }
 }
 
@@ -506,14 +529,17 @@ function setupEventListeners({
     }
   });
 
-  optionsLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (chrome.runtime.openOptionsPage) {
-      chrome.runtime.openOptionsPage();
-    } else {
-      window.open(chrome.runtime.getURL('options.html'));
-    }
-  });
+  // Check if optionsLink exists before adding event listener
+  if (optionsLink) {
+    optionsLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (chrome.runtime.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+      } else {
+        window.open(chrome.runtime.getURL('options.html'));
+      }
+    });
+  }
 
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (
