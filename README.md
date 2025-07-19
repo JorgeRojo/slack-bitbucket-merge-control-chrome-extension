@@ -101,4 +101,4 @@ The help page provides comprehensive instructions for:
 
 ---
 
-*Documentation and UI improvements assisted by [Amazon Q](https://aws.amazon.com/q/).*
+_Documentation and UI improvements assisted by [Amazon Q](https://aws.amazon.com/q/)._
