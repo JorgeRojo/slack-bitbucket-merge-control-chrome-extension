@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     slackChannelLink: document.getElementById('slack-channel-link'),
     matchingMessageDiv: document.getElementById('matching-message'),
     featureToggle: document.getElementById('feature-toggle'),
+    optionsLink: document.getElementById('options-link'),
+    optionsLinkContainer: document.getElementById('options-link-container'),
   };
 
   const {
@@ -19,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     slackChannelLink,
     matchingMessageDiv,
     featureToggle,
+    optionsLinkContainer,
   } = uiElements;
 
   if (featureToggle) {
@@ -32,6 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    optionsLinkContainer,
   });
 });
 
@@ -41,6 +45,7 @@ function updateUI({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  optionsLinkContainer,
   state,
   message,
   matchingMessage = null,
@@ -57,6 +62,7 @@ function updateUI({
     statusText,
     openOptionsButton,
     slackChannelLink,
+    optionsLinkContainer,
     state,
     message,
   });
@@ -72,6 +78,7 @@ function updateContentByState({
   statusText,
   openOptionsButton,
   slackChannelLink,
+  optionsLinkContainer,
   state,
   message,
 }) {
@@ -93,11 +100,19 @@ function updateContentByState({
       statusIcon.textContent = literals.popup.emojiUnknown;
       statusText.textContent = message;
       openOptionsButton.style.display = 'block';
+      optionsLinkContainer.style.display = 'none';
       break;
     default:
       statusIcon.textContent = literals.popup.emojiUnknown;
       statusText.textContent = message ?? literals.popup.textCouldNotDetermine;
       break;
+  }
+
+  // Show options link only when the options button is not visible
+  if (openOptionsButton.style.display === 'none') {
+    optionsLinkContainer.style.display = 'block';
+  } else {
+    optionsLinkContainer.style.display = 'none';
   }
 }
 
@@ -192,6 +207,7 @@ async function loadAndDisplayData({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  optionsLinkContainer,
 }) {
   try {
     const { slackToken, appToken, channelName } = await chrome.storage.sync.get(
@@ -205,6 +221,7 @@ async function loadAndDisplayData({
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
+        optionsLinkContainer,
       });
       return;
     }
@@ -217,6 +234,7 @@ async function loadAndDisplayData({
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
+      optionsLinkContainer,
     });
   } catch (error) {
     console.error('Error processing messages:', error);
@@ -226,6 +244,7 @@ async function loadAndDisplayData({
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
+      optionsLinkContainer,
     });
   }
 }
@@ -240,6 +259,7 @@ function showConfigNeededUI({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  optionsLinkContainer,
 }) {
   updateUI({
     statusIcon,
@@ -247,6 +267,7 @@ function showConfigNeededUI({
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    optionsLinkContainer,
     state: 'config_needed',
     message: literals.popup.textConfigNeeded,
   });
@@ -277,6 +298,7 @@ async function showMergeStatus({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  optionsLinkContainer,
 }) {
   const { lastKnownMergeState } = await chrome.storage.local.get(
     'lastKnownMergeState',
@@ -289,6 +311,7 @@ async function showMergeStatus({
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
+      optionsLinkContainer,
     });
     return;
   }
@@ -322,6 +345,7 @@ async function showMergeStatus({
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    optionsLinkContainer,
     state,
     message,
     matchingMessage: lastSlackMessage,
@@ -338,6 +362,7 @@ function showLoadingUI({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  optionsLinkContainer,
 }) {
   updateUI({
     statusIcon,
@@ -345,6 +370,7 @@ function showLoadingUI({
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    optionsLinkContainer,
     state: 'loading',
   });
   statusText.textContent = literals.popup.textWaitingMessages;
@@ -360,6 +386,7 @@ function showErrorUI({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  optionsLinkContainer,
 }) {
   updateUI({
     statusIcon,
@@ -367,6 +394,7 @@ function showErrorUI({
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    optionsLinkContainer,
     state: 'disallowed',
     message: literals.popup.textErrorProcessingMessages,
   });
@@ -426,6 +454,8 @@ function setupEventListeners({
   slackChannelLink,
   matchingMessageDiv,
   featureToggle,
+  optionsLink,
+  optionsLinkContainer,
 }) {
   featureToggle.addEventListener('toggle', (event) => {
     const isChecked = event.detail.checked;
@@ -464,6 +494,15 @@ function setupEventListeners({
     }
   });
 
+  optionsLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (chrome.runtime.openOptionsPage) {
+      chrome.runtime.openOptionsPage();
+    } else {
+      window.open(chrome.runtime.getURL('options.html'));
+    }
+  });
+
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (
       namespace === 'local' &&
@@ -475,6 +514,7 @@ function setupEventListeners({
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
+        optionsLinkContainer,
       });
     }
   });

@@ -4,6 +4,7 @@ body {
   width: 400px;
   margin: 0 auto;
   padding: 0;
+  position: relative;
 }
 
 h1 {
@@ -137,4 +138,24 @@ h1 {
 
 .toggle-switch {
   margin-top: 10px;
+}
+
+#options-link-container {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  text-align: right;
+}
+
+#options-link {
+  font-size: 12px;
+  color: var(--ft-color-grey-1);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+#options-link:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
