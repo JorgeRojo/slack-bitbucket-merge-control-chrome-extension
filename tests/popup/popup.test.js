@@ -102,7 +102,7 @@ describe('popup.js', () => {
 
     // Import the module to trigger the event listener registration
     vi.resetModules();
-    require('../src/popup.js');
+    require('../../src/popup.js');
   });
 
   afterEach(() => {

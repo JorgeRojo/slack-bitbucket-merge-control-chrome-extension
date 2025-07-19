@@ -99,7 +99,7 @@ describe('Popup.js Runtime Error Handling', () => {
 
     // Import the module to trigger the event listener registration
     vi.resetModules();
-    require('../src/popup.js');
+    require('../../src/popup.js');
   });
 
   test('should handle runtime.lastError in checkCountdownStatus', async () => {
