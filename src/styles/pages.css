@@ -1,4 +1,4 @@
-@import url('./styles/base.css');
+@import url('./base.css');
 
 body {
   padding: 20px;
@@ -23,7 +23,15 @@ h2 {
   padding-bottom: 5px;
 }
 
-.option-section {
+h3 {
+  font-size: 16px;
+  font-weight: var(--ft-font-weight-bold);
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: var(--ft-color-darkest);
+}
+
+.card {
   background-color: var(--ft-color-lightest);
   padding: 20px;
   margin-bottom: 25px;
@@ -31,7 +39,7 @@ h2 {
   box-shadow: var(--ft-box-shadow-2);
 }
 
-.option-section > div {
+.card-item {
   margin-bottom: 20px;
 }
 
@@ -80,7 +88,23 @@ code {
   border-radius: 3px;
 }
 
-button {
+.text-hint {
+  font-size: 13px;
+  color: var(--ft-color-grey-1);
+  margin-top: 5px;
+}
+
+.text-small {
+  font-size: 12px;
+  color: var(--ft-color-grey-1);
+  margin-top: 5px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.btn {
   display: block;
   width: 60%;
   margin: 20px auto;
@@ -102,12 +126,127 @@ button {
     box-shadow var(--ft-transition-duration) ease-in-out;
 }
 
-button:hover {
+.btn:hover {
   background-color: var(--ft-secondary-hover-bg-color);
   box-shadow:
     0 3px 16px 0 var(--ft-secondary-hover-shadow-color),
     inset 0 1px 0 0 var(--ft-secondary-hover-border-top-color),
     inset 0 -1px 0 0 var(--ft-secondary-hover-border-bottom-color);
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.status-message {
+  margin-top: 20px;
+  font-size: 16px;
+  text-align: center;
+  padding: 10px;
+  border-radius: var(--ft-form-item-border-radius);
+  background-color: var(--ft-color-grey-3);
+  transition: all var(--ft-transition-duration) ease;
+}
+
+.status-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--ft-color-success);
+}
+
+.status-error {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--ft-color-error);
+}
+
+.link {
+  color: var(--ft-color-primary);
+  text-decoration: none;
+  font-weight: var(--ft-font-weight-bold);
+  transition: color var(--ft-transition-duration) ease;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.list {
+  padding-left: 20px;
+}
+
+.list-item {
+  margin-bottom: 15px;
+}
+
+.list-compact {
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.list-compact .list-item {
+  margin-bottom: 5px;
+}
+
+.option-section, .help-section {
+  background-color: var(--ft-color-lightest);
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 8px;
+  box-shadow: var(--ft-box-shadow-2);
+}
+
+.option-section > div {
+  margin-bottom: 20px;
+}
+
+.info-text {
+  font-size: 13px;
+  color: var(--ft-color-grey-1);
+  margin-top: 5px;
+}
+
+.sub-info-text {
+  font-size: 12px;
+  color: var(--ft-color-grey-1);
+  margin-top: 5px;
+}
+
+.help-link {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.help-link a {
+  color: var(--ft-color-primary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: var(--ft-font-weight-bold);
+  transition: color var(--ft-transition-duration) ease;
+}
+
+.help-link a:hover {
+  text-decoration: underline;
+}
+
+.help-section ol {
+  padding-left: 20px;
+}
+
+.help-section li {
+  margin-bottom: 15px;
+}
+
+.help-section ul {
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.help-section ul li {
+  margin-bottom: 5px;
 }
 
 #status {
@@ -128,21 +267,4 @@ button:hover {
 #status.error {
   background-color: rgba(231, 76, 60, 0.1);
   color: var(--ft-color-error);
-}
-
-.info-text {
-  font-size: 13px;
-  color: var(--ft-color-grey-1);
-  margin-top: 5px;
-}
-
-.sub-info-text {
-  font-size: 12px;
-  color: var(--ft-color-grey-1);
-  margin-top: 5px;
-}
-
-#ai-status {
-  margin-top: 10px;
-  font-weight: var(--ft-font-weight-bold);
 }

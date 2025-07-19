@@ -2,66 +2,72 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Slack Extension Options</title>
-    <link rel="stylesheet" href="options.css" />
+    <title>Slack-Bitbucket Merge Control Options</title>
+    <link rel="stylesheet" href="styles/pages.css" />
   </head>
   <body>
     <h1>Slack-Bitbucket Merge Control Options</h1>
 
+    <div class="text-center mb-20">
+      <a href="help.html" class="link">View Configuration & Usage Help</a>
+    </div>
+
     <h2>Slack Options</h2>
-    <div class="option-section">
-      <div>
+    <div class="card">
+      <div class="card-item">
         <label for="slackToken">Slack Bot User OAuth Token:</label>
-        <p class="info-text">
+        <p class="text-hint">
           You can generate a token for your Slack app
-          <a href="https://api.slack.com/apps" target="_blank">here</a>.
+          <a href="https://api.slack.com/apps" target="_blank" class="link"
+            >here</a
+          >.
         </p>
         <input type="password" id="slackToken" />
       </div>
-      <div>
+      <div class="card-item">
         <label for="appToken">Slack App-Level Token (xapp-):</label>
-        <p class="info-text">This token is used for Socket Mode connections.</p>
+        <p class="text-hint">This token is used for Socket Mode connections.</p>
         <input type="password" id="appToken" />
       </div>
-      <div>
+      <div class="card-item">
         <label for="channelName">Channel Name:</label>
         <input type="text" id="channelName" />
       </div>
 
-      <div>
+      <div class="card-item">
         <label for="exceptionPhrases"
           >Allowed with Exception Phrases (one per line):</label
         >
-        <p class="info-text">
+        <p class="text-hint">
           Phrases indicating that merging is generally disallowed but with
           specific exceptions.
         </p>
         <textarea id="exceptionPhrases" rows="7"></textarea>
-        <p class="sub-info-text">
+        <p class="text-small">
           Searched first. If found, merging will be allowed with exceptions,
           overriding disallowed phrases.
         </p>
       </div>
 
-      <div>
+      <div class="card-item">
         <label for="disallowedPhrases"
           >Disallowed Phrases (one per line):</label
         >
-        <p class="info-text">Phrases indicating that merging is not allowed.</p>
+        <p class="text-hint">Phrases indicating that merging is not allowed.</p>
         <textarea id="disallowedPhrases" rows="7"></textarea>
-        <p class="sub-info-text">
+        <p class="text-small">
           Searched second. If found, merging will be disallowed unless an
           exception phrase is also present.
         </p>
       </div>
 
-      <div>
+      <div class="card-item">
         <label for="allowedPhrases">Allowed Phrases (one per line):</label>
-        <p class="info-text">
+        <p class="text-hint">
           Phrases indicating that merging is generally allowed.
         </p>
         <textarea id="allowedPhrases" rows="7"></textarea>
-        <p class="sub-info-text">
+        <p class="text-small">
           Searched last. If no exception or disallowed phrases are found, these
           will determine if merging is allowed.
         </p>
@@ -69,10 +75,10 @@
     </div>
 
     <h2>Bitbucket Options</h2>
-    <div class="option-section">
-      <div>
+    <div class="card">
+      <div class="card-item">
         <label for="bitbucketUrl">Bitbucket Pull Request URL Pattern:</label>
-        <p class="info-text">
+        <p class="text-hint">
           Use '*' as a wildcard for dynamic parts of the URL.<br />Example:
           <code
             >https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code
@@ -80,9 +86,9 @@
         </p>
         <input type="text" id="bitbucketUrl" />
       </div>
-      <div>
+      <div class="card-item">
         <label for="mergeButtonSelector">Merge Button DOM Selector:</label>
-        <p class="info-text">
+        <p class="text-hint">
           The CSS selector used to find the merge button on Bitbucket pull
           request pages.<br />Example: <code>.merge-button</code>
         </p>
@@ -90,9 +96,8 @@
       </div>
     </div>
 
-    <button id="save" class="secondary-button">Save</button>
-    <div id="status"></div>
-    <div id="ai-status"></div>
+    <div id="status" class="status-message"></div>
+    <button id="save" class="btn">Save</button>
     <script type="module" src="options.js"></script>
   </body>
 </html>
