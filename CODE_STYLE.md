@@ -277,6 +277,8 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 
 ### Testing Approach
 
+[Test README](./tests/README.md)
+
 - **Prefer Integration Testing**: Test the behavior of the code through its public interfaces rather than testing internal functions directly.
 
   ```javascript
@@ -301,21 +303,6 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 
   // Avoid: Redefining the entire chrome object in each test file
   global.chrome = { ... };
-  ```
-
-        dispatch: (message) => {
-          // Simulate message dispatch to listeners
-          const listeners = chrome.runtime.onMessage.addListener.mock.calls.map(
-            (call) => call[0],
-          );
-          listeners.forEach((listener) => listener(message, {}, () => {}));
-        },
-      },
-
-  },
-  };
-
-  ```
 
   ```
 
@@ -336,6 +323,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   ```
 
 - **Use Realistic Test Data**: Create test data that closely resembles real-world scenarios.
+
   ```javascript
   const mockMessages = [
     {
