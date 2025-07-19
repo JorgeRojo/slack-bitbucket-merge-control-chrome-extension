@@ -1,4 +1,4 @@
-import { SLACK_BASE_URL } from './constants.js';
+import { SLACK_BASE_URL, MERGE_STATUS, APP_STATUS } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
 
@@ -83,15 +83,15 @@ function updateContentByState({
   message,
 }) {
   switch (state) {
-    case 'allowed':
+    case MERGE_STATUS.ALLOWED:
       statusIcon.textContent = literals.popup.emojiAllowed;
       statusText.textContent = message;
       break;
-    case 'disallowed':
+    case MERGE_STATUS.DISALLOWED:
       statusIcon.textContent = literals.popup.emojiDisallowed;
       statusText.textContent = message;
       break;
-    case 'exception':
+    case MERGE_STATUS.EXCEPTION:
       statusIcon.textContent = literals.popup.emojiException;
       statusText.textContent = message;
       slackChannelLink.style.display = 'block';
@@ -323,7 +323,7 @@ async function showMergeStatus({
   } = lastKnownMergeState;
 
   // Si el appStatus es CHANNEL_NOT_FOUND, mostrar mensaje específico
-  if (appStatus === 'channel_not_found') {
+  if (appStatus === APP_STATUS.CHANNEL_NOT_FOUND) {
     updateUI({
       statusIcon,
       statusText,
@@ -331,27 +331,27 @@ async function showMergeStatus({
       slackChannelLink,
       matchingMessageDiv,
       optionsLinkContainer,
-      state: 'disallowed',
+      state: MERGE_STATUS.DISALLOWED,
       message: literals.popup.textChannelNotFound,
     });
     return;
   }
 
   const stateUIMap = {
-    exception: {
-      state: 'exception',
+    [MERGE_STATUS.EXCEPTION]: {
+      state: MERGE_STATUS.EXCEPTION,
       message: literals.popup.textAllowedWithExceptions,
     },
-    allowed: {
-      state: 'allowed',
+    [MERGE_STATUS.ALLOWED]: {
+      state: MERGE_STATUS.ALLOWED,
       message: literals.popup.textMergeAllowed,
     },
-    disallowed: {
-      state: 'disallowed',
+    [MERGE_STATUS.DISALLOWED]: {
+      state: MERGE_STATUS.DISALLOWED,
       message: literals.popup.textMergeNotAllowed,
     },
     default: {
-      state: 'unknown',
+      state: MERGE_STATUS.UNKNOWN,
       message: literals.popup.textCouldNotDetermineStatus,
     },
   };
@@ -390,7 +390,7 @@ function showLoadingUI({
     slackChannelLink,
     matchingMessageDiv,
     optionsLinkContainer,
-    state: 'loading',
+    state: MERGE_STATUS.LOADING,
   });
   statusText.textContent = literals.popup.textWaitingMessages;
 }
@@ -414,7 +414,7 @@ function showErrorUI({
     slackChannelLink,
     matchingMessageDiv,
     optionsLinkContainer,
-    state: 'disallowed',
+    state: MERGE_STATUS.DISALLOWED,
     message: literals.popup.textErrorProcessingMessages,
   });
 }
