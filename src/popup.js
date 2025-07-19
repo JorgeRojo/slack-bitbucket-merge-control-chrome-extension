@@ -96,7 +96,7 @@ function updateContentByState({
       statusText.textContent = message;
       slackChannelLink.style.display = 'block';
       break;
-    case 'config_needed':
+    case MERGE_STATUS.CONFIG_NEEDED:
       statusIcon.textContent = literals.popup.emojiUnknown;
       statusText.textContent = message;
       openOptionsButton.style.display = 'block';
@@ -268,7 +268,7 @@ function showConfigNeededUI({
     slackChannelLink,
     matchingMessageDiv,
     optionsLinkContainer,
-    state: 'config_needed',
+    state: MERGE_STATUS.CONFIG_NEEDED,
     message: literals.popup.textConfigNeeded,
   });
 }

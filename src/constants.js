@@ -62,6 +62,7 @@ export const MERGE_STATUS = {
   EXCEPTION: 'exception',
   LOADING: 'loading',
   ERROR: 'error',
+  CONFIG_NEEDED: 'config_needed',
 };
 
 // Constants for WebSocket management
