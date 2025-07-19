@@ -297,10 +297,11 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   beforeEach(() => {
     vi.spyOn(chrome.storage.local, 'get').mockImplementation(() => Promise.resolve({...}));
   });
-  
+
   // Avoid: Redefining the entire chrome object in each test file
   global.chrome = { ... };
   ```
+
         dispatch: (message) => {
           // Simulate message dispatch to listeners
           const listeners = chrome.runtime.onMessage.addListener.mock.calls.map(
@@ -309,8 +310,12 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
           listeners.forEach((listener) => listener(message, {}, () => {}));
         },
       },
-    },
+
+  },
   };
+
+  ```
+
   ```
 
 - **Test State Changes**: Focus on testing the resulting state changes rather than implementation details.

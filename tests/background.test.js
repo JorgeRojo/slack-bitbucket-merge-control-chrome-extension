@@ -1,35 +1,5 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 
-// Mock chrome APIs
-global.chrome = {
-  action: {
-    setIcon: vi.fn(),
-  },
-  storage: {
-    sync: {
-      get: vi.fn(),
-    },
-    local: {
-      get: vi.fn(),
-      set: vi.fn(),
-    },
-  },
-  runtime: {
-    sendMessage: vi.fn(),
-  },
-  tabs: {
-    sendMessage: vi.fn(),
-  },
-  scripting: {
-    registerContentScripts: vi.fn(),
-    unregisterContentScripts: vi.fn(),
-  },
-  alarms: {
-    create: vi.fn(),
-    clear: vi.fn(),
-  },
-};
-
 // Dado que ya no podemos importar directamente las funciones del background.js,
 // vamos a crear versiones de prueba de las funciones que necesitamos probar
 
@@ -341,6 +311,7 @@ describe('determineMergeStatus', () => {
 describe('updateExtensionIcon', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(chrome.action, 'setIcon');
   });
 
   test('should set allowed icon for allowed status', () => {
