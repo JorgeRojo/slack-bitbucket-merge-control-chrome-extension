@@ -308,9 +308,10 @@ async function updateContentScriptMergeState(channelName) {
 
   if (
     appStatus &&
-    (appStatus === APP_STATUS.UNKNOWN_ERROR || 
-     appStatus === APP_STATUS.CONFIG_ERROR || 
-     appStatus === APP_STATUS.TOKEN_ERROR)
+    (appStatus === APP_STATUS.UNKNOWN_ERROR ||
+      appStatus === APP_STATUS.CONFIG_ERROR ||
+      appStatus === APP_STATUS.TOKEN_ERROR ||
+      appStatus === APP_STATUS.WEB_SOCKET_ERROR)
   ) {
     mergeStatusForContentScript = 'allowed';
   }
@@ -441,14 +442,14 @@ async function connectToSlackSocketMode() {
 
     rtmWebSocket.onclose = () => {
       updateExtensionIcon('error');
-      chrome.storage.local.set({ appStatus: APP_STATUS.UNKNOWN_ERROR });
+      chrome.storage.local.set({ appStatus: APP_STATUS.WEB_SOCKET_ERROR });
       console.log('WebSocket closed. Scheduling reconnection...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
     rtmWebSocket.onerror = (error) => {
       updateExtensionIcon('error');
-      chrome.storage.local.set({ appStatus: APP_STATUS.UNKNOWN_ERROR });
+      chrome.storage.local.set({ appStatus: APP_STATUS.WEB_SOCKET_ERROR });
       console.error('WebSocket error:', error);
       rtmWebSocket.close();
     };
@@ -505,6 +506,7 @@ async function checkWebSocketConnection() {
       console.log('Ping sent to Slack server');
     } catch (error) {
       console.error('Error sending ping:', error);
+      chrome.storage.local.set({ appStatus: APP_STATUS.WEB_SOCKET_ERROR });
       rtmWebSocket.close();
       setTimeout(connectToSlackSocketMode, 1000);
     }

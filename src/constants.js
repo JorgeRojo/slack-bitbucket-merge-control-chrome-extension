@@ -50,6 +50,7 @@ export const APP_STATUS = {
   UNKNOWN_ERROR: 'UNKNOWN_ERROR',
   TOKEN_ERROR: 'TOKEN_TOKEN_ERROR',
   CONFIG_ERROR: 'CONFIG_ERROR',
+  WEB_SOCKET_ERROR: 'WEB_SOCKET_ERROR',
 };
 
 // Constants for WebSocket management
