@@ -55,33 +55,10 @@ async function updateContentScriptMergeState(channelName) {
   });
 }
 
-// Mock the chrome API
-global.chrome = {
-  storage: {
-    local: {
-      get: vi.fn(),
-      set: vi.fn(),
-    },
-    sync: {
-      get: vi.fn(),
-    },
-  },
-  action: {
-    setIcon: vi.fn(),
-  },
-  tabs: {
-    sendMessage: vi.fn(),
-  },
-  runtime: {
-    sendMessage: vi.fn(),
-  },
-};
-
 describe('App Status Error Handling', () => {
   beforeEach(() => {
-    vi.resetAllMocks();
-
-    chrome.storage.local.get.mockImplementation((keys) => {
+    // Reset mocks before each test
+    vi.spyOn(chrome.storage.local, 'get').mockImplementation((keys) => {
       if (Array.isArray(keys) && keys.includes('messages')) {
         return Promise.resolve({
           messages: [],
@@ -92,7 +69,7 @@ describe('App Status Error Handling', () => {
       return Promise.resolve({});
     });
 
-    chrome.storage.sync.get.mockImplementation(() => {
+    vi.spyOn(chrome.storage.sync, 'get').mockImplementation(() => {
       return Promise.resolve({
         allowedPhrases: 'allowed to merge',
         disallowedPhrases: 'not allowed to merge',
@@ -100,8 +77,12 @@ describe('App Status Error Handling', () => {
       });
     });
 
-    chrome.storage.local.set.mockImplementation(() => Promise.resolve());
-    chrome.runtime.sendMessage.mockImplementation(() => Promise.resolve());
+    vi.spyOn(chrome.storage.local, 'set').mockImplementation(() =>
+      Promise.resolve(),
+    );
+    vi.spyOn(chrome.runtime, 'sendMessage').mockImplementation(() =>
+      Promise.resolve(),
+    );
   });
 
   test('should set merge status to ERROR when app status is UNKNOWN_ERROR', async () => {

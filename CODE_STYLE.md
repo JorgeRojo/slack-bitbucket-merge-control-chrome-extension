@@ -277,36 +277,44 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 ### Testing Approach
 
 - **Prefer Integration Testing**: Test the behavior of the code through its public interfaces rather than testing internal functions directly.
+
   ```javascript
   // Good: Test through message passing (integration approach)
-  await chrome.runtime.sendMessage({ 
-    action: 'updateContentScriptMergeState', 
-    channelName: 'test-channel' 
+  await chrome.runtime.sendMessage({
+    action: 'updateContentScriptMergeState',
+    channelName: 'test-channel'
   });
-  
+
   // Avoid: Creating duplicates of internal functions for testing
   const updateContentScriptMergeState = function() { ... };
   await updateContentScriptMergeState('test-channel');
   ```
 
-- **Mock Chrome API**: Create comprehensive mocks of the Chrome API that simulate the actual behavior.
+- **Use Global Chrome API Mocks**: Leverage the global Chrome API mocks defined in the test setup file instead of redefining them in each test file.
+
   ```javascript
-  global.chrome = {
-    runtime: {
-      sendMessage: vi.fn(),
-      onMessage: {
-        addListener: vi.fn(),
+  // Good: Use spies on the global mock
+  beforeEach(() => {
+    vi.spyOn(chrome.storage.local, 'get').mockImplementation(() => Promise.resolve({...}));
+  });
+  
+  // Avoid: Redefining the entire chrome object in each test file
+  global.chrome = { ... };
+  ```
         dispatch: (message) => {
           // Simulate message dispatch to listeners
-          const listeners = chrome.runtime.onMessage.addListener.mock.calls.map(call => call[0]);
-          listeners.forEach(listener => listener(message, {}, () => {}));
-        }
-      }
-    }
+          const listeners = chrome.runtime.onMessage.addListener.mock.calls.map(
+            (call) => call[0],
+          );
+          listeners.forEach((listener) => listener(message, {}, () => {}));
+        },
+      },
+    },
   };
   ```
 
 - **Test State Changes**: Focus on testing the resulting state changes rather than implementation details.
+
   ```javascript
   // Good: Test the resulting state
   expect(chrome.storage.local.set).toHaveBeenCalledWith(
@@ -316,7 +324,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
       }),
     }),
   );
-  
+
   // Avoid: Testing implementation details
   expect(someInternalFunction).toHaveBeenCalledWith(...);
   ```
@@ -325,10 +333,10 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   ```javascript
   const mockMessages = [
     {
-      text: "not allowed to merge today",
-      user: "U12345",
-      ts: "1609459200.000100"
-    }
+      text: 'not allowed to merge today',
+      user: 'U12345',
+      ts: '1609459200.000100',
+    },
   ];
   ```
 
