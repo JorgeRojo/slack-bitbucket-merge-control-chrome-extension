@@ -13,6 +13,7 @@ import {
   WEBSOCKET_CHECK_INTERVAL,
   WEBSOCKET_CHECK_ALARM,
   WEBSOCKET_MAX_AGE,
+  APP_STATUS,
 } from './constants.js';
 
 let bitbucketTabId = null;
@@ -248,7 +249,7 @@ async function handleSlackApiError(error) {
     errorMessage.includes('not_in_channel')
   ) {
     await chrome.storage.local.set({
-      appStatus: 'UNKNOWN_ERROR',
+      appStatus: APP_STATUS.UNKNOWN_ERROR,
       messages: [],
       channelId: null,
     });
@@ -257,12 +258,12 @@ async function handleSlackApiError(error) {
     errorMessage.includes('token_revoked')
   ) {
     await chrome.storage.local.set({
-      appStatus: 'TOKEN_TOKEN_ERROR',
+      appStatus: APP_STATUS.TOKEN_ERROR,
       messages: [],
     });
   } else {
     await chrome.storage.local.set({
-      appStatus: 'UNKNOWN_ERROR',
+      appStatus: APP_STATUS.UNKNOWN_ERROR,
       messages: [],
     });
   }
@@ -307,7 +308,9 @@ async function updateContentScriptMergeState(channelName) {
 
   if (
     appStatus &&
-    (appStatus.includes('ERROR') || appStatus.includes('TOKEN'))
+    (appStatus === APP_STATUS.UNKNOWN_ERROR || 
+     appStatus === APP_STATUS.CONFIG_ERROR || 
+     appStatus === APP_STATUS.TOKEN_ERROR)
   ) {
     mergeStatusForContentScript = 'allowed';
   }
@@ -377,7 +380,7 @@ async function connectToSlackSocketMode() {
 
   if (!slackToken || !appToken || !channelName) {
     await chrome.storage.local.set({
-      appStatus: 'CONFIG_ERROR',
+      appStatus: APP_STATUS.CONFIG_ERROR,
       messages: [],
     });
     updateExtensionIcon('default');
@@ -415,7 +418,7 @@ async function connectToSlackSocketMode() {
 
     rtmWebSocket.onopen = () => {
       chrome.storage.local.set({
-        appStatus: 'OK',
+        appStatus: APP_STATUS.OK,
         lastWebSocketConnectTime: Date.now(),
       });
       console.log('WebSocket successfully connected');
@@ -438,14 +441,14 @@ async function connectToSlackSocketMode() {
 
     rtmWebSocket.onclose = () => {
       updateExtensionIcon('error');
-      chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
+      chrome.storage.local.set({ appStatus: APP_STATUS.UNKNOWN_ERROR });
       console.log('WebSocket closed. Scheduling reconnection...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
     rtmWebSocket.onerror = (error) => {
       updateExtensionIcon('error');
-      chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
+      chrome.storage.local.set({ appStatus: APP_STATUS.UNKNOWN_ERROR });
       console.error('WebSocket error:', error);
       rtmWebSocket.close();
     };
