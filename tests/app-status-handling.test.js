@@ -5,7 +5,6 @@
 import { describe, beforeEach, test, expect, vi } from 'vitest';
 import { APP_STATUS, MERGE_STATUS } from '../src/constants';
 
-// Mock chrome API
 global.chrome = {
   storage: {
     local: {
@@ -24,7 +23,6 @@ global.chrome = {
   },
 };
 
-// Simplified implementation of updateContentScriptMergeState
 async function updateContentScriptMergeState(channelName) {
   const { appStatus, featureEnabled } = await chrome.storage.local.get([
     'messages',
@@ -32,18 +30,15 @@ async function updateContentScriptMergeState(channelName) {
     'featureEnabled',
   ]);
 
-  // Mock the behavior of getPhrasesFromStorage
   await chrome.storage.sync.get([
     'allowedPhrases',
     'disallowedPhrases',
     'exceptionPhrases',
   ]);
 
-  // Simplified determineMergeStatus
   let mergeStatusForContentScript = MERGE_STATUS.UNKNOWN;
   let matchingMessageForContentScript = null;
 
-  // This is the key part we're testing - handling of error statuses
   const errorStatuses = [
     APP_STATUS.UNKNOWN_ERROR,
     APP_STATUS.CONFIG_ERROR,
@@ -55,7 +50,6 @@ async function updateContentScriptMergeState(channelName) {
     mergeStatusForContentScript = MERGE_STATUS.ERROR;
   }
 
-  // Set the merge state in storage
   await chrome.storage.local.set({
     lastKnownMergeState: {
       isMergeDisabled:
@@ -71,10 +65,8 @@ async function updateContentScriptMergeState(channelName) {
 
 describe('App Status Error Handling', () => {
   beforeEach(() => {
-    // Reset all mocks
     vi.resetAllMocks();
 
-    // Mock storage.local.get to return different app statuses
     chrome.storage.local.get.mockImplementation((keys) => {
       if (Array.isArray(keys) && keys.includes('messages')) {
         return Promise.resolve({
@@ -86,7 +78,6 @@ describe('App Status Error Handling', () => {
       return Promise.resolve({});
     });
 
-    // Mock storage.sync.get for phrases
     chrome.storage.sync.get.mockImplementation(() => {
       return Promise.resolve({
         allowedPhrases: 'allowed to merge',
@@ -95,12 +86,10 @@ describe('App Status Error Handling', () => {
       });
     });
 
-    // Mock storage.local.set
     chrome.storage.local.set.mockImplementation(() => Promise.resolve());
   });
 
   test('should set merge status to ERROR when app status is UNKNOWN_ERROR', async () => {
-    // Setup
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
@@ -109,10 +98,8 @@ describe('App Status Error Handling', () => {
       });
     });
 
-    // Execute
     await updateContentScriptMergeState('test-channel');
 
-    // Verify
     expect(chrome.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({
         lastKnownMergeState: expect.objectContaining({
@@ -123,7 +110,6 @@ describe('App Status Error Handling', () => {
   });
 
   test('should set merge status to ERROR when app status is CONFIG_ERROR', async () => {
-    // Setup
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
@@ -132,10 +118,8 @@ describe('App Status Error Handling', () => {
       });
     });
 
-    // Execute
     await updateContentScriptMergeState('test-channel');
 
-    // Verify
     expect(chrome.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({
         lastKnownMergeState: expect.objectContaining({
@@ -146,7 +130,6 @@ describe('App Status Error Handling', () => {
   });
 
   test('should set merge status to ERROR when app status is TOKEN_ERROR', async () => {
-    // Setup
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
@@ -155,10 +138,8 @@ describe('App Status Error Handling', () => {
       });
     });
 
-    // Execute
     await updateContentScriptMergeState('test-channel');
 
-    // Verify
     expect(chrome.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({
         lastKnownMergeState: expect.objectContaining({
@@ -169,7 +150,6 @@ describe('App Status Error Handling', () => {
   });
 
   test('should set merge status to ERROR when app status is WEB_SOCKET_ERROR', async () => {
-    // Setup
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
@@ -178,10 +158,8 @@ describe('App Status Error Handling', () => {
       });
     });
 
-    // Execute
     await updateContentScriptMergeState('test-channel');
 
-    // Verify
     expect(chrome.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({
         lastKnownMergeState: expect.objectContaining({
@@ -192,7 +170,6 @@ describe('App Status Error Handling', () => {
   });
 
   test('should not change merge status when app status is OK', async () => {
-    // Setup
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
@@ -201,10 +178,8 @@ describe('App Status Error Handling', () => {
       });
     });
 
-    // Execute
     await updateContentScriptMergeState('test-channel');
 
-    // Verify
     expect(chrome.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({
         lastKnownMergeState: expect.objectContaining({
