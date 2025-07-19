@@ -15,6 +15,18 @@ export const literals = {
     textChannelNotFound: 'Channel not found or bot is not in channel.',
     textMatchingMessagePrefix: 'Matching message: "',
     textCouldNotDetermine: 'Could not determine',
+
+    // Detailed error messages
+    errorDetails: {
+      slackTokenMissing:
+        'Slack Bot Token is missing. Please add it in the options page.',
+      appTokenMissing:
+        'Slack App Token is missing. Please add it in the options page.',
+      channelNameMissing:
+        'Channel name is missing. Please add it in the options page.',
+      configurationIncomplete:
+        'Configuration is incomplete. Please check all required fields in the options page.',
+    },
   },
   options: {
     textOptionsSaved: 'Options saved.',

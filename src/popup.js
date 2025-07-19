@@ -250,7 +250,7 @@ async function loadAndDisplayData({
 }
 
 /**
- * Muestra la UI de configuración necesaria
+ * Muestra la UI de configuración necesaria con mensajes de error detallados
  * @param {Object} elements - Elementos de la UI
  */
 function showConfigNeededUI({
@@ -261,16 +261,72 @@ function showConfigNeededUI({
   matchingMessageDiv,
   optionsLinkContainer,
 }) {
-  updateUI({
-    statusIcon,
-    statusText,
-    openOptionsButton,
-    slackChannelLink,
-    matchingMessageDiv,
-    optionsLinkContainer,
-    state: MERGE_STATUS.CONFIG_NEEDED,
-    message: literals.popup.textConfigNeeded,
-  });
+  // Crear un div para mostrar mensajes de error detallados
+  const errorDetailsDiv = document.createElement('div');
+  errorDetailsDiv.id = 'error-details';
+  errorDetailsDiv.className = 'error-details';
+
+  // Obtener la configuración actual
+  chrome.storage.sync.get(
+    ['slackToken', 'appToken', 'channelName'],
+    (result) => {
+      const { slackToken, appToken, channelName } = result;
+
+      // Crear una lista de errores
+      const errors = [];
+
+      if (!slackToken) {
+        errors.push(literals.popup.errorDetails.slackTokenMissing);
+      }
+
+      if (!appToken) {
+        errors.push(literals.popup.errorDetails.appTokenMissing);
+      }
+
+      if (!channelName) {
+        errors.push(literals.popup.errorDetails.channelNameMissing);
+      }
+
+      // Si no hay errores específicos, mostrar mensaje genérico
+      if (errors.length === 0) {
+        errors.push(literals.popup.errorDetails.configurationIncomplete);
+      }
+
+      // Crear el contenido HTML para los errores
+      errorDetailsDiv.innerHTML = `
+      <h3>Configuration Issues:</h3>
+      <ul>
+        ${errors.map((error) => `<li>${error}</li>`).join('')}
+      </ul>
+    `;
+
+      // Añadir el div de errores al DOM
+      const popupContent = document.querySelector('.popup-content');
+
+      // Eliminar el div de errores anterior si existe
+      const existingErrorDetails = document.getElementById('error-details');
+      if (existingErrorDetails) {
+        existingErrorDetails.remove();
+      }
+
+      // Añadir el nuevo div de errores
+      if (popupContent) {
+        popupContent.appendChild(errorDetailsDiv);
+      }
+
+      // Actualizar la UI
+      updateUI({
+        statusIcon,
+        statusText,
+        openOptionsButton,
+        slackChannelLink,
+        matchingMessageDiv,
+        optionsLinkContainer,
+        state: MERGE_STATUS.CONFIG_NEEDED,
+        message: literals.popup.textConfigNeeded,
+      });
+    },
+  );
 }
 
 /**
