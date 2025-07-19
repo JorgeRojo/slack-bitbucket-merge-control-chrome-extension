@@ -145,7 +145,15 @@ document.addEventListener('DOMContentLoaded', function () {
             statusDiv.textContent = '';
             statusDiv.className = '';
           }, 2000); // Clear status message after 2 seconds
+
+          // Reconectar a Slack y recalcular appStatus
           chrome.runtime.sendMessage({ action: 'reconnectSlack' });
+
+          // Forzar la recarga de mensajes para recalcular appStatus
+          chrome.runtime.sendMessage({
+            action: 'fetchNewMessages',
+            channelName: channelName,
+          });
         },
       );
     } else {

@@ -582,12 +582,21 @@ const messageHandlers = {
     if (slackToken && channelName) {
       try {
         const channelId = await resolveChannelId(slackToken, channelName);
-        await chrome.storage.local.set({ messages: [] });
+        await chrome.storage.local.set({
+          messages: [],
+          appStatus: APP_STATUS.OK, // Establecer appStatus a OK cuando se cambia el canal exitosamente
+        });
         await fetchAndStoreMessages(slackToken, channelId);
         await updateContentScriptMergeState(channelName);
       } catch (error) {
         await handleSlackApiError(error);
       }
+    } else {
+      // Si no hay token o nombre de canal, establecer error de configuración
+      await chrome.storage.local.set({
+        appStatus: APP_STATUS.CONFIG_ERROR,
+        messages: [],
+      });
     }
   },
   reconnectSlack: () => {
