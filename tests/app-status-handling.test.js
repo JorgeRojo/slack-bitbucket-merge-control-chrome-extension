@@ -4,6 +4,7 @@
 
 import { describe, beforeEach, test, expect, vi } from 'vitest';
 import { APP_STATUS, MERGE_STATUS } from '../src/constants';
+import { updateContentScriptMergeState } from '../src/background';
 
 // Mock chrome API
 global.chrome = {
@@ -27,72 +28,18 @@ global.chrome = {
   },
 };
 
-// Mock functions that are used by updateContentScriptMergeState
-const getPhrasesFromStorage = vi.fn().mockResolvedValue({
-  currentAllowedPhrases: ['allowed to merge'],
-  currentDisallowedPhrases: ['not allowed to merge'],
-  currentExceptionPhrases: ['except'],
+// Mock the functions that updateContentScriptMergeState depends on
+vi.mock('../src/background', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    determineMergeStatus: vi.fn().mockReturnValue({
+      status: MERGE_STATUS.UNKNOWN,
+      message: null,
+    }),
+    updateExtensionIcon: vi.fn(),
+  };
 });
-
-const determineMergeStatus = vi.fn().mockReturnValue({
-  status: MERGE_STATUS.UNKNOWN,
-  message: null,
-});
-
-const updateExtensionIcon = vi.fn();
-
-// Create a simplified version of updateContentScriptMergeState for testing
-async function updateContentScriptMergeState(channelName) {
-  const {
-    messages: currentMessages = [],
-    appStatus,
-    featureEnabled,
-  } = await chrome.storage.local.get([
-    'messages',
-    'appStatus',
-    'featureEnabled',
-  ]);
-
-  await getPhrasesFromStorage();
-
-  let mergeStatusForContentScript = MERGE_STATUS.UNKNOWN;
-  let matchingMessageForContentScript = null;
-
-  if (currentMessages.length > 0) {
-    const { status, message } = determineMergeStatus({
-      messages: currentMessages,
-      allowedPhrases: [],
-      disallowedPhrases: [],
-      exceptionPhrases: [],
-    });
-    mergeStatusForContentScript = status;
-    matchingMessageForContentScript = message;
-    updateExtensionIcon(status);
-  }
-
-  const errorStatuses = [
-    APP_STATUS.UNKNOWN_ERROR,
-    APP_STATUS.CONFIG_ERROR,
-    APP_STATUS.TOKEN_ERROR,
-    APP_STATUS.WEB_SOCKET_ERROR,
-  ];
-
-  if (appStatus && errorStatuses.includes(appStatus)) {
-    mergeStatusForContentScript = MERGE_STATUS.ERROR;
-  }
-
-  await chrome.storage.local.set({
-    lastKnownMergeState: {
-      isMergeDisabled:
-        mergeStatusForContentScript === MERGE_STATUS.DISALLOWED ||
-        mergeStatusForContentScript === MERGE_STATUS.EXCEPTION,
-      mergeStatus: mergeStatusForContentScript,
-      lastSlackMessage: matchingMessageForContentScript,
-      channelName: channelName,
-      featureEnabled: featureEnabled !== false,
-    },
-  });
-}
 
 describe('App Status Error Handling', () => {
   beforeEach(() => {
@@ -109,6 +56,15 @@ describe('App Status Error Handling', () => {
         });
       }
       return Promise.resolve({});
+    });
+
+    // Mock storage.sync.get for phrases
+    chrome.storage.sync.get.mockImplementation(() => {
+      return Promise.resolve({
+        allowedPhrases: 'allowed to merge',
+        disallowedPhrases: 'not allowed to merge',
+        exceptionPhrases: 'except',
+      });
     });
 
     // Mock storage.local.set
