@@ -98,3 +98,7 @@ The help page provides comprehensive instructions for:
 - Configuring the Chrome Extension
 - Using the extension with Bitbucket
 - Understanding the different merge control statuses
+
+---
+
+*Documentation and UI improvements assisted by [Amazon Q](https://aws.amazon.com/q/).*
