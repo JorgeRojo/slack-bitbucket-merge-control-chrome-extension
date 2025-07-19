@@ -273,6 +273,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Don't modify code only for testing purposes, improve the mocks instead
 - Don't export functions or variables solely to make them testable
 - Aim for 80% code coverage when possible without overly complicating test logic
+- Avoid comments in code, leave only short comments in english for complex mocking
 
 ### Testing Approach
 
