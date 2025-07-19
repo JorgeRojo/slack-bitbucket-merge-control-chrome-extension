@@ -166,7 +166,7 @@ async function resolveChannelId(slackToken, channelName) {
   return channelId;
 }
 
-async function processAndStoreMessage(message, _slackToken) {
+async function processAndStoreMessage(message) {
   if (!message.ts || !message.text) {
     return;
   }
@@ -248,7 +248,7 @@ async function handleSlackApiError(error) {
     errorMessage.includes('not_in_channel')
   ) {
     await chrome.storage.local.set({
-      appStatus: 'CHANNEL_ERROR',
+      appStatus: 'UNKNOWN_ERROR',
       messages: [],
       channelId: null,
     });
@@ -418,9 +418,8 @@ async function connectToSlackSocketMode() {
         appStatus: 'OK',
         lastWebSocketConnectTime: Date.now(),
       });
-      console.log('WebSocket conectado exitosamente');
+      console.log('WebSocket successfully connected');
 
-      // Asegurarse de que la alarma esté configurada cuando la conexión se establece
       setupWebSocketCheckAlarm();
     };
 
@@ -440,69 +439,69 @@ async function connectToSlackSocketMode() {
     rtmWebSocket.onclose = () => {
       updateExtensionIcon('error');
       chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
-      console.log('WebSocket cerrado. Programando reconexión...');
+      console.log('WebSocket closed. Scheduling reconnection...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
     rtmWebSocket.onerror = (error) => {
       updateExtensionIcon('error');
       chrome.storage.local.set({ appStatus: 'UNKNOWN_ERROR' });
-      console.error('Error en WebSocket:', error);
+      console.error('WebSocket error:', error);
       rtmWebSocket.close();
     };
   } catch (error) {
-    console.error('Error al conectar con Slack:', error);
+    console.error('Error connecting to Slack:', error);
     await handleSlackApiError(error);
     await updateContentScriptMergeState(channelName);
   }
 }
 
-// Función para configurar la alarma que verifica periódicamente el estado del WebSocket
+// Function to set up the alarm that periodically checks the WebSocket status
 function setupWebSocketCheckAlarm() {
-  // Primero eliminar cualquier alarma existente con el mismo nombre
+  // First remove any existing alarm with the same name
   chrome.alarms.clear(WEBSOCKET_CHECK_ALARM, () => {
-    // Crear una nueva alarma que se ejecute periódicamente
+    // Create a new alarm that runs periodically
     chrome.alarms.create(WEBSOCKET_CHECK_ALARM, {
       periodInMinutes: WEBSOCKET_CHECK_INTERVAL,
     });
     console.log(
-      `Alarma configurada para verificar WebSocket cada ${WEBSOCKET_CHECK_INTERVAL} minutos`,
+      `Alarm set to check WebSocket every ${WEBSOCKET_CHECK_INTERVAL} minutes`,
     );
   });
 }
 
-// Función para verificar el estado del WebSocket y reconectar si es necesario
+// Function to check the WebSocket status and reconnect if necessary
 async function checkWebSocketConnection() {
-  console.log('Verificando estado de la conexión WebSocket...');
+  console.log('Checking WebSocket connection status...');
 
-  // Verificar si el WebSocket existe y está conectado
+  // Check if WebSocket exists and is connected
   if (!rtmWebSocket || rtmWebSocket.readyState !== WebSocket.OPEN) {
-    console.log('WebSocket no está conectado. Intentando reconectar...');
+    console.log('WebSocket is not connected. Attempting to reconnect...');
     connectToSlackSocketMode();
     return;
   }
 
-  // Verificar cuánto tiempo ha pasado desde la última conexión
+  // Check how much time has passed since the last connection
   const { lastWebSocketConnectTime } = await chrome.storage.local.get(
     'lastWebSocketConnectTime',
   );
   const currentTime = Date.now();
   const connectionAge = currentTime - (lastWebSocketConnectTime || 0);
 
-  // Si la conexión tiene más de WEBSOCKET_MAX_AGE, reconectar para refrescarla
+  // If the connection is older than WEBSOCKET_MAX_AGE, reconnect to refresh it
   if (connectionAge > WEBSOCKET_MAX_AGE) {
-    console.log('Conexión WebSocket antigua. Reconectando para refrescarla...');
+    console.log('Old WebSocket connection. Reconnecting to refresh it...');
     rtmWebSocket.close();
     setTimeout(connectToSlackSocketMode, 1000);
   } else {
-    console.log('Conexión WebSocket activa y reciente.');
+    console.log('WebSocket connection active and recent.');
 
-    // Enviar un ping para mantener la conexión activa
+    // Send a ping to keep the connection active
     try {
       rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
-      console.log('Ping enviado al servidor de Slack');
+      console.log('Ping sent to Slack server');
     } catch (error) {
-      console.error('Error al enviar ping:', error);
+      console.error('Error sending ping:', error);
       rtmWebSocket.close();
       setTimeout(connectToSlackSocketMode, 1000);
     }
@@ -725,7 +724,7 @@ async function notifyPopupAboutCountdown(timeLeft) {
       timeLeft,
     });
   } catch {
-    // Esta excepción es esperada cuando el popup no está abierto
+    // This exception is expected when the popup is not open
   }
 }
 
@@ -760,7 +759,7 @@ async function reactivateFeature() {
       enabled: true,
     });
   } catch {
-    // Esta excepción es esperada cuando el popup no está abierto
+    // This exception is expected when the popup is not open
   }
 
   const { channelName } = await chrome.storage.sync.get('channelName');
@@ -781,7 +780,7 @@ chrome.runtime.onInstalled.addListener(() => {
   registerBitbucketContentScript();
   checkScheduledReactivation();
 
-  // Configurar la alarma para verificar el WebSocket
+  // Set up the alarm to check the WebSocket
   setupWebSocketCheckAlarm();
 });
 
@@ -790,11 +789,11 @@ chrome.runtime.onStartup.addListener(() => {
   registerBitbucketContentScript();
   checkScheduledReactivation();
 
-  // Configurar la alarma para verificar el WebSocket
+  // Set up the alarm to check the WebSocket
   setupWebSocketCheckAlarm();
 });
 
-// Manejar eventos de alarma
+// Handle alarm events
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === WEBSOCKET_CHECK_ALARM) {
     checkWebSocketConnection();

@@ -1,5 +1,5 @@
-// Este archivo se usará para configurar el entorno de pruebas para Vitest
-// No necesitamos cambiar nada ya que Vitest puede usar el mismo setup que Jest
+// This file will be used to configure the test environment for Vitest
+// We don't need to change anything since Vitest can use the same setup as Jest
 
 global.chrome = {
   runtime: {

@@ -44,7 +44,7 @@ export const SLACK_BASE_URL = 'https://app.slack.com/client/';
 
 export const FEATURE_REACTIVATION_TIMEOUT = 1 * 60 * 1000; // 1 minute in milliseconds
 
-// Constantes para la gestión del WebSocket
+// Constants for WebSocket management
 export const RECONNECTION_DELAY_MS = 5000; // 5 segundos
 export const WEBSOCKET_CHECK_INTERVAL = 2; // 2 minutos
 export const WEBSOCKET_CHECK_ALARM = 'checkWebSocketConnection';
