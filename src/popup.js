@@ -535,3 +535,24 @@ function setupEventListeners({
     handleBackgroundMessages(request, { featureToggle });
   });
 }
+// Export functions for testing
+export {
+  updateUI,
+  updateContentByState,
+  showConfigNeededUI,
+  showMergeStatus,
+  showLoadingUI,
+  showErrorUI,
+  handleBackgroundMessages,
+  handleCountdownUpdate,
+  handleCountdownCompleted,
+  initializeToggle,
+  setupEventListeners,
+  loadAndDisplayData,
+  setupSlackChannelLink,
+  manageCountdownElement,
+  updateCountdownText,
+  updateCountdownDisplay,
+  initializeFeatureToggleState,
+  checkCountdownStatus,
+};
