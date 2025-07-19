@@ -14,6 +14,7 @@ import {
   WEBSOCKET_CHECK_ALARM,
   WEBSOCKET_MAX_AGE,
   APP_STATUS,
+  MERGE_STATUS,
 } from './constants.js';
 
 let bitbucketTabId = null;
@@ -66,47 +67,47 @@ function determineMergeStatus({
       normalizedMessageText.includes(keyword),
     );
     if (matchingExceptionPhrase) {
-      return { status: 'exception', message };
+      return { status: MERGE_STATUS.EXCEPTION, message };
     }
 
     const matchingDisallowedPhrase = normalizedDisallowedPhrases.find(
       (keyword) => normalizedMessageText.includes(keyword),
     );
     if (matchingDisallowedPhrase) {
-      return { status: 'disallowed', message };
+      return { status: MERGE_STATUS.DISALLOWED, message };
     }
 
     const matchingAllowedPhrase = normalizedAllowedPhrases.find((keyword) =>
       normalizedMessageText.includes(keyword),
     );
     if (matchingAllowedPhrase) {
-      return { status: 'allowed', message };
+      return { status: MERGE_STATUS.ALLOWED, message };
     }
   }
 
-  return { status: 'unknown', message: null };
+  return { status: MERGE_STATUS.UNKNOWN, message: null };
 }
 
 function updateExtensionIcon(status) {
   let smallIconPath, largeIconPath;
   switch (status) {
-    case 'loading':
+    case MERGE_STATUS.LOADING:
       smallIconPath = 'images/icon16.png';
       largeIconPath = 'images/icon48.png';
       break;
-    case 'allowed':
+    case MERGE_STATUS.ALLOWED:
       smallIconPath = 'images/icon16_enabled.png';
       largeIconPath = 'images/icon48_enabled.png';
       break;
-    case 'disallowed':
+    case MERGE_STATUS.DISALLOWED:
       smallIconPath = 'images/icon16_disabled.png';
       largeIconPath = 'images/icon48_disabled.png';
       break;
-    case 'exception':
+    case MERGE_STATUS.EXCEPTION:
       smallIconPath = 'images/icon16_exception.png';
       largeIconPath = 'images/icon48_exception.png';
       break;
-    case 'error':
+    case MERGE_STATUS.ERROR:
       smallIconPath = 'images/icon16_error.png';
       largeIconPath = 'images/icon48_error.png';
       break;
@@ -267,7 +268,7 @@ async function handleSlackApiError(error) {
       messages: [],
     });
   }
-  updateExtensionIcon('error');
+  updateExtensionIcon(MERGE_STATUS.ERROR);
 }
 
 async function updateContentScriptMergeState(channelName) {
@@ -292,7 +293,7 @@ async function updateContentScriptMergeState(channelName) {
     currentExceptionPhrases,
   } = await getPhrasesFromStorage();
 
-  let mergeStatusForContentScript = 'unknown';
+  let mergeStatusForContentScript = MERGE_STATUS.UNKNOWN;
   let matchingMessageForContentScript = null;
   if (currentMessages.length > 0) {
     const { status, message } = determineMergeStatus({
@@ -313,14 +314,14 @@ async function updateContentScriptMergeState(channelName) {
       appStatus === APP_STATUS.TOKEN_ERROR ||
       appStatus === APP_STATUS.WEB_SOCKET_ERROR)
   ) {
-    mergeStatusForContentScript = 'allowed';
+    mergeStatusForContentScript = MERGE_STATUS.ALLOWED;
   }
 
   await chrome.storage.local.set({
     lastKnownMergeState: {
       isMergeDisabled:
-        mergeStatusForContentScript === 'disallowed' ||
-        mergeStatusForContentScript === 'exception',
+        mergeStatusForContentScript === MERGE_STATUS.DISALLOWED ||
+        mergeStatusForContentScript === MERGE_STATUS.EXCEPTION,
       mergeStatus: mergeStatusForContentScript,
       lastSlackMessage: matchingMessageForContentScript,
       channelName: channelName,
@@ -337,12 +338,12 @@ async function updateContentScriptMergeState(channelName) {
   if (bitbucketTabId) {
     try {
       const effectiveMergeStatus =
-        featureEnabled === false ? 'allowed' : mergeStatusForContentScript;
+        featureEnabled === false ? MERGE_STATUS.ALLOWED : mergeStatusForContentScript;
       const effectiveIsMergeDisabled =
         featureEnabled === false
           ? false
-          : mergeStatusForContentScript === 'disallowed' ||
-            mergeStatusForContentScript === 'exception';
+          : mergeStatusForContentScript === MERGE_STATUS.DISALLOWED ||
+            mergeStatusForContentScript === MERGE_STATUS.EXCEPTION;
 
       await chrome.tabs.sendMessage(bitbucketTabId, {
         action: 'updateMergeButton',
@@ -384,11 +385,11 @@ async function connectToSlackSocketMode() {
       appStatus: APP_STATUS.CONFIG_ERROR,
       messages: [],
     });
-    updateExtensionIcon('default');
+    updateExtensionIcon(MERGE_STATUS.UNKNOWN);
     return;
   }
 
-  updateExtensionIcon('loading');
+  updateExtensionIcon(MERGE_STATUS.LOADING);
 
   try {
     await Promise.all([
@@ -441,14 +442,14 @@ async function connectToSlackSocketMode() {
     };
 
     rtmWebSocket.onclose = () => {
-      updateExtensionIcon('error');
+      updateExtensionIcon(MERGE_STATUS.ERROR);
       chrome.storage.local.set({ appStatus: APP_STATUS.WEB_SOCKET_ERROR });
       console.log('WebSocket closed. Scheduling reconnection...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
     rtmWebSocket.onerror = (error) => {
-      updateExtensionIcon('error');
+      updateExtensionIcon(MERGE_STATUS.ERROR);
       chrome.storage.local.set({ appStatus: APP_STATUS.WEB_SOCKET_ERROR });
       console.error('WebSocket error:', error);
       rtmWebSocket.close();
@@ -674,7 +675,7 @@ const updateMergeButtonFromLastKnownMergeState = () => {
         const finalIsMergeDisabled =
           result.featureEnabled === false ? false : isMergeDisabled;
         const finalMergeStatus =
-          result.featureEnabled === false ? 'allowed' : mergeStatus;
+          result.featureEnabled === false ? MERGE_STATUS.ALLOWED : mergeStatus;
 
         try {
           await chrome.tabs.sendMessage(bitbucketTabId, {

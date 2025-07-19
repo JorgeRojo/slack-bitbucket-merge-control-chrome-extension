@@ -53,6 +53,16 @@ export const APP_STATUS = {
   WEB_SOCKET_ERROR: 'WEB_SOCKET_ERROR',
 };
 
+// Merge status constants
+export const MERGE_STATUS = {
+  UNKNOWN: 'unknown',
+  ALLOWED: 'allowed',
+  DISALLOWED: 'disallowed',
+  EXCEPTION: 'exception',
+  LOADING: 'loading',
+  ERROR: 'error',
+};
+
 // Constants for WebSocket management
 export const RECONNECTION_DELAY_MS = 5000; // 5 seconds
 export const WEBSOCKET_CHECK_INTERVAL = 2; // 2 minutes
