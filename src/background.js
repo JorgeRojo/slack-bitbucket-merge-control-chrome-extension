@@ -307,14 +307,15 @@ async function updateContentScriptMergeState(channelName) {
     updateExtensionIcon(status);
   }
 
-  if (
-    appStatus &&
-    (appStatus === APP_STATUS.UNKNOWN_ERROR ||
-      appStatus === APP_STATUS.CONFIG_ERROR ||
-      appStatus === APP_STATUS.TOKEN_ERROR ||
-      appStatus === APP_STATUS.WEB_SOCKET_ERROR)
-  ) {
-    mergeStatusForContentScript = MERGE_STATUS.ALLOWED;
+  const errorStatuses = [
+    APP_STATUS.UNKNOWN_ERROR,
+    APP_STATUS.CONFIG_ERROR,
+    APP_STATUS.TOKEN_ERROR,
+    APP_STATUS.WEB_SOCKET_ERROR,
+  ];
+
+  if (appStatus && errorStatuses.includes(appStatus)) {
+    mergeStatusForContentScript = MERGE_STATUS.ERROR;
   }
 
   await chrome.storage.local.set({
@@ -338,7 +339,9 @@ async function updateContentScriptMergeState(channelName) {
   if (bitbucketTabId) {
     try {
       const effectiveMergeStatus =
-        featureEnabled === false ? MERGE_STATUS.ALLOWED : mergeStatusForContentScript;
+        featureEnabled === false
+          ? MERGE_STATUS.ALLOWED
+          : mergeStatusForContentScript;
       const effectiveIsMergeDisabled =
         featureEnabled === false
           ? false

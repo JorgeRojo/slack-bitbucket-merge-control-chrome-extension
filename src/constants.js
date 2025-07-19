@@ -46,11 +46,11 @@ export const FEATURE_REACTIVATION_TIMEOUT = 1 * 60 * 1000; // 1 minute in millis
 
 // Application status constants
 export const APP_STATUS = {
-  OK: 'OK',
-  UNKNOWN_ERROR: 'UNKNOWN_ERROR',
-  TOKEN_ERROR: 'TOKEN_TOKEN_ERROR',
-  CONFIG_ERROR: 'CONFIG_ERROR',
-  WEB_SOCKET_ERROR: 'WEB_SOCKET_ERROR',
+  OK: 'ok',
+  UNKNOWN_ERROR: 'unknown_error',
+  TOKEN_ERROR: 'token_error',
+  CONFIG_ERROR: 'config_error',
+  WEB_SOCKET_ERROR: 'web_socket_error',
 };
 
 // Merge status constants
