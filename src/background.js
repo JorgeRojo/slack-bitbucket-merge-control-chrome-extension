@@ -250,7 +250,7 @@ async function handleSlackApiError(error) {
     errorMessage.includes('not_in_channel')
   ) {
     await chrome.storage.local.set({
-      appStatus: APP_STATUS.UNKNOWN_ERROR,
+      appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
       messages: [],
       channelId: null,
     });
@@ -312,6 +312,7 @@ async function updateContentScriptMergeState(channelName) {
     APP_STATUS.CONFIG_ERROR,
     APP_STATUS.TOKEN_ERROR,
     APP_STATUS.WEB_SOCKET_ERROR,
+    APP_STATUS.CHANNEL_NOT_FOUND,
   ];
 
   if (appStatus && errorStatuses.includes(appStatus)) {
@@ -327,6 +328,7 @@ async function updateContentScriptMergeState(channelName) {
       lastSlackMessage: matchingMessageForContentScript,
       channelName: channelName,
       featureEnabled: featureEnabled !== false,
+      appStatus: appStatus, // Incluir appStatus en lastKnownMergeState
     },
   });
 

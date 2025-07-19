@@ -51,6 +51,7 @@ export const APP_STATUS = {
   TOKEN_ERROR: 'token_error',
   CONFIG_ERROR: 'config_error',
   WEB_SOCKET_ERROR: 'web_socket_error',
+  CHANNEL_NOT_FOUND: 'channel_not_found',
 };
 
 // Merge status constants

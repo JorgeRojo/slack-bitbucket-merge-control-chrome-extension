@@ -316,7 +316,26 @@ async function showMergeStatus({
     return;
   }
 
-  const { mergeStatus: status, lastSlackMessage } = lastKnownMergeState;
+  const {
+    mergeStatus: status,
+    lastSlackMessage,
+    appStatus,
+  } = lastKnownMergeState;
+
+  // Si el appStatus es CHANNEL_NOT_FOUND, mostrar mensaje específico
+  if (appStatus === 'channel_not_found') {
+    updateUI({
+      statusIcon,
+      statusText,
+      openOptionsButton,
+      slackChannelLink,
+      matchingMessageDiv,
+      optionsLinkContainer,
+      state: 'disallowed',
+      message: literals.popup.textChannelNotFound,
+    });
+    return;
+  }
 
   const stateUIMap = {
     exception: {
