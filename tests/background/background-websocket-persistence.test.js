@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   WEBSOCKET_CHECK_INTERVAL,
   WEBSOCKET_CHECK_ALARM,
-} from '../src/constants.js';
+} from '../../src/constants.js';
 
 global.WebSocket = class MockWebSocket {
   constructor() {
@@ -94,7 +94,7 @@ describe('WebSocket Persistence Tests', () => {
   });
 
   test('setupWebSocketCheckAlarm should clear existing alarm and create a new one', async () => {
-    const backgroundModule = await import('../src/background.js');
+    const backgroundModule = await import('../../src/background.js');
 
     if (typeof backgroundModule.setupWebSocketCheckAlarm === 'function') {
       backgroundModule.setupWebSocketCheckAlarm();
@@ -113,7 +113,7 @@ describe('WebSocket Persistence Tests', () => {
   });
 
   test('chrome.alarms.onAlarm listener should be registered', async () => {
-    await import('../src/background.js');
+    await import('../../src/background.js');
 
     expect(mockAlarms.onAlarm.addListener).toHaveBeenCalled();
   });
@@ -121,7 +121,7 @@ describe('WebSocket Persistence Tests', () => {
   test('checkWebSocketConnection should reconnect if WebSocket is not open', async () => {
     mockStorage.local.get.mockResolvedValue({});
 
-    const backgroundModule = await import('../src/background.js');
+    const backgroundModule = await import('../../src/background.js');
 
     if (typeof backgroundModule.checkWebSocketConnection === 'function') {
       backgroundModule.rtmWebSocket = null;
@@ -149,7 +149,7 @@ describe('WebSocket Persistence Tests', () => {
       json: () => Promise.resolve({ ok: true, url: 'wss://test-url' }),
     });
 
-    const backgroundModule = await import('../src/background.js');
+    const backgroundModule = await import('../../src/background.js');
 
     if (typeof backgroundModule.connectToSlackSocketMode === 'function') {
       await backgroundModule.connectToSlackSocketMode();
@@ -175,7 +175,7 @@ describe('WebSocket Persistence Tests', () => {
       },
     };
 
-    await import('../src/background.js');
+    await import('../../src/background.js');
 
     expect(mockOnInstalledCallback).toHaveBeenCalled();
     expect(mockOnStartupCallback).toHaveBeenCalled();

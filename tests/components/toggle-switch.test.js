@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import '../src/components/toggle-switch/toggle-switch.js';
+import '../../src/components/toggle-switch/toggle-switch.js';
 
 // Mock fetch for CSS loading
 global.fetch = vi.fn(() =>

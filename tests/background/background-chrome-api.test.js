@@ -4,7 +4,7 @@ import {
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
   DEFAULT_MERGE_BUTTON_SELECTOR,
-} from '../src/constants.js';
+} from '../../src/constants.js';
 
 // Mock chrome APIs
 const mockStorage = {
@@ -153,7 +153,7 @@ describe('Background Script via Chrome API', () => {
     });
 
     // Import the background script dynamically to trigger its initialization
-    await import('../src/background.js');
+    await import('../../src/background.js');
   });
 
   afterEach(() => {

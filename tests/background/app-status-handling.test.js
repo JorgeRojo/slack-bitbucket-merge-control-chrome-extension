@@ -3,7 +3,7 @@
  */
 
 import { describe, beforeEach, test, expect, vi } from 'vitest';
-import { APP_STATUS, MERGE_STATUS } from '../src/constants';
+import { APP_STATUS, MERGE_STATUS } from '../../src/constants';
 
 // Esta función es una réplica exacta de la función en background.js
 // Usamos la misma lógica para probar el comportamiento real
