@@ -5,6 +5,7 @@
 import { describe, beforeEach, test, expect, vi } from 'vitest';
 import { APP_STATUS, MERGE_STATUS } from '../src/constants';
 
+// Mock the chrome API
 global.chrome = {
   storage: {
     local: {
@@ -21,15 +22,26 @@ global.chrome = {
   tabs: {
     sendMessage: vi.fn(),
   },
+  runtime: {
+    sendMessage: vi.fn(),
+  },
 };
 
+// Esta función es una réplica exacta de la función en background.js
+// Usamos la misma lógica para probar el comportamiento real
 async function updateContentScriptMergeState(channelName) {
-  const { appStatus, featureEnabled } = await chrome.storage.local.get([
+  const {
+    // eslint-disable-next-line no-unused-vars
+    messages: _messages = [],
+    appStatus,
+    featureEnabled,
+  } = await chrome.storage.local.get([
     'messages',
     'appStatus',
     'featureEnabled',
   ]);
 
+  // Simulamos la obtención de frases desde el almacenamiento
   await chrome.storage.sync.get([
     'allowedPhrases',
     'disallowedPhrases',
@@ -60,7 +72,7 @@ async function updateContentScriptMergeState(channelName) {
       lastSlackMessage: matchingMessageForContentScript,
       channelName: channelName,
       featureEnabled: featureEnabled !== false,
-      appStatus: appStatus, // Include appStatus in lastKnownMergeState
+      appStatus: appStatus, // Incluir appStatus en lastKnownMergeState
     },
   });
 }
@@ -89,6 +101,7 @@ describe('App Status Error Handling', () => {
     });
 
     chrome.storage.local.set.mockImplementation(() => Promise.resolve());
+    chrome.runtime.sendMessage.mockImplementation(() => Promise.resolve());
   });
 
   test('should set merge status to ERROR when app status is UNKNOWN_ERROR', async () => {
@@ -191,6 +204,7 @@ describe('App Status Error Handling', () => {
     );
   });
 });
+
 test('should set merge status to ERROR when app status is CHANNEL_NOT_FOUND', async () => {
   chrome.storage.local.get.mockImplementation(() => {
     return Promise.resolve({
@@ -210,6 +224,7 @@ test('should set merge status to ERROR when app status is CHANNEL_NOT_FOUND', as
     }),
   );
 });
+
 test('should include appStatus in lastKnownMergeState', async () => {
   chrome.storage.local.get.mockImplementation(() => {
     return Promise.resolve({
