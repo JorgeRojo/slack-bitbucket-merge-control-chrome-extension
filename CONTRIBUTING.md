@@ -4,6 +4,8 @@ Thank you for your interest in contributing to this project! This document outli
 
 ## Code Style and Standards
 
+> **Important**: All contributors must follow the detailed style guidelines in [CODE_STYLE.md](./CODE_STYLE.md).
+
 ### General Guidelines
 
 - Write clean, readable, and maintainable code
