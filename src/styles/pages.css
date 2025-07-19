@@ -190,7 +190,8 @@ code {
   margin-bottom: 5px;
 }
 
-.option-section, .help-section {
+.option-section,
+.help-section {
   background-color: var(--ft-color-lightest);
   padding: 20px;
   margin-bottom: 25px;

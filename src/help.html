@@ -15,24 +15,45 @@
     <h2>Configuration</h2>
     <div class="card">
       <h3>1. Setting up your Slack App</h3>
-      <p>Before using the extension, you need to create and configure a Slack app:</p>
+      <p>
+        Before using the extension, you need to create and configure a Slack
+        app:
+      </p>
       <ol class="list">
         <li class="list-item">
           <strong>Create a Slack App:</strong>
           <ul class="list-compact">
-            <li class="list-item">Go to the <a href="https://api.slack.com/apps" target="_blank" class="link">Slack API dashboard</a></li>
-            <li class="list-item">Click "Create New App" and select "From scratch"</li>
-            <li class="list-item">Enter a name for your app and select your workspace</li>
+            <li class="list-item">
+              Go to the
+              <a href="https://api.slack.com/apps" target="_blank" class="link"
+                >Slack API dashboard</a
+              >
+            </li>
+            <li class="list-item">
+              Click "Create New App" and select "From scratch"
+            </li>
+            <li class="list-item">
+              Enter a name for your app and select your workspace
+            </li>
           </ul>
         </li>
         <li class="list-item">
           <strong>Configure Bot Permissions:</strong>
           <ul class="list-compact">
-            <li class="list-item">Navigate to <strong>OAuth & Permissions</strong> in the sidebar</li>
-            <li class="list-item">Under <strong>Bot Token Scopes</strong>, add these permissions:
+            <li class="list-item">
+              Navigate to <strong>OAuth & Permissions</strong> in the sidebar
+            </li>
+            <li class="list-item">
+              Under <strong>Bot Token Scopes</strong>, add these permissions:
               <ul class="list-compact">
-                <li class="list-item"><code>channels:history</code> (to read messages in public channels)</li>
-                <li class="list-item"><code>groups:history</code> (to read messages in private channels)</li>
+                <li class="list-item">
+                  <code>channels:history</code> (to read messages in public
+                  channels)
+                </li>
+                <li class="list-item">
+                  <code>groups:history</code> (to read messages in private
+                  channels)
+                </li>
               </ul>
             </li>
           </ul>
@@ -40,19 +61,32 @@
         <li class="list-item">
           <strong>Set up Socket Mode:</strong>
           <ul class="list-compact">
-            <li class="list-item">Go to <strong>Socket Mode</strong> in the sidebar and enable it</li>
-            <li class="list-item">This allows the extension to receive messages in real-time</li>
+            <li class="list-item">
+              Go to <strong>Socket Mode</strong> in the sidebar and enable it
+            </li>
+            <li class="list-item">
+              This allows the extension to receive messages in real-time
+            </li>
           </ul>
         </li>
         <li class="list-item">
           <strong>Configure Event Subscriptions:</strong>
           <ul class="list-compact">
-            <li class="list-item">Go to <strong>Event Subscriptions</strong> in the sidebar</li>
-            <li class="list-item">Toggle <strong>Enable Events</strong> to ON</li>
-            <li class="list-item">Under <strong>Subscribe to bot events</strong>, add:
+            <li class="list-item">
+              Go to <strong>Event Subscriptions</strong> in the sidebar
+            </li>
+            <li class="list-item">
+              Toggle <strong>Enable Events</strong> to ON
+            </li>
+            <li class="list-item">
+              Under <strong>Subscribe to bot events</strong>, add:
               <ul class="list-compact">
-                <li class="list-item"><code>message.channels</code> (for public channels)</li>
-                <li class="list-item"><code>message.groups</code> (for private channels)</li>
+                <li class="list-item">
+                  <code>message.channels</code> (for public channels)
+                </li>
+                <li class="list-item">
+                  <code>message.groups</code> (for private channels)
+                </li>
               </ul>
             </li>
           </ul>
@@ -60,55 +94,99 @@
         <li class="list-item">
           <strong>Generate Required Tokens:</strong>
           <ul class="list-compact">
-            <li class="list-item">In <strong>Basic Information</strong> → <strong>App-Level Tokens</strong>:
+            <li class="list-item">
+              In <strong>Basic Information</strong> →
+              <strong>App-Level Tokens</strong>:
               <ul class="list-compact">
                 <li class="list-item">Click "Generate Token"</li>
-                <li class="list-item">Add the <code>connections:write</code> scope</li>
-                <li class="list-item">Name your token and create it (this token starts with <code>xapp-</code>)</li>
+                <li class="list-item">
+                  Add the <code>connections:write</code> scope
+                </li>
+                <li class="list-item">
+                  Name your token and create it (this token starts with
+                  <code>xapp-</code>)
+                </li>
               </ul>
             </li>
-            <li class="list-item">In <strong>OAuth & Permissions</strong>:
+            <li class="list-item">
+              In <strong>OAuth & Permissions</strong>:
               <ul class="list-compact">
-                <li class="list-item">Click "Install to Workspace" to generate the Bot User OAuth Token (starts with <code>xoxb-</code>)</li>
+                <li class="list-item">
+                  Click "Install to Workspace" to generate the Bot User OAuth
+                  Token (starts with <code>xoxb-</code>)
+                </li>
               </ul>
             </li>
           </ul>
         </li>
         <li class="list-item">
-          <strong>IMPORTANT:</strong> After making all changes, reinstall your app to your workspace from the <strong>OAuth & Permissions</strong> page
+          <strong>IMPORTANT:</strong> After making all changes, reinstall your
+          app to your workspace from the
+          <strong>OAuth & Permissions</strong> page
         </li>
       </ol>
 
       <h3>2. Configuring the Chrome Extension</h3>
-      <p>After setting up your Slack app and installing the extension in Chrome:</p>
+      <p>
+        After setting up your Slack app and installing the extension in Chrome:
+      </p>
       <ol class="list">
         <li class="list-item">
           <strong>Access Extension Options:</strong>
           <ul class="list-compact">
-            <li class="list-item">Right-click on the extension icon in your Chrome toolbar</li>
-            <li class="list-item">Select <strong>Options</strong> from the menu</li>
+            <li class="list-item">
+              Right-click on the extension icon in your Chrome toolbar
+            </li>
+            <li class="list-item">
+              Select <strong>Options</strong> from the menu
+            </li>
           </ul>
         </li>
         <li class="list-item">
           <strong>Enter Slack Credentials:</strong>
           <ul class="list-compact">
-            <li class="list-item"><strong>Slack Bot Token</strong>: Paste your Bot User OAuth Token (xoxb-...)</li>
-            <li class="list-item"><strong>Slack App Token</strong>: Paste your App-Level Token (xapp-...)</li>
-            <li class="list-item"><strong>Channel Name</strong>: Enter the exact name of the channel to monitor (e.g., <code>general</code>, <code>my-private-channel</code>)</li>
+            <li class="list-item">
+              <strong>Slack Bot Token</strong>: Paste your Bot User OAuth Token
+              (xoxb-...)
+            </li>
+            <li class="list-item">
+              <strong>Slack App Token</strong>: Paste your App-Level Token
+              (xapp-...)
+            </li>
+            <li class="list-item">
+              <strong>Channel Name</strong>: Enter the exact name of the channel
+              to monitor (e.g., <code>general</code>,
+              <code>my-private-channel</code>)
+            </li>
           </ul>
         </li>
         <li class="list-item">
           <strong>Configure Bitbucket Integration:</strong>
           <ul class="list-compact">
-            <li class="list-item"><strong>Bitbucket Pull Request URL Pattern</strong>: Enter the URL pattern that matches your Bitbucket pull request pages
+            <li class="list-item">
+              <strong>Bitbucket Pull Request URL Pattern</strong>: Enter the URL
+              pattern that matches your Bitbucket pull request pages
               <ul class="list-compact">
-                <li class="list-item">Example: <code>https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code></li>
-                <li class="list-item">The asterisks (*) act as wildcards to match different projects, repos, and PR numbers</li>
+                <li class="list-item">
+                  Example:
+                  <code
+                    >https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code
+                  >
+                </li>
+                <li class="list-item">
+                  The asterisks (*) act as wildcards to match different
+                  projects, repos, and PR numbers
+                </li>
               </ul>
             </li>
-            <li class="list-item"><strong>Merge Button DOM Selector</strong>: Enter the CSS selector that identifies the merge button on Bitbucket pages
+            <li class="list-item">
+              <strong>Merge Button DOM Selector</strong>: Enter the CSS selector
+              that identifies the merge button on Bitbucket pages
               <ul class="list-compact">
-                <li class="list-item">Example: <code>.merge-button</code> or <code>#pull-request-merge-button</code></li>
+                <li class="list-item">
+                  Example: <code>.merge-button</code> or
+                  <code>#pull-request-merge-button</code>
+                </li>
               </ul>
             </li>
           </ul>
@@ -116,7 +194,9 @@
         <li class="list-item">
           <strong>Save Your Configuration:</strong>
           <ul class="list-compact">
-            <li class="list-item">Click the <strong>Save</strong> button to apply your settings</li>
+            <li class="list-item">
+              Click the <strong>Save</strong> button to apply your settings
+            </li>
           </ul>
         </li>
       </ol>
@@ -124,18 +204,40 @@
 
     <h2>Usage</h2>
     <div class="card">
-      <p>Once configured, the extension will receive messages in real-time from the specified channel.</p>
+      <p>
+        Once configured, the extension will receive messages in real-time from
+        the specified channel.
+      </p>
       <ul class="list">
-        <li class="list-item">Click on the extension icon in your Chrome toolbar to open the popup and view the latest messages.</li>
-        <li class="list-item">On Bitbucket pull request pages, the merge button will be enabled or disabled based on the configured phrases in Slack messages.</li>
-        <li class="list-item">The extension checks for specific phrases in the Slack messages to determine if merging is allowed:
+        <li class="list-item">
+          Click on the extension icon in your Chrome toolbar to open the popup
+          and view the latest messages.
+        </li>
+        <li class="list-item">
+          On Bitbucket pull request pages, the merge button will be enabled or
+          disabled based on the configured phrases in Slack messages.
+        </li>
+        <li class="list-item">
+          The extension checks for specific phrases in the Slack messages to
+          determine if merging is allowed:
           <ul class="list-compact">
-            <li class="list-item"><strong>Exception Phrases</strong>: Indicate that merging is generally disallowed but with specific exceptions.</li>
-            <li class="list-item"><strong>Disallowed Phrases</strong>: Indicate that merging is not allowed.</li>
-            <li class="list-item"><strong>Allowed Phrases</strong>: Indicate that merging is generally allowed.</li>
+            <li class="list-item">
+              <strong>Exception Phrases</strong>: Indicate that merging is
+              generally disallowed but with specific exceptions.
+            </li>
+            <li class="list-item">
+              <strong>Disallowed Phrases</strong>: Indicate that merging is not
+              allowed.
+            </li>
+            <li class="list-item">
+              <strong>Allowed Phrases</strong>: Indicate that merging is
+              generally allowed.
+            </li>
           </ul>
         </li>
-        <li class="list-item">The extension will display different indicators based on the merge status:
+        <li class="list-item">
+          The extension will display different indicators based on the merge
+          status:
           <ul class="list-compact">
             <li class="list-item">✅ - Merge is allowed</li>
             <li class="list-item">❌ - Merge is not allowed</li>

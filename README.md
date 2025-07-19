@@ -93,6 +93,7 @@ For detailed configuration instructions and usage information, please refer to t
 3. Click on the **View Configuration & Usage Help** link at the top of the page
 
 The help page provides comprehensive instructions for:
+
 - Setting up your Slack App
 - Configuring the Chrome Extension
 - Using the extension with Bitbucket
