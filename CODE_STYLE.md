@@ -271,6 +271,8 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 - Mock external dependencies
 - Keep tests independent of each other
 - Don't modify code only for testing purposes, improve the mocks instead
+- Don't export functions or variables solely to make them testable
+- Aim for 80% code coverage when possible without overly complicating test logic
 
 ## Documentation
 
