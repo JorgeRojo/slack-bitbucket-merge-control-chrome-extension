@@ -57,29 +57,17 @@ describe('Popup.js Runtime Error Handling', () => {
       }
     });
 
-    global.chrome = {
-      storage: {
-        sync: {
-          get: vi.fn(),
-        },
-        local: {
-          get: vi.fn(),
-          set: vi.fn(),
-        },
-        onChanged: {
-          addListener: vi.fn(),
-        },
-      },
-      runtime: {
-        sendMessage: vi.fn(),
-        openOptionsPage: vi.fn(),
-        getURL: vi.fn(() => 'chrome-extension://options.html'),
-        onMessage: {
-          addListener: vi.fn(),
-        },
-        lastError: null,
-      },
-    };
+    // Set up spies on the global chrome mock
+    vi.spyOn(chrome.storage.sync, 'get');
+    vi.spyOn(chrome.storage.local, 'get');
+    vi.spyOn(chrome.storage.local, 'set');
+    vi.spyOn(chrome.runtime, 'sendMessage');
+    vi.spyOn(chrome.runtime, 'openOptionsPage');
+    vi.spyOn(chrome.runtime, 'getURL').mockReturnValue(
+      'chrome-extension://options.html',
+    );
+    vi.spyOn(chrome.runtime.onMessage, 'addListener');
+    vi.spyOn(chrome.storage.onChanged, 'addListener');
 
     console.log = vi.fn();
 
