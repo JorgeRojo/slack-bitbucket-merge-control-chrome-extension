@@ -130,10 +130,23 @@ h1 {
   color: var(--ft-color-text);
   margin-top: 16px;
   word-wrap: break-word;
-  background-color: var(--ft-color-grey-2);
-  padding: 16px;
+  background-color: var(--ft-color-grey-4);
+  padding: 32px 16px 16px 16px;
   border-radius: var(--ft-form-item-border-radius);
-  max-width: 100%;
+  width: 100%;
+  position: relative;
+}
+
+#matching-message::before {
+  content: 'Matching message';
+  position: absolute;
+  display: block;
+  color: var(--ft-color-grey-1);
+  top: 0;
+  left: 0;
+  padding: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .toggle-switch {
