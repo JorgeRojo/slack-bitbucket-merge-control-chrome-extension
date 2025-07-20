@@ -447,7 +447,26 @@ async function connectToSlackSocketMode() {
     };
 
     rtmWebSocket.onclose = () => {
-      updateExtensionIcon(MERGE_STATUS.ERROR);
+      // No cambiamos el icono a ERROR inmediatamente, ya que podría ser una reconexión normal
+      console.log('WebSocket connection closed');
+
+      // Intentar reconectar después de un retraso
+      setTimeout(() => {
+        // Verificar si ya se ha establecido una nueva conexión
+        chrome.storage.local.get(['lastWebSocketConnectTime'], (result) => {
+          const lastConnectTime = result.lastWebSocketConnectTime || 0;
+          const timeSinceLastConnect = Date.now() - lastConnectTime;
+
+          // Si ha pasado más de 5 segundos desde la última conexión exitosa,
+          // consideramos que hay un problema y actualizamos el estado
+          if (timeSinceLastConnect > 5000) {
+            updateExtensionIcon(MERGE_STATUS.ERROR);
+            chrome.storage.local.set({
+              appStatus: APP_STATUS.WEB_SOCKET_ERROR,
+            });
+          }
+        });
+      }, RECONNECTION_DELAY_MS);
       chrome.storage.local.set({ appStatus: APP_STATUS.WEB_SOCKET_ERROR });
       console.log('WebSocket closed. Scheduling reconnection...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
@@ -584,9 +603,10 @@ const messageHandlers = {
     if (slackToken && channelName) {
       try {
         const channelId = await resolveChannelId(slackToken, channelName);
+        // Establecer appStatus a OK cuando se cambia el canal exitosamente
+        // pero no vaciar los mensajes hasta que tengamos nuevos
         await chrome.storage.local.set({
-          messages: [],
-          appStatus: APP_STATUS.OK, // Establecer appStatus a OK cuando se cambia el canal exitosamente
+          appStatus: APP_STATUS.OK,
         });
         await fetchAndStoreMessages(slackToken, channelId);
         await updateContentScriptMergeState(channelName);
@@ -601,10 +621,19 @@ const messageHandlers = {
       });
     }
   },
-  reconnectSlack: () => {
+  reconnectSlack: async () => {
+    // Obtener el estado actual antes de cerrar la conexión
+    const { appStatus } = await chrome.storage.local.get('appStatus');
+
     if (rtmWebSocket) {
       rtmWebSocket.close();
     }
+
+    // Solo establecer el estado a LOADING si no hay un error previo
+    if (!appStatus || appStatus === APP_STATUS.OK) {
+      updateExtensionIcon(MERGE_STATUS.LOADING);
+    }
+
     connectToSlackSocketMode();
   },
   bitbucketTabLoaded: async (_request, sender) => {

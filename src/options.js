@@ -135,12 +135,11 @@ document.addEventListener('DOMContentLoaded', function () {
         function () {
           statusDiv.textContent = literals.options.textOptionsSaved;
           statusDiv.className = 'status-message status-success';
-          chrome.storage.local.remove([
-            'channelId',
-            'lastFetchTs',
-            'messages',
-            'appStatus',
-          ]);
+
+          // Solo eliminamos channelId y lastFetchTs, pero mantenemos messages y appStatus
+          // hasta que se actualicen correctamente
+          chrome.storage.local.remove(['channelId', 'lastFetchTs']);
+
           setTimeout(function () {
             statusDiv.textContent = '';
             statusDiv.className = 'status-message';
