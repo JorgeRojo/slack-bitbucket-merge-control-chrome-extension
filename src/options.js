@@ -35,40 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
   );
   const statusDiv = document.getElementById('status');
 
-  channelInput.addEventListener('change', function () {
-    const channelName = channelInput.value.trim().replace(/^#/, '');
-    if (channelName) {
-      // Show a loading indicator
-      statusDiv.textContent = 'Verifying channel...';
-      statusDiv.className = 'status-message status-loading';
-
-      chrome.runtime.sendMessage({
-        action: 'fetchNewMessages',
-        channelName: channelName,
-      });
-
-      // Listen for the response to know if the channel change was successful
-      chrome.runtime.onMessage.addListener(
-        function channelChangeListener(message) {
-          if (message.action === 'channelChangeError') {
-            // If there's an error, show the message
-            statusDiv.textContent = `Error: ${message.error}`;
-            statusDiv.className = 'status-message status-error';
-
-            // Remove this listener after using it
-            chrome.runtime.onMessage.removeListener(channelChangeListener);
-
-            // Clear the message after a while
-            setTimeout(function () {
-              statusDiv.textContent = '';
-              statusDiv.className = 'status-message';
-            }, 3000);
-          }
-        },
-      );
-    }
-  });
-
   chrome.storage.sync.get(
     [
       'slackToken',
@@ -175,6 +141,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
           // First reconnect Slack to update the connection with the new tokens
           chrome.runtime.sendMessage({ action: 'reconnectSlack' });
+
+          // Set up a listener for channel change errors
+          chrome.runtime.onMessage.addListener(
+            function channelChangeListener(message) {
+              if (message.action === 'channelChangeError') {
+                // If there's an error, show the message
+                statusDiv.textContent = `Error: ${message.error}`;
+                statusDiv.className = 'status-message status-error';
+
+                // Remove this listener after using it
+                chrome.runtime.onMessage.removeListener(channelChangeListener);
+              }
+            },
+          );
 
           // Then, after a brief delay, try to get messages from the channel
           setTimeout(function () {
