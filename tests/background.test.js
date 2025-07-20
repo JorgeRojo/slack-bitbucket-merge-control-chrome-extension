@@ -17,10 +17,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   let alarmHandler;
 
   beforeAll(async () => {
-    // Import background script once and capture handlers
     backgroundModule = await import('../src/background.js');
 
-    // Capture the event handlers that were registered
     messageHandler = mockRuntime.onMessage.addListener.mock.calls[0]?.[0];
     installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
     startupHandler = mockRuntime.onStartup.addListener.mock.calls[0]?.[0];
@@ -68,7 +66,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         mockSendResponse,
       );
 
-      // Verificar que se llamó con las propiedades correctas (incluyendo defaultAllowedPhrases)
       expect(mockSendResponse).toHaveBeenCalledWith({
         defaultAllowedPhrases: expect.any(Array),
         defaultDisallowedPhrases: expect.any(Array),
@@ -874,25 +871,25 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     }
   });
 
-  // Tests for 100% coverage - covering remaining uncovered lines
   test('should set default mergeButtonSelector when not present on install', async () => {
     // Get the onInstalled handler
-    const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
-    
+    const installedHandler =
+      mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
+
     if (installedHandler) {
       // Mock storage.sync.get to return empty result (no mergeButtonSelector)
       mockStorage.sync.get.mockImplementationOnce((key, callback) => {
         callback({}); // Empty result - no mergeButtonSelector
       });
-      
+
       mockStorage.sync.set.mockClear();
-      
+
       // Execute the installed handler
       await installedHandler({ reason: 'install' });
-      
+
       // Should set the default mergeButtonSelector
       expect(mockStorage.sync.set).toHaveBeenCalledWith({
-        mergeButtonSelector: expect.any(String)
+        mergeButtonSelector: expect.any(String),
       });
     } else {
       expect(true).toBe(true);
@@ -901,22 +898,23 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should not set mergeButtonSelector when already present on install', async () => {
     // Get the onInstalled handler
-    const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
-    
+    const installedHandler =
+      mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
+
     if (installedHandler) {
       // Mock storage.sync.get to return existing mergeButtonSelector
       mockStorage.sync.get.mockImplementationOnce((key, callback) => {
         callback({ mergeButtonSelector: 'existing-selector' });
       });
-      
+
       mockStorage.sync.set.mockClear();
-      
+
       // Execute the installed handler
       await installedHandler({ reason: 'install' });
-      
+
       // Should NOT set the mergeButtonSelector since it already exists
       expect(mockStorage.sync.set).not.toHaveBeenCalledWith({
-        mergeButtonSelector: expect.any(String)
+        mergeButtonSelector: expect.any(String),
       });
     } else {
       expect(true).toBe(true);
@@ -926,20 +924,19 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should handle websocketCheck alarm specifically', async () => {
     // Get the alarm handler
     const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
-    
+
     if (alarmHandler) {
       // Mock the checkWebSocketConnection function by spying on fetch calls
       global.fetch.mockClear();
       mockStorage.sync.get.mockResolvedValueOnce({
         slackToken: 'test-token',
-        channelName: 'test-channel'
+        channelName: 'test-channel',
       });
-      
+
       // Execute alarm handler with websocketCheck alarm
       await alarmHandler({ name: 'websocketCheck' });
-      
-      // Should trigger WebSocket connection check (which makes fetch calls)
-      expect(true).toBe(true); // Test passes if no error is thrown
+
+      expect(true).toBe(true);
     } else {
       expect(true).toBe(true);
     }
@@ -948,15 +945,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should ignore non-websocketCheck alarms', async () => {
     // Get the alarm handler
     const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
-    
+
     if (alarmHandler) {
       global.fetch.mockClear();
-      
+
       // Execute alarm handler with different alarm name
       await alarmHandler({ name: 'someOtherAlarm' });
-      
-      // Should not trigger any specific WebSocket actions
-      expect(true).toBe(true); // Test passes if no error is thrown
+
+      expect(true).toBe(true);
     } else {
       expect(true).toBe(true);
     }
@@ -965,19 +961,18 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should cover alarm handler websocketCheck branch', async () => {
     // Get the alarm handler
     const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
-    
+
     if (alarmHandler) {
       // Mock storage and fetch for WebSocket check
       mockStorage.sync.get.mockResolvedValueOnce({
         slackToken: 'test-token',
-        channelName: 'test-channel'
+        channelName: 'test-channel',
       });
-      
+
       global.fetch.mockClear();
-      
-      // Execute alarm handler with websocketCheck alarm - this should cover line 920-921
+
       await alarmHandler({ name: 'websocketCheck' });
-      
+
       expect(true).toBe(true);
     } else {
       expect(true).toBe(true);
@@ -987,19 +982,25 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should cover all alarm handler branches', async () => {
     // Get the alarm handler
     const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
-    
+
     if (alarmHandler) {
       // Test all possible alarm names to ensure full branch coverage
-      const alarmNames = ['websocketCheck', 'featureReactivation', 'unknownAlarm', null, undefined];
-      
+      const alarmNames = [
+        'websocketCheck',
+        'featureReactivation',
+        'unknownAlarm',
+        null,
+        undefined,
+      ];
+
       for (const alarmName of alarmNames) {
         try {
           await alarmHandler({ name: alarmName });
-        } catch (error) {
-          // Some alarms might throw errors, which is expected
+        } catch {
+          // Expected for some alarm types
         }
       }
-      
+
       expect(true).toBe(true);
     } else {
       expect(true).toBe(true);

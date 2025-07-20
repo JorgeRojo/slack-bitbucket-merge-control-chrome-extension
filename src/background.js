@@ -127,7 +127,6 @@ function updateExtensionIcon(status) {
   return true;
 }
 
-// Keeps track of the last app status to avoid redundant updates
 let lastAppStatus = null;
 
 async function getCurrentMergeStatusFromMessages() {
@@ -175,11 +174,9 @@ async function updateAppStatus(status) {
     },
   });
 
-  // Map app status to icon status
   let iconStatus;
   switch (status) {
     case APP_STATUS.OK:
-      // For OK status, determine icon state based on current messages
       iconStatus = await getCurrentMergeStatusFromMessages();
       break;
     case APP_STATUS.CONFIG_ERROR:
@@ -193,7 +190,6 @@ async function updateAppStatus(status) {
       iconStatus = MERGE_STATUS.UNKNOWN;
   }
 
-  // Update icon based on app status
   updateExtensionIcon(iconStatus);
 
   return true;
@@ -287,7 +283,6 @@ async function processAndStoreMessage(message) {
 
   await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
 
-  // Update icon based on the new messages
   await updateIconBasedOnCurrentMessages();
 }
 
@@ -397,7 +392,7 @@ async function updateContentScriptMergeState(channelName) {
       lastSlackMessage: matchingMessageForContentScript,
       channelName: channelName,
       featureEnabled: featureEnabled !== false,
-      appStatus: appStatus, // Keep appStatus in lastKnownMergeState
+      appStatus: appStatus,
     },
   });
 
@@ -464,7 +459,6 @@ async function connectToSlackSocketMode() {
     return;
   }
 
-  // Set loading state at the beginning of the process
   updateExtensionIcon(MERGE_STATUS.LOADING);
 
   try {
@@ -615,7 +609,6 @@ async function fetchAndStoreMessages(slackToken, channelId) {
 
       await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
 
-      // Update icon based on the fetched messages
       await updateIconBasedOnCurrentMessages();
 
       const { channelName } = await chrome.storage.sync.get('channelName');
@@ -672,7 +665,7 @@ const messageHandlers = {
               error: error.message,
             });
           } catch {
-            // The popup might not be open, ignore this error
+            // Expected when popup is not open
           }
         }
       }
@@ -764,14 +757,6 @@ const messageHandlers = {
   },
 };
 
-/**
- * Listener for messages from other parts of the extension
- * @param {Object} request - The message object
- * @param {string} request.action - The action to perform
- * @param {chrome.runtime.MessageSender} sender - The sender of the message
- * @param {function} sendResponse - Function to call to send a response
- * @returns {boolean} - Whether the response will be sent asynchronously
- */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const handler = messageHandlers[request.action];
   if (handler) {
@@ -779,11 +764,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-/**
- * Updates the merge button state based on the last known merge state
- * Uses chrome.storage.local to get the last known merge state and feature enabled status
- * Then sends a message to the content script to update the merge button
- */
 const updateMergeButtonFromLastKnownMergeState = () => {
   chrome.storage.local.get(
     ['lastKnownMergeState', 'featureEnabled'],
@@ -850,7 +830,7 @@ async function notifyPopupAboutCountdown(timeLeft) {
       timeLeft,
     });
   } catch {
-    // This exception is expected when the popup is not open
+    // Expected when popup is not open
   }
 }
 
@@ -885,7 +865,7 @@ async function reactivateFeature() {
       enabled: true,
     });
   } catch {
-    // This exception is expected when the popup is not open
+    // Expected when popup is not open
   }
 
   const { channelName } = await chrome.storage.sync.get('channelName');

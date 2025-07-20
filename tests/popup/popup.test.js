@@ -63,7 +63,6 @@ describe('popup.js', () => {
       }
     });
 
-    // Reset the centralized mocks to default values instead of creating new ones
     mockStorage.sync.get.mockResolvedValue({
       slackToken: 'test-token',
       channelName: 'test-channel',
@@ -88,13 +87,11 @@ describe('popup.js', () => {
       return originalAddEventListener.call(document, event, handler);
     });
 
-    // Import the module to trigger the event listener registration
     vi.resetModules();
     require('../../src/popup.js');
   });
 
   afterEach(() => {
-    // Restore document.addEventListener
     document.addEventListener = originalAddEventListener;
   });
 
@@ -389,7 +386,6 @@ describe('popup.js', () => {
       // Call the handler with updateCountdownDisplay action
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
 
-      // No error should be thrown
       expect(true).toBe(true);
     });
   });
