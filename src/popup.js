@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     matchingMessageDiv: document.getElementById('matching-message'),
     featureToggle: document.getElementById('feature-toggle'),
     optionsLink: document.getElementById('options-link'),
+    helpLink: document.getElementById('help-link'),
     optionsLinkContainer: document.getElementById('options-link-container'),
   };
 
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     matchingMessageDiv,
     featureToggle,
     optionsLinkContainer,
+    helpLink,
   } = uiElements;
 
   if (featureToggle) {
@@ -498,6 +500,7 @@ function setupEventListeners({
   matchingMessageDiv,
   featureToggle,
   optionsLink,
+  helpLink,
   optionsLinkContainer,
 }) {
   featureToggle.addEventListener('toggle', (event) => {
@@ -546,6 +549,14 @@ function setupEventListeners({
       } else {
         window.open(chrome.runtime.getURL('options.html'));
       }
+    });
+  }
+
+  // Check if helpLink exists before adding event listener
+  if (helpLink) {
+    helpLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.open(chrome.runtime.getURL('help.html'));
     });
   }
 
