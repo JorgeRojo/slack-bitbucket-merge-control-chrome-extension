@@ -30,9 +30,7 @@ describe('NavLinks Component', () => {
   });
 
   afterEach(() => {
-    if (document.body.contains(navLinks)) {
-      document.body.removeChild(navLinks);
-    }
+    document.body.contains(navLinks) && document.body.removeChild(navLinks);
 
     chrome.runtime.openOptionsPage = originalOpenOptionsPage;
     chrome.runtime.getURL = originalGetURL;
