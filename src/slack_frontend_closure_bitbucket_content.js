@@ -1,6 +1,8 @@
-import { MESSAGE_ACTIONS } from './constants.js';
+// No podemos usar import en content scripts, así que definimos las constantes directamente
+const BITBUCKET_TAB_LOADED = 'bitbucketTabLoaded';
+const UPDATE_MERGE_BUTTON = 'updateMergeButton';
 
-chrome.runtime.sendMessage({ action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED });
+chrome.runtime.sendMessage({ action: BITBUCKET_TAB_LOADED });
 
 let mergeButtonObserver = null;
 
@@ -80,7 +82,7 @@ async function applyMergeButtonLogic(mergeStatus, channelName) {
 }
 
 chrome.runtime.onMessage.addListener((request) => {
-  if (request.action === 'updateMergeButton') {
+  if (request.action === UPDATE_MERGE_BUTTON) {
     if (request.featureEnabled === false) {
       applyMergeButtonLogic('allowed', request.channelName);
     } else {

@@ -143,13 +143,17 @@ code {
 }
 
 .status-message {
-  margin-top: 20px;
   font-size: 16px;
   text-align: center;
-  padding: 10px;
   border-radius: var(--ft-form-item-border-radius);
   background-color: var(--ft-color-grey-3);
   transition: all var(--ft-transition-duration) ease;
+}
+
+.status-error,
+.status-success {
+  margin-top: 20px;
+  padding: 10px;
 }
 
 .status-success {
@@ -256,13 +260,17 @@ code {
 }
 
 #status {
-  margin-top: 20px;
   font-size: 16px;
   text-align: center;
-  padding: 10px;
   border-radius: var(--ft-form-item-border-radius);
   background-color: var(--ft-color-grey-3);
   transition: all var(--ft-transition-duration) ease;
+}
+
+#status.success,
+#status.error {
+  margin-top: 20px;
+  padding: 10px;
 }
 
 #status.success {

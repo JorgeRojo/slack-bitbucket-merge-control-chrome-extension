@@ -757,7 +757,7 @@ const updateMergeButtonFromLastKnownMergeState = () => {
 
         try {
           await chrome.tabs.sendMessage(bitbucketTabId, {
-            action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
+            action: 'updateMergeButton',
             lastSlackMessage: lastSlackMessage,
             channelName: channelName,
             isMergeDisabled: finalIsMergeDisabled,

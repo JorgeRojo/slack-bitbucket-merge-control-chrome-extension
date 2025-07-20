@@ -44,7 +44,6 @@ export const SLACK_BASE_URL = 'https://app.slack.com/client/';
 
 export const FEATURE_REACTIVATION_TIMEOUT = 1 * 60 * 1000; // 1 minute in milliseconds
 
-// Application status constants
 export const APP_STATUS = {
   OK: 'ok',
   UNKNOWN_ERROR: 'unknown_error',
@@ -54,7 +53,6 @@ export const APP_STATUS = {
   CHANNEL_NOT_FOUND: 'channel_not_found',
 };
 
-// Merge status constants
 export const MERGE_STATUS = {
   UNKNOWN: 'unknown',
   ALLOWED: 'allowed',
@@ -65,13 +63,11 @@ export const MERGE_STATUS = {
   CONFIG_NEEDED: 'config_needed',
 };
 
-// Constants for WebSocket management
 export const RECONNECTION_DELAY_MS = 5000; // 5 seconds
 export const WEBSOCKET_CHECK_INTERVAL = 2; // 2 minutes
 export const WEBSOCKET_CHECK_ALARM = 'checkWebSocketConnection';
 export const WEBSOCKET_MAX_AGE = 30 * 60 * 1000; // 30 minutes in milliseconds
 
-// Message action constants
 export const MESSAGE_ACTIONS = {
   GET_DEFAULT_PHRASES: 'getDefaultPhrases',
   FETCH_NEW_MESSAGES: 'fetchNewMessages',

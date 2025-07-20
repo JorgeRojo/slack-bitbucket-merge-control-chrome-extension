@@ -119,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function () {
       bitbucketUrl &&
       mergeButtonSelector
     ) {
-      // Show a loading indicator
       statusDiv.textContent = 'Saving options...';
       statusDiv.className = 'status-message status-loading';
 
@@ -134,28 +133,26 @@ document.addEventListener('DOMContentLoaded', function () {
           bitbucketUrl,
           mergeButtonSelector,
         },
-        function () {
+        async function () {
           statusDiv.textContent = literals.options.textOptionsSaved;
           statusDiv.className = 'status-message status-success';
 
           chrome.storage.local.remove(['channelId', 'lastFetchTs']);
 
-          setTimeout(function () {
-            statusDiv.textContent = '';
-            statusDiv.className = 'status-message';
-          }, 2000);
-
-          chrome.runtime.sendMessage({
+          await chrome.runtime.sendMessage({
             action: MESSAGE_ACTIONS.RECONNECT_SLACK,
           });
 
+          await chrome.runtime.sendMessage({
+            action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
+            channelName: channelName,
+            skipErrorNotification: true,
+          });
+
           setTimeout(function () {
-            chrome.runtime.sendMessage({
-              action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
-              channelName: channelName,
-              skipErrorNotification: true,
-            });
-          }, 1000);
+            statusDiv.textContent = '';
+            statusDiv.className = 'status-message';
+          }, 3000);
         },
       );
     } else {
