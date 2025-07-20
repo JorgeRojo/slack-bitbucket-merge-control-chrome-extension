@@ -116,15 +116,55 @@ function updateExtensionIcon(status) {
       largeIconPath = 'images/icon48.png';
       break;
   }
+
   chrome.action.setIcon({
     path: {
       16: smallIconPath,
       48: largeIconPath,
     },
   });
+
+  return true;
+}
+
+// Keeps track of the last app status to avoid redundant updates
+let lastAppStatus = null;
+
+async function getCurrentMergeStatusFromMessages() {
+  const { messages = [] } = await chrome.storage.local.get('messages');
+
+  if (messages.length === 0) {
+    return MERGE_STATUS.UNKNOWN;
+  }
+
+  const {
+    currentAllowedPhrases,
+    currentDisallowedPhrases,
+    currentExceptionPhrases,
+  } = await getPhrasesFromStorage();
+
+  const { status } = determineMergeStatus({
+    messages,
+    allowedPhrases: currentAllowedPhrases,
+    disallowedPhrases: currentDisallowedPhrases,
+    exceptionPhrases: currentExceptionPhrases,
+  });
+
+  return status;
+}
+
+async function updateIconBasedOnCurrentMessages() {
+  const iconStatus = await getCurrentMergeStatusFromMessages();
+  updateExtensionIcon(iconStatus);
 }
 
 async function updateAppStatus(status) {
+  if (status === lastAppStatus) {
+    return false;
+  }
+
+  lastAppStatus = status;
+
   const { lastKnownMergeState = {} } = await chrome.storage.local.get(
     'lastKnownMergeState',
   );
@@ -134,6 +174,29 @@ async function updateAppStatus(status) {
       appStatus: status,
     },
   });
+
+  // Map app status to icon status
+  let iconStatus;
+  switch (status) {
+    case APP_STATUS.OK:
+      // For OK status, determine icon state based on current messages
+      iconStatus = await getCurrentMergeStatusFromMessages();
+      break;
+    case APP_STATUS.CONFIG_ERROR:
+    case APP_STATUS.TOKEN_ERROR:
+    case APP_STATUS.WEB_SOCKET_ERROR:
+    case APP_STATUS.CHANNEL_NOT_FOUND:
+    case APP_STATUS.UNKNOWN_ERROR:
+      iconStatus = MERGE_STATUS.ERROR;
+      break;
+    default:
+      iconStatus = MERGE_STATUS.UNKNOWN;
+  }
+
+  // Update icon based on app status
+  updateExtensionIcon(iconStatus);
+
+  return true;
 }
 
 async function resolveChannelId(slackToken, channelName) {
@@ -215,16 +278,17 @@ async function processAndStoreMessage(message) {
     currentExceptionPhrases,
   } = await getPhrasesFromStorage();
 
-  const { status: mergeStatus, message: matchingMessage } =
-    determineMergeStatus({
-      messages: messages,
-      allowedPhrases: currentAllowedPhrases,
-      disallowedPhrases: currentDisallowedPhrases,
-      exceptionPhrases: currentExceptionPhrases,
-    });
+  const { message: matchingMessage } = determineMergeStatus({
+    messages: messages,
+    allowedPhrases: currentAllowedPhrases,
+    disallowedPhrases: currentDisallowedPhrases,
+    exceptionPhrases: currentExceptionPhrases,
+  });
 
-  updateExtensionIcon(mergeStatus);
   await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
+
+  // Update icon based on the new messages
+  await updateIconBasedOnCurrentMessages();
 }
 
 async function getPhrasesFromStorage() {
@@ -273,7 +337,6 @@ async function handleSlackApiError(error) {
   } else {
     await updateAppStatus(APP_STATUS.UNKNOWN_ERROR);
   }
-  updateExtensionIcon(MERGE_STATUS.ERROR);
 }
 
 async function updateContentScriptMergeState(channelName) {
@@ -287,7 +350,6 @@ async function updateContentScriptMergeState(channelName) {
     'lastKnownMergeState',
   ]);
 
-  // Usar un valor por defecto si lastKnownMergeState es null o undefined
   const appStatus = lastKnownMergeState?.appStatus;
 
   const lastSlackMessage =
@@ -312,7 +374,6 @@ async function updateContentScriptMergeState(channelName) {
     });
     mergeStatusForContentScript = status;
     matchingMessageForContentScript = message;
-    updateExtensionIcon(status);
   }
 
   const errorStatuses = [
@@ -336,7 +397,7 @@ async function updateContentScriptMergeState(channelName) {
       lastSlackMessage: matchingMessageForContentScript,
       channelName: channelName,
       featureEnabled: featureEnabled !== false,
-      appStatus: appStatus, // Mantener appStatus en lastKnownMergeState
+      appStatus: appStatus, // Keep appStatus in lastKnownMergeState
     },
   });
 
@@ -400,10 +461,10 @@ async function connectToSlackSocketMode() {
     await chrome.storage.local.set({
       messages: [],
     });
-    updateExtensionIcon(MERGE_STATUS.UNKNOWN);
     return;
   }
 
+  // Set loading state at the beginning of the process
   updateExtensionIcon(MERGE_STATUS.LOADING);
 
   try {
@@ -424,12 +485,6 @@ async function connectToSlackSocketMode() {
       throw new Error(connectionsOpenData.error);
     }
 
-    const { lastKnownMergeState } =
-      (await chrome.storage.local.get('lastKnownMergeState')) ?? {};
-    if (lastKnownMergeState?.mergeStatus) {
-      updateExtensionIcon(lastKnownMergeState.mergeStatus);
-    }
-
     const wsUrl = connectionsOpenData.url;
     rtmWebSocket = new WebSocket(wsUrl);
 
@@ -448,7 +503,7 @@ async function connectToSlackSocketMode() {
       if (envelope.payload && envelope.payload.event) {
         const message = envelope.payload.event;
         if (message.type === 'message' && message.ts && message.text) {
-          await processAndStoreMessage(message, slackToken);
+          await processAndStoreMessage(message);
           await updateContentScriptMergeState(channelName);
         }
       } else if (envelope.type === 'disconnect') {
@@ -459,27 +514,13 @@ async function connectToSlackSocketMode() {
     rtmWebSocket.onclose = async () => {
       console.log('WebSocket connection closed');
 
-      setTimeout(() => {
-        chrome.storage.local.get(
-          ['lastWebSocketConnectTime'],
-          async (result) => {
-            const lastConnectTime = result.lastWebSocketConnectTime || 0;
-            const timeSinceLastConnect = Date.now() - lastConnectTime;
-
-            if (timeSinceLastConnect > 5000) {
-              updateExtensionIcon(MERGE_STATUS.ERROR);
-              await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
-            }
-          },
-        );
-      }, RECONNECTION_DELAY_MS);
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
+
       console.log('WebSocket closed. Scheduling reconnection...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
     rtmWebSocket.onerror = async (error) => {
-      updateExtensionIcon(MERGE_STATUS.ERROR);
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       console.error('WebSocket error:', error);
       rtmWebSocket.close();
@@ -565,16 +606,17 @@ async function fetchAndStoreMessages(slackToken, channelId) {
         currentExceptionPhrases,
       } = await getPhrasesFromStorage();
 
-      const { status: mergeStatus, message: matchingMessage } =
-        determineMergeStatus({
-          messages,
-          allowedPhrases: currentAllowedPhrases,
-          disallowedPhrases: currentDisallowedPhrases,
-          exceptionPhrases: currentExceptionPhrases,
-        });
+      const { message: matchingMessage } = determineMergeStatus({
+        messages,
+        allowedPhrases: currentAllowedPhrases,
+        disallowedPhrases: currentDisallowedPhrases,
+        exceptionPhrases: currentExceptionPhrases,
+      });
 
-      updateExtensionIcon(mergeStatus);
       await chrome.storage.local.set({ lastMatchingMessage: matchingMessage });
+
+      // Update icon based on the fetched messages
+      await updateIconBasedOnCurrentMessages();
 
       const { channelName } = await chrome.storage.sync.get('channelName');
       await updateContentScriptMergeState(channelName);

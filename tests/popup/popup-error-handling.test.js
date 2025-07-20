@@ -3,6 +3,7 @@
  */
 
 import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { mockStorage, mockRuntime } from '../setup.js';
 
 const createMockElement = () => ({
   className: '',
@@ -57,17 +58,23 @@ describe('Popup.js Runtime Error Handling', () => {
       }
     });
 
-    // Set up spies on the global chrome mock
-    vi.spyOn(chrome.storage.sync, 'get');
-    vi.spyOn(chrome.storage.local, 'get');
-    vi.spyOn(chrome.storage.local, 'set');
-    vi.spyOn(chrome.runtime, 'sendMessage');
-    vi.spyOn(chrome.runtime, 'openOptionsPage');
-    vi.spyOn(chrome.runtime, 'getURL').mockReturnValue(
-      'chrome-extension://options.html',
-    );
-    vi.spyOn(chrome.runtime.onMessage, 'addListener');
-    vi.spyOn(chrome.storage.onChanged, 'addListener');
+    // Reset the centralized mocks to default values
+    mockStorage.sync.get.mockResolvedValue({
+      slackToken: 'test-token',
+      channelName: 'test-channel',
+      disallowedPhrases: 'block,stop,do not merge',
+      exceptionPhrases: 'allow,proceed,exception',
+      bitbucketUrl: 'https://bitbucket.org/test',
+    });
+
+    mockStorage.local.get.mockResolvedValue({
+      featureEnabled: true,
+      messages: [],
+      teamId: 'test-team',
+      countdownEndTime: Date.now() + 60000,
+    });
+
+    mockRuntime.getURL.mockReturnValue('chrome-extension://options.html');
 
     console.log = vi.fn();
 
@@ -86,13 +93,13 @@ describe('Popup.js Runtime Error Handling', () => {
 
   test('should handle runtime.lastError in checkCountdownStatus', async () => {
     // Setup for the test
-    chrome.storage.sync.get.mockResolvedValue({
+    mockStorage.sync.get.mockResolvedValue({
       slackToken: 'xoxb-token',
       appToken: 'xapp-token',
       channelName: 'general',
     });
 
-    chrome.storage.local.get.mockImplementation((keys, callback) => {
+    mockStorage.local.get.mockImplementation((keys, callback) => {
       if (typeof callback === 'function') {
         callback({ featureEnabled: false });
       }
@@ -100,19 +107,19 @@ describe('Popup.js Runtime Error Handling', () => {
     });
 
     // Simulate runtime.lastError when sendMessage is called
-    chrome.runtime.sendMessage.mockImplementation((message, callback) => {
+    mockRuntime.sendMessage.mockImplementation((message, callback) => {
       if (
         message.action === 'getCountdownStatus' &&
         callback &&
         typeof callback === 'function'
       ) {
         // Set runtime.lastError before calling the callback
-        chrome.runtime.lastError = {
+        mockRuntime.lastError = {
           message: 'The message port closed before a response was received.',
         };
         callback(null);
         // Clear runtime.lastError after callback
-        delete chrome.runtime.lastError;
+        delete mockRuntime.lastError;
       }
     });
 
@@ -120,14 +127,13 @@ describe('Popup.js Runtime Error Handling', () => {
     await domContentLoadedHandler();
 
     // Get the message handler
-    const messageHandler =
-      chrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
     // Call the handler with countdownCompleted to trigger checkCountdownStatus
     messageHandler({ action: 'countdownCompleted' }, {}, () => {});
 
     // Verify that getCountdownStatus was called
-    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+    expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
       { action: 'getCountdownStatus' },
       expect.any(Function),
     );
@@ -141,13 +147,13 @@ describe('Popup.js Runtime Error Handling', () => {
 
   test('should handle runtime.lastError in toggle event', async () => {
     // Setup for the test
-    chrome.storage.sync.get.mockResolvedValue({
+    mockStorage.sync.get.mockResolvedValue({
       slackToken: 'xoxb-token',
       appToken: 'xapp-token',
       channelName: 'general',
     });
 
-    chrome.storage.local.get.mockImplementation((keys, callback) => {
+    mockStorage.local.get.mockImplementation((keys, callback) => {
       if (typeof callback === 'function') {
         callback({ featureEnabled: true });
       }
@@ -155,19 +161,19 @@ describe('Popup.js Runtime Error Handling', () => {
     });
 
     // Simulate runtime.lastError when sendMessage is called
-    chrome.runtime.sendMessage.mockImplementation((message, callback) => {
+    mockRuntime.sendMessage.mockImplementation((message, callback) => {
       if (
         message.action === 'featureToggleChanged' &&
         callback &&
         typeof callback === 'function'
       ) {
         // Set runtime.lastError before calling the callback
-        chrome.runtime.lastError = {
+        mockRuntime.lastError = {
           message: 'The message port closed before a response was received.',
         };
         callback(null);
         // Clear runtime.lastError after callback
-        delete chrome.runtime.lastError;
+        delete mockRuntime.lastError;
       }
     });
 
@@ -183,7 +189,7 @@ describe('Popup.js Runtime Error Handling', () => {
     toggleHandler({ detail: { checked: true } });
 
     // Verify that featureToggleChanged was called
-    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+    expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
       {
         action: 'featureToggleChanged',
         enabled: true,
@@ -200,13 +206,13 @@ describe('Popup.js Runtime Error Handling', () => {
 
   test('should handle exception in sendMessage during checkCountdownStatus', async () => {
     // Setup for the test
-    chrome.storage.sync.get.mockResolvedValue({
+    mockStorage.sync.get.mockResolvedValue({
       slackToken: 'xoxb-token',
       appToken: 'xapp-token',
       channelName: 'general',
     });
 
-    chrome.storage.local.get.mockImplementation((keys, callback) => {
+    mockStorage.local.get.mockImplementation((keys, callback) => {
       if (typeof callback === 'function') {
         callback({ featureEnabled: false });
       }
@@ -214,7 +220,7 @@ describe('Popup.js Runtime Error Handling', () => {
     });
 
     // Simulate exception when sendMessage is called
-    chrome.runtime.sendMessage.mockImplementation((message) => {
+    mockRuntime.sendMessage.mockImplementation((message) => {
       if (message.action === 'getCountdownStatus') {
         throw new Error('Test error');
       }
@@ -224,8 +230,7 @@ describe('Popup.js Runtime Error Handling', () => {
     await domContentLoadedHandler();
 
     // Get the message handler
-    const messageHandler =
-      chrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
     // Call the handler with countdownCompleted to trigger checkCountdownStatus
     messageHandler({ action: 'countdownCompleted' }, {}, () => {});
@@ -239,13 +244,13 @@ describe('Popup.js Runtime Error Handling', () => {
 
   test('should handle exception in sendMessage during toggle event', async () => {
     // Setup for the test
-    chrome.storage.sync.get.mockResolvedValue({
+    mockStorage.sync.get.mockResolvedValue({
       slackToken: 'xoxb-token',
       appToken: 'xapp-token',
       channelName: 'general',
     });
 
-    chrome.storage.local.get.mockImplementation((keys, callback) => {
+    mockStorage.local.get.mockImplementation((keys, callback) => {
       if (typeof callback === 'function') {
         callback({ featureEnabled: true });
       }
@@ -253,7 +258,7 @@ describe('Popup.js Runtime Error Handling', () => {
     });
 
     // Simulate exception when sendMessage is called
-    chrome.runtime.sendMessage.mockImplementation((message) => {
+    mockRuntime.sendMessage.mockImplementation((message) => {
       if (message.action === 'featureToggleChanged') {
         throw new Error('Test error');
       }

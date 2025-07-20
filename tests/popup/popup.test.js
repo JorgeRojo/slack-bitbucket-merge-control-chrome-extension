@@ -3,6 +3,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mockStorage, mockRuntime } from '../setup.js';
 
 const createMockElement = () => ({
   className: '',
@@ -62,28 +63,23 @@ describe('popup.js', () => {
       }
     });
 
-    global.chrome = {
-      storage: {
-        sync: {
-          get: vi.fn(),
-        },
-        local: {
-          get: vi.fn(),
-          set: vi.fn(),
-        },
-        onChanged: {
-          addListener: vi.fn(),
-        },
-      },
-      runtime: {
-        sendMessage: vi.fn(),
-        openOptionsPage: vi.fn(),
-        getURL: vi.fn(() => 'chrome-extension://options.html'),
-        onMessage: {
-          addListener: vi.fn(),
-        },
-      },
-    };
+    // Reset the centralized mocks to default values instead of creating new ones
+    mockStorage.sync.get.mockResolvedValue({
+      slackToken: 'test-token',
+      channelName: 'test-channel',
+      disallowedPhrases: 'block,stop,do not merge',
+      exceptionPhrases: 'allow,proceed,exception',
+      bitbucketUrl: 'https://bitbucket.org/test',
+    });
+
+    mockStorage.local.get.mockResolvedValue({
+      featureEnabled: true,
+      messages: [],
+      teamId: 'test-team',
+      countdownEndTime: Date.now() + 60000,
+    });
+
+    mockRuntime.getURL.mockReturnValue('chrome-extension://options.html');
 
     document.addEventListener = vi.fn((event, handler) => {
       if (event === 'DOMContentLoaded') {
@@ -116,13 +112,13 @@ describe('popup.js', () => {
   describe('Event handlers', () => {
     test('should handle toggle event', async () => {
       // Setup for the test
-      chrome.storage.sync.get.mockResolvedValue({
+      mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
         channelName: 'general',
       });
 
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (typeof callback === 'function') {
           callback({ featureEnabled: true });
         }
@@ -141,12 +137,12 @@ describe('popup.js', () => {
       toggleHandler({ detail: { checked: true } });
 
       // Verify that storage was updated
-      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      expect(mockStorage.local.set).toHaveBeenCalledWith({
         featureEnabled: true,
       });
 
       // Verify that a message was sent
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+      expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
         {
           action: 'featureToggleChanged',
           enabled: true,
@@ -157,13 +153,13 @@ describe('popup.js', () => {
 
     test('should handle options button click with openOptionsPage', async () => {
       // Setup for the test
-      chrome.storage.sync.get.mockResolvedValue({
+      mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
         channelName: 'general',
       });
 
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (typeof callback === 'function') {
           callback({ featureEnabled: true });
         }
@@ -183,18 +179,18 @@ describe('popup.js', () => {
       clickHandler();
 
       // Verify that openOptionsPage was called
-      expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
+      expect(mockRuntime.openOptionsPage).toHaveBeenCalled();
     });
 
     test('should handle options button click without openOptionsPage', async () => {
       // Setup for the test
-      chrome.storage.sync.get.mockResolvedValue({
+      mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
         channelName: 'general',
       });
 
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (typeof callback === 'function') {
           callback({ featureEnabled: true });
         }
@@ -202,7 +198,7 @@ describe('popup.js', () => {
       });
 
       // Remove openOptionsPage
-      chrome.runtime.openOptionsPage = undefined;
+      mockRuntime.openOptionsPage = undefined;
 
       // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
@@ -224,13 +220,13 @@ describe('popup.js', () => {
 
     test('should handle storage changes', async () => {
       // Setup for the test
-      chrome.storage.sync.get.mockResolvedValue({
+      mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
         channelName: 'general',
       });
 
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (typeof callback === 'function') {
           callback({ featureEnabled: true });
         }
@@ -241,11 +237,10 @@ describe('popup.js', () => {
       await domContentLoadedHandler();
 
       // Get the storage change handler
-      const storageHandler =
-        chrome.storage.onChanged.addListener.mock.calls[0][0];
+      const storageHandler = mockStorage.onChanged.addListener.mock.calls[0][0];
 
       // Reset mocks to track new calls
-      chrome.storage.sync.get.mockClear();
+      mockStorage.sync.get.mockClear();
 
       // Call the handler with a storage change
       storageHandler(
@@ -254,18 +249,18 @@ describe('popup.js', () => {
       );
 
       // Verify that loadAndDisplayData was called (indirectly)
-      expect(chrome.storage.sync.get).toHaveBeenCalled();
+      expect(mockStorage.sync.get).toHaveBeenCalled();
     });
 
     test('should handle runtime messages for updateCountdownDisplay', async () => {
       // Setup for the test
-      chrome.storage.sync.get.mockResolvedValue({
+      mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
         channelName: 'general',
       });
 
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (typeof callback === 'function') {
           callback({ featureEnabled: false });
         }
@@ -276,14 +271,13 @@ describe('popup.js', () => {
       await domContentLoadedHandler();
 
       // Get the message handler
-      const messageHandler =
-        chrome.runtime.onMessage.addListener.mock.calls[0][0];
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       // Call the handler with a message
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 60000 });
 
       // Verify that storage was queried
-      expect(chrome.storage.local.get).toHaveBeenCalledWith(
+      expect(mockStorage.local.get).toHaveBeenCalledWith(
         ['featureEnabled'],
         expect.any(Function),
       );
@@ -291,13 +285,13 @@ describe('popup.js', () => {
 
     test('should handle runtime messages for countdownCompleted', async () => {
       // Setup for the test
-      chrome.storage.sync.get.mockResolvedValue({
+      mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
         channelName: 'general',
       });
 
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (typeof callback === 'function') {
           callback({ featureEnabled: true });
         }
@@ -308,8 +302,7 @@ describe('popup.js', () => {
       await domContentLoadedHandler();
 
       // Get the message handler
-      const messageHandler =
-        chrome.runtime.onMessage.addListener.mock.calls[0][0];
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       // Call the handler with a message
       messageHandler({ action: 'countdownCompleted' });
@@ -324,8 +317,8 @@ describe('popup.js', () => {
 
   describe('UI state handling', () => {
     test('should handle countdown display', async () => {
-      // Mock chrome.storage.local.get for updateCountdownDisplay
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      // Mock mockStorage.local.get for updateCountdownDisplay
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: false });
         } else {
@@ -337,8 +330,7 @@ describe('popup.js', () => {
       await domContentLoadedHandler();
 
       // Get the message handler
-      const messageHandler =
-        chrome.runtime.onMessage.addListener.mock.calls[0][0];
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       // Call the handler with updateCountdownDisplay action
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
@@ -348,7 +340,7 @@ describe('popup.js', () => {
       expect(mockCountdownElement.textContent).toContain('1:05');
 
       // Test with feature enabled
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: true });
         } else {
@@ -360,7 +352,7 @@ describe('popup.js', () => {
       expect(mockCountdownElement.style.display).toBe('none');
 
       // Test with zero time left
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: false });
         } else {
@@ -379,8 +371,8 @@ describe('popup.js', () => {
         return mockStatusIcon; // Return something for other elements
       });
 
-      // Mock chrome.storage.local.get for updateCountdownDisplay
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
+      // Mock mockStorage.local.get for updateCountdownDisplay
+      mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: false });
         } else {
@@ -392,8 +384,7 @@ describe('popup.js', () => {
       await domContentLoadedHandler();
 
       // Get the message handler
-      const messageHandler =
-        chrome.runtime.onMessage.addListener.mock.calls[0][0];
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       // Call the handler with updateCountdownDisplay action
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });

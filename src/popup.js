@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     matchingMessageDiv,
     featureToggle,
     optionsLinkContainer,
-    helpLink,
+    // helpLink, // Commented out as it's not used yet
   } = uiElements;
 
   if (featureToggle) {
