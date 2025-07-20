@@ -583,6 +583,9 @@ async function fetchAndStoreMessages(slackToken, channelId) {
   }
 
   try {
+    // Limpiar lastMatchingMessage antes de obtener nuevos mensajes
+    await chrome.storage.local.set({ lastMatchingMessage: null });
+
     const response = await fetch(
       `${SLACK_CONVERSATIONS_HISTORY_URL}?channel=${channelId}&limit=${MAX_MESSAGES}`,
       {
@@ -647,6 +650,9 @@ const messageHandlers = {
       try {
         // First, set the state to LOADING to indicate we're changing channels
         updateExtensionIcon(MERGE_STATUS.LOADING);
+
+        // Limpiar lastMatchingMessage al cambiar de canal
+        await chrome.storage.local.set({ lastMatchingMessage: null });
 
         const channelId = await resolveChannelId(slackToken, targetChannelName);
 
