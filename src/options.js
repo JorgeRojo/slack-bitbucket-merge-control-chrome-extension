@@ -5,6 +5,7 @@ import {
   DEFAULT_BITBUCKET_URL,
   DEFAULT_MERGE_BUTTON_SELECTOR,
   DEFAULT_CHANNEL_NAME,
+  MESSAGE_ACTIONS,
 } from './constants.js';
 import { literals } from './literals.js';
 
@@ -50,14 +51,17 @@ document.addEventListener('DOMContentLoaded', function () {
       if (result.slackToken) {
         tokenInput.value = result.slackToken;
       }
+
       if (result.appToken) {
         appTokenInput.value = result.appToken;
       }
+
       if (result.channelName) {
         channelInput.value = result.channelName;
       } else {
         channelInput.value = DEFAULT_CHANNEL_NAME;
       }
+
       if (result.allowedPhrases) {
         allowedPhrasesInput.value = formatCommaToMultiline(
           result.allowedPhrases,
@@ -65,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         allowedPhrasesInput.value = DEFAULT_ALLOWED_PHRASES.join('\n');
       }
+
       if (result.disallowedPhrases) {
         disallowedPhrasesInput.value = formatCommaToMultiline(
           result.disallowedPhrases,
@@ -72,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         disallowedPhrasesInput.value = DEFAULT_DISALLOWED_PHRASES.join('\n');
       }
+
       if (result.exceptionPhrases) {
         exceptionPhrasesInput.value = formatCommaToMultiline(
           result.exceptionPhrases,
@@ -79,11 +85,13 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         exceptionPhrasesInput.value = DEFAULT_EXCEPTION_PHRASES.join('\n');
       }
+
       if (result.bitbucketUrl) {
         bitbucketUrlInput.value = result.bitbucketUrl;
       } else {
         bitbucketUrlInput.value = DEFAULT_BITBUCKET_URL;
       }
+
       if (result.mergeButtonSelector) {
         mergeButtonSelectorInput.value = result.mergeButtonSelector;
       } else {
@@ -130,8 +138,6 @@ document.addEventListener('DOMContentLoaded', function () {
           statusDiv.textContent = literals.options.textOptionsSaved;
           statusDiv.className = 'status-message status-success';
 
-          // Only remove channelId and lastFetchTs, but keep messages
-          // until they are correctly updated
           chrome.storage.local.remove(['channelId', 'lastFetchTs']);
 
           setTimeout(function () {
@@ -139,16 +145,15 @@ document.addEventListener('DOMContentLoaded', function () {
             statusDiv.className = 'status-message';
           }, 2000);
 
-          // First reconnect Slack to update the connection with the new tokens
-          chrome.runtime.sendMessage({ action: 'reconnectSlack' });
+          chrome.runtime.sendMessage({
+            action: MESSAGE_ACTIONS.RECONNECT_SLACK,
+          });
 
-          // Then, after a brief delay, try to get messages from the channel
-          // but don't wait for a response or error
           setTimeout(function () {
             chrome.runtime.sendMessage({
-              action: 'fetchNewMessages',
+              action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
               channelName: channelName,
-              skipErrorNotification: true, // Indicar que no queremos notificaciones de error
+              skipErrorNotification: true,
             });
           }, 1000);
         },

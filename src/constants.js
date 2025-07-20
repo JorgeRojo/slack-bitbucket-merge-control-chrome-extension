@@ -70,3 +70,18 @@ export const RECONNECTION_DELAY_MS = 5000; // 5 seconds
 export const WEBSOCKET_CHECK_INTERVAL = 2; // 2 minutes
 export const WEBSOCKET_CHECK_ALARM = 'checkWebSocketConnection';
 export const WEBSOCKET_MAX_AGE = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+// Message action constants
+export const MESSAGE_ACTIONS = {
+  GET_DEFAULT_PHRASES: 'getDefaultPhrases',
+  FETCH_NEW_MESSAGES: 'fetchNewMessages',
+  RECONNECT_SLACK: 'reconnectSlack',
+  BITBUCKET_TAB_LOADED: 'bitbucketTabLoaded',
+  FEATURE_TOGGLE_CHANGED: 'featureToggleChanged',
+  GET_COUNTDOWN_STATUS: 'getCountdownStatus',
+  COUNTDOWN_COMPLETED: 'countdownCompleted',
+  UPDATE_MESSAGES: 'updateMessages',
+  UPDATE_MERGE_BUTTON: 'updateMergeButton',
+  CHANNEL_CHANGE_ERROR: 'channelChangeError',
+  UPDATE_COUNTDOWN_DISPLAY: 'updateCountdownDisplay',
+};

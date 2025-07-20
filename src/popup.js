@@ -1,4 +1,9 @@
-import { SLACK_BASE_URL, MERGE_STATUS, APP_STATUS } from './constants.js';
+import {
+  SLACK_BASE_URL,
+  MERGE_STATUS,
+  APP_STATUS,
+  MESSAGE_ACTIONS,
+} from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
 
@@ -187,19 +192,22 @@ function initializeFeatureToggleState(toggleElement) {
 
 function checkCountdownStatus() {
   try {
-    chrome.runtime.sendMessage({ action: 'getCountdownStatus' }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.log(
-          'Error al recibir respuesta:',
-          chrome.runtime.lastError.message,
-        );
-        return;
-      }
+    chrome.runtime.sendMessage(
+      { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.log(
+            'Error al recibir respuesta:',
+            chrome.runtime.lastError.message,
+          );
+          return;
+        }
 
-      if (!response?.isCountdownActive) return;
+        if (!response?.isCountdownActive) return;
 
-      updateCountdownDisplay(response.timeLeft);
-    });
+        updateCountdownDisplay(response.timeLeft);
+      },
+    );
   } catch (error) {
     console.log('Error al enviar mensaje:', error);
   }
@@ -499,7 +507,7 @@ function setupEventListeners({
     try {
       chrome.runtime.sendMessage(
         {
-          action: 'featureToggleChanged',
+          action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
           enabled: isChecked,
         },
         (_response) => {

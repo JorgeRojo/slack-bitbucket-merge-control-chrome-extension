@@ -15,6 +15,7 @@ import {
   WEBSOCKET_MAX_AGE,
   APP_STATUS,
   MERGE_STATUS,
+  MESSAGE_ACTIONS,
 } from './constants.js';
 
 let bitbucketTabId = null;
@@ -123,7 +124,6 @@ function updateExtensionIcon(status) {
   });
 }
 
-// Helper function to update appStatus within lastKnownMergeState
 async function updateAppStatus(status) {
   const { lastKnownMergeState = {} } = await chrome.storage.local.get(
     'lastKnownMergeState',
@@ -187,26 +187,26 @@ async function processAndStoreMessage(message) {
 
   const messageTs = message.ts;
 
-  let storedMessages =
-    (await chrome.storage.local.get('messages')).messages || [];
+  let messages = (await chrome.storage.local.get('messages')).messages || [];
+  const existMessage = messages.some((m) => m.ts === messageTs);
 
-  if (storedMessages.some((m) => m.ts === messageTs)) {
+  if (existMessage) {
     return;
   }
 
-  storedMessages.push({
+  messages.push({
     text: cleanSlackMessageText(message.text),
-    ts: message.ts,
+    ts: messageTs,
   });
 
-  storedMessages.sort((a, b) => Number(b.ts) - Number(a.ts));
+  messages.sort((a, b) => Number(b.ts) - Number(a.ts));
 
-  if (storedMessages.length > MAX_MESSAGES) {
-    storedMessages = storedMessages.slice(storedMessages.length - MAX_MESSAGES);
+  if (messages.length > MAX_MESSAGES) {
+    messages = messages.slice(messages.length - MAX_MESSAGES);
   }
 
   await chrome.storage.local.set({
-    messages: storedMessages,
+    messages: messages,
   });
 
   const {
@@ -217,7 +217,7 @@ async function processAndStoreMessage(message) {
 
   const { status: mergeStatus, message: matchingMessage } =
     determineMergeStatus({
-      messages: storedMessages,
+      messages: messages,
       allowedPhrases: currentAllowedPhrases,
       disallowedPhrases: currentDisallowedPhrases,
       exceptionPhrases: currentExceptionPhrases,
@@ -341,7 +341,9 @@ async function updateContentScriptMergeState(channelName) {
   });
 
   try {
-    await chrome.runtime.sendMessage({ action: 'updateMessages' });
+    await chrome.runtime.sendMessage({
+      action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
+    });
   } catch {
     /* empty */
   }
@@ -500,7 +502,6 @@ function setupWebSocketCheckAlarm() {
   });
 }
 
-// Function to check the WebSocket status and reconnect if necessary
 async function checkWebSocketConnection() {
   console.log('Checking WebSocket connection status...');
 
@@ -586,7 +587,7 @@ async function fetchAndStoreMessages(slackToken, channelId) {
 }
 
 const messageHandlers = {
-  getDefaultPhrases: (request, sender, sendResponse) => {
+  [MESSAGE_ACTIONS.GET_DEFAULT_PHRASES]: (_request, _sender, sendResponse) => {
     sendResponse({
       defaultAllowedPhrases: DEFAULT_ALLOWED_PHRASES,
       defaultDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,
@@ -594,7 +595,7 @@ const messageHandlers = {
     });
     return true;
   },
-  fetchNewMessages: async (request) => {
+  [MESSAGE_ACTIONS.FETCH_NEW_MESSAGES]: async (request) => {
     const { slackToken, channelName } = await chrome.storage.sync.get([
       'slackToken',
       'channelName',
@@ -625,7 +626,7 @@ const messageHandlers = {
         if (request?.channelName && !request?.skipErrorNotification) {
           try {
             await chrome.runtime.sendMessage({
-              action: 'channelChangeError',
+              action: MESSAGE_ACTIONS.CHANNEL_CHANGE_ERROR,
               error: error.message,
             });
           } catch {
@@ -637,7 +638,7 @@ const messageHandlers = {
       await updateAppStatus(APP_STATUS.CONFIG_ERROR);
     }
   },
-  reconnectSlack: async () => {
+  [MESSAGE_ACTIONS.RECONNECT_SLACK]: async () => {
     const { lastKnownMergeState = {} } = await chrome.storage.local.get(
       'lastKnownMergeState',
     );
@@ -653,7 +654,7 @@ const messageHandlers = {
 
     connectToSlackSocketMode();
   },
-  bitbucketTabLoaded: async (_request, sender) => {
+  [MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED]: async (_request, sender) => {
     if (sender.tab) {
       const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
       if (bitbucketUrl) {
@@ -667,7 +668,7 @@ const messageHandlers = {
       }
     }
   },
-  featureToggleChanged: async (request) => {
+  [MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED]: async (request) => {
     const { enabled } = request;
     await chrome.storage.local.set({ featureEnabled: enabled });
 
@@ -681,7 +682,7 @@ const messageHandlers = {
     }
   },
 
-  countdownCompleted: async (request) => {
+  [MESSAGE_ACTIONS.COUNTDOWN_COMPLETED]: async (request) => {
     const { enabled } = request;
     await chrome.storage.local.set({ featureEnabled: enabled });
 
@@ -691,7 +692,11 @@ const messageHandlers = {
     }
   },
 
-  getCountdownStatus: async (request, sender, sendResponse) => {
+  [MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS]: async (
+    request,
+    sender,
+    sendResponse,
+  ) => {
     const { reactivationTime, featureEnabled } = await chrome.storage.local.get(
       ['reactivationTime', 'featureEnabled'],
     );
@@ -739,7 +744,7 @@ const updateMergeButtonFromLastKnownMergeState = () => {
 
         try {
           await chrome.tabs.sendMessage(bitbucketTabId, {
-            action: 'updateMergeButton',
+            action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
             lastSlackMessage: lastSlackMessage,
             channelName: channelName,
             isMergeDisabled: finalIsMergeDisabled,
@@ -786,7 +791,7 @@ async function startCountdown(targetTime) {
 async function notifyPopupAboutCountdown(timeLeft) {
   try {
     await chrome.runtime.sendMessage({
-      action: 'updateCountdownDisplay',
+      action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
       timeLeft,
     });
   } catch {
@@ -821,7 +826,7 @@ async function reactivateFeature() {
 
   try {
     await chrome.runtime.sendMessage({
-      action: 'countdownCompleted',
+      action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED,
       enabled: true,
     });
   } catch {
@@ -845,8 +850,6 @@ chrome.runtime.onInstalled.addListener(() => {
   connectToSlackSocketMode();
   registerBitbucketContentScript();
   checkScheduledReactivation();
-
-  // Set up the alarm to check the WebSocket
   setupWebSocketCheckAlarm();
 });
 
@@ -854,12 +857,9 @@ chrome.runtime.onStartup.addListener(() => {
   connectToSlackSocketMode();
   registerBitbucketContentScript();
   checkScheduledReactivation();
-
-  // Set up the alarm to check the WebSocket
   setupWebSocketCheckAlarm();
 });
 
-// Handle alarm events
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === WEBSOCKET_CHECK_ALARM) {
     checkWebSocketConnection();

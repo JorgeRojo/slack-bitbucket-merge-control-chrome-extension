@@ -1,4 +1,6 @@
-chrome.runtime.sendMessage({ action: 'bitbucketTabLoaded' });
+import { MESSAGE_ACTIONS } from './constants.js';
+
+chrome.runtime.sendMessage({ action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED });
 
 let mergeButtonObserver = null;
 
