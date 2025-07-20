@@ -1,4 +1,3 @@
-// No podemos usar import en content scripts, así que definimos las constantes directamente
 const BITBUCKET_TAB_LOADED = 'bitbucketTabLoaded';
 const UPDATE_MERGE_BUTTON = 'updateMergeButton';
 
