@@ -17,31 +17,6 @@ import {
   MERGE_STATUS,
 } from './constants.js';
 
-async function migrateAppStatus() {
-  try {
-    const { appStatus, lastKnownMergeState = {} } =
-      await chrome.storage.local.get(['appStatus', 'lastKnownMergeState']);
-
-    if (appStatus !== undefined) {
-      await chrome.storage.local.set({
-        lastKnownMergeState: {
-          ...lastKnownMergeState,
-          appStatus,
-        },
-      });
-
-      await chrome.storage.local.remove('appStatus');
-      console.log('Migrated appStatus to lastKnownMergeState');
-    }
-  } catch (error) {
-    console.error('Error migrating appStatus:', error);
-  }
-}
-
-if (typeof process === 'undefined' || process.env.NODE_ENV !== 'test') {
-  migrateAppStatus();
-}
-
 let bitbucketTabId = null;
 let rtmWebSocket = null;
 
