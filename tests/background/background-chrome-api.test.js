@@ -332,18 +332,31 @@ describe('Background Script via Chrome API', () => {
 
   test('should clear lastMatchingMessage when fetching new messages', async () => {
     // Configurar un mock para fetch
-    global.fetch = vi.fn().mockImplementation(() =>
-      Promise.resolve({
-        json: () =>
-          Promise.resolve({
-            ok: true,
-            messages: [
-              { text: 'Test message 1', ts: '1626262626.000001' },
-              { text: 'Test message 2', ts: '1626262626.000002' },
-            ],
-          }),
-      }),
-    );
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url.includes('conversations.list')) {
+        return Promise.resolve({
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              channels: [
+                { id: 'C12345', name: 'new-channel' },
+                { id: 'C67890', name: 'other-channel' },
+              ],
+            }),
+        });
+      } else {
+        return Promise.resolve({
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              messages: [
+                { text: 'Test message 1', ts: '1626262626.000001' },
+                { text: 'Test message 2', ts: '1626262626.000002' },
+              ],
+            }),
+        });
+      }
+    });
 
     // Simular que ya existe un lastMatchingMessage
     mockStorage.local.get.mockImplementation((keys) => {
@@ -352,6 +365,16 @@ describe('Background Script via Chrome API', () => {
           lastKnownMergeState: {
             appStatus: 'ok',
           },
+        });
+      }
+      if (
+        Array.isArray(keys) &&
+        keys.includes('channelId') &&
+        keys.includes('cachedChannelName')
+      ) {
+        return Promise.resolve({
+          channelId: null,
+          cachedChannelName: null,
         });
       }
       return Promise.resolve({
