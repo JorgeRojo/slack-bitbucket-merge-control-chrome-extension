@@ -86,7 +86,7 @@ function updateUI({
   });
 
   if (matchingMessage && matchingMessageDiv) {
-    matchingMessageDiv.textContent = `${literals.popup.textMatchingMessagePrefix}${matchingMessage.text}"`;
+    matchingMessageDiv.textContent = matchingMessage.text;
     matchingMessageDiv.style.display = 'block';
   }
 }

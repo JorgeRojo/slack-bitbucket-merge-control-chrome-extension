@@ -13,7 +13,6 @@ export const literals = {
     textConfigNeeded: 'Slack token or channel name not configured.',
     textErrorProcessingMessages: 'Error processing messages',
     textChannelNotFound: 'Channel not found or bot is not in channel.',
-    textMatchingMessagePrefix: 'Matching message: "',
     textCouldNotDetermine: 'Could not determine',
 
     // Detailed error messages
