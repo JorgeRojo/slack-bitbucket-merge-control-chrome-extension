@@ -8,20 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      exclude: [
-        'node_modules/',
-        'coverage/',
-        'tests/',
-        '**/*.test.js',
-        '**/*.spec.js',
-        'src/components/toggle-switch/toggle-switch.js', // Exclude problematic file
-        'eslint.config.js',
-        'vitest.config.js',
-        '.amazonq/',
-        '**/*.config.js',
-        '**/*.config.ts',
-      ],
-      // Add source map support and ignore empty lines
+      include: ['src/'],
       all: true,
       skipFull: false,
       thresholds: {
@@ -30,7 +17,6 @@ export default defineConfig({
         functions: 50,
         lines: 50,
       },
-      // Configure v8 options to handle source maps better
       reportsDirectory: './coverage',
       clean: true,
     },
