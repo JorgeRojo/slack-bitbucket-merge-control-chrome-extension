@@ -2,7 +2,7 @@
 
 When making any code changes or suggestions, always follow these project guidelines:
 
-## Code Style Guidelines (from CODE_STYLE.md)
+## Code Style Guidelines (from documentation/CODE_STYLE.md)
 
 1. Follow JavaScript naming conventions:
    - camelCase for variables and functions
@@ -25,11 +25,11 @@ When making any code changes or suggestions, always follow these project guideli
    - Prefer async/await over Promise chains
    - Use objects for functions with more than two parameters
 
-4. Follow HTML and CSS conventions as specified in CODE_STYLE.md
+4. Follow HTML and CSS conventions as specified in documentation/CODE_STYLE.md
 
 5. Follow Chrome Extension specific guidelines for background scripts, content scripts, and manifest
 
-## General Guidelines (from CONTRIBUTING.md)
+## General Guidelines (from documentation/CONTRIBUTING.md)
 
 - Write clean, readable, and maintainable code
 - Follow the Single Responsibility Principle
@@ -59,4 +59,4 @@ Always check your suggestions against these guidelines before providing them.
 
 ## Maintenance Note
 
-Whenever changes are made to CODE_STYLE.md or CONTRIBUTING.md, those same changes should be reflected in this rules file to ensure Amazon Q follows the most current project guidelines.
+Whenever changes are made to documentation/CODE_STYLE.md or documentation/CONTRIBUTING.md, those same changes should be reflected in this rules file to ensure Amazon Q follows the most current project guidelines.

@@ -60,8 +60,17 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
 
 This project follows specific coding standards and development practices:
 
-- See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines and development workflow
-- See [CODE_STYLE.md](./CODE_STYLE.md) for detailed coding style rules and best practices
+- See [CONTRIBUTING.md](./documentation/CONTRIBUTING.md) for contribution guidelines and development workflow
+- See [CODE_STYLE.md](./documentation/CODE_STYLE.md) for detailed coding style rules and best practices
+
+## Documentation
+
+All project documentation is organized in the `documentation/` directory:
+
+- **[CONTRIBUTING.md](./documentation/CONTRIBUTING.md)** - Contribution guidelines and development workflow
+- **[CODE_STYLE.md](./documentation/CODE_STYLE.md)** - Detailed coding style rules and best practices
+- **[TESTING_GUIDELINES.md](./documentation/TESTING_GUIDELINES.md)** - Testing strategies and guidelines
+- **[MOCKING_STRATEGIES.md](./documentation/MOCKING_STRATEGIES.md)** - Mocking patterns and strategies for tests
 
 ## Installation
 

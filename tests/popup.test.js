@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import { mockStorage, mockRuntime } from '../setup.js';
+import { mockStorage, mockRuntime } from './setup.js';
 
 const createMockElement = () => ({
   className: '',
@@ -88,7 +88,7 @@ describe('popup.js', () => {
     });
 
     vi.resetModules();
-    require('../../src/popup.js');
+    require('../src/popup.js');
   });
 
   afterEach(() => {
