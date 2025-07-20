@@ -722,6 +722,14 @@ const messageHandlers = {
   },
 };
 
+/**
+ * Listener for messages from other parts of the extension
+ * @param {Object} request - The message object
+ * @param {string} request.action - The action to perform
+ * @param {chrome.runtime.MessageSender} sender - The sender of the message
+ * @param {function} sendResponse - Function to call to send a response
+ * @returns {boolean} - Whether the response will be sent asynchronously
+ */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const handler = messageHandlers[request.action];
   if (handler) {
@@ -729,6 +737,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
+/**
+ * Updates the merge button state based on the last known merge state
+ * Uses chrome.storage.local to get the last known merge state and feature enabled status
+ * Then sends a message to the content script to update the merge button
+ */
 const updateMergeButtonFromLastKnownMergeState = () => {
   chrome.storage.local.get(
     ['lastKnownMergeState', 'featureEnabled'],
