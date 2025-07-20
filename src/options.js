@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', function () {
   channelInput.addEventListener('change', function () {
     const channelName = channelInput.value.trim().replace(/^#/, '');
     if (channelName) {
-      // Mostrar un indicador de carga
-      statusDiv.textContent = 'Verificando canal...';
+      // Show a loading indicator
+      statusDiv.textContent = 'Verifying channel...';
       statusDiv.className = 'status-message status-loading';
 
       chrome.runtime.sendMessage({
@@ -47,18 +47,18 @@ document.addEventListener('DOMContentLoaded', function () {
         channelName: channelName,
       });
 
-      // Escuchar la respuesta para saber si el cambio de canal fue exitoso
+      // Listen for the response to know if the channel change was successful
       chrome.runtime.onMessage.addListener(
         function channelChangeListener(message) {
           if (message.action === 'channelChangeError') {
-            // Si hay un error, mostrar el mensaje
+            // If there's an error, show the message
             statusDiv.textContent = `Error: ${message.error}`;
             statusDiv.className = 'status-message status-error';
 
-            // Eliminar este listener después de usarlo
+            // Remove this listener after using it
             chrome.runtime.onMessage.removeListener(channelChangeListener);
 
-            // Limpiar el mensaje después de un tiempo
+            // Clear the message after a while
             setTimeout(function () {
               statusDiv.textContent = '';
               statusDiv.className = 'status-message';
@@ -145,8 +145,8 @@ document.addEventListener('DOMContentLoaded', function () {
       bitbucketUrl &&
       mergeButtonSelector
     ) {
-      // Mostrar un indicador de carga
-      statusDiv.textContent = 'Guardando opciones...';
+      // Show a loading indicator
+      statusDiv.textContent = 'Saving options...';
       statusDiv.className = 'status-message status-loading';
 
       chrome.storage.sync.set(
@@ -164,8 +164,8 @@ document.addEventListener('DOMContentLoaded', function () {
           statusDiv.textContent = literals.options.textOptionsSaved;
           statusDiv.className = 'status-message status-success';
 
-          // Solo eliminamos channelId y lastFetchTs, pero mantenemos messages y appStatus
-          // hasta que se actualicen correctamente
+          // Only remove channelId and lastFetchTs, but keep messages and appStatus
+          // until they are correctly updated
           chrome.storage.local.remove(['channelId', 'lastFetchTs']);
 
           setTimeout(function () {
@@ -173,10 +173,10 @@ document.addEventListener('DOMContentLoaded', function () {
             statusDiv.className = 'status-message';
           }, 2000);
 
-          // Primero reconectar Slack para actualizar la conexión con los nuevos tokens
+          // First reconnect Slack to update the connection with the new tokens
           chrome.runtime.sendMessage({ action: 'reconnectSlack' });
 
-          // Luego, después de un breve retraso, intentar obtener mensajes del canal
+          // Then, after a brief delay, try to get messages from the channel
           setTimeout(function () {
             chrome.runtime.sendMessage({
               action: 'fetchNewMessages',

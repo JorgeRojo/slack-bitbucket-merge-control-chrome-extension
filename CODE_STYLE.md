@@ -49,6 +49,10 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   import { constants } from './constants.js';
   ```
 
+### Comments
+
+- **Avoid comments in code**: Use descriptive function and variable names to make code self-documenting
+- **Language**: All comments must be written in English, regardless of the primary language used by the development team.
 - **Function Length**: Keep functions under 30 lines when possible
 - **Nesting**: Avoid nesting more than 3 levels deep
 - **Early Returns**: Use early returns to avoid deep nesting
