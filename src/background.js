@@ -401,7 +401,7 @@ async function updateContentScriptMergeState(channelName) {
       action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
     });
   } catch {
-    /* empty */
+    // Expected when popup is not open
   }
 
   if (bitbucketTabId) {
@@ -425,7 +425,7 @@ async function updateContentScriptMergeState(channelName) {
         featureEnabled: featureEnabled !== false,
       });
     } catch {
-      /* empty */
+      // Expected when tab is not available
     }
   }
 }
@@ -440,7 +440,7 @@ async function fetchAndStoreTeamId(slackToken) {
       await chrome.storage.local.set({ teamId: data.team_id });
     }
   } catch {
-    /* empty */
+    // Ignore fetch errors for team ID
   }
 }
 
@@ -915,7 +915,7 @@ async function registerBitbucketContentScript() {
       ids: ['bitbucket-content-script'],
     });
   } catch {
-    /* empty */
+    // Script might not be registered yet
   }
 
   if (bitbucketUrl) {
@@ -924,12 +924,12 @@ async function registerBitbucketContentScript() {
         {
           id: 'bitbucket-content-script',
           matches: [bitbucketUrl],
-          js: ['slack_frontend_closure_bitbucket_content.js'],
+          js: ['content.js'],
           runAt: 'document_idle',
         },
       ]);
     } catch {
-      /* empty */
+      // Registration might fail if URL pattern is invalid
     }
   }
 }
