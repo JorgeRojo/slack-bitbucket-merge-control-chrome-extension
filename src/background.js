@@ -666,8 +666,8 @@ const messageHandlers = {
         console.error('Error fetching messages:', error);
         await handleSlackApiError(error);
 
-        // If we're changing to a new channel and it fails, notify the UI
-        if (request?.channelName) {
+        // Si skipErrorNotification es true, no notificar al UI sobre el error
+        if (request?.channelName && !request?.skipErrorNotification) {
           try {
             await chrome.runtime.sendMessage({
               action: 'channelChangeError',

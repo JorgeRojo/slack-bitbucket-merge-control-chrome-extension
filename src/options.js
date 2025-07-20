@@ -142,25 +142,13 @@ document.addEventListener('DOMContentLoaded', function () {
           // First reconnect Slack to update the connection with the new tokens
           chrome.runtime.sendMessage({ action: 'reconnectSlack' });
 
-          // Set up a listener for channel change errors
-          chrome.runtime.onMessage.addListener(
-            function channelChangeListener(message) {
-              if (message.action === 'channelChangeError') {
-                // If there's an error, show the message
-                statusDiv.textContent = `Error: ${message.error}`;
-                statusDiv.className = 'status-message status-error';
-
-                // Remove this listener after using it
-                chrome.runtime.onMessage.removeListener(channelChangeListener);
-              }
-            },
-          );
-
           // Then, after a brief delay, try to get messages from the channel
+          // but don't wait for a response or error
           setTimeout(function () {
             chrome.runtime.sendMessage({
               action: 'fetchNewMessages',
               channelName: channelName,
+              skipErrorNotification: true, // Indicar que no queremos notificaciones de error
             });
           }, 1000);
         },
