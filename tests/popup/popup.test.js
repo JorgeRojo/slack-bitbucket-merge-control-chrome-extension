@@ -16,7 +16,7 @@ const createMockElement = () => ({
 });
 
 console.error = vi.fn();
-
+console.log = vi.fn();
 window.open = vi.fn();
 
 describe('popup.js', () => {
@@ -97,7 +97,6 @@ describe('popup.js', () => {
 
   describe('DOMContentLoaded event', () => {
     test('should register event listeners', async () => {
-      // Verify that the DOMContentLoaded event listener was registered
       expect(document.addEventListener).toHaveBeenCalledWith(
         'DOMContentLoaded',
         expect.any(Function),
@@ -108,7 +107,6 @@ describe('popup.js', () => {
 
   describe('Event handlers', () => {
     test('should handle toggle event', async () => {
-      // Setup for the test
       mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
@@ -122,23 +120,18 @@ describe('popup.js', () => {
         return Promise.resolve({});
       });
 
-      // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
 
-      // Get the toggle event handler
       const toggleHandler = mockFeatureToggle.addEventListener.mock.calls.find(
         (call) => call[0] === 'toggle',
       )[1];
 
-      // Call the handler with a mock event
       toggleHandler({ detail: { checked: true } });
 
-      // Verify that storage was updated
       expect(mockStorage.local.set).toHaveBeenCalledWith({
         featureEnabled: true,
       });
 
-      // Verify that a message was sent
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
         {
           action: 'featureToggleChanged',
@@ -149,7 +142,6 @@ describe('popup.js', () => {
     });
 
     test('should handle options button click with openOptionsPage', async () => {
-      // Setup for the test
       mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
@@ -163,24 +155,19 @@ describe('popup.js', () => {
         return Promise.resolve({});
       });
 
-      // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
 
-      // Get the click event handler
       const clickHandler =
         mockOpenOptionsButton.addEventListener.mock.calls.find(
           (call) => call[0] === 'click',
         )[1];
 
-      // Call the handler
       clickHandler();
 
-      // Verify that openOptionsPage was called
       expect(mockRuntime.openOptionsPage).toHaveBeenCalled();
     });
 
     test('should handle options button click without openOptionsPage', async () => {
-      // Setup for the test
       mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
@@ -194,29 +181,23 @@ describe('popup.js', () => {
         return Promise.resolve({});
       });
 
-      // Remove openOptionsPage
       mockRuntime.openOptionsPage = undefined;
 
-      // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
 
-      // Get the click event handler
       const clickHandler =
         mockOpenOptionsButton.addEventListener.mock.calls.find(
           (call) => call[0] === 'click',
         )[1];
 
-      // Call the handler
       clickHandler();
 
-      // Verify that window.open was called
       expect(window.open).toHaveBeenCalledWith(
         'chrome-extension://options.html',
       );
     });
 
     test('should handle storage changes', async () => {
-      // Setup for the test
       mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
@@ -230,27 +211,21 @@ describe('popup.js', () => {
         return Promise.resolve({});
       });
 
-      // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
 
-      // Get the storage change handler
       const storageHandler = mockStorage.onChanged.addListener.mock.calls[0][0];
 
-      // Reset mocks to track new calls
       mockStorage.sync.get.mockClear();
 
-      // Call the handler with a storage change
       storageHandler(
         { lastKnownMergeState: { newValue: {}, oldValue: null } },
         'local',
       );
 
-      // Verify that loadAndDisplayData was called (indirectly)
       expect(mockStorage.sync.get).toHaveBeenCalled();
     });
 
     test('should handle runtime messages for updateCountdownDisplay', async () => {
-      // Setup for the test
       mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
@@ -264,16 +239,12 @@ describe('popup.js', () => {
         return Promise.resolve({});
       });
 
-      // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
 
-      // Get the message handler
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
-      // Call the handler with a message
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 60000 });
 
-      // Verify that storage was queried
       expect(mockStorage.local.get).toHaveBeenCalledWith(
         ['featureEnabled'],
         expect.any(Function),
@@ -281,7 +252,6 @@ describe('popup.js', () => {
     });
 
     test('should handle runtime messages for countdownCompleted', async () => {
-      // Setup for the test
       mockStorage.sync.get.mockResolvedValue({
         slackToken: 'xoxb-token',
         appToken: 'xapp-token',
@@ -295,16 +265,12 @@ describe('popup.js', () => {
         return Promise.resolve({});
       });
 
-      // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
 
-      // Get the message handler
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
-      // Call the handler with a message
       messageHandler({ action: 'countdownCompleted' });
 
-      // Verify that the toggle was updated
       expect(mockFeatureToggle.setAttribute).toHaveBeenCalledWith(
         'checked',
         '',
@@ -314,7 +280,6 @@ describe('popup.js', () => {
 
   describe('UI state handling', () => {
     test('should handle countdown display', async () => {
-      // Mock mockStorage.local.get for updateCountdownDisplay
       mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: false });
@@ -323,20 +288,15 @@ describe('popup.js', () => {
         }
       });
 
-      // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
 
-      // Get the message handler
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
-      // Call the handler with updateCountdownDisplay action
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
 
-      // Verify that countdown element is updated
       expect(mockCountdownElement.style.display).toBe('block');
       expect(mockCountdownElement.textContent).toContain('1:05');
 
-      // Test with feature enabled
       mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: true });
@@ -348,7 +308,6 @@ describe('popup.js', () => {
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
       expect(mockCountdownElement.style.display).toBe('none');
 
-      // Test with zero time left
       mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: false });
@@ -362,13 +321,11 @@ describe('popup.js', () => {
     });
 
     test('should handle missing countdown element', async () => {
-      // Mock document.getElementById to return null for countdown-timer
       document.getElementById.mockImplementation((id) => {
         if (id === 'countdown-timer') return null;
-        return mockStatusIcon; // Return something for other elements
+        return mockStatusIcon;
       });
 
-      // Mock mockStorage.local.get for updateCountdownDisplay
       mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: false });
@@ -377,16 +334,176 @@ describe('popup.js', () => {
         }
       });
 
-      // Trigger the DOMContentLoaded handler
       await domContentLoadedHandler();
 
-      // Get the message handler
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
-      // Call the handler with updateCountdownDisplay action
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
 
       expect(true).toBe(true);
+    });
+  });
+
+  describe('Error handling', () => {
+    test('should handle runtime.lastError in checkCountdownStatus', async () => {
+      mockStorage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: false });
+        }
+        return Promise.resolve({});
+      });
+
+      mockRuntime.sendMessage.mockImplementation((message, callback) => {
+        if (
+          message.action === 'getCountdownStatus' &&
+          callback &&
+          typeof callback === 'function'
+        ) {
+          mockRuntime.lastError = {
+            message: 'The message port closed before a response was received.',
+          };
+          callback(null);
+          delete mockRuntime.lastError;
+        }
+      });
+
+      await domContentLoadedHandler();
+
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+      messageHandler({ action: 'countdownCompleted' }, {}, () => {});
+
+      expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
+        { action: 'getCountdownStatus' },
+        expect.any(Function),
+      );
+
+      expect(console.log).toHaveBeenCalledWith(
+        'Error al recibir respuesta:',
+        'The message port closed before a response was received.',
+      );
+    });
+
+    test('should handle runtime.lastError in toggle event', async () => {
+      mockStorage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: true });
+        }
+        return Promise.resolve({});
+      });
+
+      mockRuntime.sendMessage.mockImplementation((message, callback) => {
+        if (
+          message.action === 'featureToggleChanged' &&
+          callback &&
+          typeof callback === 'function'
+        ) {
+          mockRuntime.lastError = {
+            message: 'The message port closed before a response was received.',
+          };
+          callback(null);
+          delete mockRuntime.lastError;
+        }
+      });
+
+      await domContentLoadedHandler();
+
+      const toggleHandler = mockFeatureToggle.addEventListener.mock.calls.find(
+        (call) => call[0] === 'toggle',
+      )[1];
+
+      toggleHandler({ detail: { checked: true } });
+
+      expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
+        {
+          action: 'featureToggleChanged',
+          enabled: true,
+        },
+        expect.any(Function),
+      );
+
+      expect(console.log).toHaveBeenCalledWith(
+        'Error al recibir respuesta de featureToggleChanged:',
+        'The message port closed before a response was received.',
+      );
+    });
+
+    test('should handle exception in sendMessage during checkCountdownStatus', async () => {
+      mockStorage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: false });
+        }
+        return Promise.resolve({});
+      });
+
+      mockRuntime.sendMessage.mockImplementation((message) => {
+        if (message.action === 'getCountdownStatus') {
+          throw new Error('Test error');
+        }
+      });
+
+      await domContentLoadedHandler();
+
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+      messageHandler({ action: 'countdownCompleted' }, {}, () => {});
+
+      expect(console.log).toHaveBeenCalledWith(
+        'Error al enviar mensaje:',
+        expect.any(Error),
+      );
+    });
+
+    test('should handle exception in sendMessage during toggle event', async () => {
+      mockStorage.sync.get.mockResolvedValue({
+        slackToken: 'xoxb-token',
+        appToken: 'xapp-token',
+        channelName: 'general',
+      });
+
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({ featureEnabled: true });
+        }
+        return Promise.resolve({});
+      });
+
+      mockRuntime.sendMessage.mockImplementation((message) => {
+        if (message.action === 'featureToggleChanged') {
+          throw new Error('Test error');
+        }
+      });
+
+      await domContentLoadedHandler();
+
+      const toggleHandler = mockFeatureToggle.addEventListener.mock.calls.find(
+        (call) => call[0] === 'toggle',
+      )[1];
+
+      toggleHandler({ detail: { checked: true } });
+
+      expect(console.log).toHaveBeenCalledWith(
+        'Error al enviar mensaje de featureToggleChanged:',
+        expect.any(Error),
+      );
     });
   });
 });
