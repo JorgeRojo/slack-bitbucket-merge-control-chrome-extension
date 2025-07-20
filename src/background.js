@@ -400,8 +400,8 @@ async function updateContentScriptMergeState(channelName) {
     await chrome.runtime.sendMessage({
       action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
     });
-  } catch {
-    // Expected when popup is not open
+  } catch (error) {
+    console.error(error);
   }
 
   if (bitbucketTabId) {
@@ -424,8 +424,8 @@ async function updateContentScriptMergeState(channelName) {
         mergeStatus: effectiveMergeStatus,
         featureEnabled: featureEnabled !== false,
       });
-    } catch {
-      // Expected when tab is not available
+    } catch (error) {
+      console.error(error);
     }
   }
 }
@@ -439,8 +439,8 @@ async function fetchAndStoreTeamId(slackToken) {
     if (data.ok) {
       await chrome.storage.local.set({ teamId: data.team_id });
     }
-  } catch {
-    // Ignore fetch errors for team ID
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -664,8 +664,8 @@ const messageHandlers = {
               action: MESSAGE_ACTIONS.CHANNEL_CHANGE_ERROR,
               error: error.message,
             });
-          } catch {
-            // Expected when popup is not open
+          } catch (error) {
+            console.error(error);
           }
         }
       }
@@ -786,7 +786,8 @@ const updateMergeButtonFromLastKnownMergeState = () => {
             mergeStatus: finalMergeStatus,
             featureEnabled: result.featureEnabled !== false,
           });
-        } catch {
+        } catch (error) {
+          console.error(error);
           bitbucketTabId = null;
         }
       }
@@ -829,8 +830,8 @@ async function notifyPopupAboutCountdown(timeLeft) {
       action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
       timeLeft,
     });
-  } catch {
-    // Expected when popup is not open
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -864,8 +865,8 @@ async function reactivateFeature() {
       action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED,
       enabled: true,
     });
-  } catch {
-    // Expected when popup is not open
+  } catch (error) {
+    console.error(error);
   }
 
   const { channelName } = await chrome.storage.sync.get('channelName');
@@ -914,8 +915,8 @@ async function registerBitbucketContentScript() {
     await chrome.scripting.unregisterContentScripts({
       ids: ['bitbucket-content-script'],
     });
-  } catch {
-    // Script might not be registered yet
+  } catch (error) {
+    console.error(error);
   }
 
   if (bitbucketUrl) {
@@ -928,8 +929,8 @@ async function registerBitbucketContentScript() {
           runAt: 'document_idle',
         },
       ]);
-    } catch {
-      // Registration might fail if URL pattern is invalid
+    } catch (error) {
+      console.error(error);
     }
   }
 }
