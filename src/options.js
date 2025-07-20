@@ -38,10 +38,34 @@ document.addEventListener('DOMContentLoaded', function () {
   channelInput.addEventListener('change', function () {
     const channelName = channelInput.value.trim().replace(/^#/, '');
     if (channelName) {
+      // Mostrar un indicador de carga
+      statusDiv.textContent = 'Verificando canal...';
+      statusDiv.className = 'status-message status-loading';
+
       chrome.runtime.sendMessage({
         action: 'fetchNewMessages',
         channelName: channelName,
       });
+
+      // Escuchar la respuesta para saber si el cambio de canal fue exitoso
+      chrome.runtime.onMessage.addListener(
+        function channelChangeListener(message) {
+          if (message.action === 'channelChangeError') {
+            // Si hay un error, mostrar el mensaje
+            statusDiv.textContent = `Error: ${message.error}`;
+            statusDiv.className = 'status-message status-error';
+
+            // Eliminar este listener después de usarlo
+            chrome.runtime.onMessage.removeListener(channelChangeListener);
+
+            // Limpiar el mensaje después de un tiempo
+            setTimeout(function () {
+              statusDiv.textContent = '';
+              statusDiv.className = 'status-message';
+            }, 3000);
+          }
+        },
+      );
     }
   });
 
@@ -121,6 +145,10 @@ document.addEventListener('DOMContentLoaded', function () {
       bitbucketUrl &&
       mergeButtonSelector
     ) {
+      // Mostrar un indicador de carga
+      statusDiv.textContent = 'Guardando opciones...';
+      statusDiv.className = 'status-message status-loading';
+
       chrome.storage.sync.set(
         {
           slackToken,
@@ -145,12 +173,16 @@ document.addEventListener('DOMContentLoaded', function () {
             statusDiv.className = 'status-message';
           }, 2000);
 
+          // Primero reconectar Slack para actualizar la conexión con los nuevos tokens
           chrome.runtime.sendMessage({ action: 'reconnectSlack' });
 
-          chrome.runtime.sendMessage({
-            action: 'fetchNewMessages',
-            channelName: channelName,
-          });
+          // Luego, después de un breve retraso, intentar obtener mensajes del canal
+          setTimeout(function () {
+            chrome.runtime.sendMessage({
+              action: 'fetchNewMessages',
+              channelName: channelName,
+            });
+          }, 1000);
         },
       );
     } else {

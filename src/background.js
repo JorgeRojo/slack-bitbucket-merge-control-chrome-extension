@@ -251,7 +251,6 @@ async function handleSlackApiError(error) {
   ) {
     await chrome.storage.local.set({
       appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
-      messages: [],
       channelId: null,
     });
   } else if (
@@ -260,12 +259,10 @@ async function handleSlackApiError(error) {
   ) {
     await chrome.storage.local.set({
       appStatus: APP_STATUS.TOKEN_ERROR,
-      messages: [],
     });
   } else {
     await chrome.storage.local.set({
       appStatus: APP_STATUS.UNKNOWN_ERROR,
-      messages: [],
     });
   }
   updateExtensionIcon(MERGE_STATUS.ERROR);
@@ -595,29 +592,54 @@ const messageHandlers = {
     });
     return true;
   },
-  fetchNewMessages: async (_request) => {
+  fetchNewMessages: async (request) => {
     const { slackToken, channelName } = await chrome.storage.sync.get([
       'slackToken',
       'channelName',
     ]);
-    if (slackToken && channelName) {
+
+    // Si se proporciona un nombre de canal específico en la solicitud, úsalo
+    const targetChannelName = request?.channelName || channelName;
+
+    if (slackToken && targetChannelName) {
       try {
-        const channelId = await resolveChannelId(slackToken, channelName);
-        // Establecer appStatus a OK cuando se cambia el canal exitosamente
-        // pero no vaciar los mensajes hasta que tengamos nuevos
+        // Primero, establecer el estado a LOADING para indicar que estamos cambiando de canal
+        updateExtensionIcon(MERGE_STATUS.LOADING);
+
+        const channelId = await resolveChannelId(slackToken, targetChannelName);
+
+        // Si llegamos aquí, el canal existe y tenemos acceso a él
+        // Establecer appStatus a OK y actualizar el channelId
         await chrome.storage.local.set({
           appStatus: APP_STATUS.OK,
+          channelId: channelId,
         });
+
+        // Obtener los mensajes del nuevo canal
         await fetchAndStoreMessages(slackToken, channelId);
-        await updateContentScriptMergeState(channelName);
+
+        // Actualizar el estado del botón de merge
+        await updateContentScriptMergeState(targetChannelName);
       } catch (error) {
+        console.error('Error fetching messages:', error);
         await handleSlackApiError(error);
+
+        // Si estamos cambiando a un nuevo canal y falla, notificar a la UI
+        if (request?.channelName) {
+          try {
+            await chrome.runtime.sendMessage({
+              action: 'channelChangeError',
+              error: error.message,
+            });
+          } catch {
+            // La popup podría no estar abierta, ignorar este error
+          }
+        }
       }
     } else {
       // Si no hay token o nombre de canal, establecer error de configuración
       await chrome.storage.local.set({
         appStatus: APP_STATUS.CONFIG_ERROR,
-        messages: [],
       });
     }
   },

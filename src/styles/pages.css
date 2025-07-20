@@ -162,6 +162,11 @@ code {
   color: var(--ft-color-error);
 }
 
+.status-loading {
+  background-color: rgba(52, 152, 219, 0.1);
+  color: var(--ft-color-primary);
+}
+
 .link {
   color: var(--ft-color-primary);
   text-decoration: none;
