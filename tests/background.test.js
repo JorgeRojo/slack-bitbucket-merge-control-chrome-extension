@@ -755,7 +755,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Should handle channel not found error
       expect(mockAction.setIcon).toHaveBeenCalled();
-      
+
       // Restore console.error
       console.error = originalConsoleError;
     } else {
@@ -834,7 +834,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Should handle network errors by setting error icon
       expect(mockAction.setIcon).toHaveBeenCalled();
-      
+
       // Restore console.error
       console.error = originalConsoleError;
     } else {
@@ -866,7 +866,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Should handle JSON parsing errors
       expect(mockAction.setIcon).toHaveBeenCalled();
-      
+
       // Restore console.error
       console.error = originalConsoleError;
     } else {
