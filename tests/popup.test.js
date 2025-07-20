@@ -1,7 +1,3 @@
-/**
- * @vitest-environment jsdom
- */
-
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mockStorage, mockRuntime } from './setup.js';
 
@@ -167,7 +163,6 @@ describe('popup.js', () => {
     });
 
     test('should handle all merge status cases', async () => {
-      // Test ALLOWED state
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
           mergeStatus: 'allowed',
@@ -177,7 +172,6 @@ describe('popup.js', () => {
 
       await domContentLoadedHandler();
 
-      // Test DISALLOWED state
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
           mergeStatus: 'disallowed',
@@ -187,7 +181,6 @@ describe('popup.js', () => {
 
       await domContentLoadedHandler();
 
-      // Test EXCEPTION state
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
           mergeStatus: 'exception',
@@ -209,7 +202,6 @@ describe('popup.js', () => {
     });
 
     test('should handle optionsLinkContainer display logic', async () => {
-      // When openOptionsButton is displayed (config needed)
       mockStorage.sync.get.mockResolvedValue({
         slackToken: null,
         appToken: null,
@@ -218,7 +210,6 @@ describe('popup.js', () => {
 
       await domContentLoadedHandler();
 
-      // When openOptionsButton is hidden (normal state)
       mockStorage.sync.get.mockResolvedValue({
         slackToken: 'test-token',
         appToken: 'test-app-token',
@@ -271,15 +262,12 @@ describe('popup.js', () => {
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
-      // Test minutes and seconds
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
       expect(mockCountdownElement.textContent).toContain('Reactivation in:');
 
-      // Test seconds only
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 5000 });
       expect(mockCountdownElement.textContent).toContain('Reactivation in:');
 
-      // Test multiple minutes
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 125000 });
       expect(mockCountdownElement.textContent).toContain('Reactivation in:');
     });
@@ -892,7 +880,6 @@ describe('popup.js', () => {
     });
   });
 
-  // Pruebas adicionales para cubrir las líneas restantes
   describe('Additional coverage tests', () => {
     test('should handle getCountdownStatus with active countdown', async () => {
       mockStorage.local.get.mockImplementation((keys, callback) => {

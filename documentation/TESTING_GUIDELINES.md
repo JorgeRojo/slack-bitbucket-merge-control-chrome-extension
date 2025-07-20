@@ -137,11 +137,11 @@ Instead of:
 test('should handle both valid and invalid inputs', () => {
   const validInput = 'valid';
   const invalidInput = '';
-  
+
   if (validInput) {
     expect(isValid(validInput)).toBe(true);
   }
-  
+
   if (!invalidInput) {
     expect(isValid(invalidInput)).toBe(false);
   }
@@ -182,7 +182,7 @@ Better approach:
 test('should handle handler when available', () => {
   // Verify handler exists before using it
   expect(handler).toBeDefined();
-  
+
   // Continue with test only if handler exists
   // ...
 });

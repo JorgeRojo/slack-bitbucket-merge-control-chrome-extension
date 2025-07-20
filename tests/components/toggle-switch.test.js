@@ -1,7 +1,3 @@
-/**
- * @vitest-environment jsdom
- */
-
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import '../../src/components/toggle-switch/toggle-switch.js';
 
@@ -42,7 +38,6 @@ describe('ToggleSwitch Component', () => {
   });
 
   test('should initialize with checked attribute', async () => {
-    // Remove and recreate element with attribute
     document.body.removeChild(toggleSwitch);
     toggleSwitch = document.createElement('toggle-switch');
     toggleSwitch.setAttribute('checked', '');
@@ -55,7 +50,6 @@ describe('ToggleSwitch Component', () => {
   });
 
   test('should initialize with disabled attribute', async () => {
-    // Remove and recreate element with attribute
     document.body.removeChild(toggleSwitch);
     toggleSwitch = document.createElement('toggle-switch');
     toggleSwitch.setAttribute('disabled', '');
@@ -70,7 +64,6 @@ describe('ToggleSwitch Component', () => {
   test('should initialize with label attribute', async () => {
     const testLabel = 'Test Label';
 
-    // Remove and recreate element with attribute
     document.body.removeChild(toggleSwitch);
     toggleSwitch = document.createElement('toggle-switch');
     toggleSwitch.setAttribute('label', testLabel);
@@ -85,11 +78,9 @@ describe('ToggleSwitch Component', () => {
   test('should update checked state when clicked', async () => {
     const input = toggleSwitch.shadowRoot.querySelector('input');
 
-    // Mock the change event
     const changeEvent = new Event('change');
     Object.defineProperty(changeEvent, 'target', { value: { checked: true } });
 
-    // Dispatch the event
     input.dispatchEvent(changeEvent);
 
     expect(toggleSwitch.hasAttribute('checked')).toBe(true);
@@ -98,15 +89,12 @@ describe('ToggleSwitch Component', () => {
   test('should dispatch toggle event when clicked', async () => {
     const input = toggleSwitch.shadowRoot.querySelector('input');
 
-    // Set up event listener
     const toggleHandler = vi.fn();
     toggleSwitch.addEventListener('toggle', toggleHandler);
 
-    // Mock the change event
     const changeEvent = new Event('change');
     Object.defineProperty(changeEvent, 'target', { value: { checked: true } });
 
-    // Dispatch the event
     input.dispatchEvent(changeEvent);
 
     expect(toggleHandler).toHaveBeenCalledTimes(1);

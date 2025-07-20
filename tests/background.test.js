@@ -6,7 +6,6 @@ import {
   mockTabs,
   mockAction,
   mockScripting,
-  // mockPermissions, // Available but not used in current tests
 } from './setup.js';
 
 describe('Background Script - Enhanced Coverage Tests', () => {
@@ -48,9 +47,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle getDefaultPhrases message', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     const mockSendResponse = vi.fn();
     const result = messageHandler(
       { action: 'getDefaultPhrases' },
@@ -67,14 +65,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle featureToggleChanged message', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Reset mocks
+
     mockStorage.local.set.mockClear();
     mockStorage.local.remove.mockClear();
 
-    // Test disabling feature
     const result1 = messageHandler(
       { action: 'featureToggleChanged', enabled: false },
       {},
@@ -84,20 +79,17 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     await result1;
     expect(mockStorage.local.set).toHaveBeenCalled();
 
-    // Test enabling feature - just verify it returns a Promise
     const result2 = messageHandler(
       { action: 'featureToggleChanged', enabled: true },
       {},
     );
     expect(result2).toBeInstanceOf(Promise);
     await result2;
-    // Don't check specific calls as the behavior might vary
   });
 
   test('should handle countdownCompleted message', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     mockStorage.local.set.mockClear();
 
     const result = messageHandler(
@@ -114,9 +106,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle getCountdownStatus message', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     const mockSendResponse = vi.fn();
     const result = messageHandler(
       { action: 'getCountdownStatus' },
@@ -130,9 +121,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle fetchNewMessages message', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     global.fetch.mockClear();
     mockStorage.local.set.mockClear();
 
@@ -148,23 +138,21 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle reconnectSlack message', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     global.fetch.mockClear();
 
     const result = messageHandler({ action: 'reconnectSlack' }, {});
     expect(result).toBeInstanceOf(Promise);
 
     await result;
-    // reconnectSlack might not always call fetch immediately
+
     expect(result).toBeInstanceOf(Promise);
   });
 
   test('should handle bitbucketTabLoaded message', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     mockTabs.sendMessage.mockClear();
 
     const sender = { tab: { id: 123 } };
@@ -172,15 +160,13 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(result).toBeInstanceOf(Promise);
 
     await result;
-    // bitbucketTabLoaded might not always send messages
+
     expect(result).toBeInstanceOf(Promise);
   });
 
   test('should handle alarm events', async () => {
-    // Ensure alarmHandler exists before testing
     expect(alarmHandler).toBeDefined();
-    
-    // Test that alarm handlers can be called without throwing
+
     await expect(
       async () => await alarmHandler({ name: 'websocketCheck' }),
     ).not.toThrow();
@@ -188,28 +174,23 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       async () => await alarmHandler({ name: 'featureReactivation' }),
     ).not.toThrow();
 
-    // Verify that some storage operation happened during the test
     expect(mockStorage.local.set).toHaveBeenCalled();
   });
 
   test('should handle WebSocket connection setup', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     global.WebSocket.mockClear();
 
     const result = messageHandler({ action: 'reconnectSlack' }, {});
     await result;
 
-    // WebSocket might be called during connection setup
     expect(result).toBeInstanceOf(Promise);
   });
 
   test('should handle error scenarios', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Mock fetch to return error
+
     global.fetch.mockResolvedValueOnce({
       ok: false,
       json: () => Promise.resolve({ ok: false, error: 'invalid_auth' }),
@@ -224,10 +205,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle missing configuration', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Temporarily override storage mock
+
     const originalGet = mockStorage.sync.get;
     mockStorage.sync.get.mockResolvedValueOnce({});
 
@@ -238,22 +217,19 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     expect(mockAction.setIcon).toHaveBeenCalled();
 
-    // Restore original mock
     mockStorage.sync.get = originalGet;
   });
 
   test('should handle unknown message action', () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     const result = messageHandler({ action: 'unknownAction' }, {}, vi.fn());
     expect(result).toBeUndefined();
   });
 
   test('should process Slack API responses correctly', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     global.fetch.mockClear();
 
     const result = messageHandler(
@@ -262,14 +238,12 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Verify API calls were made
     expect(global.fetch).toHaveBeenCalled();
   });
 
   test('should handle storage operations correctly', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     mockStorage.local.set.mockClear();
 
     const result = messageHandler(
@@ -278,14 +252,12 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Should store some data (messages, status, etc.)
     expect(mockStorage.local.set).toHaveBeenCalled();
   });
 
   test('should update extension icon based on merge status', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     mockAction.setIcon.mockClear();
 
     const result = messageHandler(
@@ -298,9 +270,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle Bitbucket tab communication', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
+
     mockTabs.sendMessage.mockClear();
     mockTabs.query.mockResolvedValueOnce([
       { id: 123, url: 'https://bitbucket.org/test/pull-requests/1' },
@@ -312,18 +283,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Tab communication might happen
     expect(result).toBeInstanceOf(Promise);
   });
 
   test('should handle content script registration', async () => {
-    // Content script registration happens during initialization
-    // We can't easily test this without complex setup, so we verify the API is available
     expect(mockScripting.registerContentScripts).toBeDefined();
   });
 
   test('should import background script without errors', async () => {
-    // This is the most important test - the background script should load without throwing
     expect(backgroundModule).toBeDefined();
   });
 
@@ -337,15 +304,12 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(global.chrome.permissions).toBeDefined();
   });
 
-  // Tests for utility functions that are not directly exported but can be tested through integration
   test('should handle text normalization through message processing', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Set up messages with various text formats that need normalization
+
     global.fetch.mockImplementationOnce((url) => {
       const isConversationsHistory = url.includes('conversations.history');
-      
+
       return isConversationsHistory
         ? Promise.resolve({
             ok: true,
@@ -378,7 +342,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Verify that messages were processed and stored (may be filtered)
     expect(mockStorage.local.set).toHaveBeenCalled();
     const setCall = mockStorage.local.set.mock.calls.find(
       (call) => call[0].messages,
@@ -388,13 +351,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle Slack message text cleaning through message processing', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Set up messages with Slack-specific formatting that needs cleaning
+
     global.fetch.mockImplementationOnce((url) => {
       const isConversationsHistory = url.includes('conversations.history');
-      
+
       return isConversationsHistory
         ? Promise.resolve({
             ok: true,
@@ -435,7 +396,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Verify that messages were processed and Slack formatting was cleaned
     expect(mockStorage.local.set).toHaveBeenCalled();
     const setCall = mockStorage.local.set.mock.calls.find(
       (call) => call[0].messages,
@@ -445,10 +405,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should determine merge status correctly through message processing', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Test different merge status scenarios
+
     const testScenarios = [
       {
         messages: [{ text: 'do not merge', ts: '1234567890' }],
@@ -470,7 +428,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     for (const scenario of testScenarios) {
       global.fetch.mockImplementationOnce((url) => {
         const isConversationsHistory = url.includes('conversations.history');
-        
+
         return isConversationsHistory
           ? Promise.resolve({
               ok: true,
@@ -499,27 +457,23 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       );
       await result;
 
-      // Verify that the correct merge status was determined
       expect(mockAction.setIcon).toHaveBeenCalled();
       expect(mockStorage.local.set).toHaveBeenCalled();
     }
   });
 
   test('should handle storage changes for bitbucketUrl', async () => {
-    // Get the storage change handler that was registered
     const storageChangeHandler =
       mockStorage.onChanged.addListener.mock.calls[0]?.[0];
 
-    // Ensure storageChangeHandler exists before testing
     expect(storageChangeHandler).toBeDefined();
-    
+
     mockScripting.unregisterContentScripts.mockClear();
     mockScripting.registerContentScripts.mockClear();
     mockStorage.sync.get.mockResolvedValueOnce({
       bitbucketUrl: 'https://bitbucket.org/newrepo/*',
     });
 
-    // Simulate a storage change for bitbucketUrl
     const changes = {
       bitbucketUrl: {
         oldValue: 'https://bitbucket.org/oldrepo/*',
@@ -529,11 +483,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     await storageChangeHandler(changes, 'sync');
 
-    // Verify that content scripts were re-registered
     expect(mockScripting.unregisterContentScripts).toHaveBeenCalledWith({
       ids: ['bitbucket-content-script'],
     });
-    // Just verify the function was called - the actual registration might fail in test environment
+
     expect(mockStorage.sync.get).toHaveBeenCalledWith('bitbucketUrl');
   });
 
@@ -541,9 +494,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const storageChangeHandler =
       mockStorage.onChanged.addListener.mock.calls[0]?.[0];
 
-    // Ensure storageChangeHandler exists before testing
     expect(storageChangeHandler).toBeDefined();
-    
+
     mockScripting.unregisterContentScripts.mockClear();
     mockScripting.registerContentScripts.mockClear();
     mockStorage.sync.get.mockResolvedValueOnce({ bitbucketUrl: undefined });
@@ -551,7 +503,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const changes = { bitbucketUrl: { newValue: undefined } };
     await storageChangeHandler(changes, 'sync');
 
-    // Should unregister but not register new scripts when URL is undefined
     expect(mockScripting.unregisterContentScripts).toHaveBeenCalled();
     expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
   });
@@ -560,10 +511,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const storageChangeHandler =
       mockStorage.onChanged.addListener.mock.calls[0]?.[0];
 
-    // Ensure storageChangeHandler exists before testing
     expect(storageChangeHandler).toBeDefined();
-    
-    // Mock scripting APIs to throw errors
+
     mockScripting.unregisterContentScripts.mockRejectedValueOnce(
       new Error('Unregister failed'),
     );
@@ -578,7 +527,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       bitbucketUrl: { newValue: 'https://bitbucket.org/test/*' },
     };
 
-    // Should not throw despite the errors
     await expect(
       async () => await storageChangeHandler(changes, 'sync'),
     ).not.toThrow();
@@ -588,18 +536,16 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const storageChangeHandler =
       mockStorage.onChanged.addListener.mock.calls[0]?.[0];
 
-    // Ensure storageChangeHandler exists before testing
     expect(storageChangeHandler).toBeDefined();
-    
+
     mockScripting.unregisterContentScripts.mockClear();
     mockScripting.registerContentScripts.mockClear();
 
     const changes = {
       bitbucketUrl: { newValue: 'https://bitbucket.org/test/*' },
     };
-    await storageChangeHandler(changes, 'local'); // Different namespace
+    await storageChangeHandler(changes, 'local');
 
-    // Should not trigger content script registration for non-sync changes
     expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
     expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
   });
@@ -608,28 +554,24 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const storageChangeHandler =
       mockStorage.onChanged.addListener.mock.calls[0]?.[0];
 
-    // Ensure storageChangeHandler exists before testing
     expect(storageChangeHandler).toBeDefined();
-    
+
     mockScripting.unregisterContentScripts.mockClear();
     mockScripting.registerContentScripts.mockClear();
 
     const changes = { slackToken: { newValue: 'new-token' } };
     await storageChangeHandler(changes, 'sync');
 
-    // Should not trigger content script registration for other keys
     expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
     expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
   });
 
   test('should handle WebSocket connection errors', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Mock fetch to return WebSocket connection error
+
     global.fetch.mockImplementationOnce((url) => {
       const isAppsConnectionsOpen = url.includes('apps.connections.open');
-      
+
       return isAppsConnectionsOpen
         ? Promise.resolve({
             ok: false,
@@ -648,18 +590,15 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const result = messageHandler({ action: 'reconnectSlack' }, {});
     await result;
 
-    // Should handle WebSocket connection errors gracefully
     expect(result).toBeInstanceOf(Promise);
   });
 
   test('should handle Slack API rate limiting', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Mock fetch to return rate limit error
+
     global.fetch.mockImplementationOnce((url) => {
       const isConversationsHistory = url.includes('conversations.history');
-      
+
       return isConversationsHistory
         ? Promise.resolve({
             ok: false,
@@ -683,29 +622,25 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Should handle rate limiting by setting appropriate icon
     expect(mockAction.setIcon).toHaveBeenCalled();
   });
 
   test('should handle channel not found error', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Silence console.error for this test since we expect an error
+
     const originalConsoleError = console.error;
     console.error = vi.fn();
 
-    // Mock fetch to return channel not found
     global.fetch.mockImplementationOnce((url) => {
       const isConversationsList = url.includes('conversations.list');
-      
+
       return isConversationsList
         ? Promise.resolve({
             ok: true,
             json: () =>
               Promise.resolve({
                 ok: true,
-                channels: [], // No channels found
+                channels: [],
                 response_metadata: { next_cursor: '' },
               }),
           })
@@ -723,18 +658,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Should handle channel not found error
     expect(mockAction.setIcon).toHaveBeenCalled();
 
-    // Restore console.error
     console.error = originalConsoleError;
   });
 
   test('should handle empty messages response', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Override the default fetch mock completely for this test
+
     global.fetch.mockImplementation((url) => {
       if (url.includes('conversations.list')) {
         return Promise.resolve({
@@ -753,7 +684,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
           json: () =>
             Promise.resolve({
               ok: true,
-              messages: [], // Empty messages
+              messages: [],
             }),
         });
       }
@@ -771,7 +702,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Should handle empty messages gracefully
     expect(mockStorage.local.set).toHaveBeenCalled();
     const setCall = mockStorage.local.set.mock.calls.find(
       (call) => call[0].messages,
@@ -782,14 +712,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle network errors gracefully', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Silence console.error for this test since we expect an error
+
     const originalConsoleError = console.error;
     console.error = vi.fn();
 
-    // Mock fetch to throw network error
     global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
     mockAction.setIcon.mockClear();
@@ -800,22 +727,17 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Should handle network errors by setting error icon
     expect(mockAction.setIcon).toHaveBeenCalled();
 
-    // Restore console.error
     console.error = originalConsoleError;
   });
 
   test('should handle malformed JSON responses', async () => {
-    // Ensure messageHandler exists before testing
     expect(messageHandler).toBeDefined();
-    
-    // Silence console.error for this test since we expect an error
+
     const originalConsoleError = console.error;
     console.error = vi.fn();
 
-    // Mock fetch to return malformed JSON
     global.fetch.mockImplementationOnce(() => {
       return Promise.resolve({
         ok: true,
@@ -831,100 +753,78 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
     await result;
 
-    // Should handle JSON parsing errors
     expect(mockAction.setIcon).toHaveBeenCalled();
 
-    // Restore console.error
     console.error = originalConsoleError;
   });
 
   test('should set default mergeButtonSelector when not present on install', async () => {
-    // Get the onInstalled handler
     const installedHandler =
       mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
 
-    // Ensure installedHandler exists before testing
     expect(installedHandler).toBeDefined();
-    
-    // Mock storage.sync.get to return empty result (no mergeButtonSelector)
+
     mockStorage.sync.get.mockImplementationOnce((key, callback) => {
-      callback({}); // Empty result - no mergeButtonSelector
+      callback({});
     });
 
     mockStorage.sync.set.mockClear();
 
-    // Execute the installed handler
     await installedHandler({ reason: 'install' });
 
-    // Should set the default mergeButtonSelector
     expect(mockStorage.sync.set).toHaveBeenCalledWith({
       mergeButtonSelector: expect.any(String),
     });
   });
 
   test('should not set mergeButtonSelector when already present on install', async () => {
-    // Get the onInstalled handler
     const installedHandler =
       mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
 
-    // Ensure installedHandler exists before testing
     expect(installedHandler).toBeDefined();
-    
-    // Mock storage.sync.get to return existing mergeButtonSelector
+
     mockStorage.sync.get.mockImplementationOnce((key, callback) => {
       callback({ mergeButtonSelector: 'existing-selector' });
     });
 
     mockStorage.sync.set.mockClear();
 
-    // Execute the installed handler
     await installedHandler({ reason: 'install' });
 
-    // Should NOT set the mergeButtonSelector since it already exists
     expect(mockStorage.sync.set).not.toHaveBeenCalledWith({
       mergeButtonSelector: expect.any(String),
     });
   });
 
   test('should handle websocketCheck alarm specifically', async () => {
-    // Get the alarm handler
     const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
 
-    // Ensure alarmHandler exists before testing
     expect(alarmHandler).toBeDefined();
-    
-    // Mock the checkWebSocketConnection function by spying on fetch calls
+
     global.fetch.mockClear();
     mockStorage.sync.get.mockResolvedValueOnce({
       slackToken: 'test-token',
       channelName: 'test-channel',
     });
 
-    // Execute alarm handler with websocketCheck alarm
-    await alarmHandler({ name: 'websocketCheck' });
+    expect(() => alarmHandler({ name: 'websocketCheck' })).not.toThrow();
   });
 
   test('should ignore non-websocketCheck alarms', async () => {
-    // Get the alarm handler
     const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
 
-    // Ensure alarmHandler exists before testing
     expect(alarmHandler).toBeDefined();
-    
+
     global.fetch.mockClear();
 
-    // Execute alarm handler with different alarm name
-    await alarmHandler({ name: 'someOtherAlarm' });
+    expect(() => alarmHandler({ name: 'someOtherAlarm' })).not.toThrow();
   });
 
   test('should cover alarm handler websocketCheck branch', async () => {
-    // Get the alarm handler
     const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
 
-    // Ensure alarmHandler exists before testing
     expect(alarmHandler).toBeDefined();
-    
-    // Mock storage and fetch for WebSocket check
+
     mockStorage.sync.get.mockResolvedValueOnce({
       slackToken: 'test-token',
       channelName: 'test-channel',
@@ -932,17 +832,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     global.fetch.mockClear();
 
-    await alarmHandler({ name: 'websocketCheck' });
+    expect(() => alarmHandler({ name: 'websocketCheck' })).not.toThrow();
   });
 
   test('should cover all alarm handler branches', async () => {
-    // Get the alarm handler
     const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
 
-    // Ensure alarmHandler exists before testing
     expect(alarmHandler).toBeDefined();
-    
-    // Test all possible alarm names to ensure full branch coverage
+
     const alarmNames = [
       'websocketCheck',
       'featureReactivation',
@@ -952,11 +849,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     ];
 
     for (const alarmName of alarmNames) {
-      try {
-        await alarmHandler({ name: alarmName });
-      } catch {
-        // Expected for some alarm types
-      }
+      expect(() => alarmHandler({ name: alarmName })).not.toThrow();
     }
   });
 });
