@@ -722,6 +722,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should handle channel not found error', async () => {
     if (messageHandler) {
+      // Silence console.error for this test since we expect an error
+      const originalConsoleError = console.error;
+      console.error = vi.fn();
+
       // Mock fetch to return channel not found
       global.fetch.mockImplementationOnce((url) => {
         if (url.includes('conversations.list')) {
@@ -751,6 +755,9 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Should handle channel not found error
       expect(mockAction.setIcon).toHaveBeenCalled();
+      
+      // Restore console.error
+      console.error = originalConsoleError;
     } else {
       expect(true).toBe(true);
     }
@@ -810,6 +817,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should handle network errors gracefully', async () => {
     if (messageHandler) {
+      // Silence console.error for this test since we expect an error
+      const originalConsoleError = console.error;
+      console.error = vi.fn();
+
       // Mock fetch to throw network error
       global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
@@ -823,6 +834,9 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Should handle network errors by setting error icon
       expect(mockAction.setIcon).toHaveBeenCalled();
+      
+      // Restore console.error
+      console.error = originalConsoleError;
     } else {
       expect(true).toBe(true);
     }
@@ -830,6 +844,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should handle malformed JSON responses', async () => {
     if (messageHandler) {
+      // Silence console.error for this test since we expect an error
+      const originalConsoleError = console.error;
+      console.error = vi.fn();
+
       // Mock fetch to return malformed JSON
       global.fetch.mockImplementationOnce(() => {
         return Promise.resolve({
@@ -848,6 +866,9 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Should handle JSON parsing errors
       expect(mockAction.setIcon).toHaveBeenCalled();
+      
+      // Restore console.error
+      console.error = originalConsoleError;
     } else {
       expect(true).toBe(true);
     }
