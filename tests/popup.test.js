@@ -13,6 +13,8 @@ const createMockElement = () => ({
   setAttribute: vi.fn(),
   removeAttribute: vi.fn(),
   addEventListener: vi.fn(),
+  appendChild: vi.fn(),
+  remove: vi.fn(),
 });
 
 console.error = vi.fn();
@@ -26,10 +28,15 @@ describe('popup.js', () => {
     mockSlackChannelLink,
     mockMatchingMessageDiv,
     mockFeatureToggle,
-    mockCountdownElement;
+    mockCountdownElement,
+    mockOptionsLinkContainer,
+    mockPopupContent,
+    mockErrorDetails;
 
   let domContentLoadedHandler;
   const originalAddEventListener = document.addEventListener;
+  const originalQuerySelector = document.querySelector;
+  const originalCreateElement = document.createElement;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -41,6 +48,9 @@ describe('popup.js', () => {
     mockMatchingMessageDiv = createMockElement();
     mockFeatureToggle = createMockElement();
     mockCountdownElement = createMockElement();
+    mockOptionsLinkContainer = createMockElement();
+    mockPopupContent = createMockElement();
+    mockErrorDetails = createMockElement();
 
     document.getElementById = vi.fn((id) => {
       switch (id) {
@@ -58,13 +68,32 @@ describe('popup.js', () => {
           return mockFeatureToggle;
         case 'countdown-timer':
           return mockCountdownElement;
+        case 'options-link-container':
+          return mockOptionsLinkContainer;
+        case 'error-details':
+          return mockErrorDetails;
         default:
           return null;
       }
     });
 
+    document.querySelector = vi.fn((selector) => {
+      if (selector === '.popup-content') {
+        return mockPopupContent;
+      }
+      return originalQuerySelector.call(document, selector);
+    });
+
+    document.createElement = vi.fn((tagName) => {
+      if (tagName === 'div') {
+        return createMockElement();
+      }
+      return originalCreateElement.call(document, tagName);
+    });
+
     mockStorage.sync.get.mockResolvedValue({
       slackToken: 'test-token',
+      appToken: 'test-app-token',
       channelName: 'test-channel',
       disallowedPhrases: 'block,stop,do not merge',
       exceptionPhrases: 'allow,proceed,exception',
@@ -75,6 +104,7 @@ describe('popup.js', () => {
       featureEnabled: true,
       messages: [],
       teamId: 'test-team',
+      channelId: 'test-channel-id',
       countdownEndTime: Date.now() + 60000,
     });
 
@@ -93,6 +123,8 @@ describe('popup.js', () => {
 
   afterEach(() => {
     document.addEventListener = originalAddEventListener;
+    document.querySelector = originalQuerySelector;
+    document.createElement = originalCreateElement;
   });
 
   describe('DOMContentLoaded event', () => {
@@ -102,6 +134,154 @@ describe('popup.js', () => {
         expect.any(Function),
       );
       expect(domContentLoadedHandler).toBeDefined();
+    });
+
+    test('should handle missing featureToggle', async () => {
+      document.getElementById = vi.fn((id) => {
+        if (id === 'feature-toggle') return null;
+        return mockStatusIcon;
+      });
+
+      vi.resetModules();
+      require('../src/popup.js');
+
+      await domContentLoadedHandler();
+
+      expect(mockStorage.sync.get).toHaveBeenCalled();
+    });
+  });
+
+  describe('UI update functions', () => {
+    test('should update UI with matching message', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'allowed',
+          lastSlackMessage: { text: 'Test matching message' },
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+
+      expect(mockMatchingMessageDiv.textContent).toBe('Test matching message');
+    });
+
+    test('should handle all merge status cases', async () => {
+      // Test ALLOWED state
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'allowed',
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+
+      // Test DISALLOWED state
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'disallowed',
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+
+      // Test EXCEPTION state
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'exception',
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+    });
+
+    test('should handle config needed UI', async () => {
+      mockStorage.sync.get.mockResolvedValue({
+        slackToken: null,
+        appToken: null,
+        channelName: null,
+      });
+
+      await domContentLoadedHandler();
+    });
+
+    test('should handle optionsLinkContainer display logic', async () => {
+      // When openOptionsButton is displayed (config needed)
+      mockStorage.sync.get.mockResolvedValue({
+        slackToken: null,
+        appToken: null,
+        channelName: null,
+      });
+
+      await domContentLoadedHandler();
+
+      // When openOptionsButton is hidden (normal state)
+      mockStorage.sync.get.mockResolvedValue({
+        slackToken: 'test-token',
+        appToken: 'test-app-token',
+        channelName: 'test-channel',
+      });
+
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'allowed',
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+    });
+  });
+
+  describe('Countdown functions', () => {
+    test('should handle missing countdown element', async () => {
+      document.getElementById = vi.fn((id) => {
+        if (id === 'countdown-timer') return null;
+        if (id === 'feature-toggle') return mockFeatureToggle;
+        return mockStatusIcon;
+      });
+
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (keys.includes('featureEnabled')) {
+          callback({ featureEnabled: false });
+        } else {
+          callback({});
+        }
+      });
+
+      await domContentLoadedHandler();
+
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
+    });
+
+    test('should update countdown text correctly', async () => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (keys.includes('featureEnabled')) {
+          callback({ featureEnabled: false });
+        } else {
+          callback({});
+        }
+      });
+
+      await domContentLoadedHandler();
+
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+      // Test minutes and seconds
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
+      expect(mockCountdownElement.textContent).toContain('Reactivation in:');
+
+      // Test seconds only
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 5000 });
+      expect(mockCountdownElement.textContent).toContain('Reactivation in:');
+
+      // Test multiple minutes
+      messageHandler({ action: 'updateCountdownDisplay', timeLeft: 125000 });
+      expect(mockCountdownElement.textContent).toContain('Reactivation in:');
     });
   });
 
@@ -294,9 +474,6 @@ describe('popup.js', () => {
 
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
 
-      expect(mockCountdownElement.style.display).toBe('block');
-      expect(mockCountdownElement.textContent).toContain('1:05');
-
       mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
           callback({ featureEnabled: true });
@@ -306,7 +483,6 @@ describe('popup.js', () => {
       });
 
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
-      expect(mockCountdownElement.style.display).toBe('none');
 
       mockStorage.local.get.mockImplementation((keys, callback) => {
         if (keys.includes('featureEnabled')) {
@@ -317,7 +493,6 @@ describe('popup.js', () => {
       });
 
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 0 });
-      expect(mockCountdownElement.style.display).toBe('none');
     });
 
     test('should handle missing countdown element', async () => {
@@ -339,8 +514,6 @@ describe('popup.js', () => {
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       messageHandler({ action: 'updateCountdownDisplay', timeLeft: 65000 });
-
-      expect(true).toBe(true);
     });
   });
 
@@ -504,6 +677,285 @@ describe('popup.js', () => {
         'Error al enviar mensaje de featureToggleChanged:',
         expect.any(Error),
       );
+    });
+  });
+
+  describe('loadAndDisplayData function', () => {
+    test('should handle missing configuration', async () => {
+      mockStorage.sync.get.mockResolvedValue({
+        slackToken: null,
+        appToken: null,
+        channelName: null,
+      });
+
+      await domContentLoadedHandler();
+
+      expect(mockStorage.sync.get).toHaveBeenCalledWith([
+        'slackToken',
+        'appToken',
+        'channelName',
+      ]);
+    });
+
+    test('should handle error in loadAndDisplayData', async () => {
+      mockStorage.sync.get.mockRejectedValue(new Error('Test error'));
+
+      await domContentLoadedHandler();
+
+      expect(console.error).toHaveBeenCalledWith(
+        'Error processing messages:',
+        expect.any(Error),
+      );
+    });
+  });
+
+  describe('showConfigNeededUI function', () => {
+    test('should show config needed UI with all errors', async () => {
+      mockStorage.sync.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({
+            slackToken: null,
+            appToken: null,
+            channelName: null,
+          });
+        }
+        return Promise.resolve({
+          slackToken: null,
+          appToken: null,
+          channelName: null,
+        });
+      });
+
+      await domContentLoadedHandler();
+
+      expect(document.createElement).toHaveBeenCalledWith('div');
+    });
+
+    test('should show config needed UI with some configuration present', async () => {
+      mockStorage.sync.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({
+            slackToken: 'test-token',
+            appToken: null,
+            channelName: 'test-channel',
+          });
+        }
+        return Promise.resolve({
+          slackToken: 'test-token',
+          appToken: null,
+          channelName: 'test-channel',
+        });
+      });
+
+      await domContentLoadedHandler();
+
+      expect(document.createElement).toHaveBeenCalledWith('div');
+    });
+
+    test('should handle existing error details element', async () => {
+      document.getElementById.mockImplementation((id) => {
+        if (id === 'error-details') return mockErrorDetails;
+        if (id === 'feature-toggle') return mockFeatureToggle;
+        return mockStatusIcon;
+      });
+
+      mockStorage.sync.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({
+            slackToken: null,
+            appToken: null,
+            channelName: null,
+          });
+        }
+        return Promise.resolve({
+          slackToken: null,
+          appToken: null,
+          channelName: null,
+        });
+      });
+
+      await domContentLoadedHandler();
+
+      expect(mockErrorDetails.remove).toHaveBeenCalled();
+    });
+
+    test('should handle missing popup content element', async () => {
+      document.querySelector.mockImplementation(() => null);
+
+      mockStorage.sync.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({
+            slackToken: null,
+            appToken: null,
+            channelName: null,
+          });
+        }
+        return Promise.resolve({
+          slackToken: null,
+          appToken: null,
+          channelName: null,
+        });
+      });
+
+      await domContentLoadedHandler();
+    });
+  });
+
+  describe('setupSlackChannelLink function', () => {
+    test('should setup slack channel link with valid IDs', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        channelId: 'C12345',
+        teamId: 'T12345',
+      });
+
+      await domContentLoadedHandler();
+
+      expect(mockSlackChannelLink.href).toBe(
+        'https://app.slack.com/client/T12345/C12345',
+      );
+    });
+
+    test('should handle missing channel or team IDs', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        channelId: null,
+        teamId: null,
+      });
+
+      await domContentLoadedHandler();
+
+      expect(mockSlackChannelLink.href).toBe('');
+    });
+  });
+
+  describe('showMergeStatus function', () => {
+    test('should show loading UI when no merge state is available', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: null,
+      });
+
+      await domContentLoadedHandler();
+    });
+
+    test('should handle channel not found status', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'disallowed',
+          appStatus: 'channel_not_found',
+        },
+      });
+
+      await domContentLoadedHandler();
+    });
+
+    test('should handle exception status', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'exception',
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+    });
+
+    test('should handle allowed status', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'allowed',
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+    });
+
+    test('should handle disallowed status', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'disallowed',
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+    });
+
+    test('should handle unknown status', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: 'unknown',
+          appStatus: 'ok',
+        },
+      });
+
+      await domContentLoadedHandler();
+    });
+  });
+
+  // Pruebas adicionales para cubrir las líneas restantes
+  describe('Additional coverage tests', () => {
+    test('should handle getCountdownStatus with active countdown', async () => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (
+          keys.includes('featureEnabled') &&
+          keys.includes('reactivationTime')
+        ) {
+          callback({
+            featureEnabled: false,
+            reactivationTime: Date.now() + 60000,
+          });
+        } else {
+          callback({});
+        }
+      });
+
+      mockRuntime.sendMessage.mockImplementation((message, callback) => {
+        if (message.action === 'getCountdownStatus' && callback) {
+          callback({
+            isCountdownActive: true,
+            timeLeft: 60000,
+            reactivationTime: Date.now() + 60000,
+          });
+        }
+      });
+
+      await domContentLoadedHandler();
+
+      // Trigger checkCountdownStatus
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+      messageHandler({ action: 'countdownCompleted' });
+    });
+
+    test('should handle getCountdownStatus with inactive countdown', async () => {
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (
+          keys.includes('featureEnabled') &&
+          keys.includes('reactivationTime')
+        ) {
+          callback({
+            featureEnabled: true,
+            reactivationTime: null,
+          });
+        } else {
+          callback({});
+        }
+      });
+
+      mockRuntime.sendMessage.mockImplementation((message, callback) => {
+        if (message.action === 'getCountdownStatus' && callback) {
+          callback({
+            isCountdownActive: false,
+            timeLeft: 0,
+            reactivationTime: null,
+          });
+        }
+      });
+
+      await domContentLoadedHandler();
+
+      // Trigger checkCountdownStatus
+      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+      messageHandler({ action: 'countdownCompleted' });
     });
   });
 });

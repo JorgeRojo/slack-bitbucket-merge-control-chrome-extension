@@ -126,6 +126,40 @@ This organization makes it easier to find and maintain tests related to specific
 5. **Keep tests focused**: Each test should test a single piece of functionality
 6. **Use setup and teardown**: Use `beforeEach` and `afterEach` to set up and clean up test state
 7. **Avoid testing implementation details**: Test behavior, not implementation details
+8. **Avoid conditional statements in tests**: Tests should be deterministic and straightforward. Avoid using if/else statements, ternary operators, or other conditional logic within test cases. If you need different test scenarios, create separate test cases instead.
+
+### Example of avoiding conditionals in tests
+
+Instead of:
+
+```javascript
+test('should handle both valid and invalid inputs', () => {
+  const validInput = 'valid';
+  const invalidInput = '';
+  
+  if (validInput) {
+    expect(isValid(validInput)).toBe(true);
+  }
+  
+  if (!invalidInput) {
+    expect(isValid(invalidInput)).toBe(false);
+  }
+});
+```
+
+Write separate tests:
+
+```javascript
+test('should return true for valid input', () => {
+  const validInput = 'valid';
+  expect(isValid(validInput)).toBe(true);
+});
+
+test('should return false for invalid input', () => {
+  const invalidInput = '';
+  expect(isValid(invalidInput)).toBe(false);
+});
+```
 
 ## Running Tests
 
