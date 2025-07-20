@@ -127,6 +127,7 @@ This organization makes it easier to find and maintain tests related to specific
 6. **Use setup and teardown**: Use `beforeEach` and `afterEach` to set up and clean up test state
 7. **Avoid testing implementation details**: Test behavior, not implementation details
 8. **Avoid conditional statements in tests**: Tests should be deterministic and straightforward. Avoid using if/else statements, ternary operators, or other conditional logic within test cases. If you need different test scenarios, create separate test cases instead.
+9. **Avoid trivial assertions**: Never use `expect(true).toBe(true)` or other trivial assertions that always pass. Each assertion should verify something meaningful.
 
 ### Example of avoiding conditionals in tests
 
@@ -158,6 +159,37 @@ test('should return true for valid input', () => {
 test('should return false for invalid input', () => {
   const invalidInput = '';
   expect(isValid(invalidInput)).toBe(false);
+});
+```
+
+### Example of avoiding trivial assertions
+
+Instead of:
+
+```javascript
+test('should handle missing handler', () => {
+  if (handler) {
+    // Test with handler
+  } else {
+    expect(true).toBe(true); // ❌ Trivial assertion
+  }
+});
+```
+
+Better approach:
+
+```javascript
+test('should handle handler when available', () => {
+  // Verify handler exists before using it
+  expect(handler).toBeDefined();
+  
+  // Continue with test only if handler exists
+  // ...
+});
+
+// Or if the handler might not exist, skip the test
+test.runIf(handler)('should process data with handler', () => {
+  // Test implementation
 });
 ```
 
