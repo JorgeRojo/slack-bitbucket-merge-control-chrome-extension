@@ -160,7 +160,8 @@ h1 {
   text-align: right;
 }
 
-#options-link, #help-link {
+#options-link,
+#help-link {
   font-size: 12px;
   color: var(--ft-color-grey-1);
   text-decoration: none;
@@ -168,7 +169,8 @@ h1 {
   transition: opacity 0.2s ease;
 }
 
-#options-link:hover, #help-link:hover {
+#options-link:hover,
+#help-link:hover {
   opacity: 1;
   text-decoration: underline;
 }
