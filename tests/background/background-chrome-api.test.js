@@ -329,4 +329,60 @@ describe('Background Script via Chrome API', () => {
       reactivationTime: null,
     });
   });
+
+  test('should clear lastMatchingMessage when fetching new messages', async () => {
+    // Configurar un mock para fetch
+    global.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            messages: [
+              { text: 'Test message 1', ts: '1626262626.000001' },
+              { text: 'Test message 2', ts: '1626262626.000002' },
+            ],
+          }),
+      }),
+    );
+
+    // Simular que ya existe un lastMatchingMessage
+    mockStorage.local.get.mockImplementation((keys) => {
+      if (Array.isArray(keys) && keys.includes('lastKnownMergeState')) {
+        return Promise.resolve({
+          lastKnownMergeState: {
+            appStatus: 'ok',
+          },
+        });
+      }
+      return Promise.resolve({
+        lastMatchingMessage: { text: 'Old message', ts: '1626262626.000000' },
+      });
+    });
+
+    // Trigger fetchNewMessages message
+    await triggerChromeMessage({
+      action: 'fetchNewMessages',
+      channelName: 'new-channel',
+    });
+
+    // Verificar que lastMatchingMessage se estableció a null antes de obtener nuevos mensajes
+    const setCalls = mockStorage.local.set.mock.calls;
+
+    // Buscar la llamada que establece lastMatchingMessage a null
+    const nullMatchingMessageCall = setCalls.find(
+      (call) => call[0].lastMatchingMessage === null,
+    );
+
+    expect(nullMatchingMessageCall).toBeTruthy();
+
+    // Verificar que esta llamada ocurrió antes de establecer los nuevos mensajes
+    const nullMatchingMessageIndex = setCalls.indexOf(nullMatchingMessageCall);
+    const messagesSetIndex = setCalls.findIndex((call) => call[0].messages);
+
+    // Si messagesSetIndex es -1, significa que no se establecieron nuevos mensajes,
+    // lo cual es aceptable para esta prueba
+    if (messagesSetIndex !== -1) {
+      expect(nullMatchingMessageIndex).toBeLessThan(messagesSetIndex);
+    }
+  });
 });
