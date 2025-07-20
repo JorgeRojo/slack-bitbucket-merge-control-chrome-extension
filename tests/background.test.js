@@ -852,4 +852,65 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       expect(() => alarmHandler({ name: alarmName })).not.toThrow();
     }
   });
+
+  test('should test additional message processing scenarios', async () => {
+    // Test with various message formats
+    global.fetch.mockImplementationOnce((url) => {
+      const isConversationsHistory = url.includes('conversations.history');
+
+      return isConversationsHistory
+        ? Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                ok: true,
+                messages: [
+                  {
+                    text: 'Message with DO NOT MERGE keyword',
+                    ts: '1234567890',
+                  },
+                  {
+                    text: 'Message with ALLOWED TO MERGE keyword',
+                    ts: '1234567891',
+                  },
+                  { text: 'Message with EXCEPTION keyword', ts: '1234567892' },
+                ],
+              }),
+          })
+        : Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                ok: true,
+                channels: [{ id: 'C123', name: 'test-channel' }],
+              }),
+          });
+    });
+
+    mockStorage.sync.get.mockImplementation((keys) => {
+      if (
+        keys.includes('allowedPhrases') ||
+        (Array.isArray(keys) && keys.includes('allowedPhrases'))
+      ) {
+        return Promise.resolve({
+          allowedPhrases: 'allowed to merge',
+          disallowedPhrases: 'do not merge',
+          exceptionPhrases: 'exception',
+        });
+      }
+      return Promise.resolve({
+        slackToken: 'test-token',
+        appToken: 'test-app-token',
+        channelName: 'test-channel',
+      });
+    });
+
+    await messageHandler(
+      { action: 'fetchNewMessages', channelName: 'test-channel' },
+      {},
+    );
+
+    // Verify that messages were processed
+    expect(mockStorage.local.set).toHaveBeenCalled();
+  });
 });
