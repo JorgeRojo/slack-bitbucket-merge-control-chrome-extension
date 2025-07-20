@@ -17,13 +17,11 @@ import {
   MERGE_STATUS,
 } from './constants.js';
 
-// Función de migración de appStatus a lastKnownMergeState
 async function migrateAppStatus() {
   try {
     const { appStatus, lastKnownMergeState = {} } =
       await chrome.storage.local.get(['appStatus', 'lastKnownMergeState']);
 
-    // Si existe appStatus como clave independiente, moverlo a lastKnownMergeState
     if (appStatus !== undefined) {
       await chrome.storage.local.set({
         lastKnownMergeState: {
@@ -32,7 +30,6 @@ async function migrateAppStatus() {
         },
       });
 
-      // Eliminar la clave independiente
       await chrome.storage.local.remove('appStatus');
       console.log('Migrated appStatus to lastKnownMergeState');
     }
@@ -41,13 +38,11 @@ async function migrateAppStatus() {
   }
 }
 
-// Ejecutar la migración solo en el entorno de producción, no en tests
 if (typeof process === 'undefined' || process.env.NODE_ENV !== 'test') {
   migrateAppStatus();
 }
 
 let bitbucketTabId = null;
-
 let rtmWebSocket = null;
 
 function normalizeText(text) {
@@ -485,20 +480,15 @@ async function connectToSlackSocketMode() {
     };
 
     rtmWebSocket.onclose = async () => {
-      // Don't change the icon to ERROR immediately, as it could be a normal reconnection
       console.log('WebSocket connection closed');
 
-      // Try to reconnect after a delay
       setTimeout(() => {
-        // Check if a new connection has already been established
         chrome.storage.local.get(
           ['lastWebSocketConnectTime'],
           async (result) => {
             const lastConnectTime = result.lastWebSocketConnectTime || 0;
             const timeSinceLastConnect = Date.now() - lastConnectTime;
 
-            // If more than 5 seconds have passed since the last successful connection,
-            // we consider there's a problem and update the state
             if (timeSinceLastConnect > 5000) {
               updateExtensionIcon(MERGE_STATUS.ERROR);
               await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
@@ -524,11 +514,8 @@ async function connectToSlackSocketMode() {
   }
 }
 
-// Function to set up the alarm that periodically checks the WebSocket status
 function setupWebSocketCheckAlarm() {
-  // First remove any existing alarm with the same name
   chrome.alarms.clear(WEBSOCKET_CHECK_ALARM, () => {
-    // Create a new alarm that runs periodically
     chrome.alarms.create(WEBSOCKET_CHECK_ALARM, {
       periodInMinutes: WEBSOCKET_CHECK_INTERVAL,
     });
@@ -542,21 +529,18 @@ function setupWebSocketCheckAlarm() {
 async function checkWebSocketConnection() {
   console.log('Checking WebSocket connection status...');
 
-  // Check if WebSocket exists and is connected
   if (!rtmWebSocket || rtmWebSocket.readyState !== WebSocket.OPEN) {
     console.log('WebSocket is not connected. Attempting to reconnect...');
     connectToSlackSocketMode();
     return;
   }
 
-  // Check how much time has passed since the last connection
   const { lastWebSocketConnectTime } = await chrome.storage.local.get(
     'lastWebSocketConnectTime',
   );
   const currentTime = Date.now();
   const connectionAge = currentTime - (lastWebSocketConnectTime || 0);
 
-  // If the connection is older than WEBSOCKET_MAX_AGE, reconnect to refresh it
   if (connectionAge > WEBSOCKET_MAX_AGE) {
     console.log('Old WebSocket connection. Reconnecting to refresh it...');
     rtmWebSocket.close();
@@ -564,7 +548,6 @@ async function checkWebSocketConnection() {
   } else {
     console.log('WebSocket connection active and recent.');
 
-    // Send a ping to keep the connection active
     try {
       rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
       console.log('Ping sent to Slack server');
@@ -583,7 +566,6 @@ async function fetchAndStoreMessages(slackToken, channelId) {
   }
 
   try {
-    // Limpiar lastMatchingMessage antes de obtener nuevos mensajes
     await chrome.storage.local.set({ lastMatchingMessage: null });
 
     const response = await fetch(
@@ -643,36 +625,28 @@ const messageHandlers = {
       'channelName',
     ]);
 
-    // Use the channel name from the request if provided, otherwise use the stored one
     const targetChannelName = request?.channelName || channelName;
 
     if (slackToken && targetChannelName) {
       try {
-        // First, set the state to LOADING to indicate we're changing channels
         updateExtensionIcon(MERGE_STATUS.LOADING);
 
-        // Limpiar lastMatchingMessage al cambiar de canal
         await chrome.storage.local.set({ lastMatchingMessage: null });
 
         const channelId = await resolveChannelId(slackToken, targetChannelName);
 
-        // If we get here, the channel exists and we have access to it
-        // Set appStatus to OK and update the channelId
         await updateAppStatus(APP_STATUS.OK);
         await chrome.storage.local.set({
           channelId: channelId,
         });
 
-        // Get messages from the new channel
         await fetchAndStoreMessages(slackToken, channelId);
 
-        // Update the merge button state
         await updateContentScriptMergeState(targetChannelName);
       } catch (error) {
         console.error('Error fetching messages:', error);
         await handleSlackApiError(error);
 
-        // Si skipErrorNotification es true, no notificar al UI sobre el error
         if (request?.channelName && !request?.skipErrorNotification) {
           try {
             await chrome.runtime.sendMessage({
@@ -685,12 +659,10 @@ const messageHandlers = {
         }
       }
     } else {
-      // If there's no token or channel name, set configuration error
       await updateAppStatus(APP_STATUS.CONFIG_ERROR);
     }
   },
   reconnectSlack: async () => {
-    // Get the current state before closing the connection
     const { lastKnownMergeState = {} } = await chrome.storage.local.get(
       'lastKnownMergeState',
     );
@@ -700,7 +672,6 @@ const messageHandlers = {
       rtmWebSocket.close();
     }
 
-    // Only set the state to LOADING if there's no previous error
     if (!appStatus || appStatus === APP_STATUS.OK) {
       updateExtensionIcon(MERGE_STATUS.LOADING);
     }
