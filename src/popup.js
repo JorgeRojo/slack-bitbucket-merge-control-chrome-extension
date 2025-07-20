@@ -15,8 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     slackChannelLink: document.getElementById('slack-channel-link'),
     matchingMessageDiv: document.getElementById('matching-message'),
     featureToggle: document.getElementById('feature-toggle'),
-    optionsLink: document.getElementById('options-link'),
-    helpLink: document.getElementById('help-link'),
     optionsLinkContainer: document.getElementById('options-link-container'),
   };
 
@@ -28,7 +26,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     matchingMessageDiv,
     featureToggle,
     optionsLinkContainer,
-    // helpLink, // Commented out as it's not used yet
   } = uiElements;
 
   if (featureToggle) {
@@ -499,8 +496,6 @@ function setupEventListeners({
   slackChannelLink,
   matchingMessageDiv,
   featureToggle,
-  optionsLink,
-  helpLink,
   optionsLinkContainer,
 }) {
   featureToggle.addEventListener('toggle', (event) => {
@@ -540,26 +535,6 @@ function setupEventListeners({
     }
   });
 
-  // Check if optionsLink exists before adding event listener
-  if (optionsLink) {
-    optionsLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (chrome.runtime.openOptionsPage) {
-        chrome.runtime.openOptionsPage();
-      } else {
-        window.open(chrome.runtime.getURL('options.html'));
-      }
-    });
-  }
-
-  // Check if helpLink exists before adding event listener
-  if (helpLink) {
-    helpLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.open(chrome.runtime.getURL('help.html'));
-    });
-  }
-
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (
       namespace === 'local' &&
@@ -580,24 +555,3 @@ function setupEventListeners({
     handleBackgroundMessages(request, { featureToggle });
   });
 }
-// Export functions for testing
-export {
-  updateUI,
-  updateContentByState,
-  showConfigNeededUI,
-  showMergeStatus,
-  showLoadingUI,
-  showErrorUI,
-  handleBackgroundMessages,
-  handleCountdownUpdate,
-  handleCountdownCompleted,
-  initializeToggle,
-  setupEventListeners,
-  loadAndDisplayData,
-  setupSlackChannelLink,
-  manageCountdownElement,
-  updateCountdownText,
-  updateCountdownDisplay,
-  initializeFeatureToggleState,
-  checkCountdownStatus,
-};

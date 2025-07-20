@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>Slack-Bitbucket Merge Control</title>
     <link rel="stylesheet" href="styles/popup.css" />
+    <script src="components/nav-links.js" defer></script>
   </head>
   <body>
     <h1>Slack-Bitbucket Merge Control</h1>
@@ -23,11 +24,7 @@
         <button id="open-options">Open Options Page</button>
       </div>
     </div>
-    <div id="options-link-container">
-      <a id="options-link" href="#">Options</a>
-      <span class="link-separator">|</span>
-      <a id="help-link" href="#">Help</a>
-    </div>
+    <nav-links id="options-link-container"></nav-links>
     <script src="popup.js" type="module"></script>
   </body>
 </html>

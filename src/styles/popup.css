@@ -134,7 +134,9 @@ h1 {
   padding: 32px 16px 16px 16px;
   border-radius: var(--ft-form-item-border-radius);
   width: 100%;
+  box-sizing: border-box;
   position: relative;
+  text-align: left;
 }
 
 #matching-message::before {
@@ -146,6 +148,7 @@ h1 {
   left: 0;
   padding: 8px;
   font-size: 12px;
+
   text-transform: uppercase;
 }
 
@@ -154,9 +157,7 @@ h1 {
 }
 
 #options-link-container {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
+  margin: 8px;
   text-align: right;
 }
 
