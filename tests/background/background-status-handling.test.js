@@ -9,13 +9,15 @@ async function updateContentScriptMergeState(channelName) {
   const {
     // eslint-disable-next-line no-unused-vars
     messages: _messages = [],
-    appStatus,
     featureEnabled,
+    lastKnownMergeState = {},
   } = await chrome.storage.local.get([
     'messages',
-    'appStatus',
     'featureEnabled',
+    'lastKnownMergeState',
   ]);
+
+  const appStatus = lastKnownMergeState.appStatus;
 
   await chrome.storage.sync.get([
     'allowedPhrases',
@@ -40,6 +42,7 @@ async function updateContentScriptMergeState(channelName) {
 
   await chrome.storage.local.set({
     lastKnownMergeState: {
+      ...lastKnownMergeState,
       isMergeDisabled:
         mergeStatusForContentScript === MERGE_STATUS.DISALLOWED ||
         mergeStatusForContentScript === MERGE_STATUS.EXCEPTION,
@@ -47,7 +50,7 @@ async function updateContentScriptMergeState(channelName) {
       lastSlackMessage: matchingMessageForContentScript,
       channelName: channelName,
       featureEnabled: featureEnabled !== false,
-      appStatus: appStatus, // Incluir appStatus en lastKnownMergeState
+      appStatus: appStatus, // Mantener appStatus en lastKnownMergeState
     },
   });
 }
@@ -58,8 +61,10 @@ describe('App Status Error Handling', () => {
       if (Array.isArray(keys) && keys.includes('messages')) {
         return Promise.resolve({
           messages: [],
-          appStatus: null,
           featureEnabled: true,
+          lastKnownMergeState: {
+            appStatus: null,
+          },
         });
       }
       return Promise.resolve({});
@@ -85,8 +90,10 @@ describe('App Status Error Handling', () => {
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
-        appStatus: APP_STATUS.UNKNOWN_ERROR,
         featureEnabled: true,
+        lastKnownMergeState: {
+          appStatus: APP_STATUS.UNKNOWN_ERROR,
+        },
       });
     });
 
@@ -105,8 +112,10 @@ describe('App Status Error Handling', () => {
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
-        appStatus: APP_STATUS.CONFIG_ERROR,
         featureEnabled: true,
+        lastKnownMergeState: {
+          appStatus: APP_STATUS.CONFIG_ERROR,
+        },
       });
     });
 
@@ -125,8 +134,10 @@ describe('App Status Error Handling', () => {
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
-        appStatus: APP_STATUS.TOKEN_ERROR,
         featureEnabled: true,
+        lastKnownMergeState: {
+          appStatus: APP_STATUS.TOKEN_ERROR,
+        },
       });
     });
 
@@ -145,8 +156,10 @@ describe('App Status Error Handling', () => {
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
-        appStatus: APP_STATUS.WEB_SOCKET_ERROR,
         featureEnabled: true,
+        lastKnownMergeState: {
+          appStatus: APP_STATUS.WEB_SOCKET_ERROR,
+        },
       });
     });
 
@@ -165,8 +178,10 @@ describe('App Status Error Handling', () => {
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
-        appStatus: APP_STATUS.OK,
         featureEnabled: true,
+        lastKnownMergeState: {
+          appStatus: APP_STATUS.OK,
+        },
       });
     });
 
@@ -185,8 +200,10 @@ describe('App Status Error Handling', () => {
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
-        appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
         featureEnabled: true,
+        lastKnownMergeState: {
+          appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
+        },
       });
     });
 
@@ -205,8 +222,10 @@ describe('App Status Error Handling', () => {
     chrome.storage.local.get.mockImplementation(() => {
       return Promise.resolve({
         messages: [],
-        appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
         featureEnabled: true,
+        lastKnownMergeState: {
+          appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
+        },
       });
     });
 

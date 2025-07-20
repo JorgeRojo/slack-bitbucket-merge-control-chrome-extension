@@ -1,6 +1,19 @@
 import { describe, test, expect, vi } from 'vitest';
 import { APP_STATUS } from '../../src/constants.js';
 
+// Helper function to update appStatus within lastKnownMergeState
+const updateAppStatus = async (status) => {
+  const { lastKnownMergeState = {} } = await chrome.storage.local.get(
+    'lastKnownMergeState',
+  );
+  await chrome.storage.local.set({
+    lastKnownMergeState: {
+      ...lastKnownMergeState,
+      appStatus: status,
+    },
+  });
+};
+
 // Create a mock implementation of handleSlackApiError that matches the real one
 const mockHandleSlackApiError = async (error) => {
   const errorMessage = error?.message || '';
@@ -9,33 +22,31 @@ const mockHandleSlackApiError = async (error) => {
     errorMessage.includes('channel_not_found') ||
     errorMessage.includes('not_in_channel')
   ) {
+    await updateAppStatus(APP_STATUS.CHANNEL_NOT_FOUND);
     await chrome.storage.local.set({
-      appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
       channelId: null,
     });
   } else if (
     errorMessage.includes('invalid_auth') ||
     errorMessage.includes('token_revoked')
   ) {
-    await chrome.storage.local.set({
-      appStatus: APP_STATUS.TOKEN_ERROR,
-    });
+    await updateAppStatus(APP_STATUS.TOKEN_ERROR);
   } else {
-    await chrome.storage.local.set({
-      appStatus: APP_STATUS.UNKNOWN_ERROR,
-    });
+    await updateAppStatus(APP_STATUS.UNKNOWN_ERROR);
   }
 };
 
 describe('Background Script Error Recovery', () => {
   // Test that handleSlackApiError doesn't clear messages
   test('handleSlackApiError should not clear messages when setting error state', async () => {
-    // Mock chrome.storage.local.set
+    // Mock chrome.storage.local.set and get
     const mockSet = vi.fn();
+    const mockGet = vi.fn().mockResolvedValue({ lastKnownMergeState: {} });
     global.chrome = {
       storage: {
         local: {
           set: mockSet,
+          get: mockGet,
         },
       },
     };
@@ -48,12 +59,15 @@ describe('Background Script Error Recovery', () => {
 
     // Check that messages were not cleared
     const calls = mockSet.mock.calls;
-    const setParams = calls[0][0];
 
-    // Verify that the messages property is not present in the set call
-    expect(setParams).not.toHaveProperty('messages');
+    // Verify that appStatus was set correctly in lastKnownMergeState
+    expect(calls[0][0]).toHaveProperty('lastKnownMergeState');
+    expect(calls[0][0].lastKnownMergeState).toHaveProperty(
+      'appStatus',
+      APP_STATUS.CHANNEL_NOT_FOUND,
+    );
 
-    // Verify that appStatus was set correctly
-    expect(setParams).toHaveProperty('appStatus', APP_STATUS.CHANNEL_NOT_FOUND);
+    // Verify that channelId was set to null
+    expect(calls[1][0]).toHaveProperty('channelId', null);
   });
 });

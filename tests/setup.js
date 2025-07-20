@@ -21,6 +21,7 @@ global.chrome = {
     local: {
       get: () => Promise.resolve({}),
       set: () => Promise.resolve(),
+      remove: () => Promise.resolve(),
     },
     onChanged: {
       addListener: () => {},
