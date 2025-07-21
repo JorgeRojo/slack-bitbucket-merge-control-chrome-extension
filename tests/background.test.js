@@ -932,4 +932,60 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     // Verify that messages were processed
     expect(mockStorage.local.set).toHaveBeenCalled();
   });
+
+  test('should handle "Receiving end does not exist" errors silently in runtime.sendMessage', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    mockRuntime.sendMessage.mockRejectedValue(
+      new Error(
+        'Could not establish connection. Receiving end does not exist.',
+      ),
+    );
+
+    await messageHandler(
+      { action: 'fetchAndStoreMessages', channelName: 'test-channel' },
+      {},
+      vi.fn(),
+    );
+
+    expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('Receiving end does not exist'),
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  test('should handle "Receiving end does not exist" errors silently in tabs.sendMessage', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    mockTabs.sendMessage.mockRejectedValue(
+      new Error(
+        'Could not establish connection. Receiving end does not exist.',
+      ),
+    );
+
+    mockStorage.local.get.mockResolvedValue({
+      lastKnownMergeState: {
+        isMergeDisabled: false,
+        lastSlackMessage: 'test message',
+        channelName: 'test-channel',
+        mergeStatus: 'allowed',
+      },
+      featureEnabled: true,
+    });
+
+    global.bitbucketTabId = 123;
+
+    await messageHandler(
+      { action: 'fetchAndStoreMessages', channelName: 'test-channel' },
+      {},
+      vi.fn(),
+    );
+
+    expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('Receiving end does not exist'),
+    );
+
+    consoleSpy.mockRestore();
+  });
 });

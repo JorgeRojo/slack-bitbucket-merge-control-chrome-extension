@@ -402,6 +402,9 @@ async function updateContentScriptMergeState(channelName) {
       action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
     });
   } catch (error) {
+    if (error.message?.includes('Receiving end does not exist')) {
+      return;
+    }
     Logger.error(error);
   }
 
@@ -426,6 +429,9 @@ async function updateContentScriptMergeState(channelName) {
         featureEnabled: featureEnabled !== false,
       });
     } catch (error) {
+      if (error.message?.includes('Receiving end does not exist')) {
+        return;
+      }
       Logger.error(error);
     }
   }
@@ -668,8 +674,11 @@ const messageHandlers = {
               action: MESSAGE_ACTIONS.CHANNEL_CHANGE_ERROR,
               error: error.message,
             });
-          } catch (error) {
-            Logger.error(error);
+          } catch (sendError) {
+            if (sendError.message?.includes('Receiving end does not exist')) {
+              return;
+            }
+            Logger.error(sendError);
           }
         }
       }
@@ -791,6 +800,10 @@ const updateMergeButtonFromLastKnownMergeState = () => {
             featureEnabled: result.featureEnabled !== false,
           });
         } catch (error) {
+          if (error.message?.includes('Receiving end does not exist')) {
+            bitbucketTabId = null;
+            return;
+          }
           Logger.error(error);
           bitbucketTabId = null;
         }
@@ -835,6 +848,9 @@ async function notifyPopupAboutCountdown(timeLeft) {
       timeLeft,
     });
   } catch (error) {
+    if (error.message?.includes('Receiving end does not exist')) {
+      return;
+    }
     Logger.error(error);
   }
 }
@@ -870,6 +886,9 @@ async function reactivateFeature() {
       enabled: true,
     });
   } catch (error) {
+    if (error.message?.includes('Receiving end does not exist')) {
+      return;
+    }
     Logger.error(error);
   }
 
