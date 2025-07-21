@@ -5,7 +5,6 @@ vi.mock('../src/utils/logger.js');
 
 describe('Content Script Structure', () => {
   test('should have proper encapsulation pattern', () => {
-    // Read the content script file to verify structure
     const fs = require('fs');
     const path = require('path');
     const contentScript = fs.readFileSync(
@@ -13,12 +12,10 @@ describe('Content Script Structure', () => {
       'utf8',
     );
 
-    // Verify that the script uses encapsulation pattern
     expect(contentScript).toContain('BitbucketMergeController');
     expect(contentScript).toContain('(() => {');
     expect(contentScript).toContain('let mergeButtonObserver = null;');
 
-    // Verify that mergeButtonObserver is not a global variable
     expect(contentScript).not.toMatch(/^let mergeButtonObserver/m);
     expect(contentScript).not.toMatch(/^var mergeButtonObserver/m);
   });
@@ -31,7 +28,6 @@ describe('Content Script Structure', () => {
       'utf8',
     );
 
-    // Verify that the controller is initialized
     expect(contentScript).toContain('BitbucketMergeController.init()');
   });
 
@@ -43,7 +39,6 @@ describe('Content Script Structure', () => {
       'utf8',
     );
 
-    // Verify that key functions are present and encapsulated
     expect(contentScript).toContain('function disableMergeButton');
     expect(contentScript).toContain('function enableMergeButton');
     expect(contentScript).toContain('function applyMergeButtonLogic');
@@ -53,13 +48,11 @@ describe('Content Script Structure', () => {
 });
 
 describe('Content Script Initialization', () => {
-  // Mock para document
   global.document = {
     querySelector: vi.fn(),
     body: {},
   };
 
-  // Mock para MutationObserver
   global.MutationObserver = vi.fn(function (callback) {
     this.observe = vi.fn();
     this.disconnect = vi.fn();
@@ -67,10 +60,8 @@ describe('Content Script Initialization', () => {
   });
 
   beforeEach(() => {
-    // Reset mocks
     vi.resetAllMocks();
 
-    // Setup storage mocks
     mockStorage.sync.get.mockResolvedValue({
       mergeButtonSelector: '.test-merge-button',
     });
@@ -91,7 +82,6 @@ describe('Content Script Initialization', () => {
   });
 
   test('should send bitbucketTabLoaded message on init', async () => {
-    // Import the module to trigger init
     await import('../src/content.js');
 
     expect(mockRuntime.sendMessage).toHaveBeenCalledWith({
@@ -100,14 +90,12 @@ describe('Content Script Initialization', () => {
   });
 
   test('should set up message listener on init', async () => {
-    // Import the module to trigger init
     await import('../src/content.js');
 
     expect(mockRuntime.onMessage.addListener).toHaveBeenCalled();
   });
 
   test('should observe for merge button on init', async () => {
-    // Import the module to trigger init
     await import('../src/content.js');
 
     expect(global.MutationObserver).toHaveBeenCalled();
@@ -122,7 +110,6 @@ describe('Content Script Initialization', () => {
   });
 
   test('should apply initial merge state when merge button is found', async () => {
-    // Setup mock merge button
     const mockMergeButton = {
       style: {},
       addEventListener: vi.fn(),
@@ -130,10 +117,8 @@ describe('Content Script Initialization', () => {
     };
     document.querySelector.mockReturnValue(mockMergeButton);
 
-    // Import the module to trigger init
     await import('../src/content.js');
 
-    // Simulate MutationObserver callback finding the merge button
     const observer = global.MutationObserver.mock.instances[0];
     observer.callback([], observer);
 
@@ -143,41 +128,297 @@ describe('Content Script Initialization', () => {
       expect.any(Function),
     );
   });
+
+  test('should use default merge button selector when custom selector is not provided', async () => {
+    mockStorage.sync.get.mockResolvedValue({});
+
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+
+    document.querySelector
+      .mockReturnValueOnce(null)
+      .mockReturnValueOnce(mockMergeButton);
+
+    await import('../src/content.js');
+
+    const observer = global.MutationObserver.mock.instances[0];
+    observer.callback([], observer);
+
+    expect(document.querySelector).toHaveBeenCalledWith(
+      '.merge-button-container > .merge-button',
+    );
+  });
 });
 
 describe('Content Script Message Handling', () => {
-  // Mock para document.querySelector
-  const mockMergeButton = {
-    style: {},
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    _customMergeHandler: null,
-  };
-
-  // Mock para document
   global.document = {
-    querySelector: vi.fn(() => mockMergeButton),
+    querySelector: vi.fn(),
     body: {},
   };
 
-  // Mock para alert y confirm
   global.alert = vi.fn();
   global.confirm = vi.fn();
 
   beforeEach(() => {
-    // Reset mocks
     vi.resetAllMocks();
 
-    // Reset merge button mock
-    mockMergeButton.style = {};
-    mockMergeButton._customMergeHandler = null;
-    mockMergeButton.addEventListener.mockClear();
-    mockMergeButton.removeEventListener.mockClear();
-
-    // Setup storage mocks
     mockStorage.sync.get.mockResolvedValue({
       mergeButtonSelector: '.test-merge-button',
     });
+
+    global.confirm.mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  test('should ignore non-updateMergeButton messages', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    await import('../src/content.js');
+
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+    messageHandler({
+      action: 'someOtherAction',
+      data: 'test',
+    });
+
+    expect(document.querySelector).not.toHaveBeenCalled();
+  });
+
+  test('should skip removing event listener if not present', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      _customMergeHandler: null,
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    await import('../src/content.js');
+
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+    messageHandler({
+      action: 'updateMergeButton',
+      featureEnabled: true,
+      mergeStatus: 'allowed',
+      channelName: 'test-channel',
+    });
+
+    expect(mockMergeButton.removeEventListener).not.toHaveBeenCalled();
+  });
+
+  test('should handle updateMergeButton message with disallowed status', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    await import('../src/content.js');
+
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+    messageHandler({
+      action: 'updateMergeButton',
+      featureEnabled: true,
+      mergeStatus: 'disallowed',
+      channelName: 'test-channel',
+    });
+  });
+
+  test('should handle updateMergeButton message with exception status', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    await import('../src/content.js');
+
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+    messageHandler({
+      action: 'updateMergeButton',
+      featureEnabled: true,
+      mergeStatus: 'exception',
+      channelName: 'test-channel',
+    });
+  });
+
+  test('should handle updateMergeButton message with allowed status', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      _customMergeHandler: () => {},
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    await import('../src/content.js');
+
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+    messageHandler({
+      action: 'updateMergeButton',
+      featureEnabled: true,
+      mergeStatus: 'allowed',
+      channelName: 'test-channel',
+    });
+  });
+
+  test('should handle updateMergeButton message with feature disabled', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    await import('../src/content.js');
+
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+    messageHandler({
+      action: 'updateMergeButton',
+      featureEnabled: false,
+      mergeStatus: 'disallowed',
+      channelName: 'test-channel',
+    });
+  });
+
+  test('should do nothing when merge button is not found', async () => {
+    document.querySelector.mockReturnValueOnce(null);
+
+    await import('../src/content.js');
+
+    const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+    messageHandler({
+      action: 'updateMergeButton',
+      featureEnabled: true,
+      mergeStatus: 'disallowed',
+      channelName: 'test-channel',
+    });
+  });
+});
+
+describe('Initial Merge State Application', () => {
+  global.document = {
+    querySelector: vi.fn(),
+    body: {},
+  };
+
+  global.MutationObserver = vi.fn(function (callback) {
+    this.observe = vi.fn();
+    this.disconnect = vi.fn();
+    this.callback = callback;
+  });
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    mockStorage.sync.get.mockResolvedValue({
+      mergeButtonSelector: '.test-merge-button',
+    });
+  });
+
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  test('should do nothing when no lastKnownMergeState exists', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    mockStorage.local.get.mockImplementation((keys, callback) => {
+      callback({
+        featureEnabled: true,
+      });
+    });
+
+    await import('../src/content.js');
+
+    const observer = global.MutationObserver.mock.instances[0];
+    observer.callback([], observer);
+
+    expect(mockMergeButton.addEventListener).not.toHaveBeenCalled();
+    expect(mockMergeButton.removeEventListener).not.toHaveBeenCalled();
+  });
+
+  test('should apply disallowed state from storage', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    mockStorage.local.get.mockImplementation((keys, callback) => {
+      callback({
+        lastKnownMergeState: {
+          mergeStatus: 'disallowed',
+          channelName: 'test-channel',
+        },
+        featureEnabled: true,
+      });
+    });
+
+    await import('../src/content.js');
+
+    const observer = global.MutationObserver.mock.instances[0];
+    observer.callback([], observer);
+  });
+
+  test('should apply exception state from storage', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    mockStorage.local.get.mockImplementation((keys, callback) => {
+      callback({
+        lastKnownMergeState: {
+          mergeStatus: 'exception',
+          channelName: 'test-channel',
+        },
+        featureEnabled: true,
+      });
+    });
+
+    await import('../src/content.js');
+
+    const observer = global.MutationObserver.mock.instances[0];
+    observer.callback([], observer);
+  });
+
+  test('should apply allowed state from storage', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      _customMergeHandler: () => {},
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
 
     mockStorage.local.get.mockImplementation((keys, callback) => {
       callback({
@@ -189,7 +430,53 @@ describe('Content Script Message Handling', () => {
       });
     });
 
-    // Default confirm to return true
+    await import('../src/content.js');
+
+    const observer = global.MutationObserver.mock.instances[0];
+    observer.callback([], observer);
+  });
+
+  test('should override merge state when feature is disabled', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
+    mockStorage.local.get.mockImplementation((keys, callback) => {
+      callback({
+        lastKnownMergeState: {
+          mergeStatus: 'disallowed',
+          channelName: 'test-channel',
+        },
+        featureEnabled: false,
+      });
+    });
+
+    await import('../src/content.js');
+
+    const observer = global.MutationObserver.mock.instances[0];
+    observer.callback([], observer);
+  });
+});
+
+describe('Merge Button Event Handlers', () => {
+  global.document = {
+    querySelector: vi.fn(),
+    body: {},
+  };
+
+  global.alert = vi.fn();
+  global.confirm = vi.fn();
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    mockStorage.sync.get.mockResolvedValue({
+      mergeButtonSelector: '.test-merge-button',
+    });
+
     global.confirm.mockReturnValue(true);
   });
 
@@ -197,43 +484,45 @@ describe('Content Script Message Handling', () => {
     vi.resetModules();
   });
 
-  test('should do nothing when merge button is not found', async () => {
-    // Mock document.querySelector to return null for this test
-    document.querySelector.mockReturnValueOnce(null);
+  test('should create event handler for disallowed status', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      _customMergeHandler: null,
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
 
-    // Import the module to trigger init
     await import('../src/content.js');
 
-    // Get the message handler
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
-    // Call the handler
     messageHandler({
       action: 'updateMergeButton',
       featureEnabled: true,
       mergeStatus: 'disallowed',
       channelName: 'test-channel',
     });
-
-    // Verify no changes were made to the button
-    expect(mockMergeButton.addEventListener).not.toHaveBeenCalled();
   });
 
-  test('should ignore non-updateMergeButton messages', async () => {
-    // Import the module to trigger init
+  test('should create event handler for exception status', async () => {
+    const mockMergeButton = {
+      style: {},
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      _customMergeHandler: null,
+    };
+    document.querySelector.mockReturnValue(mockMergeButton);
+
     await import('../src/content.js');
 
-    // Get the message handler
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
-    // Call the handler with a different action
     messageHandler({
-      action: 'someOtherAction',
-      data: 'test',
+      action: 'updateMergeButton',
+      featureEnabled: true,
+      mergeStatus: 'exception',
+      channelName: 'test-channel',
     });
-
-    // Verify no changes were made to the button
-    expect(mockMergeButton.addEventListener).not.toHaveBeenCalled();
-    expect(mockMergeButton.removeEventListener).not.toHaveBeenCalled();
   });
 });
