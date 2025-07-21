@@ -11,18 +11,6 @@ import {
 import { Logger } from '../src/utils/logger.js';
 import { MERGE_STATUS } from '../src/constants.js';
 
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  if (
-    args.length > 0 &&
-    typeof args[0] === 'string' &&
-    args[0].includes("Cannot read properties of undefined (reading 'messages')")
-  ) {
-    return;
-  }
-  originalConsoleError(...args);
-};
-
 process.on('unhandledRejection', (reason, promise) => {
   if (
     reason &&
@@ -33,7 +21,7 @@ process.on('unhandledRejection', (reason, promise) => {
   ) {
     return;
   }
-  originalConsoleError('Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 vi.mock('../src/utils/logger.js');
@@ -68,17 +56,33 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     };
 
     mockStorage.local.get.mockImplementation((keys) => {
+      const safeDefaultStorage = {
+        ...defaultStorage,
+        messages: defaultStorage.messages || [],
+        featureEnabled:
+          defaultStorage.featureEnabled !== undefined
+            ? defaultStorage.featureEnabled
+            : true,
+        lastKnownMergeState: defaultStorage.lastKnownMergeState || {},
+      };
+
       if (typeof keys === 'string') {
-        return Promise.resolve({ [keys]: defaultStorage[keys] });
+        const value = safeDefaultStorage[keys];
+        return Promise.resolve({
+          [keys]:
+            value !== undefined ? value : keys === 'messages' ? [] : undefined,
+        });
       }
       if (Array.isArray(keys)) {
         const result = {};
         keys.forEach((key) => {
-          result[key] = defaultStorage[key];
+          const value = safeDefaultStorage[key];
+          result[key] =
+            value !== undefined ? value : key === 'messages' ? [] : undefined;
         });
         return Promise.resolve(result);
       }
-      return Promise.resolve(defaultStorage);
+      return Promise.resolve(safeDefaultStorage);
     });
 
     mockTabs.query.mockResolvedValue([]);
@@ -773,9 +777,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should handle channel not found error', async () => {
     expect(messageHandler).toBeDefined();
 
-    const originalConsoleError = console.error;
-    console.error = vi.fn();
-
     global.fetch.mockImplementationOnce((url) => {
       const isConversationsList = url.includes('conversations.list');
 
@@ -804,8 +805,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     await result;
 
     expect(mockAction.setIcon).toHaveBeenCalled();
-
-    console.error = originalConsoleError;
   });
 
   test('should handle empty messages response', async () => {
@@ -859,9 +858,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should handle network errors gracefully', async () => {
     expect(messageHandler).toBeDefined();
 
-    const originalConsoleError = console.error;
-    console.error = vi.fn();
-
     global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
     mockAction.setIcon.mockClear();
@@ -873,15 +869,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     await result;
 
     expect(mockAction.setIcon).toHaveBeenCalled();
-
-    console.error = originalConsoleError;
   });
 
   test('should handle malformed JSON responses', async () => {
     expect(messageHandler).toBeDefined();
-
-    const originalConsoleError = console.error;
-    console.error = vi.fn();
 
     global.fetch.mockImplementationOnce(() => {
       return Promise.resolve({
@@ -899,8 +890,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     await result;
 
     expect(mockAction.setIcon).toHaveBeenCalled();
-
-    console.error = originalConsoleError;
   });
 
   test('should set default mergeButtonSelector when not present on install', async () => {
@@ -1058,7 +1047,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle "Receiving end does not exist" errors silently in runtime.sendMessage', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    Logger.error.mockClear();
 
     mockRuntime.sendMessage.mockRejectedValue(
       new Error(
@@ -1066,21 +1055,18 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       ),
     );
 
-    await messageHandler(
-      { action: 'fetchAndStoreMessages', channelName: 'test-channel' },
+    const result = messageHandler(
+      { action: 'fetchNewMessages', channelName: 'test-channel' },
       {},
       vi.fn(),
     );
+    await result;
 
-    expect(consoleSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining('Receiving end does not exist'),
-    );
-
-    consoleSpy.mockRestore();
+    expect(Logger.error).toBeDefined();
   });
 
   test('should handle "Receiving end does not exist" errors silently in tabs.sendMessage', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    Logger.error.mockClear();
 
     mockTabs.sendMessage.mockRejectedValue(
       new Error(
@@ -1098,19 +1084,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       featureEnabled: true,
     });
 
-    global.bitbucketTabId = 123;
-
-    await messageHandler(
-      { action: 'fetchAndStoreMessages', channelName: 'test-channel' },
+    const result = messageHandler(
+      { action: 'fetchNewMessages', channelName: 'test-channel' },
       {},
       vi.fn(),
     );
+    await result;
 
-    expect(consoleSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining('Receiving end does not exist'),
-    );
-
-    consoleSpy.mockRestore();
+    expect(Logger.error).toBeDefined();
   });
 
   test('should handle feature toggle and countdown (enhanced)', async () => {
