@@ -1,0 +1,100 @@
+const SLACK_API_BASE_URL = 'https://slack.com/api';
+
+export const SLACK_CONVERSATIONS_LIST_URL = `${SLACK_API_BASE_URL}/conversations.list`;
+export const SLACK_CONVERSATIONS_HISTORY_URL = `${SLACK_API_BASE_URL}/conversations.history`;
+
+export const SLACK_USERS_LIST_URL = `${SLACK_API_BASE_URL}/users.list`;
+
+export const SLACK_AUTH_TEST_URL = `${SLACK_API_BASE_URL}/auth.test`;
+export const SLACK_CONNECTIONS_OPEN_URL = `${SLACK_API_BASE_URL}/apps.connections.open`;
+
+export const CONTENT_SCRIPT_ID = 'slack-bitbucket-extension-content-script';
+
+export const MAX_MESSAGES = 50;
+
+export const DEFAULT_ALLOWED_PHRASES: string[] = [
+  'allowed to merge',
+  'no restrictions on merging.',
+];
+
+export const DEFAULT_DISALLOWED_PHRASES: string[] = [
+  'not allowed to merge',
+  'do not merge without consent',
+  'closing versions. do not merge',
+  'ask me before merging',
+];
+
+export const DEFAULT_EXCEPTION_PHRASES: string[] = [
+  'allowed to merge this task',
+  'except everything related to',
+  'allowed to merge in all projects except',
+  'merge is allowed except',
+  'do not merge these projects',
+  'you can merge:',
+  'do not merge in',
+];
+
+export const DEFAULT_MERGE_BUTTON_SELECTOR =
+  '.merge-button-container > .merge-button';
+
+export const DEFAULT_BITBUCKET_URL =
+  'https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*';
+
+export const DEFAULT_CHANNEL_NAME = 'frontend-closure';
+
+export const SLACK_BASE_URL = 'https://app.slack.com/client/';
+
+export const FEATURE_REACTIVATION_TIMEOUT = 1 * 60 * 1000; // 1 minute in milliseconds
+
+export enum APP_STATUS {
+  OK = 'ok',
+  UNKNOWN_ERROR = 'unknown_error',
+  TOKEN_ERROR = 'token_error',
+  CONFIG_ERROR = 'config_error',
+  WEB_SOCKET_ERROR = 'web_socket_error',
+  CHANNEL_NOT_FOUND = 'channel_not_found',
+}
+
+export enum MERGE_STATUS {
+  UNKNOWN = 'unknown',
+  ALLOWED = 'allowed',
+  DISALLOWED = 'disallowed',
+  EXCEPTION = 'exception',
+  LOADING = 'loading',
+  ERROR = 'error',
+  CONFIG_NEEDED = 'config_needed',
+}
+
+export const RECONNECTION_DELAY_MS = 5000; // 5 seconds
+export const WEBSOCKET_CHECK_INTERVAL = 2; // 2 minutes
+export const WEBSOCKET_CHECK_ALARM = 'checkWebSocketConnection';
+export const WEBSOCKET_MAX_AGE = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+export enum MESSAGE_ACTIONS {
+  GET_DEFAULT_PHRASES = 'getDefaultPhrases',
+  FETCH_NEW_MESSAGES = 'fetchNewMessages',
+  RECONNECT_SLACK = 'reconnectSlack',
+  BITBUCKET_TAB_LOADED = 'bitbucketTabLoaded',
+  FEATURE_TOGGLE_CHANGED = 'featureToggleChanged',
+  GET_COUNTDOWN_STATUS = 'getCountdownStatus',
+  COUNTDOWN_COMPLETED = 'countdownCompleted',
+  UPDATE_MESSAGES = 'updateMessages',
+  UPDATE_MERGE_BUTTON = 'updateMergeButton',
+  CHANNEL_CHANGE_ERROR = 'channelChangeError',
+  UPDATE_COUNTDOWN_DISPLAY = 'updateCountdownDisplay',
+}
+
+export enum ERROR_MESSAGES {
+  RECEIVING_END_NOT_EXIST = 'Receiving end does not exist',
+  CONNECTION_FAILED = 'Connection failed - receiving end missing',
+  MESSAGE_PORT_CLOSED = 'message port closed before a response',
+  CHANNEL_NOT_FOUND = 'Channel not found',
+  NOT_IN_CHANNEL = 'Bot not in channel',
+  INVALID_AUTH = 'Auth failed - check token',
+  TOKEN_REVOKED = 'Slack token revoked',
+  SENDING_PING = 'Ping failed',
+  FETCHING_MESSAGES = 'Failed to fetch messages',
+  IN_CALLBACK = 'Error in callback handler',
+  SCRIPT_VERIFICATION = 'Error verifying content scripts',
+  SCRIPT_REGISTRATION = 'Error registering content script',
+}

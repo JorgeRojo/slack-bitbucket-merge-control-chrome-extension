@@ -20,5 +20,6 @@ export default defineConfig({
       reportsDirectory: './coverage',
       clean: true,
     },
+    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   },
 });
