@@ -1,12 +1,5 @@
 import { vi } from 'vitest';
 
-vi.mock('../src/utils/logger.js', () => ({
-  Logger: {
-    log: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 export const mockStorage = {
   sync: {
     get: vi.fn(),

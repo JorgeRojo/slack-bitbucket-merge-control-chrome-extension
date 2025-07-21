@@ -7,6 +7,15 @@ import {
   mockAction,
   mockScripting,
 } from './setup.js';
+
+// Mock Logger locally for background tests
+vi.mock('../src/utils/logger.js', () => ({
+  Logger: {
+    log: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 import { Logger } from '../src/utils/logger.js';
 
 describe('Background Script - Enhanced Coverage Tests', () => {
