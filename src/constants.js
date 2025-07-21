@@ -85,9 +85,9 @@ export const MESSAGE_ACTIONS = {
 };
 
 export const ERROR_MESSAGES = {
-  RECEIVING_END_NOT_EXIST: 'Receiving end missing',
+  RECEIVING_END_NOT_EXIST: 'Receiving end does not exist',
   CONNECTION_FAILED: 'Connection failed - receiving end missing',
-  MESSAGE_PORT_CLOSED: 'Message port closed before response',
+  MESSAGE_PORT_CLOSED: 'message port closed before a response',
   CHANNEL_NOT_FOUND: 'Channel not found',
   NOT_IN_CHANNEL: 'Bot not in channel',
   INVALID_AUTH: 'Auth failed - check token',

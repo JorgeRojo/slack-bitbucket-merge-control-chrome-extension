@@ -3,11 +3,11 @@ import {
   SLACK_BASE_URL,
   MERGE_STATUS,
   APP_STATUS,
-  MESSAGE_ACTIONS,
   ERROR_MESSAGES,
 } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
+import { initializeToggleFeatureStatus } from './popup-toggle-feature-status.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const uiElements = {
@@ -30,10 +30,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     optionsLinkContainer,
   } = uiElements;
 
-  if (featureToggle) {
-    await initializeToggle(featureToggle);
-    setupEventListeners(uiElements);
-  }
+  // Initialize toggle feature status system
+  await initializeToggleFeatureStatus(featureToggle);
+
+  // Setup other event listeners
+  setupEventListeners({
+    statusIcon,
+    statusText,
+    openOptionsButton,
+    slackChannelLink,
+    matchingMessageDiv,
+    optionsLinkContainer,
+  });
 
   await loadAndDisplayData({
     statusIcon,
@@ -141,84 +149,6 @@ function updateContentByState({
     if (optionsLinkContainer) {
       optionsLinkContainer.style.display = 'none';
     }
-  }
-}
-
-function manageCountdownElement({ show, timeLeft }) {
-  const countdownElement = document.getElementById('countdown-timer');
-  if (!countdownElement) return null;
-
-  countdownElement.style.display = show ? 'block' : 'none';
-
-  if (show && timeLeft !== undefined) {
-    updateCountdownText(countdownElement, timeLeft);
-  }
-
-  return countdownElement;
-}
-
-function updateCountdownText(element, timeLeft) {
-  const minutes = Math.floor(timeLeft / 60000);
-  const seconds = Math.floor((timeLeft % 60000) / 1000);
-  element.textContent = `Reactivation in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
-
-function updateCountdownDisplay(timeLeft) {
-  chrome.storage.local.get(['featureEnabled'], (result) => {
-    const isEnabled = result.featureEnabled !== false;
-
-    if (isEnabled || timeLeft <= 0) {
-      manageCountdownElement({ show: false });
-      return;
-    }
-
-    manageCountdownElement({ show: true, timeLeft });
-  });
-}
-
-function initializeFeatureToggleState(toggleElement) {
-  chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
-    const isEnabled = result.featureEnabled !== false;
-
-    if (isEnabled) {
-      toggleElement.setAttribute('checked', '');
-      manageCountdownElement({ show: false });
-      return;
-    }
-
-    toggleElement.removeAttribute('checked');
-    checkCountdownStatus();
-  });
-}
-
-function checkCountdownStatus() {
-  try {
-    chrome.runtime.sendMessage(
-      { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
-      (response) => {
-        if (chrome.runtime.lastError) {
-          Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
-            silentMessages: [
-              ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-              ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
-            ],
-          });
-          return;
-        }
-
-        if (!response?.isCountdownActive) return;
-
-        updateCountdownDisplay(response.timeLeft);
-      },
-    );
-  } catch (error) {
-    // Silence common connection errors in popup
-    Logger.error(error, 'Popup', {
-      silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
-      ],
-    });
   }
 }
 
@@ -473,83 +403,14 @@ function showErrorUI({
   });
 }
 
-function handleBackgroundMessages(request, { featureToggle }) {
-  if (request.action === 'updateCountdownDisplay') {
-    handleCountdownUpdate(request);
-  } else if (request.action === 'countdownCompleted') {
-    handleCountdownCompleted(featureToggle);
-  }
-}
-
-function handleCountdownUpdate(request) {
-  chrome.storage.local.get(['featureEnabled'], (result) => {
-    const isEnabled = result.featureEnabled !== false;
-
-    if (!isEnabled) {
-      updateCountdownDisplay(request.timeLeft);
-    } else {
-      manageCountdownElement({ show: false });
-    }
-  });
-}
-
-function handleCountdownCompleted(featureToggle) {
-  manageCountdownElement({ show: false });
-  featureToggle.setAttribute('checked', '');
-}
-
-async function initializeToggle(featureToggle) {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  initializeFeatureToggleState(featureToggle);
-}
-
 function setupEventListeners({
   statusIcon,
   statusText,
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
-  featureToggle,
   optionsLinkContainer,
 }) {
-  featureToggle.addEventListener('toggle', (event) => {
-    const isChecked = event.detail.checked;
-    chrome.storage.local.set({ featureEnabled: isChecked });
-
-    try {
-      chrome.runtime.sendMessage(
-        {
-          action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
-          enabled: isChecked,
-        },
-        (_response) => {
-          if (chrome.runtime.lastError) {
-            // Silence connection errors when background script is not available
-            Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
-              silentMessages: [
-                ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-                ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
-              ],
-            });
-            return;
-          }
-        },
-      );
-    } catch (error) {
-      // Silence common connection errors in toggle
-      Logger.error(error, 'Popup', {
-        silentMessages: [
-          ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-          ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
-        ],
-      });
-    }
-
-    if (isChecked) {
-      manageCountdownElement({ show: false });
-    }
-  });
-
   openOptionsButton.addEventListener('click', () => {
     if (chrome.runtime.openOptionsPage) {
       chrome.runtime.openOptionsPage();
@@ -572,9 +433,5 @@ function setupEventListeners({
         optionsLinkContainer,
       });
     }
-  });
-
-  chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
-    handleBackgroundMessages(request, { featureToggle });
   });
 }

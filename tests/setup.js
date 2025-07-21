@@ -89,6 +89,13 @@ global.WebSocket = vi.fn().mockImplementation(() => ({
 
 global.fetch = vi.fn();
 
+global.requestAnimationFrame = vi.fn((callback) => {
+  callback();
+  return 1;
+});
+
+global.cancelAnimationFrame = vi.fn();
+
 const setupDefaultMockResponses = () => {
   mockStorage.sync.get.mockResolvedValue({
     slackToken: 'test-token',
