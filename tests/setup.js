@@ -1,6 +1,5 @@
 import { vi } from 'vitest';
 
-// Mock para la clase Logger
 vi.mock('../src/utils/logger.js', () => ({
   Logger: {
     log: vi.fn(),

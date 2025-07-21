@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mockRuntime } from '../setup.js';
 import '../../src/components/nav-links.js';
 
 const waitForRender = async () => {
@@ -11,13 +12,11 @@ describe('NavLinks Component', () => {
   let originalGetURL;
 
   beforeEach(async () => {
-    originalOpenOptionsPage = chrome.runtime.openOptionsPage;
-    originalGetURL = chrome.runtime.getURL;
+    originalOpenOptionsPage = mockRuntime.openOptionsPage;
+    originalGetURL = mockRuntime.getURL;
 
-    chrome.runtime.openOptionsPage = vi.fn();
-    chrome.runtime.getURL = vi.fn(
-      (path) => `chrome-extension://fake-id/${path}`,
-    );
+    mockRuntime.openOptionsPage = vi.fn();
+    mockRuntime.getURL = vi.fn((path) => `chrome-extension://fake-id/${path}`);
 
     navLinks = document.createElement('nav-links');
     document.body.appendChild(navLinks);
@@ -28,8 +27,8 @@ describe('NavLinks Component', () => {
   afterEach(() => {
     document.body.contains(navLinks) && document.body.removeChild(navLinks);
 
-    chrome.runtime.openOptionsPage = originalOpenOptionsPage;
-    chrome.runtime.getURL = originalGetURL;
+    mockRuntime.openOptionsPage = originalOpenOptionsPage;
+    mockRuntime.getURL = originalGetURL;
   });
 
   test('should render with default attributes', async () => {
@@ -67,11 +66,11 @@ describe('NavLinks Component', () => {
   test('should open options page when options link is clicked', async () => {
     const optionsLink = navLinks.querySelector('#options-link');
     optionsLink.click();
-    expect(chrome.runtime.openOptionsPage).toHaveBeenCalledTimes(1);
+    expect(mockRuntime.openOptionsPage).toHaveBeenCalledTimes(1);
   });
 
-  test('should open options page via URL when chrome.runtime.openOptionsPage is not available', async () => {
-    chrome.runtime.openOptionsPage = undefined;
+  test('should open options page via URL when mockRuntime.openOptionsPage is not available', async () => {
+    mockRuntime.openOptionsPage = undefined;
 
     const originalWindowOpen = window.open;
     window.open = vi.fn();

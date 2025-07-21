@@ -76,11 +76,6 @@ describe('popup.js', () => {
 
     document.createElement = vi.fn(() => createMockElement());
 
-    global.chrome = {
-      storage: mockStorage,
-      runtime: mockRuntime,
-    };
-
     mockStorage.sync.get.mockResolvedValue({
       slackToken: 'xoxb-token',
       appToken: 'xapp-token',
@@ -152,7 +147,7 @@ describe('popup.js', () => {
 
   describe('Event handlers', () => {
     test('should handle options button click with openOptionsPage', async () => {
-      global.chrome.runtime.openOptionsPage = vi.fn();
+      mockRuntime.openOptionsPage = vi.fn();
 
       await domContentLoadedHandler();
 
@@ -163,18 +158,18 @@ describe('popup.js', () => {
 
       clickHandler();
 
-      expect(global.chrome.runtime.openOptionsPage).toHaveBeenCalled();
+      expect(mockRuntime.openOptionsPage).toHaveBeenCalled();
     });
 
     test('should handle options button click without openOptionsPage', async () => {
-      global.chrome.runtime.openOptionsPage = undefined;
+      mockRuntime.openOptionsPage = undefined;
       global.chrome.tabs = {
         create: vi.fn(),
       };
 
       await domContentLoadedHandler();
 
-      if (!global.chrome.runtime.openOptionsPage) {
+      if (!mockRuntime.openOptionsPage) {
         global.chrome.tabs.create({ url: 'options.html' });
       }
 
