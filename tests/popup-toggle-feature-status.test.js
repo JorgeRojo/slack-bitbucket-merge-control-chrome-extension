@@ -70,10 +70,14 @@ describe('popup-toggle-feature-status.js', () => {
 
     test('should initialize toggle with enabled state', async () => {
       global.chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: true });
+        // Simulate async behavior more realistically
+        setTimeout(() => callback({ featureEnabled: true }), 0);
       });
 
       await initializeToggleFeatureStatus(mockToggleElement);
+
+      // Wait for the async storage call to complete
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockToggleElement.setAttribute).toHaveBeenCalledWith(
         'checked',
@@ -84,10 +88,12 @@ describe('popup-toggle-feature-status.js', () => {
 
     test('should initialize toggle with disabled state', async () => {
       global.chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({ featureEnabled: false });
+        setTimeout(() => callback({ featureEnabled: false }), 0);
       });
 
       await initializeToggleFeatureStatus(mockToggleElement);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockToggleElement.removeAttribute).toHaveBeenCalledWith('checked');
     });

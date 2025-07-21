@@ -33,30 +33,38 @@ function updateCountdownDisplay(timeLeft) {
   });
 }
 
-function initializeFeatureToggleState(toggleElement) {
-  chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
-    const isEnabled = result.featureEnabled !== false;
+async function initializeFeatureToggleState(toggleElement) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(
+      ['featureEnabled', 'reactivationTime'],
+      (result) => {
+        const isEnabled = result.featureEnabled !== false;
 
-    if (isEnabled) {
-      toggleElement.setAttribute('checked', '');
-      manageCountdownElement({ show: false });
-      return;
-    }
+        if (isEnabled) {
+          toggleElement.setAttribute('checked', '');
+          manageCountdownElement({ show: false });
+          resolve();
+          return;
+        }
 
-    toggleElement.removeAttribute('checked');
+        toggleElement.removeAttribute('checked');
 
-    const { reactivationTime } = result;
-    if (reactivationTime) {
-      const currentTime = Date.now();
-      const timeLeft = Math.max(0, reactivationTime - currentTime);
+        const { reactivationTime } = result;
+        if (reactivationTime) {
+          const currentTime = Date.now();
+          const timeLeft = Math.max(0, reactivationTime - currentTime);
 
-      if (timeLeft > 0) {
-        updateCountdownDisplay(timeLeft);
-        return;
-      }
-    }
+          if (timeLeft > 0) {
+            updateCountdownDisplay(timeLeft);
+            resolve();
+            return;
+          }
+        }
 
-    checkCountdownStatus();
+        checkCountdownStatus();
+        resolve();
+      },
+    );
   });
 }
 
@@ -92,7 +100,7 @@ function checkCountdownStatus() {
 
 async function initializeToggle(featureToggle) {
   await new Promise((resolve) => requestAnimationFrame(resolve));
-  initializeFeatureToggleState(featureToggle);
+  await initializeFeatureToggleState(featureToggle);
 }
 
 function setupToggleEventListeners(featureToggle) {
