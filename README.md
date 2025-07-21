@@ -1,13 +1,13 @@
 # Slack-Bitbucket Merge Control Chrome Extension
 
-This is a Chrome extension designed to read messages from specified Slack channels (both public and private) and display them within the extension's popup. It also integrates with Bitbucket to control merge button availability based on Slack channel messages.
+This is a Chrome extension designed to read messages from specified Slack channels (both public and private) and control merge button availability on Bitbucket pull request pages. The extension popup displays the current merge status and the latest matching message that determined the merge control decision.
 
 ## Features
 
 - Reads messages from a configurable Slack channel.
 - Supports both public and private channels.
 - Receives messages in real-time via Slack Socket Mode.
-- Displays the latest messages in the extension popup.
+- Displays the current merge status and latest matching message in the extension popup.
 - **Bitbucket Integration:** Controls the merge button on Bitbucket pull request pages based on keywords in Slack messages.
 
 ## Code Quality
