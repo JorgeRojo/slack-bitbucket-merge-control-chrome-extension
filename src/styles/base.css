@@ -46,7 +46,7 @@ a:hover {
 }
 
 button,
-.tertiary-button {
+.default-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -58,12 +58,12 @@ button,
   font-weight: var(--ft-button-default-font-weight);
   padding: 0 var(--ft-button-default-padding-x);
   height: var(--ft-button-default-height);
-  background-color: var(--ft-tertiary-default-bg-color);
-  color: var(--ft-tertiary-default-color);
+  background-color: var(--ft-button-default-bg-color);
+  color: var(--ft-button-default-color);
   box-shadow:
-    0 1px 4px 0 var(--ft-tertiary-shadow-color),
-    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
-    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
+    0 1px 4px 0 var(--ft-button-default-shadow-color),
+    inset 0 1px 0 0 var(--ft-button-default-border-top-color),
+    inset 0 -1px 0 0 var(--ft-button-default-border-bottom-color);
   cursor: pointer;
   transition:
     box-shadow var(--ft-transition-duration) ease-out,
@@ -71,18 +71,18 @@ button,
 }
 
 button:hover,
-.tertiary-button:hover {
-  background-color: var(--ft-tertiary-hover-bg-color);
-  color: var(--ft-tertiary-hover-color);
+.default-button:hover {
+  background-color: var(--ft-button-default-hover-bg-color);
+  color: var(--ft-button-default-hover-color);
   box-shadow:
-    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
-    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
-    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
+    0 3px 16px 0 var(--ft-button-default-hover-shadow-color),
+    inset 0 1px 0 0 var(--ft-button-default-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-button-default-hover-border-bottom-color);
 }
 
 button:active,
-.tertiary-button:active {
-  background-color: var(--ft-tertiary-active-bg-color);
+.default-button:active {
+  background-color: var(--ft-button-default-active-bg-color);
 }
 
 button:disabled {

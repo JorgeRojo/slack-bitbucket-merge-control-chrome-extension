@@ -58,43 +58,7 @@ h1 {
 }
 
 #slack-channel-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--ft-button-default-border-radius);
-  border: none;
-  letter-spacing: var(--ft-button-default-letter-spacing);
-  font-family: var(--ft-button-default-font-family);
-  font-size: var(--ft-button-default-font-size);
-  font-weight: var(--ft-button-default-font-weight);
-  padding: 0 var(--ft-button-default-padding-x);
-  height: var(--ft-button-default-height);
-  background-color: var(--ft-tertiary-default-bg-color);
-  color: var(--ft-tertiary-default-color);
-  box-shadow:
-    0 1px 4px 0 var(--ft-tertiary-shadow-color),
-    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
-    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
-  cursor: pointer;
-  transition:
-    box-shadow var(--ft-transition-duration) ease-out,
-    background-color var(--ft-transition-duration) ease-out;
-  text-decoration: none;
   margin-top: 16px;
-}
-
-#slack-channel-link:hover {
-  background-color: var(--ft-tertiary-hover-bg-color);
-  color: var(--ft-tertiary-hover-color);
-  box-shadow:
-    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
-    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
-    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
-  text-decoration: none;
-}
-
-#slack-channel-link:active {
-  background-color: var(--ft-tertiary-active-bg-color);
 }
 
 .control-section {

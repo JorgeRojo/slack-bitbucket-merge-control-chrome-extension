@@ -1,6 +1,5 @@
 :root {
   --ft-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  --ft-font-weight-light: 300;
   --ft-font-weight-normal: 400;
   --ft-font-weight-bold: 600;
   --ft-font-size: 14px;
@@ -19,25 +18,15 @@
   --ft-color-warning: #f39c12;
   --ft-color-info: #3498db;
   --ft-color-primary: var(--ft-brand-color);
-  --ft-color-tertiary: #3498db;
   --ft-color-error: #e74c3c;
 
   --ft-select-color: var(--ft-color-light);
 
-  --ft-color-item-hover: #ecf0f1;
-  --ft-color-item-active: #d5f9f6;
-  --ft-color-item-hover-active: #d6ebff;
-
   --ft-color-text: var(--ft-brand-text-1);
-  --ft-color-text-inverted: var(--ft-color-lightest);
   --ft-color-background: var(--ft-color-grey-3);
   --ft-color-link: var(--ft-color-primary);
-  --ft-header-bg-color: var(--ft-brand-color);
 
-  --ft-box-shadow-1: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
   --ft-box-shadow-2: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
-  --ft-box-shadow-3: 0 0 6px 0 rgba(0, 0, 0, 0.1);
-  --ft-box-shadow-4: 0 2px 16px 0 rgba(0, 0, 0, 0.1);
 
   --ft-transition-duration: 0.2s;
 
@@ -46,17 +35,17 @@
   --ft-button-default-letter-spacing: 0.5px;
   --ft-button-default-border-radius: 6px;
 
-  --ft-tertiary-default-bg-color: #3498db;
-  --ft-tertiary-default-color: #ffffff;
-  --ft-tertiary-hover-bg-color: #2980b9;
-  --ft-tertiary-active-bg-color: #2471a3;
-  --ft-tertiary-shadow-color: rgba(52, 152, 219, 0.3);
-  --ft-tertiary-hover-shadow-color: rgba(52, 152, 219, 0.5);
-  --ft-tertiary-hover-color: var(--ft-color-lightest);
-  --ft-tertiary-border-top-color: rgba(124, 124, 255, 0.6);
-  --ft-tertiary-border-bottom-color: rgba(0, 0, 0, 0.3);
-  --ft-tertiary-hover-border-top-color: rgba(179, 179, 255, 0.2);
-  --ft-tertiary-hover-border-bottom-color: rgba(0, 0, 0, 0.3);
+  --ft-button-default-bg-color: #3498db;
+  --ft-button-default-color: #ffffff;
+  --ft-button-default-hover-bg-color: #2980b9;
+  --ft-button-default-active-bg-color: #2471a3;
+  --ft-button-default-shadow-color: rgba(52, 152, 219, 0.3);
+  --ft-button-default-hover-shadow-color: rgba(52, 152, 219, 0.5);
+  --ft-button-default-hover-color: var(--ft-color-lightest);
+  --ft-button-default-border-top-color: rgba(124, 124, 255, 0.6);
+  --ft-button-default-border-bottom-color: rgba(0, 0, 0, 0.3);
+  --ft-button-default-hover-border-top-color: rgba(179, 179, 255, 0.2);
+  --ft-button-default-hover-border-bottom-color: rgba(0, 0, 0, 0.3);
 
   --ft-button-small-font-size: 14px;
   --ft-button-default-font-size: 16px;
@@ -70,7 +59,6 @@
   --ft-form-item-padding-x: 12px;
   --ft-form-item-border-wight: 1px;
   --ft-form-item-border-color: var(--ft-color-grey-1);
-  --ft-form-item-border-color-light: var(--ft-color-grey-2);
   --ft-form-item-border: var(--ft-form-item-border-wight) solid
     var(--ft-form-item-border-color);
   --ft-form-item-bg-color: var(--ft-color-lightest);
