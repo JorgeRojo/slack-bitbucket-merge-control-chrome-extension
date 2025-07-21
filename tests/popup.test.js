@@ -691,8 +691,14 @@ describe('popup.js', () => {
       await domContentLoadedHandler();
 
       expect(console.error).toHaveBeenCalledWith(
-        'Error processing messages:',
-        expect.any(Error),
+        '[PopupUI] Test error',
+        expect.objectContaining({
+          error: expect.any(Error),
+          context: expect.objectContaining({
+            action: 'processMessages',
+            uiElements: expect.any(Object),
+          }),
+        }),
       );
     });
   });

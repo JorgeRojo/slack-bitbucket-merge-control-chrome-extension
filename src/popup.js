@@ -1,3 +1,4 @@
+import { Logger } from './utils/logger.js';
 import {
   SLACK_BASE_URL,
   MERGE_STATUS,
@@ -195,7 +196,7 @@ function checkCountdownStatus() {
       { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
       (response) => {
         if (chrome.runtime.lastError) {
-          console.log(
+          Logger.log(
             'Error al recibir respuesta:',
             chrome.runtime.lastError.message,
           );
@@ -208,7 +209,7 @@ function checkCountdownStatus() {
       },
     );
   } catch (error) {
-    console.log('Error al enviar mensaje:', error);
+    Logger.log('Error al enviar mensaje:', error);
   }
 }
 
@@ -248,7 +249,15 @@ async function loadAndDisplayData({
       optionsLinkContainer,
     });
   } catch (error) {
-    console.error('Error processing messages:', error);
+    Logger.error(error, 'PopupUI', {
+      action: 'processMessages',
+      uiElements: {
+        statusIcon: statusIcon?.id,
+        statusText: statusText?.id,
+        hasOpenOptionsButton: !!openOptionsButton,
+        hasSlackChannelLink: !!slackChannelLink,
+      },
+    });
     showErrorUI({
       statusIcon,
       statusText,
@@ -510,7 +519,7 @@ function setupEventListeners({
         },
         (_response) => {
           if (chrome.runtime.lastError) {
-            console.log(
+            Logger.log(
               'Error al recibir respuesta de featureToggleChanged:',
               chrome.runtime.lastError.message,
             );
@@ -519,7 +528,7 @@ function setupEventListeners({
         },
       );
     } catch (error) {
-      console.log('Error al enviar mensaje de featureToggleChanged:', error);
+      Logger.log('Error al enviar mensaje de featureToggleChanged:', error);
     }
 
     if (isChecked) {

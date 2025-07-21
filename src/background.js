@@ -17,6 +17,7 @@ import {
   MERGE_STATUS,
   MESSAGE_ACTIONS,
 } from './constants.js';
+import { Logger } from './utils/logger.js';
 
 let bitbucketTabId = null;
 let rtmWebSocket = null;
@@ -401,7 +402,7 @@ async function updateContentScriptMergeState(channelName) {
       action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
     });
   } catch (error) {
-    console.error(error);
+    Logger.error(error);
   }
 
   if (bitbucketTabId) {
@@ -425,7 +426,7 @@ async function updateContentScriptMergeState(channelName) {
         featureEnabled: featureEnabled !== false,
       });
     } catch (error) {
-      console.error(error);
+      Logger.error(error);
     }
   }
 }
@@ -440,7 +441,7 @@ async function fetchAndStoreTeamId(slackToken) {
       await chrome.storage.local.set({ teamId: data.team_id });
     }
   } catch (error) {
-    console.error(error);
+    Logger.error(error);
   }
 }
 
@@ -487,7 +488,7 @@ async function connectToSlackSocketMode() {
       await chrome.storage.local.set({
         lastWebSocketConnectTime: Date.now(),
       });
-      console.log('WebSocket successfully connected');
+      Logger.log('WebSocket successfully connected');
 
       setupWebSocketCheckAlarm();
     };
@@ -506,21 +507,24 @@ async function connectToSlackSocketMode() {
     };
 
     rtmWebSocket.onclose = async () => {
-      console.log('WebSocket connection closed');
+      Logger.log('WebSocket connection closed');
 
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
 
-      console.log('WebSocket closed. Scheduling reconnection...');
+      Logger.log('WebSocket closed. Scheduling reconnection...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
     rtmWebSocket.onerror = async (error) => {
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
-      console.error('WebSocket error:', error);
+      Logger.error(error, 'WebSocket', { type: 'connection' });
       rtmWebSocket.close();
     };
   } catch (error) {
-    console.error('Error connecting to Slack:', error);
+    Logger.error(error, 'SlackConnection', {
+      channelName,
+      connectionType: 'RTM',
+    });
     await handleSlackApiError(error);
     await updateContentScriptMergeState(channelName);
   }
@@ -531,17 +535,17 @@ function setupWebSocketCheckAlarm() {
     chrome.alarms.create(WEBSOCKET_CHECK_ALARM, {
       periodInMinutes: WEBSOCKET_CHECK_INTERVAL,
     });
-    console.log(
+    Logger.log(
       `Alarm set to check WebSocket every ${WEBSOCKET_CHECK_INTERVAL} minutes`,
     );
   });
 }
 
 async function checkWebSocketConnection() {
-  console.log('Checking WebSocket connection status...');
+  Logger.log('Checking WebSocket connection status...');
 
   if (!rtmWebSocket || rtmWebSocket.readyState !== WebSocket.OPEN) {
-    console.log('WebSocket is not connected. Attempting to reconnect...');
+    Logger.log('WebSocket is not connected. Attempting to reconnect...');
     connectToSlackSocketMode();
     return;
   }
@@ -553,17 +557,17 @@ async function checkWebSocketConnection() {
   const connectionAge = currentTime - (lastWebSocketConnectTime || 0);
 
   if (connectionAge > WEBSOCKET_MAX_AGE) {
-    console.log('Old WebSocket connection. Reconnecting to refresh it...');
+    Logger.log('Old WebSocket connection. Reconnecting to refresh it...');
     rtmWebSocket.close();
     setTimeout(connectToSlackSocketMode, 1000);
   } else {
-    console.log('WebSocket connection active and recent.');
+    Logger.log('WebSocket connection active and recent.');
 
     try {
       rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
-      console.log('Ping sent to Slack server');
+      Logger.log('Ping sent to Slack server');
     } catch (error) {
-      console.error('Error sending ping:', error);
+      Logger.error('Error sending ping:', error);
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       rtmWebSocket.close();
       setTimeout(connectToSlackSocketMode, 1000);
@@ -655,7 +659,7 @@ const messageHandlers = {
 
         await updateContentScriptMergeState(targetChannelName);
       } catch (error) {
-        console.error('Error fetching messages:', error);
+        Logger.error('Error fetching messages:', error);
         await handleSlackApiError(error);
 
         if (request?.channelName && !request?.skipErrorNotification) {
@@ -665,7 +669,7 @@ const messageHandlers = {
               error: error.message,
             });
           } catch (error) {
-            console.error(error);
+            Logger.error(error);
           }
         }
       }
@@ -787,7 +791,7 @@ const updateMergeButtonFromLastKnownMergeState = () => {
             featureEnabled: result.featureEnabled !== false,
           });
         } catch (error) {
-          console.error(error);
+          Logger.error(error);
           bitbucketTabId = null;
         }
       }
@@ -831,7 +835,7 @@ async function notifyPopupAboutCountdown(timeLeft) {
       timeLeft,
     });
   } catch (error) {
-    console.error(error);
+    Logger.error(error);
   }
 }
 
@@ -866,7 +870,7 @@ async function reactivateFeature() {
       enabled: true,
     });
   } catch (error) {
-    console.error(error);
+    Logger.error(error);
   }
 
   const { channelName } = await chrome.storage.sync.get('channelName');
@@ -916,7 +920,7 @@ async function registerBitbucketContentScript() {
       ids: ['bitbucket-content-script'],
     });
   } catch (error) {
-    console.error(error);
+    Logger.error(error);
   }
 
   if (bitbucketUrl) {
@@ -930,7 +934,7 @@ async function registerBitbucketContentScript() {
         },
       ]);
     } catch (error) {
-      console.error(error);
+      Logger.error(error);
     }
   }
 }
