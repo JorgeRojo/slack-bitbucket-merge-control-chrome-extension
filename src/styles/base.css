@@ -45,7 +45,9 @@ a:hover {
   text-decoration: underline;
 }
 
-button {
+button,
+.tertiary-button,
+#open-options {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -69,7 +71,9 @@ button {
     background-color var(--ft-transition-duration) ease-out;
 }
 
-button:hover {
+button:hover,
+.tertiary-button:hover,
+#open-options:hover {
   background-color: var(--ft-tertiary-hover-bg-color);
   color: var(--ft-tertiary-hover-color);
   box-shadow:
@@ -78,13 +82,22 @@ button:hover {
     inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
 }
 
-button:active {
+button:active,
+.tertiary-button:active,
+#open-options:active {
   background-color: var(--ft-tertiary-active-bg-color);
 }
 
 button:disabled {
   filter: saturate(0.5) brightness(135%) contrast(80%);
   cursor: not-allowed;
+}
+
+/* Small button variant for popup */
+#open-options {
+  padding: 0 var(--ft-button-small-padding-x);
+  height: var(--ft-button-small-height);
+  font-size: var(--ft-button-small-font-size);
 }
 
 input[type='text'],
@@ -110,28 +123,6 @@ textarea:focus {
   outline: none;
   border-color: var(--ft-color-primary);
   box-shadow: 0 0 0 2px rgba(74, 21, 75, 0.2);
-}
-
-.tertiary-button {
-  background-color: var(--ft-tertiary-default-bg-color);
-  color: var(--ft-tertiary-default-color);
-  box-shadow:
-    0 1px 4px 0 var(--ft-tertiary-shadow-color),
-    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
-    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
-}
-
-.tertiary-button:hover {
-  background-color: var(--ft-tertiary-hover-bg-color);
-  color: var(--ft-tertiary-hover-color);
-  box-shadow:
-    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
-    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
-    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
-}
-
-.tertiary-button:active {
-  background-color: var(--ft-tertiary-active-bg-color);
 }
 
 .info-text {

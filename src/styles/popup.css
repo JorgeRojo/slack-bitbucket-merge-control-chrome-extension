@@ -1,7 +1,7 @@
 @import url('./base.css');
 
 body {
-  width: 400px;
+  width: 480px;
   margin: 0 auto;
   padding: 0;
   position: relative;
@@ -51,31 +51,7 @@ h1 {
 }
 
 #open-options {
-  background-color: var(--ft-tertiary-default-bg-color);
-  color: var(--ft-tertiary-default-color);
-  border: none;
-  padding: 0 var(--ft-button-small-padding-x);
-  height: var(--ft-button-small-height);
-  border-radius: var(--ft-button-default-border-radius);
-  cursor: pointer;
-  font-size: var(--ft-button-small-font-size);
-  font-weight: var(--ft-button-default-font-weight);
   margin-top: 16px;
-  box-shadow:
-    0 1px 4px 0 var(--ft-tertiary-shadow-color),
-    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
-    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
-  transition:
-    background-color var(--ft-transition-duration) ease,
-    box-shadow var(--ft-transition-duration) ease;
-}
-
-#open-options:hover {
-  background-color: var(--ft-tertiary-hover-bg-color);
-  box-shadow:
-    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
-    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
-    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
 }
 
 #slack-channel-link {
@@ -185,7 +161,7 @@ h1 {
 .error-details {
   margin-top: 20px;
   padding: 16px;
-  background-color: var(--ft-color-grey-2);
+  background-color: var(--ft-color-grey-4);
   border-radius: var(--ft-form-item-border-radius);
   text-align: left;
   max-width: 100%;
