@@ -196,8 +196,15 @@ function checkCountdownStatus() {
       { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
       (response) => {
         if (chrome.runtime.lastError) {
+          if (
+            chrome.runtime.lastError.message.includes(
+              'Receiving end does not exist',
+            )
+          ) {
+            return;
+          }
           Logger.log(
-            'Error al recibir respuesta:',
+            'Error receiving response:',
             chrome.runtime.lastError.message,
           );
           return;
@@ -209,7 +216,7 @@ function checkCountdownStatus() {
       },
     );
   } catch (error) {
-    Logger.log('Error al enviar mensaje:', error);
+    Logger.log('Error sending message:', error);
   }
 }
 
@@ -520,7 +527,7 @@ function setupEventListeners({
         (_response) => {
           if (chrome.runtime.lastError) {
             Logger.log(
-              'Error al recibir respuesta de featureToggleChanged:',
+              'Error receiving featureToggleChanged response:',
               chrome.runtime.lastError.message,
             );
             return;
@@ -528,7 +535,7 @@ function setupEventListeners({
         },
       );
     } catch (error) {
-      Logger.log('Error al enviar mensaje de featureToggleChanged:', error);
+      Logger.log('Error sending featureToggleChanged message:', error);
     }
 
     if (isChecked) {

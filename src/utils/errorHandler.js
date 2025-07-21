@@ -2,9 +2,11 @@ export class ErrorHandler {
   static handle(error, options = {}) {
     const { component = 'General', context = {}, callback = null } = options;
 
-    const errorMessage = error instanceof Error ? error.message : error;
+    console.error(`[${component}]`, error);
 
-    console.error(`[${component}] ${errorMessage}`, { error, context });
+    if (Object.keys(context).length > 0) {
+      console.error('Context:', context);
+    }
 
     if (callback && typeof callback === 'function') {
       try {

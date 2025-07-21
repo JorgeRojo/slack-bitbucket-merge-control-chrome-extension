@@ -54,10 +54,11 @@ button,
   border: none;
   letter-spacing: var(--ft-button-default-letter-spacing);
   font-family: var(--ft-button-default-font-family);
-  font-size: var(--ft-button-default-font-size);
+  font-size: var(--ft-button-small-font-size);
   font-weight: var(--ft-button-default-font-weight);
   padding: 0 var(--ft-button-default-padding-x);
   height: var(--ft-button-default-height);
+  line-height: var(--ft-button-default-height);
   background-color: var(--ft-button-default-bg-color);
   color: var(--ft-button-default-color);
   box-shadow:
@@ -72,6 +73,7 @@ button,
 
 button:hover,
 .default-button:hover {
+  text-decoration: none;
   background-color: var(--ft-button-default-hover-bg-color);
   color: var(--ft-button-default-hover-color);
   box-shadow:

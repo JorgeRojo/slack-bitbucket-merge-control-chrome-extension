@@ -31,7 +31,7 @@
   --ft-transition-duration: 0.2s;
 
   --ft-button-default-font-family: var(--ft-font-family);
-  --ft-button-default-font-weight: var(--ft-font-weight-bold);
+  --ft-button-default-font-weight: var(--ft-font-weight-normal);
   --ft-button-default-letter-spacing: 0.5px;
   --ft-button-default-border-radius: 6px;
 
@@ -50,9 +50,9 @@
   --ft-button-small-font-size: 14px;
   --ft-button-default-font-size: 16px;
   --ft-button-small-height: 36px;
-  --ft-button-default-height: 42px;
+  --ft-button-default-height: 36px;
   --ft-button-small-padding-x: 12px;
-  --ft-button-default-padding-x: 16px;
+  --ft-button-default-padding-x: 24px;
 
   --ft-form-item-border-radius: 4px;
   --ft-form-item-padding-y: 8px;

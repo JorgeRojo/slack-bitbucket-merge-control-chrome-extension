@@ -546,7 +546,7 @@ describe('popup.js', () => {
       );
 
       expect(console.log).toHaveBeenCalledWith(
-        'Error al recibir respuesta:',
+        'Error receiving response:',
         'The message port closed before a response was received.',
       );
     });
@@ -596,7 +596,7 @@ describe('popup.js', () => {
       );
 
       expect(console.log).toHaveBeenCalledWith(
-        'Error al recibir respuesta de featureToggleChanged:',
+        'Error receiving featureToggleChanged response:',
         'The message port closed before a response was received.',
       );
     });
@@ -628,7 +628,7 @@ describe('popup.js', () => {
       messageHandler({ action: 'countdownCompleted' }, {}, () => {});
 
       expect(console.log).toHaveBeenCalledWith(
-        'Error al enviar mensaje:',
+        'Error sending message:',
         expect.any(Error),
       );
     });
@@ -662,7 +662,7 @@ describe('popup.js', () => {
       toggleHandler({ detail: { checked: true } });
 
       expect(console.log).toHaveBeenCalledWith(
-        'Error al enviar mensaje de featureToggleChanged:',
+        'Error sending featureToggleChanged message:',
         expect.any(Error),
       );
     });
@@ -691,13 +691,14 @@ describe('popup.js', () => {
       await domContentLoadedHandler();
 
       expect(console.error).toHaveBeenCalledWith(
-        '[PopupUI] Test error',
+        '[PopupUI]',
+        expect.any(Error),
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        'Context:',
         expect.objectContaining({
-          error: expect.any(Error),
-          context: expect.objectContaining({
-            action: 'processMessages',
-            uiElements: expect.any(Object),
-          }),
+          action: 'processMessages',
+          uiElements: expect.any(Object),
         }),
       );
     });

@@ -58,6 +58,7 @@ h1 {
 }
 
 #slack-channel-link {
+  display: none;
   margin-top: 16px;
 }
 
@@ -79,6 +80,7 @@ h1 {
 }
 
 #matching-message {
+  display: none;
   font-size: 14px;
   color: var(--ft-color-text);
   margin-top: 16px;
