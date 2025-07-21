@@ -1,6 +1,14 @@
 import { Logger } from './utils/logger.js';
 import { MESSAGE_ACTIONS, ERROR_MESSAGES } from './constants.js';
 
+/**
+ * Manages the countdown element's visibility and content
+ *
+ * @param {Object} options - Configuration options
+ * @param {boolean} options.show - Whether to show or hide the countdown element
+ * @param {number | undefined} [options.timeLeft] - Time left in milliseconds for the countdown
+ * @returns {HTMLElement|null} - The countdown element or null if not found
+ */
 function manageCountdownElement({ show, timeLeft }) {
   const countdownElement = document.getElementById('countdown-timer');
   if (!countdownElement) return null;
@@ -30,41 +38,6 @@ function updateCountdownDisplay(timeLeft) {
     }
 
     manageCountdownElement({ show: true, timeLeft });
-  });
-}
-
-async function initializeFeatureToggleState(toggleElement) {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(
-      ['featureEnabled', 'reactivationTime'],
-      (result) => {
-        const isEnabled = result.featureEnabled !== false;
-
-        if (isEnabled) {
-          toggleElement.setAttribute('checked', '');
-          manageCountdownElement({ show: false });
-          resolve();
-          return;
-        }
-
-        toggleElement.removeAttribute('checked');
-
-        const { reactivationTime } = result;
-        if (reactivationTime) {
-          const currentTime = Date.now();
-          const timeLeft = Math.max(0, reactivationTime - currentTime);
-
-          if (timeLeft > 0) {
-            updateCountdownDisplay(timeLeft);
-            resolve();
-            return;
-          }
-        }
-
-        checkCountdownStatus();
-        resolve();
-      },
-    );
   });
 }
 
@@ -98,9 +71,33 @@ function checkCountdownStatus() {
   }
 }
 
-async function initializeToggle(featureToggle) {
-  await new Promise((resolve) => requestAnimationFrame(resolve));
-  await initializeFeatureToggleState(featureToggle);
+async function initializeToggle(toggleElement) {
+  chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
+    const isEnabled = result.featureEnabled !== false;
+
+    if (isEnabled) {
+      toggleElement.setAttribute('checked', '');
+      manageCountdownElement({ show: false });
+
+      return;
+    }
+
+    toggleElement.removeAttribute('checked');
+
+    const { reactivationTime } = result;
+    if (reactivationTime) {
+      const currentTime = Date.now();
+      const timeLeft = Math.max(0, reactivationTime - currentTime);
+
+      if (timeLeft > 0) {
+        updateCountdownDisplay(timeLeft);
+
+        return;
+      }
+    }
+
+    checkCountdownStatus();
+  });
 }
 
 function setupToggleEventListeners(featureToggle) {

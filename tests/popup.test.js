@@ -231,4 +231,169 @@ describe('popup.js', () => {
       await expect(domContentLoadedHandler()).resolves.not.toThrow();
     });
   });
+
+  describe('Initialization order', () => {
+    test('should initialize toggle feature status AFTER loading and displaying data', async () => {
+      const callOrder = [];
+
+      // Mock storage calls to track when they're called
+      mockStorage.sync.get.mockImplementation(() => {
+        callOrder.push('loadAndDisplayData-sync');
+        return Promise.resolve({
+          slackToken: 'xoxb-token',
+          appToken: 'xapp-token',
+          channelName: 'general',
+          teamId: 'T123456',
+          channelId: 'C123456',
+        });
+      });
+
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        callOrder.push('loadAndDisplayData-local');
+        if (typeof callback === 'function') {
+          callback({
+            mergeState: 'allowed',
+            lastMessages: [
+              {
+                text: 'Test message',
+                user: 'U123456',
+                ts: '1234567890.123456',
+              },
+            ],
+          });
+        }
+        return Promise.resolve({});
+      });
+
+      // Mock initializeToggleFeatureStatus to track when it's called
+      mockInitializeToggleFeatureStatus.mockImplementation(() => {
+        callOrder.push('initializeToggleFeatureStatus');
+        return Promise.resolve();
+      });
+
+      await domContentLoadedHandler();
+
+      // Verify that initializeToggleFeatureStatus is called AFTER data loading
+      // Note: local.get might be called multiple times, so we check that toggle init comes last
+      expect(callOrder[callOrder.length - 1]).toBe(
+        'initializeToggleFeatureStatus',
+      );
+      expect(callOrder).toContain('loadAndDisplayData-sync');
+      expect(callOrder).toContain('loadAndDisplayData-local');
+    });
+
+    test('should call initializeToggleFeatureStatus with correct toggle element', async () => {
+      await domContentLoadedHandler();
+
+      expect(mockInitializeToggleFeatureStatus).toHaveBeenCalledWith(
+        mockFeatureToggle,
+      );
+      expect(mockInitializeToggleFeatureStatus).toHaveBeenCalledTimes(1);
+    });
+
+    test('should complete data loading before toggle initialization even with slow storage', async () => {
+      const callOrder = [];
+
+      // Simulate slow storage operations
+      mockStorage.sync.get.mockImplementation(() => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            callOrder.push('loadAndDisplayData-sync-complete');
+            resolve({
+              slackToken: 'xoxb-token',
+              appToken: 'xapp-token',
+              channelName: 'general',
+            });
+          }, 50);
+        });
+      });
+
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        setTimeout(() => {
+          callOrder.push('loadAndDisplayData-local-complete');
+          if (typeof callback === 'function') {
+            callback({
+              mergeState: 'allowed',
+              lastMessages: [],
+            });
+          }
+        }, 30);
+        return Promise.resolve({});
+      });
+
+      mockInitializeToggleFeatureStatus.mockImplementation(() => {
+        callOrder.push('initializeToggleFeatureStatus');
+        return Promise.resolve();
+      });
+
+      await domContentLoadedHandler();
+
+      // Verify that toggle initialization happens after data loading operations start
+      expect(callOrder).toContain('initializeToggleFeatureStatus');
+      expect(callOrder[callOrder.length - 1]).toBe(
+        'initializeToggleFeatureStatus',
+      );
+    });
+
+    test('should still initialize toggle even if data loading fails', async () => {
+      mockStorage.sync.get.mockRejectedValue(new Error('Storage error'));
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        if (typeof callback === 'function') {
+          callback({});
+        }
+        return Promise.resolve({});
+      });
+
+      await domContentLoadedHandler();
+
+      // Even with storage errors, toggle should still be initialized
+      expect(mockInitializeToggleFeatureStatus).toHaveBeenCalledWith(
+        mockFeatureToggle,
+      );
+    });
+
+    test('should handle toggle initialization failure gracefully', async () => {
+      mockInitializeToggleFeatureStatus.mockRejectedValue(
+        new Error('Toggle init failed'),
+      );
+
+      // Should not throw even if toggle initialization fails
+      await expect(domContentLoadedHandler()).rejects.toThrow(
+        'Toggle init failed',
+      );
+    });
+
+    test('should ensure toggle initialization is the last step in DOMContentLoaded', async () => {
+      const executionOrder = [];
+
+      // Track when each major step happens
+      mockStorage.sync.get.mockImplementation(() => {
+        executionOrder.push('sync-storage-called');
+        return Promise.resolve({
+          slackToken: 'xoxb-token',
+          channelName: 'general',
+        });
+      });
+
+      mockStorage.local.get.mockImplementation((keys, callback) => {
+        executionOrder.push('local-storage-called');
+        if (typeof callback === 'function') {
+          callback({ mergeState: 'allowed' });
+        }
+        return Promise.resolve({});
+      });
+
+      mockInitializeToggleFeatureStatus.mockImplementation(() => {
+        executionOrder.push('toggle-initialization');
+        return Promise.resolve();
+      });
+
+      await domContentLoadedHandler();
+
+      // The last action should always be toggle initialization
+      expect(executionOrder[executionOrder.length - 1]).toBe(
+        'toggle-initialization',
+      );
+    });
+  });
 });

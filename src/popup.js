@@ -25,9 +25,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     optionsLinkContainer,
   } = uiElements;
 
-  // Initialize toggle feature status system
-  await initializeToggleFeatureStatus(featureToggle);
-
   // Setup other event listeners
   setupEventListeners({
     statusIcon,
@@ -46,6 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     matchingMessageDiv,
     optionsLinkContainer,
   });
+
+  await initializeToggleFeatureStatus(featureToggle);
 });
 
 function updateUI({
