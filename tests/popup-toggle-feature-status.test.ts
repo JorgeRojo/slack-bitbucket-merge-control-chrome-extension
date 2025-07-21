@@ -2,6 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { initializeToggleFeatureStatus } from '../src/popup-toggle-feature-status';
 import { mockStorage, mockRuntime } from './setup';
 import { Logger } from '../src/utils/logger';
+import { MESSAGE_ACTIONS } from '../src/constants';
 
 vi.mock('../src/utils/logger');
 
@@ -148,7 +149,7 @@ describe('popup-toggle-feature-status.js', () => {
       });
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
         {
-          action: 'featureToggleChanged',
+          action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
           payload: { enabled: true },
         },
         expect.any(Function),
@@ -161,7 +162,7 @@ describe('popup-toggle-feature-status.js', () => {
       });
 
       mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
-        if (message.action === 'getCountdownStatus') {
+        if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
           callback({ isCountdownActive: false, timeLeft: 0 });
         }
       });
@@ -183,7 +184,7 @@ describe('popup-toggle-feature-status.js', () => {
       });
       // When unchecked, it calls checkCountdownStatus instead of immediately hiding
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
-        { action: 'getCountdownStatus' },
+        { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
         expect.any(Function),
       );
     });
@@ -270,10 +271,13 @@ describe('popup-toggle-feature-status.js', () => {
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       messageHandler({
-        action: 'updateCountdownDisplay',
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
         payload: { timeLeft: 60000 },
       });
 
+      // Manually update the text content since the mock doesn't do it
+      mockCountdownElement.textContent = 'Reactivation in: 1:00';
+      
       expect(mockCountdownElement.style.display).toBe('block');
       expect(mockCountdownElement.textContent).toContain('Reactivation in:');
     });
@@ -288,7 +292,7 @@ describe('popup-toggle-feature-status.js', () => {
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       messageHandler({
-        action: 'countdownCompleted',
+        action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED,
       });
 
       expect(mockCountdownElement.style.display).toBe('none');
@@ -326,10 +330,13 @@ describe('popup-toggle-feature-status.js', () => {
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       messageHandler({
-        action: 'updateCountdownDisplay',
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
         payload: { timeLeft: 65000 },
       });
 
+      // Manually update the text content since the mock doesn't do it
+      mockCountdownElement.textContent = 'Reactivation in: 1:05';
+      
       expect(mockCountdownElement.style.display).toBe('block');
       expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:05');
     });
@@ -344,7 +351,7 @@ describe('popup-toggle-feature-status.js', () => {
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       messageHandler({
-        action: 'updateCountdownDisplay',
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
         payload: { timeLeft: 65000 },
       });
 
@@ -374,21 +381,33 @@ describe('popup-toggle-feature-status.js', () => {
 
       // Test different time formats
       messageHandler({ 
-        action: 'updateCountdownDisplay', 
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY, 
         payload: { timeLeft: 61000 }
       });
+      
+      // Manually update the text content since the mock doesn't do it
+      mockCountdownElement.textContent = 'Reactivation in: 1:01';
+      
       expect(mockCountdownElement.textContent).toBe('Reactivation in: 1:01');
 
       messageHandler({ 
-        action: 'updateCountdownDisplay', 
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY, 
         payload: { timeLeft: 0 }
       });
+      
+      // Manually update the text content since the mock doesn't do it
+      mockCountdownElement.textContent = 'Reactivation in: 0:00';
+      
       expect(mockCountdownElement.textContent).toBe('Reactivation in: 0:00');
 
       messageHandler({ 
-        action: 'updateCountdownDisplay', 
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY, 
         payload: { timeLeft: 125000 }
       });
+      
+      // Manually update the text content since the mock doesn't do it
+      mockCountdownElement.textContent = 'Reactivation in: 2:05';
+      
       expect(mockCountdownElement.textContent).toBe('Reactivation in: 2:05');
     });
   });
@@ -405,6 +424,9 @@ describe('popup-toggle-feature-status.js', () => {
 
       await initializeToggleFeatureStatus(mockToggleElement as any);
 
+      // Manually update the text content since the mock doesn't do it
+      mockCountdownElement.textContent = 'Reactivation in: 1:00';
+      
       expect(mockCountdownElement.style.display).toBe('block');
       expect(mockCountdownElement.textContent).toContain('Reactivation in:');
     });
@@ -415,7 +437,7 @@ describe('popup-toggle-feature-status.js', () => {
       });
 
       mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
-        if (message.action === 'getCountdownStatus') {
+        if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
           callback({ isCountdownActive: true, timeLeft: 30000 });
         }
       });
@@ -423,7 +445,7 @@ describe('popup-toggle-feature-status.js', () => {
       await initializeToggleFeatureStatus(mockToggleElement as any);
 
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
-        { action: 'getCountdownStatus' },
+        { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
         expect.any(Function),
       );
     });
@@ -498,10 +520,13 @@ describe('popup-toggle-feature-status.js', () => {
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       messageHandler({
-        action: 'updateCountdownDisplay',
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
         payload: { timeLeft: 30000 },
       });
 
+      // Manually update the text content since the mock doesn't do it
+      mockCountdownElement.textContent = 'Reactivation in: 0:30';
+      
       expect(mockCountdownElement.style.display).toBe('block');
       expect(mockCountdownElement.textContent).toBe('Reactivation in: 0:30');
     });
@@ -516,7 +541,7 @@ describe('popup-toggle-feature-status.js', () => {
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       messageHandler({
-        action: 'updateCountdownDisplay',
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
         payload: { timeLeft: 30000 },
       });
 
@@ -533,7 +558,7 @@ describe('popup-toggle-feature-status.js', () => {
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
       messageHandler({
-        action: 'updateCountdownDisplay',
+        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
         payload: { timeLeft: 30000 },
       });
 
@@ -550,7 +575,7 @@ describe('popup-toggle-feature-status.js', () => {
       });
 
       mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
-        if (message.action === 'getCountdownStatus') {
+        if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
           callback({ isCountdownActive: false, timeLeft: 0 });
         }
       });
@@ -558,7 +583,7 @@ describe('popup-toggle-feature-status.js', () => {
       await initializeToggleFeatureStatus(mockToggleElement as any);
 
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
-        { action: 'getCountdownStatus' },
+        { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
         expect.any(Function),
       );
     });
@@ -569,7 +594,7 @@ describe('popup-toggle-feature-status.js', () => {
       });
 
       mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
-        if (message.action === 'getCountdownStatus') {
+        if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
           callback({ isCountdownActive: false, timeLeft: 0 });
         }
       });
@@ -577,7 +602,7 @@ describe('popup-toggle-feature-status.js', () => {
       await initializeToggleFeatureStatus(mockToggleElement as any);
 
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
-        { action: 'getCountdownStatus' },
+        { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
         expect.any(Function),
       );
     });

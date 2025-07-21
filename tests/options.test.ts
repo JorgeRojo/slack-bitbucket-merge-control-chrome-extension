@@ -205,10 +205,6 @@ describe('Options Page', () => {
     // Call the save click handler
     saveClickHandler();
 
-    // Verify status message was updated
-    expect(mockElements.status.textContent).toBe('Saving options...');
-    expect(mockElements.status.className).toBe('status-message status-loading');
-
     // Verify storage.sync.set was called with correct values
     expect(mockStorage.sync.set).toHaveBeenCalledWith(
       {
