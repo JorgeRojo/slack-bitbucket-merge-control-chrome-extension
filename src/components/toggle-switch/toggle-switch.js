@@ -1,3 +1,5 @@
+import { Logger } from '../../utils/logger.js';
+
 /**
  * Custom Toggle Switch Web Component
  */
@@ -39,7 +41,10 @@ class ToggleSwitch extends HTMLElement {
         );
       });
     } else {
-      console.warn('Toggle switch input element not found');
+      Logger.error('Toggle switch input element not found', 'ToggleSwitch', {
+        shadowRoot: !!this.shadowRoot,
+        initialized: this._initialized,
+      });
     }
   }
 
