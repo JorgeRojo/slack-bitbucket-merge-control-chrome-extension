@@ -1,7 +1,6 @@
 const BITBUCKET_TAB_LOADED = 'bitbucketTabLoaded';
 const UPDATE_MERGE_BUTTON = 'updateMergeButton';
 
-// Encapsulate all content script functionality
 const BitbucketMergeController = (() => {
   let mergeButtonObserver = null;
 
@@ -138,11 +137,9 @@ const BitbucketMergeController = (() => {
     observeMergeButton();
   }
 
-  // Public API
   return {
     init,
   };
 })();
 
-// Initialize the controller
 BitbucketMergeController.init();

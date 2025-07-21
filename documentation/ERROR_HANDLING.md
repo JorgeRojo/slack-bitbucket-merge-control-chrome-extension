@@ -9,11 +9,13 @@ This document describes how to use the simplified error handling system in the e
 Error messages are now separated into two categories in `src/constants.js`:
 
 #### Console Error Messages (for debugging and logging)
+
 ```javascript
-export const CONSOLE_ERROR_MESSAGES = {
+export const ERROR_MESSAGES = {
   // Chrome extension connection errors (silenceable)
   RECEIVING_END_NOT_EXIST: 'Receiving end does not exist',
-  CONNECTION_FAILED: 'Could not establish connection. Receiving end does not exist',
+  CONNECTION_FAILED:
+    'Could not establish connection. Receiving end does not exist',
   MESSAGE_PORT_CLOSED: 'The message port closed before a response was received',
 
   // Slack API errors (internal)
@@ -32,6 +34,7 @@ export const CONSOLE_ERROR_MESSAGES = {
 ```
 
 #### User Error Messages (for UI display)
+
 ```javascript
 export const USER_ERROR_MESSAGES = {
   // General status messages
@@ -41,10 +44,14 @@ export const USER_ERROR_MESSAGES = {
   COULD_NOT_DETERMINE_STATUS: 'Could not determine status',
 
   // Configuration errors
-  SLACK_TOKEN_MISSING: 'Slack Bot Token is missing. Please add it in the options page',
-  APP_TOKEN_MISSING: 'Slack App Token is missing. Please add it in the options page',
-  CHANNEL_NAME_MISSING: 'Channel name is missing. Please add it in the options page',
-  CONFIGURATION_INCOMPLETE: 'Configuration is incomplete. Please check all required fields in the options page',
+  SLACK_TOKEN_MISSING:
+    'Slack Bot Token is missing. Please add it in the options page',
+  APP_TOKEN_MISSING:
+    'Slack App Token is missing. Please add it in the options page',
+  CHANNEL_NAME_MISSING:
+    'Channel name is missing. Please add it in the options page',
+  CONFIGURATION_INCOMPLETE:
+    'Configuration is incomplete. Please check all required fields in the options page',
 
   // Options page errors
   FILL_ALL_FIELDS: 'Please fill in all fields',
@@ -54,15 +61,17 @@ export const USER_ERROR_MESSAGES = {
 ### Main Function
 
 ```javascript
-Logger.error(error, component, context)
+Logger.error(error, component, context);
 ```
 
 **Parameters:**
+
 - `error`: The error to handle (Error object or string)
 - `component`: Component name (default: 'General')
 - `context`: Context object that can include `silentMessages` and other data
 
 **Context with silentMessages:**
+
 ```javascript
 {
   silentMessages: ['message1', 'message2'], // Array of messages to silence
@@ -71,6 +80,7 @@ Logger.error(error, component, context)
 ```
 
 **Returns:**
+
 ```javascript
 {
   error: Error,      // The original error
@@ -145,13 +155,13 @@ try {
   const result = Logger.error(error, 'Background', {
     silentMessages: [CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST],
   });
-  
+
   // Clean up tabId only if error was silenced
   if (result.silenced) {
     bitbucketTabId = null;
     return;
   }
-  
+
   // If not silenced, do something else
   console.log('Unsilenced error requires attention');
 }
@@ -171,7 +181,7 @@ try {
     userId: '123',
     operation: 'fetchData',
   });
-  
+
   // Show user-friendly message in UI
   showUserError(USER_ERROR_MESSAGES.CONFIG_NEEDED);
 }
@@ -218,7 +228,7 @@ try {
       CONSOLE_ERROR_MESSAGES.CONNECTION_FAILED,
     ],
   });
-  
+
   if (result.silenced) {
     tabId = null; // Clean up invalid tab reference
   }
@@ -232,7 +242,7 @@ import { USER_ERROR_MESSAGES } from './constants.js';
 
 function updateUI(appStatus) {
   const statusElement = document.getElementById('status');
-  
+
   switch (appStatus) {
     case 'CHANNEL_NOT_FOUND':
       statusElement.textContent = USER_ERROR_MESSAGES.CHANNEL_NOT_FOUND;
@@ -241,7 +251,8 @@ function updateUI(appStatus) {
       statusElement.textContent = USER_ERROR_MESSAGES.CONFIG_NEEDED;
       break;
     default:
-      statusElement.textContent = USER_ERROR_MESSAGES.COULD_NOT_DETERMINE_STATUS;
+      statusElement.textContent =
+        USER_ERROR_MESSAGES.COULD_NOT_DETERMINE_STATUS;
   }
 }
 ```
@@ -304,7 +315,10 @@ errorElement.textContent = USER_ERROR_MESSAGES.NEW_USER_ERROR;
 ## Testing
 
 ```javascript
-import { CONSOLE_ERROR_MESSAGES, USER_ERROR_MESSAGES } from '../src/constants.js';
+import {
+  CONSOLE_ERROR_MESSAGES,
+  USER_ERROR_MESSAGES,
+} from '../src/constants.js';
 
 test('should handle console errors with silentMessages', () => {
   expect(() => {

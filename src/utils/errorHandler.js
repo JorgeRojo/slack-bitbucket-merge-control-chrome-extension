@@ -1,4 +1,4 @@
-import { CONSOLE_ERROR_MESSAGES } from '../constants.js';
+import { ERROR_MESSAGES } from '../constants.js';
 
 export class ErrorHandler {
   static handle(error, options = {}) {
@@ -29,7 +29,7 @@ export class ErrorHandler {
       try {
         callback(error, context);
       } catch (callbackError) {
-        console.error(CONSOLE_ERROR_MESSAGES.ERROR_IN_CALLBACK, callbackError);
+        console.error(ERROR_MESSAGES.ERROR_IN_CALLBACK, callbackError);
       }
     }
 

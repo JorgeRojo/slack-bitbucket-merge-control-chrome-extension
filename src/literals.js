@@ -17,7 +17,6 @@ export const literals = {
     textChannelNotFound: USER_ERROR_MESSAGES.CHANNEL_NOT_FOUND,
     textCouldNotDetermine: 'Could not determine',
 
-    // Detailed error messages
     errorDetails: {
       slackTokenMissing: USER_ERROR_MESSAGES.SLACK_TOKEN_MISSING,
       appTokenMissing: USER_ERROR_MESSAGES.APP_TOKEN_MISSING,

@@ -4,7 +4,7 @@ import {
   MERGE_STATUS,
   APP_STATUS,
   MESSAGE_ACTIONS,
-  CONSOLE_ERROR_MESSAGES,
+  ERROR_MESSAGES,
 } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
@@ -199,8 +199,8 @@ function checkCountdownStatus() {
         if (chrome.runtime.lastError) {
           Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
             silentMessages: [
-              CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-              CONSOLE_ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+              ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+              ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
             ],
           });
           return;
@@ -215,8 +215,8 @@ function checkCountdownStatus() {
     // Silence common connection errors in popup
     Logger.error(error, 'Popup', {
       silentMessages: [
-        CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        CONSOLE_ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+        ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
       ],
     });
   }
@@ -345,8 +345,8 @@ function showConfigNeededUI({
 }
 
 /**
- * Configura el enlace al canal de Slack
- * @param {HTMLElement} slackChannelLink - Elemento de enlace al canal
+ * Setup Slack channel link
+ * @param {HTMLElement} slackChannelLink - Channel link element
  */
 async function setupSlackChannelLink(slackChannelLink) {
   const { channelId, teamId } = await chrome.storage.local.get([
@@ -531,8 +531,8 @@ function setupEventListeners({
             // Silence connection errors when background script is not available
             Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
               silentMessages: [
-                CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-                CONSOLE_ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+                ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+                ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
               ],
             });
             return;
@@ -543,8 +543,8 @@ function setupEventListeners({
       // Silence common connection errors in toggle
       Logger.error(error, 'Popup', {
         silentMessages: [
-          CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-          CONSOLE_ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+          ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+          ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
         ],
       });
     }
