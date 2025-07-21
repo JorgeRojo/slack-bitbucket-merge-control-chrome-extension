@@ -2,6 +2,14 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { initializeToggleFeatureStatus } from '../src/popup-toggle-feature-status.js';
 import { mockStorage, mockRuntime } from './setup.js';
 
+// Mock Logger locally for popup-toggle-feature-status tests
+vi.mock('../src/utils/logger.js', () => ({
+  Logger: {
+    log: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 global.document = {
   getElementById: vi.fn(),
 };
