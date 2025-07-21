@@ -8,6 +8,8 @@ export const SLACK_USERS_LIST_URL = `${SLACK_API_BASE_URL}/users.list`;
 export const SLACK_AUTH_TEST_URL = `${SLACK_API_BASE_URL}/auth.test`;
 export const SLACK_CONNECTIONS_OPEN_URL = `${SLACK_API_BASE_URL}/apps.connections.open`;
 
+export const CONTENT_SCRIPT_ID = 'slack-bitbucket-extension-content-script';
+
 export const MAX_MESSAGES = 50;
 
 export const DEFAULT_ALLOWED_PHRASES = [
@@ -83,33 +85,16 @@ export const MESSAGE_ACTIONS = {
 };
 
 export const ERROR_MESSAGES = {
-  RECEIVING_END_NOT_EXIST: 'Receiving end does not exist',
-  CONNECTION_FAILED:
-    'Could not establish connection. Receiving end does not exist',
-  MESSAGE_PORT_CLOSED: 'The message port closed before a response was received',
-  CHANNEL_NOT_FOUND: 'channel_not_found',
-  NOT_IN_CHANNEL: 'not_in_channel',
-  INVALID_AUTH: 'invalid_auth',
-  TOKEN_REVOKED: 'token_revoked',
-  ERROR_SENDING_PING: 'Error sending ping',
-  ERROR_FETCHING_MESSAGES: 'Error fetching messages',
-  ERROR_IN_CALLBACK: 'Error in error handler callback',
-};
-
-export const USER_ERROR_MESSAGES = {
-  ERROR_PROCESSING_MESSAGES: 'Error processing messages',
-  CHANNEL_NOT_FOUND: 'Channel not found or bot is not in channel',
-  CONFIG_NEEDED: 'Slack token or channel name not configured',
-  COULD_NOT_DETERMINE_STATUS: 'Could not determine status',
-
-  SLACK_TOKEN_MISSING:
-    'Slack Bot Token is missing. Please add it in the options page',
-  APP_TOKEN_MISSING:
-    'Slack App Token is missing. Please add it in the options page',
-  CHANNEL_NAME_MISSING:
-    'Channel name is missing. Please add it in the options page',
-  CONFIGURATION_INCOMPLETE:
-    'Configuration is incomplete. Please check all required fields in the options page',
-
-  FILL_ALL_FIELDS: 'Please fill in all fields',
+  RECEIVING_END_NOT_EXIST: 'Receiving end missing',
+  CONNECTION_FAILED: 'Connection failed - receiving end missing',
+  MESSAGE_PORT_CLOSED: 'Message port closed before response',
+  CHANNEL_NOT_FOUND: 'Channel not found',
+  NOT_IN_CHANNEL: 'Bot not in channel',
+  INVALID_AUTH: 'Auth failed - check token',
+  TOKEN_REVOKED: 'Slack token revoked',
+  SENDING_PING: 'Ping failed',
+  FETCHING_MESSAGES: 'Failed to fetch messages',
+  IN_CALLBACK: 'Error in callback handler',
+  SCRIPT_VERIFICATION: 'Error verifying content scripts',
+  SCRIPT_REGISTRATION: 'Error registering content script',
 };

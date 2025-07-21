@@ -17,6 +17,7 @@ import {
   APP_STATUS,
   MERGE_STATUS,
   MESSAGE_ACTIONS,
+  CONTENT_SCRIPT_ID,
 } from './constants.js';
 import { Logger } from './utils/logger.js';
 
@@ -580,7 +581,7 @@ async function checkWebSocketConnection() {
       rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
       Logger.log('Ping sent to Slack server');
     } catch (error) {
-      Logger.error(ERROR_MESSAGES.ERROR_SENDING_PING, error);
+      Logger.error(ERROR_MESSAGES.SENDING_PING, error);
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       rtmWebSocket.close();
       setTimeout(connectToSlackSocketMode, 1000);
@@ -672,7 +673,7 @@ const messageHandlers = {
 
         await updateContentScriptMergeState(targetChannelName);
       } catch (error) {
-        Logger.error(ERROR_MESSAGES.ERROR_FETCHING_MESSAGES, error);
+        Logger.error(ERROR_MESSAGES.FETCHING_MESSAGES, error);
         await handleSlackApiError(error);
 
         if (request?.channelName && !request?.skipErrorNotification) {
@@ -956,25 +957,30 @@ async function registerBitbucketContentScript() {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
   try {
-    await chrome.scripting.unregisterContentScripts({
-      ids: ['bitbucket-content-script'],
-    });
+    const existingScripts = await chrome.scripting.getRegisteredContentScripts();
+    const scriptExists = existingScripts.some(script => script.id === CONTENT_SCRIPT_ID);
+    
+    if (scriptExists) {
+      await chrome.scripting.unregisterContentScripts({
+        ids: [CONTENT_SCRIPT_ID],
+      });
+    }
   } catch (error) {
-    Logger.error(error);
+    Logger.error(ERROR_MESSAGES.SCRIPT_VERIFICATION, error);
   }
 
   if (bitbucketUrl) {
     try {
       await chrome.scripting.registerContentScripts([
         {
-          id: 'bitbucket-content-script',
+          id: CONTENT_SCRIPT_ID,
           matches: [bitbucketUrl],
           js: ['content.js'],
           runAt: 'document_idle',
         },
       ]);
     } catch (error) {
-      Logger.error(error);
+      Logger.error(ERROR_MESSAGES.SCRIPT_REGISTRATION, error);
     }
   }
 }

@@ -309,7 +309,7 @@ function showConfigNeededUI({
       }
 
       if (errors.length === 0) {
-        errors.push(literals.popup.errorDetails.configurationIncomplete);
+        errors.push(literals.popup.errorDetails.configIncomplete);
       }
 
       errorDetailsDiv.innerHTML = `
@@ -338,16 +338,12 @@ function showConfigNeededUI({
         matchingMessageDiv,
         optionsLinkContainer,
         state: MERGE_STATUS.CONFIG_NEEDED,
-        message: literals.popup.textConfigNeeded,
+        message: literals.popup.errorDetails.textConfigNeeded,
       });
     },
   );
 }
 
-/**
- * Setup Slack channel link
- * @param {HTMLElement} slackChannelLink - Channel link element
- */
 async function setupSlackChannelLink(slackChannelLink) {
   const { channelId, teamId } = await chrome.storage.local.get([
     'channelId',
@@ -398,7 +394,7 @@ async function showMergeStatus({
       matchingMessageDiv,
       optionsLinkContainer,
       state: MERGE_STATUS.DISALLOWED,
-      message: literals.popup.textChannelNotFound,
+      message: literals.popup.errorDetails.channelNotFound,
     });
     return;
   }
@@ -473,7 +469,7 @@ function showErrorUI({
     matchingMessageDiv,
     optionsLinkContainer,
     state: MERGE_STATUS.DISALLOWED,
-    message: literals.popup.textErrorProcessingMessages,
+    message: literals.popup.errorDetails.processingMessages,
   });
 }
 

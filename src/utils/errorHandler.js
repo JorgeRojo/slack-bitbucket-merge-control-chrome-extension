@@ -29,7 +29,7 @@ export class ErrorHandler {
       try {
         callback(error, context);
       } catch (callbackError) {
-        console.error(ERROR_MESSAGES.ERROR_IN_CALLBACK, callbackError);
+        console.error(ERROR_MESSAGES.IN_CALLBACK, callbackError);
       }
     }
 

@@ -8,6 +8,7 @@ import {
   mockScripting,
 } from './setup.js';
 import { Logger } from '../src/utils/logger.js';
+import { CONTENT_SCRIPT_ID } from '../src/constants.js';
 
 describe('Background Script - Enhanced Coverage Tests', () => {
   let backgroundModule;
@@ -503,7 +504,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     await storageChangeHandler(changes, 'sync');
 
     expect(mockScripting.unregisterContentScripts).toHaveBeenCalledWith({
-      ids: ['bitbucket-content-script'],
+      ids: [CONTENT_SCRIPT_ID],
     });
 
     expect(mockStorage.sync.get).toHaveBeenCalledWith('bitbucketUrl');
