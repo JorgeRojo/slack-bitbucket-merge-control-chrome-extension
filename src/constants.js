@@ -82,10 +82,49 @@ export const MESSAGE_ACTIONS = {
   UPDATE_COUNTDOWN_DISPLAY: 'updateCountdownDisplay',
 };
 
-// Error messages that can be silenced
-export const ERROR_MESSAGES = {
+// Console error messages for debugging and logging (not shown to users)
+export const CONSOLE_ERROR_MESSAGES = {
+  // Chrome extension connection errors (silenceable)
   RECEIVING_END_NOT_EXIST: 'Receiving end does not exist',
   CONNECTION_FAILED:
     'Could not establish connection. Receiving end does not exist',
   MESSAGE_PORT_CLOSED: 'The message port closed before a response was received',
+
+  // Slack API errors (internal)
+  CHANNEL_NOT_FOUND: 'channel_not_found',
+  NOT_IN_CHANNEL: 'not_in_channel',
+  INVALID_AUTH: 'invalid_auth',
+  TOKEN_REVOKED: 'token_revoked',
+
+  // WebSocket and connection errors
+  ERROR_SENDING_PING: 'Error sending ping',
+  ERROR_FETCHING_MESSAGES: 'Error fetching messages',
+
+  // Error handler errors
+  ERROR_IN_CALLBACK: 'Error in error handler callback',
 };
+
+// User-facing error messages (shown in UI)
+export const USER_ERROR_MESSAGES = {
+  // General status messages
+  ERROR_PROCESSING_MESSAGES: 'Error processing messages',
+  CHANNEL_NOT_FOUND: 'Channel not found or bot is not in channel',
+  CONFIG_NEEDED: 'Slack token or channel name not configured',
+  COULD_NOT_DETERMINE_STATUS: 'Could not determine status',
+
+  // Configuration errors
+  SLACK_TOKEN_MISSING:
+    'Slack Bot Token is missing. Please add it in the options page',
+  APP_TOKEN_MISSING:
+    'Slack App Token is missing. Please add it in the options page',
+  CHANNEL_NAME_MISSING:
+    'Channel name is missing. Please add it in the options page',
+  CONFIGURATION_INCOMPLETE:
+    'Configuration is incomplete. Please check all required fields in the options page',
+
+  // Options page errors
+  FILL_ALL_FIELDS: 'Please fill in all fields',
+};
+
+// Legacy alias for backward compatibility (will be deprecated)
+export const ERROR_MESSAGES = CONSOLE_ERROR_MESSAGES;

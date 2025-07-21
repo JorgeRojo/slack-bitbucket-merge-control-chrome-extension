@@ -1,3 +1,5 @@
+import { CONSOLE_ERROR_MESSAGES } from '../constants.js';
+
 export class ErrorHandler {
   static handle(error, options = {}) {
     const {
@@ -27,7 +29,7 @@ export class ErrorHandler {
       try {
         callback(error, context);
       } catch (callbackError) {
-        console.error('Error in error handler callback:', callbackError);
+        console.error(CONSOLE_ERROR_MESSAGES.ERROR_IN_CALLBACK, callbackError);
       }
     }
 

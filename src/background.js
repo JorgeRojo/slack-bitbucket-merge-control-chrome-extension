@@ -13,7 +13,7 @@ import {
   WEBSOCKET_CHECK_INTERVAL,
   WEBSOCKET_CHECK_ALARM,
   WEBSOCKET_MAX_AGE,
-  ERROR_MESSAGES,
+  CONSOLE_ERROR_MESSAGES,
   APP_STATUS,
   MERGE_STATUS,
   MESSAGE_ACTIONS,
@@ -229,7 +229,7 @@ async function resolveChannelId(slackToken, channelName) {
     const foundChannel = allChannels.find((c) => c.name === channelName);
 
     if (!foundChannel) {
-      throw new Error('channel_not_found');
+      throw new Error(CONSOLE_ERROR_MESSAGES.CHANNEL_NOT_FOUND);
     }
 
     channelId = foundChannel.id;
@@ -319,16 +319,16 @@ async function handleSlackApiError(error) {
   const errorMessage = error?.message || '';
 
   if (
-    errorMessage.includes('channel_not_found') ||
-    errorMessage.includes('not_in_channel')
+    errorMessage.includes(CONSOLE_ERROR_MESSAGES.CHANNEL_NOT_FOUND) ||
+    errorMessage.includes(CONSOLE_ERROR_MESSAGES.NOT_IN_CHANNEL)
   ) {
     await updateAppStatus(APP_STATUS.CHANNEL_NOT_FOUND);
     await chrome.storage.local.set({
       channelId: null,
     });
   } else if (
-    errorMessage.includes('invalid_auth') ||
-    errorMessage.includes('token_revoked')
+    errorMessage.includes(CONSOLE_ERROR_MESSAGES.INVALID_AUTH) ||
+    errorMessage.includes(CONSOLE_ERROR_MESSAGES.TOKEN_REVOKED)
   ) {
     await updateAppStatus(APP_STATUS.TOKEN_ERROR);
   } else {
@@ -406,8 +406,8 @@ async function updateContentScriptMergeState(channelName) {
     // Silence connection errors when popup is not open
     Logger.error(error, 'Background', {
       silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.CONNECTION_FAILED,
+        CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+        CONSOLE_ERROR_MESSAGES.CONNECTION_FAILED,
       ],
     });
   }
@@ -436,8 +436,8 @@ async function updateContentScriptMergeState(channelName) {
       // Silence connection errors when Bitbucket tab is not available
       Logger.error(error, 'Background', {
         silentMessages: [
-          ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-          ERROR_MESSAGES.CONNECTION_FAILED,
+          CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+          CONSOLE_ERROR_MESSAGES.CONNECTION_FAILED,
         ],
       });
     }
@@ -580,7 +580,7 @@ async function checkWebSocketConnection() {
       rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
       Logger.log('Ping sent to Slack server');
     } catch (error) {
-      Logger.error('Error sending ping:', error);
+      Logger.error(CONSOLE_ERROR_MESSAGES.ERROR_SENDING_PING, error);
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       rtmWebSocket.close();
       setTimeout(connectToSlackSocketMode, 1000);
@@ -672,7 +672,7 @@ const messageHandlers = {
 
         await updateContentScriptMergeState(targetChannelName);
       } catch (error) {
-        Logger.error('Error fetching messages:', error);
+        Logger.error(CONSOLE_ERROR_MESSAGES.ERROR_FETCHING_MESSAGES, error);
         await handleSlackApiError(error);
 
         if (request?.channelName && !request?.skipErrorNotification) {
@@ -685,8 +685,8 @@ const messageHandlers = {
             // Silence connection errors when popup is not open to receive error notifications
             Logger.error(sendError, 'Background', {
               silentMessages: [
-                ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-                ERROR_MESSAGES.CONNECTION_FAILED,
+                CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+                CONSOLE_ERROR_MESSAGES.CONNECTION_FAILED,
               ],
             });
           }
@@ -813,8 +813,8 @@ const updateMergeButtonFromLastKnownMergeState = () => {
           // Silence connection errors when Bitbucket tab is not available
           const result = Logger.error(error, 'Background', {
             silentMessages: [
-              ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-              ERROR_MESSAGES.CONNECTION_FAILED,
+              CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+              CONSOLE_ERROR_MESSAGES.CONNECTION_FAILED,
             ],
           });
           bitbucketTabId = null;
@@ -866,8 +866,8 @@ async function notifyPopupAboutCountdown(timeLeft) {
     // Silence connection errors when popup is not open to receive countdown updates
     Logger.error(error, 'Background', {
       silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.CONNECTION_FAILED,
+        CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+        CONSOLE_ERROR_MESSAGES.CONNECTION_FAILED,
       ],
     });
   }
@@ -907,8 +907,8 @@ async function reactivateFeature() {
     // Silence connection errors when popup is not open to receive reactivation notification
     Logger.error(error, 'Background', {
       silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.CONNECTION_FAILED,
+        CONSOLE_ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+        CONSOLE_ERROR_MESSAGES.CONNECTION_FAILED,
       ],
     });
   }

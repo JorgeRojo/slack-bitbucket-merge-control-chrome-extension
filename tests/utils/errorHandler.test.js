@@ -95,7 +95,7 @@ describe('ErrorHandler', () => {
 
     expect(callback).toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledWith(
-      'Error in error handler callback:',
+      'Error in error handler callback',
       callbackError,
     );
   });

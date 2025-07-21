@@ -1,3 +1,5 @@
+import { USER_ERROR_MESSAGES } from './constants.js';
+
 export const literals = {
   popup: {
     emojiAllowed: '✅',
@@ -9,26 +11,22 @@ export const literals = {
     textAllowedWithExceptions: 'Allowed with exceptions',
     textMergeAllowed: 'Merge allowed',
     textMergeNotAllowed: 'Merge not allowed',
-    textCouldNotDetermineStatus: 'Could not determine status',
-    textConfigNeeded: 'Slack token or channel name not configured.',
-    textErrorProcessingMessages: 'Error processing messages',
-    textChannelNotFound: 'Channel not found or bot is not in channel.',
+    textCouldNotDetermineStatus: USER_ERROR_MESSAGES.COULD_NOT_DETERMINE_STATUS,
+    textConfigNeeded: USER_ERROR_MESSAGES.CONFIG_NEEDED,
+    textErrorProcessingMessages: USER_ERROR_MESSAGES.ERROR_PROCESSING_MESSAGES,
+    textChannelNotFound: USER_ERROR_MESSAGES.CHANNEL_NOT_FOUND,
     textCouldNotDetermine: 'Could not determine',
 
     // Detailed error messages
     errorDetails: {
-      slackTokenMissing:
-        'Slack Bot Token is missing. Please add it in the options page.',
-      appTokenMissing:
-        'Slack App Token is missing. Please add it in the options page.',
-      channelNameMissing:
-        'Channel name is missing. Please add it in the options page.',
-      configurationIncomplete:
-        'Configuration is incomplete. Please check all required fields in the options page.',
+      slackTokenMissing: USER_ERROR_MESSAGES.SLACK_TOKEN_MISSING,
+      appTokenMissing: USER_ERROR_MESSAGES.APP_TOKEN_MISSING,
+      channelNameMissing: USER_ERROR_MESSAGES.CHANNEL_NAME_MISSING,
+      configurationIncomplete: USER_ERROR_MESSAGES.CONFIGURATION_INCOMPLETE,
     },
   },
   options: {
     textOptionsSaved: 'Options saved.',
-    textFillAllFields: 'Please fill in all fields.',
+    textFillAllFields: USER_ERROR_MESSAGES.FILL_ALL_FIELDS,
   },
 };
