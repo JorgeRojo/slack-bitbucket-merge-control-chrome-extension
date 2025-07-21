@@ -8,7 +8,6 @@ import {
   mockScripting,
 } from './setup.js';
 import { Logger } from '../src/utils/logger.js';
-import { CONTENT_SCRIPT_ID } from '../src/constants.js';
 
 describe('Background Script - Enhanced Coverage Tests', () => {
   let backgroundModule;
@@ -488,25 +487,21 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     expect(storageChangeHandler).toBeDefined();
 
-    mockScripting.unregisterContentScripts.mockClear();
-    mockScripting.registerContentScripts.mockClear();
+    mockScripting.getRegisteredContentScripts.mockResolvedValueOnce([]);
     mockStorage.sync.get.mockResolvedValueOnce({
       bitbucketUrl: 'https://bitbucket.org/newrepo/*',
     });
 
     const changes = {
       bitbucketUrl: {
-        oldValue: 'https://bitbucket.org/oldrepo/*',
         newValue: 'https://bitbucket.org/newrepo/*',
       },
     };
 
     await storageChangeHandler(changes, 'sync');
 
-    expect(mockScripting.unregisterContentScripts).toHaveBeenCalledWith({
-      ids: [CONTENT_SCRIPT_ID],
-    });
-
+    expect(mockScripting.getRegisteredContentScripts).toHaveBeenCalled();
+    expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
     expect(mockStorage.sync.get).toHaveBeenCalledWith('bitbucketUrl');
   });
 
@@ -516,6 +511,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     expect(storageChangeHandler).toBeDefined();
 
+    mockScripting.getRegisteredContentScripts.mockResolvedValueOnce([]);
     mockScripting.unregisterContentScripts.mockClear();
     mockScripting.registerContentScripts.mockClear();
     mockStorage.sync.get.mockResolvedValueOnce({ bitbucketUrl: undefined });
@@ -523,7 +519,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const changes = { bitbucketUrl: { newValue: undefined } };
     await storageChangeHandler(changes, 'sync');
 
-    expect(mockScripting.unregisterContentScripts).toHaveBeenCalled();
+    expect(mockScripting.getRegisteredContentScripts).toHaveBeenCalled();
+    expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
     expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
   });
 

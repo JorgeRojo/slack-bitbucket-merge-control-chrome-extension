@@ -957,9 +957,12 @@ async function registerBitbucketContentScript() {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
   try {
-    const existingScripts = await chrome.scripting.getRegisteredContentScripts();
-    const scriptExists = existingScripts.some(script => script.id === CONTENT_SCRIPT_ID);
-    
+    const existingScripts =
+      await chrome.scripting.getRegisteredContentScripts();
+    const scriptExists = existingScripts.some(
+      (script) => script.id === CONTENT_SCRIPT_ID,
+    );
+
     if (scriptExists) {
       await chrome.scripting.unregisterContentScripts({
         ids: [CONTENT_SCRIPT_ID],

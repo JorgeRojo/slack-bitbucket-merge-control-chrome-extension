@@ -61,6 +61,7 @@ export const mockAction = {
 export const mockScripting = {
   registerContentScripts: vi.fn(),
   unregisterContentScripts: vi.fn(),
+  getRegisteredContentScripts: vi.fn().mockResolvedValue([]),
 };
 
 export const mockPermissions = {
