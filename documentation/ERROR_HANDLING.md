@@ -1,55 +1,53 @@
-# Sistema de Manejo de Errores Simplificado
+# Simplified Error Handling System
 
-Este documento describe cómo usar el sistema simplificado de manejo de errores en la extensión usando `Logger.error` con `silentMessages` en el contexto.
+This document describes how to use the simplified error handling system in the extension using `Logger.error` with `silentMessages` in the context.
 
-## Conceptos Clave
+## Key Concepts
 
-### Mensajes de Error Disponibles
+### Available Error Messages
 
-Los mensajes de error que pueden ser silenciados están definidos en `src/constants.js`:
+Error messages that can be silenced are defined in `src/constants.js`:
 
 ```javascript
 export const ERROR_MESSAGES = {
   RECEIVING_END_NOT_EXIST: 'Receiving end does not exist',
-  CONNECTION_FAILED: 'Could not establish connection. Receiving end does not exist',
+  CONNECTION_FAILED:
+    'Could not establish connection. Receiving end does not exist',
   MESSAGE_PORT_CLOSED: 'The message port closed before a response was received',
 };
-
-// Array con todos los mensajes silenciables (para conveniencia)
-export const ALL_SILENCEABLE_ERRORS = Object.values(ERROR_MESSAGES);
 ```
 
-### Función Principal
+### Main Function
 
 ```javascript
 Logger.error(error, component, context)
 ```
 
-**Parámetros:**
-- `error`: El error a manejar (Error object o string)
-- `component`: Nombre del componente (por defecto: 'General')
-- `context`: Objeto de contexto que puede incluir `silentMessages` y otros datos
+**Parameters:**
+- `error`: The error to handle (Error object or string)
+- `component`: Component name (default: 'General')
+- `context`: Context object that can include `silentMessages` and other data
 
-**Contexto con silentMessages:**
+**Context with silentMessages:**
 ```javascript
 {
-  silentMessages: ['mensaje1', 'mensaje2'], // Array de mensajes a silenciar
-  otherProperty: 'value',                   // Otras propiedades del contexto
+  silentMessages: ['message1', 'message2'], // Array of messages to silence
+  otherProperty: 'value',                   // Other context properties
 }
 ```
 
-**Retorna:**
+**Returns:**
 ```javascript
 {
-  error: Error,      // El error original
-  context: Object,   // El contexto sin silentMessages
-  silenced: boolean  // true si el error fue silenciado
+  error: Error,      // The original error
+  context: Object,   // The context without silentMessages
+  silenced: boolean  // true if the error was silenced
 }
 ```
 
-## Ejemplos de Uso
+## Usage Examples
 
-### 1. Silenciar Errores Específicos
+### 1. Silence Specific Errors
 
 ```javascript
 import { Logger } from './utils/logger.js';
@@ -58,7 +56,7 @@ import { ERROR_MESSAGES } from './constants.js';
 try {
   await chrome.runtime.sendMessage({ action: 'someAction' });
 } catch (error) {
-  // Solo silenciar errores de conexión
+  // Only silence connection errors
   Logger.error(error, 'MyComponent', {
     silentMessages: [
       ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
@@ -68,23 +66,27 @@ try {
 }
 ```
 
-### 2. Silenciar Todos los Errores Conocidos
+### 2. Silence Multiple Error Types
 
 ```javascript
 import { Logger } from './utils/logger.js';
-import { ALL_SILENCEABLE_ERRORS } from './constants.js';
+import { ERROR_MESSAGES } from './constants.js';
 
 try {
   await chrome.tabs.sendMessage(tabId, message);
 } catch (error) {
-  // Silenciar todos los errores conocidos
+  // Silence multiple known error types
   Logger.error(error, 'TabMessaging', {
-    silentMessages: ALL_SILENCEABLE_ERRORS,
+    silentMessages: [
+      ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+      ERROR_MESSAGES.CONNECTION_FAILED,
+      ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+    ],
   });
 }
 ```
 
-### 3. Manejo Condicional Basado en Silenciamiento
+### 3. Conditional Handling Based on Silencing
 
 ```javascript
 try {
@@ -94,18 +96,18 @@ try {
     silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST],
   });
   
-  // Limpiar el tabId solo si el error fue silenciado
+  // Clean up tabId only if error was silenced
   if (result.silenced) {
     bitbucketTabId = null;
     return;
   }
   
-  // Si no fue silenciado, hacer algo más
-  console.log('Error no silenciado, requiere atención');
+  // If not silenced, do something else
+  console.log('Unsilenced error requires attention');
 }
 ```
 
-### 4. Contexto Adicional con Silenciamiento
+### 4. Additional Context with Silencing
 
 ```javascript
 try {
@@ -120,13 +122,13 @@ try {
 }
 ```
 
-### 5. No Silenciar Ningún Error
+### 5. No Error Silencing
 
 ```javascript
 try {
   await someOperation();
 } catch (error) {
-  // Loguear todos los errores normalmente (sin silentMessages)
+  // Log all errors normally (without silentMessages)
   Logger.error(error, 'CriticalOperation', {
     userId: '123',
     operation: 'criticalTask',
@@ -134,11 +136,11 @@ try {
 }
 ```
 
-## Casos de Uso Comunes
+## Common Use Cases
 
-### Background Script - Mensajes al Popup
+### Background Script - Messages to Popup
 
-Cuando el popup no está abierto, los mensajes fallan con errores de conexión:
+When popup is not open, messages fail with connection errors:
 
 ```javascript
 try {
@@ -146,7 +148,7 @@ try {
     action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
   });
 } catch (error) {
-  // Silenciar errores de conexión cuando el popup no está abierto
+  // Silence connection errors when popup is not open
   Logger.error(error, 'Background', {
     silentMessages: [
       ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
@@ -156,15 +158,15 @@ try {
 }
 ```
 
-### Content Script - Mensajes a Pestañas
+### Content Script - Messages to Tabs
 
-Cuando una pestaña se cierra o no está disponible:
+When a tab is closed or not available:
 
 ```javascript
 try {
   await chrome.tabs.sendMessage(tabId, message);
 } catch (error) {
-  // Silenciar errores de conexión cuando la pestaña no está disponible
+  // Silence connection errors when tab is not available
   const result = Logger.error(error, 'TabMessaging', {
     silentMessages: [
       ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
@@ -173,12 +175,12 @@ try {
   });
   
   if (result.silenced) {
-    tabId = null; // Limpiar referencia a pestaña inválida
+    tabId = null; // Clean up invalid tab reference
   }
 }
 ```
 
-### Popup - Manejo de chrome.runtime.lastError
+### Popup - Handling chrome.runtime.lastError
 
 ```javascript
 chrome.runtime.sendMessage(message, (response) => {
@@ -195,24 +197,24 @@ chrome.runtime.sendMessage(message, (response) => {
     );
     return;
   }
-  // Procesar respuesta...
+  // Process response...
 });
 ```
 
-## Añadir Nuevos Mensajes Silenciables
+## Adding New Silenceable Messages
 
-1. Añadir el mensaje a `ERROR_MESSAGES` en `constants.js`:
+1. Add the message to `ERROR_MESSAGES` in `constants.js`:
 
 ```javascript
 export const ERROR_MESSAGES = {
   RECEIVING_END_NOT_EXIST: 'Receiving end does not exist',
   CONNECTION_FAILED: 'Could not establish connection. Receiving end does not exist',
   MESSAGE_PORT_CLOSED: 'The message port closed before a response was received',
-  NEW_ERROR_TYPE: 'Nuevo tipo de error', // ← Añadir aquí
+  NEW_ERROR_TYPE: 'New error type', // ← Add here
 };
 ```
 
-2. Usar el nuevo mensaje donde sea necesario:
+2. Use the new message where needed:
 
 ```javascript
 Logger.error(error, 'Component', {
@@ -220,20 +222,20 @@ Logger.error(error, 'Component', {
 });
 ```
 
-## Mejores Prácticas
+## Best Practices
 
-1. **Ser Específico**: Solo silenciar los errores que realmente necesitas silenciar
-2. **Documentar**: Añadir comentarios explicando por qué se silencian ciertos errores
-3. **Contexto**: Proporcionar contexto útil para debugging junto con silentMessages
-4. **Condicional**: Usar el valor de retorno `silenced` para lógica condicional cuando sea necesario
-5. **Consistencia**: Usar siempre `Logger.error` en lugar de `console.error` directamente
+1. **Be Specific**: Only silence errors that you really need to silence
+2. **Document**: Add comments explaining why certain errors are silenced
+3. **Context**: Provide useful context for debugging along with silentMessages
+4. **Conditional**: Use the `silenced` return value for conditional logic when needed
+5. **Consistency**: Always use `Logger.error` instead of `console.error` directly
 
-## Diferencias con el Sistema Anterior
+## Differences from Previous System
 
-- **Eliminado**: `handleErrorSilently` function
-- **Simplificado**: Todo se maneja a través de `Logger.error`
-- **Integrado**: `silentMessages` forma parte del contexto
-- **Consistente**: Un solo punto de entrada para el manejo de errores
+- **Removed**: `handleErrorSilently` function
+- **Simplified**: Everything is handled through `Logger.error`
+- **Integrated**: `silentMessages` is part of the context
+- **Consistent**: Single entry point for error handling
 
 ## Testing
 
