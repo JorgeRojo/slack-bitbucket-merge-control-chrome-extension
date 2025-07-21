@@ -104,34 +104,34 @@ code {
   text-align: center;
 }
 
-.btn {
+.tertiary-button {
   display: block;
   width: 60%;
   margin: 20px auto;
   padding: 0 var(--ft-button-default-padding-x);
   height: var(--ft-button-default-height);
-  background-color: var(--ft-secondary-default-bg-color);
-  color: var(--ft-secondary-default-color);
+  background-color: var(--ft-tertiary-default-bg-color);
+  color: var(--ft-tertiary-default-color);
   border: none;
   border-radius: var(--ft-button-default-border-radius);
   font-size: 16px;
   font-weight: var(--ft-button-default-font-weight);
   cursor: pointer;
   box-shadow:
-    0 1px 4px 0 var(--ft-secondary-shadow-color),
-    inset 0 1px 0 0 var(--ft-secondary-border-top-color),
-    inset 0 -1px 0 0 var(--ft-secondary-border-bottom-color);
+    0 1px 4px 0 var(--ft-tertiary-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
   transition:
     background-color var(--ft-transition-duration) ease-in-out,
     box-shadow var(--ft-transition-duration) ease-in-out;
 }
 
-.btn:hover {
-  background-color: var(--ft-secondary-hover-bg-color);
+.tertiary-button:hover {
+  background-color: var(--ft-tertiary-hover-bg-color);
   box-shadow:
-    0 3px 16px 0 var(--ft-secondary-hover-shadow-color),
-    inset 0 1px 0 0 var(--ft-secondary-hover-border-top-color),
-    inset 0 -1px 0 0 var(--ft-secondary-hover-border-bottom-color);
+    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
 }
 
 .mt-20 {

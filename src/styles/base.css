@@ -57,12 +57,12 @@ button {
   font-weight: var(--ft-button-default-font-weight);
   padding: 0 var(--ft-button-default-padding-x);
   height: var(--ft-button-default-height);
-  background-color: var(--ft-button-default-bg-color);
-  color: var(--ft-button-default-color);
+  background-color: var(--ft-tertiary-default-bg-color);
+  color: var(--ft-tertiary-default-color);
   box-shadow:
-    var(--ft-box-shadow-2),
-    inset 0 1px 0 0 var(--ft-button-border-top-color),
-    inset 0 -1px 0 0 var(--ft-button-border-bottom-color);
+    0 1px 4px 0 var(--ft-tertiary-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
   cursor: pointer;
   transition:
     box-shadow var(--ft-transition-duration) ease-out,
@@ -70,16 +70,16 @@ button {
 }
 
 button:hover {
-  background-color: var(--ft-button-hover-bg-color);
-  color: var(--ft-button-hover-color);
+  background-color: var(--ft-tertiary-hover-bg-color);
+  color: var(--ft-tertiary-hover-color);
   box-shadow:
-    var(--ft-box-shadow-2),
-    inset 0 1px 0 0 var(--ft-button-hover-border-top-color),
-    inset 0 -1px 0 0 var(--ft-button-hover-border-bottom-color);
+    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
 }
 
 button:active {
-  background-color: var(--ft-button-active-bg-color);
+  background-color: var(--ft-tertiary-active-bg-color);
 }
 
 button:disabled {
@@ -112,26 +112,26 @@ textarea:focus {
   box-shadow: 0 0 0 2px rgba(74, 21, 75, 0.2);
 }
 
-.secondary-button {
-  background-color: var(--ft-secondary-default-bg-color);
-  color: var(--ft-secondary-default-color);
+.tertiary-button {
+  background-color: var(--ft-tertiary-default-bg-color);
+  color: var(--ft-tertiary-default-color);
   box-shadow:
-    0 1px 4px 0 var(--ft-secondary-shadow-color),
-    inset 0 1px 0 0 var(--ft-secondary-border-top-color),
-    inset 0 -1px 0 0 var(--ft-secondary-border-bottom-color);
+    0 1px 4px 0 var(--ft-tertiary-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
 }
 
-.secondary-button:hover {
-  background-color: var(--ft-secondary-hover-bg-color);
-  color: var(--ft-secondary-hover-color);
+.tertiary-button:hover {
+  background-color: var(--ft-tertiary-hover-bg-color);
+  color: var(--ft-tertiary-hover-color);
   box-shadow:
-    0 3px 16px 0 var(--ft-secondary-hover-shadow-color),
-    inset 0 1px 0 0 var(--ft-secondary-hover-border-top-color),
-    inset 0 -1px 0 0 var(--ft-secondary-hover-border-bottom-color);
+    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
 }
 
-.secondary-button:active {
-  background-color: var(--ft-secondary-active-bg-color);
+.tertiary-button:active {
+  background-color: var(--ft-tertiary-active-bg-color);
 }
 
 .info-text {

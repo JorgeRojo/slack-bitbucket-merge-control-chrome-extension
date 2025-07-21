@@ -20,7 +20,7 @@ h1 {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 32px;
+  padding: 16px;
 }
 
 #status-icon {
@@ -82,8 +82,8 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--ft-primary-default-bg-color);
-  color: var(--ft-primary-default-color);
+  background-color: var(--ft-tertiary-default-bg-color);
+  color: var(--ft-tertiary-default-color);
   padding: 0 var(--ft-button-default-padding-x);
   line-height: var(--ft-button-default-height);
   border-radius: var(--ft-button-default-border-radius);
@@ -91,21 +91,21 @@ h1 {
   font-weight: var(--ft-button-default-font-weight);
   margin-top: 16px;
   box-shadow:
-    0 1px 4px 0 var(--ft-primary-shadow-color),
-    inset 0 1px 0 0 var(--ft-primary-border-top-color),
-    inset 0 -1px 0 0 var(--ft-primary-border-bottom-color);
+    0 1px 4px 0 var(--ft-tertiary-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-border-bottom-color);
   transition:
     background-color var(--ft-transition-duration) ease,
     box-shadow var(--ft-transition-duration) ease;
 }
 
 #slack-channel-link:hover {
-  background-color: var(--ft-primary-hover-bg-color);
+  background-color: var(--ft-tertiary-hover-bg-color);
   text-decoration: none;
   box-shadow:
-    0 3px 16px 0 var(--ft-primary-hover-shadow-color),
-    inset 0 1px 0 0 var(--ft-primary-hover-border-top-color),
-    inset 0 -1px 0 0 var(--ft-primary-hover-border-bottom-color);
+    0 3px 16px 0 var(--ft-tertiary-hover-shadow-color),
+    inset 0 1px 0 0 var(--ft-tertiary-hover-border-top-color),
+    inset 0 -1px 0 0 var(--ft-tertiary-hover-border-bottom-color);
 }
 
 .control-section {
