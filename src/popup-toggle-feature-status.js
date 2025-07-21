@@ -1,8 +1,5 @@
 import { Logger } from './utils/logger.js';
-import {
-  MESSAGE_ACTIONS,
-  ERROR_MESSAGES,
-} from './constants.js';
+import { MESSAGE_ACTIONS, ERROR_MESSAGES } from './constants.js';
 
 /**
  * Manages the countdown element display and text
@@ -233,18 +230,3 @@ export async function initializeToggleFeatureStatus(featureToggle) {
   setupToggleEventListeners(featureToggle);
   setupBackgroundMessageListener(featureToggle);
 }
-
-// Export individual functions for testing
-export {
-  manageCountdownElement,
-  updateCountdownText,
-  updateCountdownDisplay,
-  initializeFeatureToggleState,
-  checkCountdownStatus,
-  initializeToggle,
-  setupToggleEventListeners,
-  handleBackgroundMessages,
-  handleCountdownUpdate,
-  handleCountdownCompleted,
-  setupBackgroundMessageListener,
-};
