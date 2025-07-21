@@ -10,6 +10,8 @@ vi.mock('../src/utils/logger.js', () => ({
   },
 }));
 
+import { Logger } from '../src/utils/logger.js';
+
 global.document = {
   getElementById: vi.fn(),
 };
@@ -181,6 +183,8 @@ describe('popup-toggle-feature-status.js', () => {
     });
 
     test('should handle runtime errors in toggle event', async () => {
+      Logger.error.mockClear();
+
       mockStorage.local.get.mockImplementation((keys, callback) => {
         callback({ featureEnabled: true });
       });
@@ -200,9 +204,23 @@ describe('popup-toggle-feature-status.js', () => {
       expect(() => {
         toggleHandler({ detail: { checked: true } });
       }).not.toThrow();
+
+      // Verificar que se llamó a Logger.error para el error de runtime
+      expect(Logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        'Popup',
+        expect.objectContaining({
+          silentMessages: [
+            'Receiving end does not exist',
+            'message port closed before a response',
+          ],
+        }),
+      );
     });
 
     test('should handle exceptions in toggle event', async () => {
+      Logger.error.mockClear();
+
       mockStorage.local.get.mockImplementation((keys, callback) => {
         callback({ featureEnabled: true });
       });
@@ -220,6 +238,18 @@ describe('popup-toggle-feature-status.js', () => {
       expect(() => {
         toggleHandler({ detail: { checked: true } });
       }).not.toThrow();
+
+      // Verificar que se llamó a Logger.error para la excepción
+      expect(Logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        'Popup',
+        expect.objectContaining({
+          silentMessages: [
+            'Receiving end does not exist',
+            'message port closed before a response',
+          ],
+        }),
+      );
     });
   });
 
@@ -384,6 +414,8 @@ describe('popup-toggle-feature-status.js', () => {
     });
 
     test('should handle runtime errors when checking countdown status', async () => {
+      Logger.error.mockClear();
+
       mockStorage.local.get.mockImplementation((keys, callback) => {
         callback({ featureEnabled: false });
       });
@@ -397,9 +429,23 @@ describe('popup-toggle-feature-status.js', () => {
       await expect(
         initializeToggleFeatureStatus(mockToggleElement),
       ).resolves.not.toThrow();
+
+      // Verificar que se llamó a Logger.error para el error de countdown
+      expect(Logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        'Popup',
+        expect.objectContaining({
+          silentMessages: [
+            'Receiving end does not exist',
+            'message port closed before a response',
+          ],
+        }),
+      );
     });
 
     test('should handle exceptions when checking countdown status', async () => {
+      Logger.error.mockClear();
+
       mockStorage.local.get.mockImplementation((keys, callback) => {
         callback({ featureEnabled: false });
       });
@@ -411,6 +457,18 @@ describe('popup-toggle-feature-status.js', () => {
       await expect(
         initializeToggleFeatureStatus(mockToggleElement),
       ).resolves.not.toThrow();
+
+      // Verificar que se llamó a Logger.error para la excepción de countdown
+      expect(Logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        'Popup',
+        expect.objectContaining({
+          silentMessages: [
+            'Receiving end does not exist',
+            'message port closed before a response',
+          ],
+        }),
+      );
     });
   });
 

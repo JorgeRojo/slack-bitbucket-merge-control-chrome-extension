@@ -1,6 +1,16 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mockStorage, mockRuntime } from './setup.js';
 
+// Mock Logger locally for popup tests
+vi.mock('../src/utils/logger.js', () => ({
+  Logger: {
+    log: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+import { Logger } from '../src/utils/logger.js';
+
 const mockInitializeToggleFeatureStatus = vi.fn();
 vi.mock('../src/popup-toggle-feature-status.js', () => ({
   initializeToggleFeatureStatus: mockInitializeToggleFeatureStatus,
@@ -221,9 +231,20 @@ describe('popup.js', () => {
     });
 
     test('should handle storage errors gracefully', async () => {
+      Logger.error.mockClear();
+
       mockStorage.sync.get.mockRejectedValue(new Error('Storage error'));
 
       await expect(domContentLoadedHandler()).resolves.not.toThrow();
+
+      // Verificar que se llamó a Logger.error para el error de storage
+      expect(Logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        'PopupUI',
+        expect.objectContaining({
+          action: 'processMessages',
+        }),
+      );
     });
   });
 
