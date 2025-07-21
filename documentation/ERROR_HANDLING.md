@@ -12,11 +12,11 @@ import { Logger } from '../utils/logger';
 try {
   // Code that might throw an error
 } catch (error) {
-  Logger.error(error, 'ComponentName', { 
+  Logger.error(error, 'ComponentName', {
     contextKey: 'contextValue',
-    additionalInfo: 'relevant information'
+    additionalInfo: 'relevant information',
   });
-  
+
   // Additional error recovery logic if needed
 }
 ```
@@ -60,7 +60,7 @@ try {
   Logger.error(error, 'MessageFetcher', {
     channelId,
     timestamp: new Date().toISOString(),
-    requestType: 'channel_history'
+    requestType: 'channel_history',
   });
 }
 ```
@@ -72,7 +72,7 @@ try {
   await sendMessage(message);
 } catch (error) {
   Logger.error(error, 'MessageSender', { message });
-  
+
   // Attempt recovery
   if (error.message.includes('rate_limited')) {
     setTimeout(() => retryMessageSend(message), 5000);
