@@ -1,15 +1,8 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import '../../src/components/toggle-switch/toggle-switch.js';
-
-// Mock Logger locally for toggle-switch tests
-vi.mock('../../src/utils/logger.js', () => ({
-  Logger: {
-    log: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 import { Logger } from '../../src/utils/logger.js';
+
+vi.mock('../../src/utils/logger.js');
 
 global.fetch = vi.fn(() =>
   Promise.resolve({

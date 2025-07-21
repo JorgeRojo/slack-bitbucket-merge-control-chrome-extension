@@ -1,14 +1,6 @@
 import { Logger } from './utils/logger.js';
 import { MESSAGE_ACTIONS, ERROR_MESSAGES } from './constants.js';
 
-/**
- * Manages the countdown element's visibility and content
- *
- * @param {Object} options - Configuration options
- * @param {boolean} options.show - Whether to show or hide the countdown element
- * @param {number | undefined} [options.timeLeft] - Time left in milliseconds for the countdown
- * @returns {HTMLElement|null} - The countdown element or null if not found
- */
 function manageCountdownElement({ show, timeLeft }) {
   const countdownElement = document.getElementById('countdown-timer');
   if (!countdownElement) return null;

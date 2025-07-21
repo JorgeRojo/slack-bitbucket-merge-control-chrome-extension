@@ -6,17 +6,11 @@ import {
   mockTabs,
   mockAction,
   mockScripting,
+  mockPermissions,
 } from './setup.js';
-
-// Mock Logger locally for background tests
-vi.mock('../src/utils/logger.js', () => ({
-  Logger: {
-    log: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 import { Logger } from '../src/utils/logger.js';
+
+vi.mock('../src/utils/logger.js');
 
 describe('Background Script - Enhanced Coverage Tests', () => {
   let backgroundModule;
@@ -26,6 +20,77 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   let alarmHandler;
 
   beforeAll(async () => {
+    // Setup default mock responses
+    mockStorage.sync.get.mockResolvedValue({
+      slackToken: 'test-token',
+      channelName: 'test-channel',
+      disallowedPhrases: 'block,stop,do not merge',
+      exceptionPhrases: 'allow,proceed,exception',
+      bitbucketUrl: 'https://bitbucket.org/test',
+    });
+
+    mockStorage.local.get.mockResolvedValue({
+      featureEnabled: true,
+      messages: [],
+      teamId: 'test-team',
+      countdownEndTime: Date.now() + 60000,
+    });
+
+    mockTabs.query.mockResolvedValue([]);
+    mockPermissions.contains.mockResolvedValue(true);
+    mockScripting.registerContentScripts.mockResolvedValue();
+
+    global.fetch.mockImplementation((url) => {
+      if (url.includes('conversations.list')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              channels: [{ id: 'C123', name: 'test-channel' }],
+              response_metadata: { next_cursor: '' },
+            }),
+        });
+      }
+      if (url.includes('conversations.history')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              messages: [
+                { text: 'test message with block phrase', ts: '1234567890' },
+                { text: 'allow this merge', ts: '1234567891' },
+              ],
+            }),
+        });
+      }
+      if (url.includes('team.info')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              team: { id: 'T123', name: 'Test Team' },
+            }),
+        });
+      }
+      if (url.includes('apps.connections.open')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              url: 'wss://test-websocket-url',
+            }),
+        });
+      }
+      return Promise.resolve({
+        ok: false,
+        json: () => Promise.resolve({ ok: false, error: 'not_found' }),
+      });
+    });
+
     backgroundModule = await import('../src/background.js');
 
     messageHandler = mockRuntime.onMessage.addListener.mock.calls[0]?.[0];

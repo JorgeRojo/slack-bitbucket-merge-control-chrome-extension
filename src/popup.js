@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     optionsLinkContainer,
   } = uiElements;
 
-  // Setup other event listeners
   setupEventListeners({
     statusIcon,
     statusText,

@@ -1,20 +1,13 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mockStorage, mockRuntime } from './setup.js';
-
-// Mock Logger locally for popup tests
-vi.mock('../src/utils/logger.js', () => ({
-  Logger: {
-    log: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 import { Logger } from '../src/utils/logger.js';
 
-const mockInitializeToggleFeatureStatus = vi.fn();
+vi.mock('../src/utils/logger.js');
 vi.mock('../src/popup-toggle-feature-status.js', () => ({
   initializeToggleFeatureStatus: mockInitializeToggleFeatureStatus,
 }));
+
+const mockInitializeToggleFeatureStatus = vi.fn();
 
 const createMockElement = () => ({
   className: '',

@@ -1,8 +1,5 @@
 import { Logger } from '../../utils/logger.js';
 
-/**
- * Custom Toggle Switch Web Component
- */
 class ToggleSwitch extends HTMLElement {
   constructor() {
     super();
