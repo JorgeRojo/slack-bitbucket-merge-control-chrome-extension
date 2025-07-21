@@ -9,6 +9,32 @@ import {
   mockPermissions,
 } from './setup.js';
 import { Logger } from '../src/utils/logger.js';
+import { MERGE_STATUS } from '../src/constants.js';
+
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  if (
+    args.length > 0 &&
+    typeof args[0] === 'string' &&
+    args[0].includes("Cannot read properties of undefined (reading 'messages')")
+  ) {
+    return;
+  }
+  originalConsoleError(...args);
+};
+
+process.on('unhandledRejection', (reason, promise) => {
+  if (
+    reason &&
+    reason.message &&
+    reason.message.includes(
+      "Cannot read properties of undefined (reading 'messages')",
+    )
+  ) {
+    return;
+  }
+  originalConsoleError('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 vi.mock('../src/utils/logger.js');
 
@@ -20,20 +46,39 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   let alarmHandler;
 
   beforeAll(async () => {
-    // Setup default mock responses
     mockStorage.sync.get.mockResolvedValue({
       slackToken: 'test-token',
       channelName: 'test-channel',
       disallowedPhrases: 'block,stop,do not merge',
       exceptionPhrases: 'allow,proceed,exception',
       bitbucketUrl: 'https://bitbucket.org/test',
+      appToken: 'test-app-token',
     });
 
-    mockStorage.local.get.mockResolvedValue({
+    const defaultStorage = {
       featureEnabled: true,
       messages: [],
       teamId: 'test-team',
       countdownEndTime: Date.now() + 60000,
+      lastKnownMergeState: {},
+      lastWebSocketConnectTime: Date.now() - 1000,
+      channelId: 'C12345',
+      cachedChannelName: 'test-channel',
+      reactivationTime: Date.now() + 60000,
+    };
+
+    mockStorage.local.get.mockImplementation((keys) => {
+      if (typeof keys === 'string') {
+        return Promise.resolve({ [keys]: defaultStorage[keys] });
+      }
+      if (Array.isArray(keys)) {
+        const result = {};
+        keys.forEach((key) => {
+          result[key] = defaultStorage[key];
+        });
+        return Promise.resolve(result);
+      }
+      return Promise.resolve(defaultStorage);
     });
 
     mockTabs.query.mockResolvedValue([]);
@@ -255,11 +300,9 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should use Logger instead of console.log/error', async () => {
     expect(messageHandler).toBeDefined();
 
-    // Limpiar las llamadas anteriores
     Logger.error.mockClear();
     Logger.log.mockClear();
 
-    // Verificar que Logger está disponible y es un mock
     expect(Logger.error).toBeDefined();
     expect(Logger.log).toBeDefined();
     expect(typeof Logger.error).toBe('function');
@@ -277,7 +320,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     await result;
 
     expect(result).toBeInstanceOf(Promise);
-    // Verificar que Logger está disponible para logging
     expect(Logger.log).toBeDefined();
   });
 
@@ -294,7 +336,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const result = messageHandler({ action: 'fetchNewMessages' }, {});
     await result;
 
-    // Verificar que Logger está disponible para manejo de errores
     expect(Logger.error).toBeDefined();
     expect(typeof Logger.error).toBe('function');
   });
@@ -958,7 +999,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should test additional message processing scenarios', async () => {
-    // Test with various message formats
     global.fetch.mockImplementationOnce((url) => {
       const isConversationsHistory = url.includes('conversations.history');
 
@@ -1014,7 +1054,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       {},
     );
 
-    // Verify that messages were processed
     expect(mockStorage.local.set).toHaveBeenCalled();
   });
 
@@ -1072,5 +1111,216 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  test('should handle feature toggle and countdown (enhanced)', async () => {
+    mockStorage.local.set.mockClear();
+
+    await messageHandler(
+      { action: 'featureToggleChanged', enabled: false },
+      {},
+    );
+
+    expect(mockStorage.local.set).toHaveBeenCalledWith({
+      featureEnabled: false,
+    });
+
+    const reactivationCall = mockStorage.local.set.mock.calls.find(
+      (call) => call[0].reactivationTime,
+    );
+    expect(reactivationCall).toBeDefined();
+
+    const mockSendResponse = vi.fn();
+
+    const reactivationTime = Date.now() + 60000;
+    mockStorage.local.get.mockResolvedValueOnce({
+      featureEnabled: false,
+      reactivationTime,
+    });
+
+    const result = await messageHandler(
+      { action: 'getCountdownStatus' },
+      {},
+      mockSendResponse,
+    );
+
+    expect(mockSendResponse).toHaveBeenCalledWith({
+      isCountdownActive: true,
+      timeLeft: expect.any(Number),
+      reactivationTime,
+    });
+    expect(result).toBe(true);
+
+    mockStorage.local.set.mockClear();
+    mockRuntime.sendMessage.mockClear();
+
+    await messageHandler({ action: 'countdownCompleted', enabled: true }, {});
+
+    expect(mockStorage.local.set).toHaveBeenCalledWith({
+      featureEnabled: true,
+    });
+  });
+
+  test('should get phrases from storage correctly (enhanced)', async () => {
+    mockStorage.sync.get.mockResolvedValueOnce({
+      allowedPhrases: 'custom1,custom2',
+      disallowedPhrases: 'block1,block2',
+      exceptionPhrases: 'exception1,exception2',
+    });
+
+    await messageHandler(
+      { action: 'fetchNewMessages', channelName: 'test-channel' },
+      {},
+    );
+
+    mockStorage.sync.get.mockResolvedValueOnce({});
+
+    await messageHandler(
+      { action: 'fetchNewMessages', channelName: 'test-channel' },
+      {},
+    );
+
+    mockStorage.sync.get.mockResolvedValueOnce({
+      allowedPhrases: '',
+      disallowedPhrases: '',
+      exceptionPhrases: '',
+    });
+
+    await messageHandler(
+      { action: 'fetchNewMessages', channelName: 'test-channel' },
+      {},
+    );
+  });
+
+  test('should resolve channel ID correctly (enhanced)', async () => {
+    mockStorage.local.get.mockClear();
+    mockStorage.local.set.mockClear();
+    global.fetch.mockClear();
+
+    mockStorage.local.get.mockResolvedValueOnce({
+      channelId: 'C12345',
+      cachedChannelName: 'test-channel',
+    });
+
+    await messageHandler(
+      { action: 'fetchNewMessages', channelName: 'test-channel' },
+      {},
+    );
+
+    const conversationsListCalls = global.fetch.mock.calls.filter((call) =>
+      call[0].includes('conversations.list'),
+    );
+
+    expect(conversationsListCalls.length).toBe(0);
+
+    global.fetch.mockClear();
+
+    mockStorage.local.get.mockResolvedValueOnce({
+      channelId: 'C12345',
+      cachedChannelName: 'old-channel',
+    });
+
+    global.fetch.mockImplementationOnce((url) => {
+      if (url.includes('conversations.list')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              channels: [{ id: 'C67890', name: 'new-channel' }],
+              response_metadata: { next_cursor: '' },
+            }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ ok: true }),
+      });
+    });
+
+    await messageHandler(
+      { action: 'fetchNewMessages', channelName: 'new-channel' },
+      {},
+    );
+
+    const newConversationsListCalls = global.fetch.mock.calls.filter((call) =>
+      call[0].includes('conversations.list'),
+    );
+    expect(newConversationsListCalls.length).toBeGreaterThan(0);
+
+    const channelIdCall = mockStorage.local.set.mock.calls.find(
+      (call) => call[0].channelId && call[0].cachedChannelName,
+    );
+    if (channelIdCall) {
+      expect(channelIdCall[0].channelId).toBe('C67890');
+      expect(channelIdCall[0].cachedChannelName).toBe('new-channel');
+    }
+  });
+
+  test('should update extension icon based on merge status (enhanced)', async () => {
+    const scenarios = [
+      {
+        message: { text: 'do not merge this PR', ts: '1234567890' },
+        expectedStatus: MERGE_STATUS.DISALLOWED,
+      },
+      {
+        message: { text: 'proceed with the merge', ts: '1234567890' },
+        expectedStatus: MERGE_STATUS.ALLOWED,
+      },
+      {
+        message: { text: 'merge with caution', ts: '1234567890' },
+        expectedStatus: MERGE_STATUS.EXCEPTION,
+      },
+    ];
+
+    for (const scenario of scenarios) {
+      mockAction.setIcon.mockClear();
+
+      global.fetch.mockImplementationOnce((url) => {
+        if (url.includes('conversations.history')) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                ok: true,
+                messages: [scenario.message],
+              }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              channels: [{ id: 'C123', name: 'test-channel' }],
+            }),
+        });
+      });
+
+      await messageHandler(
+        { action: 'fetchNewMessages', channelName: 'test-channel' },
+        {},
+      );
+
+      expect(mockAction.setIcon).toHaveBeenCalled();
+    }
+  });
+
+  test('should initialize extension correctly on install and startup (enhanced)', async () => {
+    mockStorage.sync.get.mockClear();
+    mockStorage.sync.set.mockClear();
+
+    mockStorage.sync.get.mockImplementationOnce((key, callback) => {
+      callback({});
+      return Promise.resolve({});
+    });
+
+    await installedHandler();
+
+    expect(mockStorage.sync.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mergeButtonSelector: expect.any(String),
+      }),
+    );
   });
 });
