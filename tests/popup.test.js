@@ -545,7 +545,8 @@ describe('popup.js', () => {
         expect.any(Function),
       );
 
-      expect(console.log).toHaveBeenCalledWith(
+      // Error should be silenced, not logged
+      expect(console.log).not.toHaveBeenCalledWith(
         'Error receiving response:',
         'The message port closed before a response was received.',
       );
@@ -595,7 +596,8 @@ describe('popup.js', () => {
         expect.any(Function),
       );
 
-      expect(console.log).toHaveBeenCalledWith(
+      // Error should be silenced, not logged
+      expect(console.log).not.toHaveBeenCalledWith(
         'Error receiving featureToggleChanged response:',
         'The message port closed before a response was received.',
       );
@@ -627,7 +629,8 @@ describe('popup.js', () => {
 
       messageHandler({ action: 'countdownCompleted' }, {}, () => {});
 
-      expect(console.log).toHaveBeenCalledWith(
+      // Error should be silenced, not logged
+      expect(console.log).not.toHaveBeenCalledWith(
         'Error sending message:',
         expect.any(Error),
       );
@@ -661,7 +664,8 @@ describe('popup.js', () => {
 
       toggleHandler({ detail: { checked: true } });
 
-      expect(console.log).toHaveBeenCalledWith(
+      // Error should be silenced, not logged
+      expect(console.log).not.toHaveBeenCalledWith(
         'Error sending featureToggleChanged message:',
         expect.any(Error),
       );

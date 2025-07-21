@@ -4,6 +4,7 @@ import {
   MERGE_STATUS,
   APP_STATUS,
   MESSAGE_ACTIONS,
+  ERROR_MESSAGES,
 } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
@@ -196,17 +197,12 @@ function checkCountdownStatus() {
       { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
       (response) => {
         if (chrome.runtime.lastError) {
-          if (
-            chrome.runtime.lastError.message.includes(
-              'Receiving end does not exist',
-            )
-          ) {
-            return;
-          }
-          Logger.log(
-            'Error receiving response:',
-            chrome.runtime.lastError.message,
-          );
+          Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
+            silentMessages: [
+              ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+              ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+            ],
+          });
           return;
         }
 
@@ -216,7 +212,13 @@ function checkCountdownStatus() {
       },
     );
   } catch (error) {
-    Logger.log('Error sending message:', error);
+    // Silence common connection errors in popup
+    Logger.error(error, 'Popup', {
+      silentMessages: [
+        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+        ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+      ],
+    });
   }
 }
 
@@ -526,16 +528,25 @@ function setupEventListeners({
         },
         (_response) => {
           if (chrome.runtime.lastError) {
-            Logger.log(
-              'Error receiving featureToggleChanged response:',
-              chrome.runtime.lastError.message,
-            );
+            // Silence connection errors when background script is not available
+            Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
+              silentMessages: [
+                ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+                ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+              ],
+            });
             return;
           }
         },
       );
     } catch (error) {
-      Logger.log('Error sending featureToggleChanged message:', error);
+      // Silence common connection errors in toggle
+      Logger.error(error, 'Popup', {
+        silentMessages: [
+          ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+          ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+        ],
+      });
     }
 
     if (isChecked) {

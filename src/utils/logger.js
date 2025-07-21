@@ -6,7 +6,12 @@ export class Logger {
   }
 
   static error(error, component = 'General', context = {}) {
-    return ErrorHandler.handle(error, { component, context });
+    const { silentMessages, ...restContext } = context;
+    return ErrorHandler.handle(error, {
+      component,
+      context: restContext,
+      silentMessages: silentMessages || [],
+    });
   }
 }
 

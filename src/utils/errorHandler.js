@@ -1,6 +1,21 @@
 export class ErrorHandler {
   static handle(error, options = {}) {
-    const { component = 'General', context = {}, callback = null } = options;
+    const {
+      component = 'General',
+      context = {},
+      callback = null,
+      silentMessages = [],
+    } = options;
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    const shouldSilence = silentMessages.some((silentMsg) =>
+      errorMessage.includes(silentMsg),
+    );
+
+    if (shouldSilence) {
+      return { error, context, silenced: true };
+    }
 
     console.error(`[${component}]`, error);
 
@@ -16,7 +31,7 @@ export class ErrorHandler {
       }
     }
 
-    return { error, context };
+    return { error, context, silenced: false };
   }
 }
 

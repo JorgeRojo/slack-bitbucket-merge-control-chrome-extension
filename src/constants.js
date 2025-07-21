@@ -81,3 +81,14 @@ export const MESSAGE_ACTIONS = {
   CHANNEL_CHANGE_ERROR: 'channelChangeError',
   UPDATE_COUNTDOWN_DISPLAY: 'updateCountdownDisplay',
 };
+
+// Mensajes de error que pueden ser silenciados
+export const ERROR_MESSAGES = {
+  RECEIVING_END_NOT_EXIST: 'Receiving end does not exist',
+  CONNECTION_FAILED:
+    'Could not establish connection. Receiving end does not exist',
+  MESSAGE_PORT_CLOSED: 'The message port closed before a response was received',
+};
+
+// Array con todos los mensajes silenciables (para conveniencia)
+export const ALL_SILENCEABLE_ERRORS = Object.values(ERROR_MESSAGES);

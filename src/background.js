@@ -13,6 +13,7 @@ import {
   WEBSOCKET_CHECK_INTERVAL,
   WEBSOCKET_CHECK_ALARM,
   WEBSOCKET_MAX_AGE,
+  ERROR_MESSAGES,
   APP_STATUS,
   MERGE_STATUS,
   MESSAGE_ACTIONS,
@@ -402,10 +403,13 @@ async function updateContentScriptMergeState(channelName) {
       action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
     });
   } catch (error) {
-    if (error.message?.includes('Receiving end does not exist')) {
-      return;
-    }
-    Logger.error(error);
+    // Silence connection errors when popup is not open
+    Logger.error(error, 'Background', {
+      silentMessages: [
+        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+        ERROR_MESSAGES.CONNECTION_FAILED,
+      ],
+    });
   }
 
   if (bitbucketTabId) {
@@ -429,10 +433,13 @@ async function updateContentScriptMergeState(channelName) {
         featureEnabled: featureEnabled !== false,
       });
     } catch (error) {
-      if (error.message?.includes('Receiving end does not exist')) {
-        return;
-      }
-      Logger.error(error);
+      // Silence connection errors when Bitbucket tab is not available
+      Logger.error(error, 'Background', {
+        silentMessages: [
+          ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+          ERROR_MESSAGES.CONNECTION_FAILED,
+        ],
+      });
     }
   }
 }
@@ -675,10 +682,13 @@ const messageHandlers = {
               error: error.message,
             });
           } catch (sendError) {
-            if (sendError.message?.includes('Receiving end does not exist')) {
-              return;
-            }
-            Logger.error(sendError);
+            // Silence connection errors when popup is not open to receive error notifications
+            Logger.error(sendError, 'Background', {
+              silentMessages: [
+                ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+                ERROR_MESSAGES.CONNECTION_FAILED,
+              ],
+            });
           }
         }
       }
@@ -800,12 +810,17 @@ const updateMergeButtonFromLastKnownMergeState = () => {
             featureEnabled: result.featureEnabled !== false,
           });
         } catch (error) {
-          if (error.message?.includes('Receiving end does not exist')) {
-            bitbucketTabId = null;
+          // Silence connection errors when Bitbucket tab is not available
+          const result = Logger.error(error, 'Background', {
+            silentMessages: [
+              ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+              ERROR_MESSAGES.CONNECTION_FAILED,
+            ],
+          });
+          bitbucketTabId = null;
+          if (result.silenced) {
             return;
           }
-          Logger.error(error);
-          bitbucketTabId = null;
         }
       }
     },
@@ -848,10 +863,13 @@ async function notifyPopupAboutCountdown(timeLeft) {
       timeLeft,
     });
   } catch (error) {
-    if (error.message?.includes('Receiving end does not exist')) {
-      return;
-    }
-    Logger.error(error);
+    // Silence connection errors when popup is not open to receive countdown updates
+    Logger.error(error, 'Background', {
+      silentMessages: [
+        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+        ERROR_MESSAGES.CONNECTION_FAILED,
+      ],
+    });
   }
 }
 
@@ -886,10 +904,13 @@ async function reactivateFeature() {
       enabled: true,
     });
   } catch (error) {
-    if (error.message?.includes('Receiving end does not exist')) {
-      return;
-    }
-    Logger.error(error);
+    // Silence connection errors when popup is not open to receive reactivation notification
+    Logger.error(error, 'Background', {
+      silentMessages: [
+        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+        ERROR_MESSAGES.CONNECTION_FAILED,
+      ],
+    });
   }
 
   const { channelName } = await chrome.storage.sync.get('channelName');
