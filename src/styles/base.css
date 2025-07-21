@@ -46,9 +46,7 @@ a:hover {
 }
 
 button,
-.tertiary-button,
-#open-options,
-#slack-channel-link {
+.tertiary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -73,9 +71,7 @@ button,
 }
 
 button:hover,
-.tertiary-button:hover,
-#open-options:hover,
-#slack-channel-link:hover {
+.tertiary-button:hover {
   background-color: var(--ft-tertiary-hover-bg-color);
   color: var(--ft-tertiary-hover-color);
   box-shadow:
@@ -85,31 +81,13 @@ button:hover,
 }
 
 button:active,
-.tertiary-button:active,
-#open-options:active,
-#slack-channel-link:active {
+.tertiary-button:active {
   background-color: var(--ft-tertiary-active-bg-color);
 }
 
 button:disabled {
   filter: saturate(0.5) brightness(135%) contrast(80%);
   cursor: not-allowed;
-}
-
-/* Small button variant for popup */
-#open-options {
-  padding: 0 var(--ft-button-small-padding-x);
-  height: var(--ft-button-small-height);
-  font-size: var(--ft-button-small-font-size);
-}
-
-/* Link-specific styles */
-#slack-channel-link {
-  text-decoration: none;
-}
-
-#slack-channel-link:hover {
-  text-decoration: none;
 }
 
 input[type='text'],

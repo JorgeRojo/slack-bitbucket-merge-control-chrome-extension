@@ -1,16 +1,13 @@
 :root {
-  /* Tipografía */
   --ft-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   --ft-font-weight-light: 300;
   --ft-font-weight-normal: 400;
   --ft-font-weight-bold: 600;
   --ft-font-size: 14px;
 
-  /* Colores de marca */
   --ft-brand-color: #502185;
   --ft-brand-text-1: #333333;
 
-  /* Paleta de colores */
   --ft-color-lightest: #ffffff;
   --ft-color-grey-1: #8f8899;
   --ft-color-grey-2: #bbb9bd;
@@ -25,37 +22,30 @@
   --ft-color-tertiary: #3498db;
   --ft-color-error: #e74c3c;
 
-  /* Colores de selección */
   --ft-select-color: var(--ft-color-light);
 
-  /* Colores de elementos interactivos */
   --ft-color-item-hover: #ecf0f1;
   --ft-color-item-active: #d5f9f6;
   --ft-color-item-hover-active: #d6ebff;
 
-  /* Colores de texto */
   --ft-color-text: var(--ft-brand-text-1);
   --ft-color-text-inverted: var(--ft-color-lightest);
   --ft-color-background: var(--ft-color-grey-3);
   --ft-color-link: var(--ft-color-primary);
   --ft-header-bg-color: var(--ft-brand-color);
 
-  /* Sombras */
   --ft-box-shadow-1: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
   --ft-box-shadow-2: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
   --ft-box-shadow-3: 0 0 6px 0 rgba(0, 0, 0, 0.1);
   --ft-box-shadow-4: 0 2px 16px 0 rgba(0, 0, 0, 0.1);
 
-  /* Transiciones */
   --ft-transition-duration: 0.2s;
 
-  /* Botones */
   --ft-button-default-font-family: var(--ft-font-family);
   --ft-button-default-font-weight: var(--ft-font-weight-bold);
   --ft-button-default-letter-spacing: 0.5px;
   --ft-button-default-border-radius: 6px;
 
-  /* Botón terciario (Azul) - Único estilo de botón */
   --ft-tertiary-default-bg-color: #3498db;
   --ft-tertiary-default-color: #ffffff;
   --ft-tertiary-hover-bg-color: #2980b9;
@@ -68,7 +58,6 @@
   --ft-tertiary-hover-border-top-color: rgba(179, 179, 255, 0.2);
   --ft-tertiary-hover-border-bottom-color: rgba(0, 0, 0, 0.3);
 
-  /* Tamaños de botones */
   --ft-button-small-font-size: 14px;
   --ft-button-default-font-size: 16px;
   --ft-button-small-height: 36px;
@@ -76,7 +65,6 @@
   --ft-button-small-padding-x: 12px;
   --ft-button-default-padding-x: 16px;
 
-  /* Formularios */
   --ft-form-item-border-radius: 4px;
   --ft-form-item-padding-y: 8px;
   --ft-form-item-padding-x: 12px;
