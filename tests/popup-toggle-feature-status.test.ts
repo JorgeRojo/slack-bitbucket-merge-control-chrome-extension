@@ -150,7 +150,7 @@ describe('popup-toggle-feature-status.js', () => {
       expect(mockRuntime.sendMessage).toHaveBeenCalled();
       const sendMessageCall = mockRuntime.sendMessage.mock.calls[0];
       expect(sendMessageCall[0].action).toBe(MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED);
-      expect(sendMessageCall[0].payload).toEqual({ enabled: true });
+      expect(sendMessageCall[0].enabled).toBe(true);
     });
 
     test('should handle toggle event when unchecked', async () => {
