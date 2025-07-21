@@ -94,8 +94,6 @@ global.requestAnimationFrame = vi.fn((callback) => {
   return 1;
 });
 
-global.cancelAnimationFrame = vi.fn();
-
 const setupDefaultMockResponses = () => {
   mockStorage.sync.get.mockResolvedValue({
     slackToken: 'test-token',
@@ -169,23 +167,3 @@ const setupDefaultMockResponses = () => {
 };
 
 setupDefaultMockResponses();
-
-// Store original console methods for restoration
-const originalConsole = {
-  error: console.error,
-  warn: console.warn,
-  log: console.log,
-};
-
-// Utility functions for console management
-export const silenceConsole = () => {
-  console.error = vi.fn();
-  console.warn = vi.fn();
-  console.log = vi.fn();
-};
-
-export const restoreConsole = () => {
-  console.error = originalConsole.error;
-  console.warn = originalConsole.warn;
-  console.log = originalConsole.log;
-};
