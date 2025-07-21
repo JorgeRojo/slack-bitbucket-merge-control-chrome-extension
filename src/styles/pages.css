@@ -1,9 +1,17 @@
 @import url('./base.css');
 
+/* Page layout for sticky footer */
+html,
 body {
-  padding: 20px;
-  width: 780px;
-  margin: 0 auto;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 h1 {
@@ -27,7 +35,7 @@ h3 {
   font-size: 16px;
   font-weight: var(--ft-font-weight-bold);
   margin-top: 20px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: var(--ft-color-darkest);
 }
 
@@ -106,8 +114,9 @@ code {
 
 .default-button {
   display: block;
-  width: 60%;
-  margin: 20px auto;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 0;
   font-size: 16px;
 }
 
@@ -123,14 +132,17 @@ code {
   font-size: 16px;
   text-align: center;
   border-radius: var(--ft-form-item-border-radius);
-  background-color: var(--ft-color-grey-3);
+  background-color: var(--ft-color-grey-4);
   transition: all var(--ft-transition-duration) ease;
+  margin: 0 auto;
+  max-width: 600px;
+  box-sizing: border-box;
 }
 
 .status-error,
 .status-success {
-  margin-top: 20px;
-  padding: 10px;
+  padding: 8px;
+  margin-bottom: 8px;
 }
 
 .status-success {
@@ -174,6 +186,27 @@ code {
 
 .list-compact .list-item {
   margin-bottom: 5px;
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 20px;
+  width: 780px;
+  margin: 0 auto;
+}
+
+.sticky-footer ~ .content-wrapper {
+  padding-bottom: 100px;
+}
+
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+  background-color: var(--ft-color-lightest);
+  border-top: 1px solid var(--ft-color-grey-2);
+  padding: 15px 20px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .option-section,
@@ -247,7 +280,7 @@ code {
 #status.success,
 #status.error {
   margin-top: 20px;
-  padding: 10px;
+  padding: 8px;
 }
 
 #status.success {
