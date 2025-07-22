@@ -22,14 +22,6 @@ Builds the entire project using our custom build script:
 - Falls back to JavaScript versions when TypeScript compilation fails
 - Provides detailed build summary
 
-### `npm run watch`
-
-Watches for file changes and rebuilds automatically:
-
-- Monitors the `src/` directory for changes
-- Triggers rebuild when `.ts`, `.js`, `.html`, `.css`, or `.json` files change
-- Provides real-time feedback on build status
-
 ### `npm run clean`
 
 Removes the `dist/` directory completely.
@@ -95,11 +87,11 @@ When TypeScript compilation fails, the build system automatically uses the JavaS
    npm run dev
    ```
 
-   This builds the project and starts watching for changes.
+   This compiles TypeScript and copies static files to the `dist/` directory.
 
 2. **Make changes to TypeScript files:**
    - Edit `.ts` files in the `src/` directory
-   - The watch process will automatically rebuild
+   - Run `npm run build` to rebuild after changes
    - Check the console for compilation status
 
 3. **Test the extension:**

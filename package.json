@@ -27,10 +27,7 @@
     "prepare": "husky install",
     "build": "node build.cjs",
     "build:tsc": "tsc",
-    "watch": "node watch.cjs",
-    "watch:tsc": "tsc --watch",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist",
-    "dev": "npm run build && npm run watch"
+    "clean": "rm -rf dist"
   }
 }

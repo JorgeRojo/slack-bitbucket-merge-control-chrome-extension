@@ -26,12 +26,6 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
   npm run build
   ```
 
-  To watch for changes during development:
-
-  ```bash
-  npm run watch
-  ```
-
   To check TypeScript types without compiling:
 
   ```bash

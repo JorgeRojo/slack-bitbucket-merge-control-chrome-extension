@@ -110,7 +110,6 @@ The TypeScript migration has been successfully completed as of July 2025. All so
    ```json
    "scripts": {
      "build": "tsc",
-     "watch": "tsc --watch",
      "type-check": "tsc --noEmit"
    }
    ```
