@@ -30,10 +30,10 @@ export interface SlackMessage {
 
 export interface ProcessedMessage {
   text: string;
-  timestamp: string;
+  timestamp?: string;
   user: string;
   matchType: MERGE_STATUS | null;
-  ts?: string; // Add ts property for compatibility
+  ts: string; // Timestamp from Slack
 }
 
 // Status types

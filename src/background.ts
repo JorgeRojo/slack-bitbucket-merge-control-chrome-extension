@@ -101,7 +101,7 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
     lastKnownMergeState?: Record<string, any>;
   };
 
-  const appStatus = lastKnownMergeState?.appStatus as keyof typeof APP_STATUS | undefined;
+  const appStatus = lastKnownMergeState?.appStatus as APP_STATUS | undefined;
 
   const lastSlackMessage =
     currentMessages && currentMessages.length > 0 ? currentMessages[0] : null;
@@ -109,7 +109,7 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
   const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
     await getPhrasesFromStorage();
 
-  let mergeStatusForContentScript: keyof typeof MERGE_STATUS = MERGE_STATUS.UNKNOWN;
+  let mergeStatusForContentScript: MERGE_STATUS = MERGE_STATUS.UNKNOWN;
   let matchingMessageForContentScript: ProcessedMessage | null = null;
 
   if (currentMessages && currentMessages.length > 0) {
@@ -123,7 +123,7 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
     matchingMessageForContentScript = message;
   }
 
-  const errorStatuses = [
+  const errorStatuses: APP_STATUS[] = [
     APP_STATUS.UNKNOWN_ERROR,
     APP_STATUS.CONFIG_ERROR,
     APP_STATUS.TOKEN_ERROR,
@@ -181,7 +181,7 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
       });
     } catch (error) {
       // Silence connection errors when Bitbucket tab is not available
-      Logger.error(error, 'Background', {
+      Logger.error(toErrorType(error), 'Background', {
         silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
       });
     }
@@ -201,7 +201,7 @@ async function fetchAndStoreTeamId(slackToken: string): Promise<void> {
       await chrome.storage.local.set({ teamId: data.team_id });
     }
   } catch (error) {
-    Logger.error(error);
+    Logger.error(toErrorType(error));
   }
 }
 
@@ -336,11 +336,11 @@ async function connectToSlackSocketMode(): Promise<void> {
 
     rtmWebSocket.onerror = async error => {
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
-      Logger.error(error, 'WebSocket', { type: 'connection' });
+      Logger.error(toErrorType(error), 'WebSocket', { type: 'connection' });
       rtmWebSocket?.close();
     };
   } catch (error) {
-    Logger.error(error, 'SlackConnection', {
+    Logger.error(toErrorType(error), 'SlackConnection', {
       channelName,
       connectionType: 'RTM',
     });
@@ -391,7 +391,7 @@ async function checkWebSocketConnection(): Promise<void> {
       rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
       Logger.log('Ping sent to Slack server');
     } catch (error) {
-      Logger.error(ERROR_MESSAGES.SENDING_PING, error);
+      Logger.error(toErrorType(error), ERROR_MESSAGES.SENDING_PING);
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       rtmWebSocket.close();
       setTimeout(connectToSlackSocketMode, 1000);
@@ -437,16 +437,14 @@ function updateMergeButtonFromLastKnownMergeState(): void {
           }
         } catch (error) {
           // Silence connection errors when Bitbucket tab is not available
-          const result = Logger.error(error, 'Background', {
+          Logger.error(toErrorType(error), 'Background', {
             silentMessages: [
               ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
               ERROR_MESSAGES.CONNECTION_FAILED,
             ],
           });
           bitbucketTabId = null;
-          if (result.silenced) {
-            return;
-          }
+          return;
         }
       }
     }
@@ -474,7 +472,7 @@ async function notifyPopupAboutCountdown(timeLeft: number): Promise<void> {
     });
   } catch (error) {
     // Silence connection errors when popup is not open to receive countdown updates
-    Logger.error(error, 'Background', {
+    Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
   }
@@ -493,7 +491,7 @@ async function reactivateFeature(): Promise<void> {
     });
   } catch (error) {
     // Silence connection errors when popup is not open to receive reactivation notification
-    Logger.error(error, 'Background', {
+    Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
   }
@@ -571,7 +569,7 @@ async function registerBitbucketContentScript(): Promise<void> {
       });
     }
   } catch (error) {
-    Logger.error(ERROR_MESSAGES.SCRIPT_VERIFICATION, error);
+    Logger.error(toErrorType(error), ERROR_MESSAGES.SCRIPT_VERIFICATION);
   }
 
   if (bitbucketUrl) {
@@ -585,7 +583,7 @@ async function registerBitbucketContentScript(): Promise<void> {
         },
       ]);
     } catch (error) {
-      Logger.error(ERROR_MESSAGES.SCRIPT_REGISTRATION, error);
+      Logger.error(toErrorType(error), ERROR_MESSAGES.SCRIPT_REGISTRATION);
     }
   }
 }
@@ -597,7 +595,7 @@ const messageHandlers: Record<
     request: ChromeRuntimeMessage,
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
-  ) => boolean | Promise<void> | void
+  ) => any
 > = {
   [MESSAGE_ACTIONS.GET_DEFAULT_PHRASES]: (_request, _sender, sendResponse) => {
     // Import these directly in the function to avoid circular dependencies
@@ -640,7 +638,7 @@ const messageHandlers: Record<
 
         await updateContentScriptMergeState(targetChannelName);
       } catch (error) {
-        Logger.error(ERROR_MESSAGES.FETCHING_MESSAGES, error);
+        Logger.error(toErrorType(error), ERROR_MESSAGES.FETCHING_MESSAGES);
         await handleSlackApiError(error);
 
         if (request?.payload?.channelName && !request?.payload?.skipErrorNotification) {
@@ -651,7 +649,7 @@ const messageHandlers: Record<
             });
           } catch (sendError) {
             // Silence connection errors when popup is not open to receive error notifications
-            Logger.error(sendError, 'Background', {
+            Logger.error(toErrorType(sendError), 'Background', {
               silentMessages: [
                 ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
                 ERROR_MESSAGES.CONNECTION_FAILED,
@@ -670,7 +668,7 @@ const messageHandlers: Record<
       'lastKnownMergeState'
     )) as { lastKnownMergeState?: Record<string, any> };
 
-    const appStatus = lastKnownMergeState?.appStatus as keyof typeof APP_STATUS | undefined;
+    const appStatus = lastKnownMergeState?.appStatus as APP_STATUS | undefined;
 
     if (rtmWebSocket) {
       rtmWebSocket.close();
@@ -737,15 +735,14 @@ const messageHandlers: Record<
         timeLeft: timeLeft,
         reactivationTime: reactivationTime,
       });
-      return true;
     } else {
       sendResponse({
         isCountdownActive: false,
         timeLeft: 0,
         reactivationTime: null,
       });
-      return true;
     }
+    return true;
   },
 };
 
@@ -773,23 +770,26 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 // Set up installation and startup listeners
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.get('mergeButtonSelector', result => {
-    if (!result.mergeButtonSelector) {
-      chrome.storage.sync.set({
-        mergeButtonSelector: DEFAULT_MERGE_BUTTON_SELECTOR,
-      });
-    }
+// Only register listeners if not in test environment
+if (typeof process === 'undefined' || process.env.NODE_ENV !== 'test') {
+  chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.sync.get('mergeButtonSelector', result => {
+      if (!result.mergeButtonSelector) {
+        chrome.storage.sync.set({
+          mergeButtonSelector: DEFAULT_MERGE_BUTTON_SELECTOR,
+        });
+      }
+    });
+    connectToSlackSocketMode();
+    registerBitbucketContentScript();
+    checkScheduledReactivation();
+    setupWebSocketCheckAlarm();
   });
-  connectToSlackSocketMode();
-  registerBitbucketContentScript();
-  checkScheduledReactivation();
-  setupWebSocketCheckAlarm();
-});
 
-chrome.runtime.onStartup.addListener(() => {
-  connectToSlackSocketMode();
-  registerBitbucketContentScript();
-  checkScheduledReactivation();
-  setupWebSocketCheckAlarm();
-});
+  chrome.runtime.onStartup.addListener(() => {
+    connectToSlackSocketMode();
+    registerBitbucketContentScript();
+    checkScheduledReactivation();
+    setupWebSocketCheckAlarm();
+  });
+}

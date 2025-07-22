@@ -2,14 +2,14 @@ import { vi } from 'vitest';
 
 export const mockStorage = {
   sync: {
-    get: vi.fn(),
-    set: vi.fn(),
-    remove: vi.fn(),
+    get: vi.fn().mockResolvedValue({}),
+    set: vi.fn().mockResolvedValue(undefined),
+    remove: vi.fn().mockResolvedValue(undefined),
   },
   local: {
-    get: vi.fn(),
-    set: vi.fn(),
-    remove: vi.fn(),
+    get: vi.fn().mockResolvedValue({}),
+    set: vi.fn().mockResolvedValue(undefined),
+    remove: vi.fn().mockResolvedValue(undefined),
   },
   onChanged: {
     addListener: vi.fn(),
@@ -21,13 +21,19 @@ export const mockRuntime = {
     addListener: vi.fn(),
   },
   onInstalled: {
-    addListener: vi.fn(),
+    addListener: vi.fn(callback => {
+      // Don't execute the callback during tests to avoid side effects
+      // callback();
+    }),
   },
   onStartup: {
-    addListener: vi.fn(),
+    addListener: vi.fn(callback => {
+      // Don't execute the callback during tests to avoid side effects
+      // callback();
+    }),
   },
-  sendMessage: vi.fn(),
-  openOptionsPage: vi.fn(),
+  sendMessage: vi.fn().mockResolvedValue(undefined),
+  openOptionsPage: vi.fn().mockResolvedValue(undefined),
   getURL: vi.fn(() => ''),
   lastError: null,
 };
@@ -36,30 +42,30 @@ export const mockAlarms = {
   onAlarm: {
     addListener: vi.fn(),
   },
-  create: vi.fn(),
-  clear: vi.fn(),
+  create: vi.fn().mockResolvedValue(undefined),
+  clear: vi.fn().mockResolvedValue(undefined),
 };
 
 export const mockTabs = {
-  query: vi.fn(),
-  sendMessage: vi.fn(),
+  query: vi.fn().mockResolvedValue([]),
+  sendMessage: vi.fn().mockResolvedValue(undefined),
 };
 
 export const mockAction = {
-  setIcon: vi.fn(),
-  setBadgeText: vi.fn(),
-  setBadgeBackgroundColor: vi.fn(),
+  setIcon: vi.fn().mockResolvedValue(undefined),
+  setBadgeText: vi.fn().mockResolvedValue(undefined),
+  setBadgeBackgroundColor: vi.fn().mockResolvedValue(undefined),
 };
 
 export const mockScripting = {
-  registerContentScripts: vi.fn(),
-  unregisterContentScripts: vi.fn(),
+  registerContentScripts: vi.fn().mockResolvedValue(undefined),
+  unregisterContentScripts: vi.fn().mockResolvedValue(undefined),
   getRegisteredContentScripts: vi.fn().mockResolvedValue([]),
 };
 
 export const mockPermissions = {
-  request: vi.fn(),
-  contains: vi.fn(),
+  request: vi.fn().mockResolvedValue(true),
+  contains: vi.fn().mockResolvedValue(true),
 };
 
 // Define Chrome mock with TypeScript

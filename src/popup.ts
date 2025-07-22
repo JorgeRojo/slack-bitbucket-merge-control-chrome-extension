@@ -4,6 +4,7 @@ import { literals } from './literals';
 import './components/toggle-switch/index';
 import { initializeToggleFeatureStatus } from './popup-toggle-feature-status';
 import { ProcessedMessage, MergeStatusInfo, AppStatusInfo } from './types/index';
+import { toErrorType } from './utils/type-helpers';
 
 interface UIElements {
   statusIcon: HTMLElement | null;
@@ -16,15 +17,15 @@ interface UIElements {
 }
 
 interface UpdateUIParams extends UIElements {
-  state: keyof typeof MERGE_STATUS;
+  state: MERGE_STATUS;
   message?: string | null;
   matchingMessage?: ProcessedMessage | null;
 }
 
 interface LastKnownMergeState {
-  mergeStatus: keyof typeof MERGE_STATUS;
+  mergeStatus: MERGE_STATUS;
   lastSlackMessage?: ProcessedMessage;
-  appStatus?: keyof typeof APP_STATUS;
+  appStatus?: APP_STATUS;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -210,7 +211,7 @@ async function loadAndDisplayData({
       optionsLinkContainer,
     });
   } catch (error) {
-    Logger.error(error, 'PopupUI', {
+    Logger.error(toErrorType(error), 'PopupUI', {
       action: 'processMessages',
       uiElements: {
         statusIcon: statusIcon?.id,
@@ -343,7 +344,7 @@ async function showMergeStatus({
     return;
   }
 
-  const stateUIMap: Record<string, { state: keyof typeof MERGE_STATUS; message: string }> = {
+  const stateUIMap: Record<string, { state: MERGE_STATUS; message: string }> = {
     [MERGE_STATUS.EXCEPTION]: {
       state: MERGE_STATUS.EXCEPTION,
       message: literals.popup.textAllowedWithExceptions,

@@ -19,6 +19,25 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
 
 ### Available Scripts
 
+- **Building:**
+  To build the extension:
+
+  ```bash
+  npm run build
+  ```
+
+  To watch for changes during development:
+
+  ```bash
+  npm run watch
+  ```
+
+  To check TypeScript types without compiling:
+
+  ```bash
+  npm run type-check
+  ```
+
 - **Formatting:**
   To format the code, run:
 
@@ -91,11 +110,17 @@ All project documentation is organized in the `documentation/` directory:
    npm install
    ```
 
-3. **Load in Chrome:**
+3. **Build the extension:**
+
+   ```bash
+   npm run build
+   ```
+
+4. **Load in Chrome:**
    - Open Chrome and navigate to `chrome://extensions`.
    - Enable **Developer mode** (toggle switch in the top right).
    - Click on **Load unpacked**.
-   - Select the `slack-frontend-closure` directory.
+   - Select the `dist` directory within the project folder.
 
 ## Configuration & Usage
 

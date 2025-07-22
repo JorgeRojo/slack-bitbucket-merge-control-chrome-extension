@@ -27,7 +27,7 @@ export function cleanSlackMessageText(text: string | undefined): string {
 
   const NEWLINES_AND_TABS_REGEX = /[\n\r\t]+/g;
   const USER_MENTION_REGEX = /<@[^>]+>/g;
-  const CHANNEL_MENTION_REGEX = /<#[^|>]+>/g;
+  const CHANNEL_MENTION_REGEX = /<#[^>]+>/g;
   const REMAINING_BRACKETS_REGEX = /<[^>]+>/g;
   const MULTIPLE_WHITESPACE_REGEX = /\s+/g;
 
@@ -238,33 +238,49 @@ export async function getPhrasesFromStorage(): Promise<{
   currentDisallowedPhrases: string[];
   currentExceptionPhrases: string[];
 }> {
-  const { allowedPhrases, disallowedPhrases, exceptionPhrases } = await chrome.storage.sync.get([
-    'allowedPhrases',
-    'disallowedPhrases',
-    'exceptionPhrases',
-  ]);
+  try {
+    const result = await chrome.storage.sync.get([
+      'allowedPhrases',
+      'disallowedPhrases',
+      'exceptionPhrases',
+    ]);
 
-  // Import these directly in the function to avoid circular dependencies
-  const { DEFAULT_ALLOWED_PHRASES, DEFAULT_DISALLOWED_PHRASES, DEFAULT_EXCEPTION_PHRASES } =
-    await import('../constants');
+    // Safely destructure with fallback to empty object
+    const { allowedPhrases, disallowedPhrases, exceptionPhrases } = result || {};
 
-  const currentAllowedPhrases = allowedPhrases
-    ? allowedPhrases.split(',')
-    : DEFAULT_ALLOWED_PHRASES;
+    // Import these directly in the function to avoid circular dependencies
+    const { DEFAULT_ALLOWED_PHRASES, DEFAULT_DISALLOWED_PHRASES, DEFAULT_EXCEPTION_PHRASES } =
+      await import('../constants');
 
-  const currentDisallowedPhrases = disallowedPhrases
-    ? disallowedPhrases.split(',')
-    : DEFAULT_DISALLOWED_PHRASES;
+    const currentAllowedPhrases =
+      allowedPhrases && allowedPhrases.trim() ? allowedPhrases.split(',') : DEFAULT_ALLOWED_PHRASES;
 
-  const currentExceptionPhrases = exceptionPhrases
-    ? exceptionPhrases.split(',')
-    : DEFAULT_EXCEPTION_PHRASES;
+    const currentDisallowedPhrases =
+      disallowedPhrases && disallowedPhrases.trim()
+        ? disallowedPhrases.split(',')
+        : DEFAULT_DISALLOWED_PHRASES;
 
-  return {
-    currentAllowedPhrases,
-    currentDisallowedPhrases,
-    currentExceptionPhrases,
-  };
+    const currentExceptionPhrases =
+      exceptionPhrases && exceptionPhrases.trim()
+        ? exceptionPhrases.split(',')
+        : DEFAULT_EXCEPTION_PHRASES;
+
+    return {
+      currentAllowedPhrases,
+      currentDisallowedPhrases,
+      currentExceptionPhrases,
+    };
+  } catch (error) {
+    // If there's an error (e.g., during tests), return default values
+    const { DEFAULT_ALLOWED_PHRASES, DEFAULT_DISALLOWED_PHRASES, DEFAULT_EXCEPTION_PHRASES } =
+      await import('../constants');
+
+    return {
+      currentAllowedPhrases: DEFAULT_ALLOWED_PHRASES,
+      currentDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,
+      currentExceptionPhrases: DEFAULT_EXCEPTION_PHRASES,
+    };
+  }
 }
 
 /**

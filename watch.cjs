@@ -1,46 +1,57 @@
-#!/usr/bin/env node
-
+const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const chokidar = require('chokidar');
 
-const srcDir = path.join(__dirname, 'src');
+// Start TypeScript compiler in watch mode
+const tsc = spawn('npx', ['tsc', '--watch'], { stdio: 'inherit' });
 
-console.log('👀 Watching for changes in src/ directory...');
-console.log('Press Ctrl+C to stop watching\n');
+// Watch for changes in static files
+const staticPaths = [
+  'src/manifest.json',
+  'src/popup.html',
+  'src/options.html',
+  'src/images/**/*',
+  'src/styles/**/*',
+];
 
-// Initial build
-console.log('🔨 Initial build...');
-try {
-  execSync('npm run build', { stdio: 'inherit' });
-  console.log('✅ Initial build completed\n');
-} catch (error) {
-  console.log('❌ Initial build failed\n');
-}
+const copyFile = (source, target) => {
+  const targetDir = path.dirname(target);
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+  fs.copyFileSync(source, target);
+  console.log(`Copied: ${source} -> ${target}`);
+};
 
-// Watch for changes
-function watchDirectory(dir) {
-  fs.watch(dir, { recursive: true }, (eventType, filename) => {
-    if (filename && (filename.endsWith('.ts') || filename.endsWith('.js') || filename.endsWith('.html') || filename.endsWith('.css') || filename.endsWith('.json'))) {
-      console.log(`📝 File changed: ${filename}`);
-      console.log('🔨 Rebuilding...');
-      
-      try {
-        execSync('npm run build', { stdio: 'pipe' });
-        console.log('✅ Build completed');
-      } catch (error) {
-        console.log('❌ Build failed');
-        console.error(error.stdout?.toString() || error.message);
-      }
-      console.log('');
-    }
+const watcher = chokidar.watch(staticPaths, {
+  persistent: true,
+  ignoreInitial: false,
+});
+
+watcher
+  .on('add', filePath => {
+    const relativePath = filePath.replace(/^src\//, '');
+    const targetPath = path.join('dist', relativePath);
+    copyFile(filePath, targetPath);
+  })
+  .on('change', filePath => {
+    const relativePath = filePath.replace(/^src\//, '');
+    const targetPath = path.join('dist', relativePath);
+    copyFile(filePath, targetPath);
   });
-}
 
-watchDirectory(srcDir);
+console.log('Watching for changes...');
 
-// Keep the process running
+// Handle process termination
 process.on('SIGINT', () => {
-  console.log('\n👋 Stopping watch mode...');
-  process.exit(0);
+  tsc.kill();
+  watcher.close();
+  process.exit();
+});
+
+process.on('SIGTERM', () => {
+  tsc.kill();
+  watcher.close();
+  process.exit();
 });

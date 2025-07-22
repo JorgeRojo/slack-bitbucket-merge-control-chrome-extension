@@ -1,6 +1,7 @@
 import { Logger } from './utils/logger';
 import { MESSAGE_ACTIONS, ERROR_MESSAGES } from './constants';
 import { ChromeRuntimeMessage } from './types/chrome';
+import { toErrorType } from './utils/type-helpers';
 
 interface CountdownOptions {
   show: boolean;
@@ -65,7 +66,7 @@ function checkCountdownStatus(): void {
       }
     );
   } catch (error) {
-    Logger.error(error, 'Popup', {
+    Logger.error(toErrorType(error), 'Popup', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.MESSAGE_PORT_CLOSED],
     });
   }
@@ -125,7 +126,7 @@ function setupToggleEventListeners(featureToggle: HTMLElement): void {
         }
       );
     } catch (error) {
-      Logger.error(error, 'Popup', {
+      Logger.error(toErrorType(error), 'Popup', {
         silentMessages: [
           ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
           ERROR_MESSAGES.MESSAGE_PORT_CLOSED,

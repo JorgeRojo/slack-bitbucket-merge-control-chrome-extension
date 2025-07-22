@@ -5,6 +5,7 @@ This document explains the TypeScript compilation and build process for the Chro
 ## Overview
 
 The project uses a hybrid approach during the TypeScript migration:
+
 - **TypeScript files** (`.ts`) are compiled to JavaScript when possible
 - **JavaScript files** (`.js`) are used as fallbacks when TypeScript compilation fails
 - All assets (HTML, CSS, images, manifest) are copied to the `dist/` directory
@@ -12,7 +13,9 @@ The project uses a hybrid approach during the TypeScript migration:
 ## Build Scripts
 
 ### `npm run build`
+
 Builds the entire project using our custom build script:
+
 - Cleans the `dist/` directory
 - Copies all non-TypeScript files (JS, HTML, CSS, images, etc.)
 - Attempts to compile each TypeScript file individually
@@ -20,21 +23,28 @@ Builds the entire project using our custom build script:
 - Provides detailed build summary
 
 ### `npm run watch`
+
 Watches for file changes and rebuilds automatically:
+
 - Monitors the `src/` directory for changes
 - Triggers rebuild when `.ts`, `.js`, `.html`, `.css`, or `.json` files change
 - Provides real-time feedback on build status
 
 ### `npm run clean`
+
 Removes the `dist/` directory completely.
 
 ### `npm run type-check`
+
 Runs TypeScript compiler in check-only mode (no output files):
+
 - Useful for checking types without building
 - Shows all TypeScript errors without stopping the build
 
 ### `npm run build:tsc`
+
 Uses the standard TypeScript compiler directly:
+
 - More strict than our custom build script
 - Will fail if any TypeScript errors exist
 
@@ -61,25 +71,30 @@ dist/
 The project is in active TypeScript migration. Current status:
 
 ### ✅ Fully Migrated
+
 - Type definitions (`types/`)
 - Utility functions (most of `utils/`)
 - UI components (`components/`)
 - Constants and literals
 
 ### 🔄 Partially Migrated
+
 - Background script (TypeScript exists, but has type errors)
 - Content script (TypeScript exists, but has type errors)
 - Popup script (TypeScript exists, but has type errors)
 
 ### 📋 Using JavaScript Fallbacks
+
 When TypeScript compilation fails, the build system automatically uses the JavaScript version as a fallback, ensuring the extension continues to work during the migration process.
 
 ## Development Workflow
 
 1. **Start development mode:**
+
    ```bash
    npm run dev
    ```
+
    This builds the project and starts watching for changes.
 
 2. **Make changes to TypeScript files:**
@@ -100,17 +115,20 @@ When TypeScript compilation fails, the build system automatically uses the JavaS
 ## Troubleshooting
 
 ### Build Fails Completely
+
 - Check that Node.js and npm are installed
 - Run `npm install` to ensure dependencies are installed
 - Try `npm run clean && npm run build`
 
 ### TypeScript Compilation Errors
+
 - The build system is designed to continue working even with TypeScript errors
 - JavaScript fallbacks are used automatically
 - Use `npm run type-check` to see all TypeScript issues
 - Fix TypeScript errors gradually without breaking the extension
 
 ### Extension Not Loading
+
 - Ensure the `dist/` directory exists and contains `manifest.json`
 - Check Chrome's extension management page for error messages
 - Verify that all required files are present in `dist/`

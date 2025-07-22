@@ -9,7 +9,7 @@ interface MergeButtonWithHandler extends HTMLElement {
 }
 
 interface LastKnownMergeState {
-  mergeStatus: keyof typeof MERGE_STATUS;
+  mergeStatus: MERGE_STATUS;
   channelName?: string;
 }
 
@@ -19,7 +19,7 @@ const BitbucketMergeController = (() => {
   function disableMergeButton(
     mergeButton: MergeButtonWithHandler,
     channelName: string | undefined,
-    mergeStatus: keyof typeof MERGE_STATUS
+    mergeStatus: MERGE_STATUS
   ): void {
     if (mergeStatus === MERGE_STATUS.EXCEPTION) {
       mergeButton.style.backgroundColor = '#FFA500';
@@ -69,7 +69,7 @@ const BitbucketMergeController = (() => {
   }
 
   async function applyMergeButtonLogic(
-    mergeStatus: keyof typeof MERGE_STATUS,
+    mergeStatus: MERGE_STATUS,
     channelName: string | undefined
   ): Promise<void> {
     const { mergeButtonSelector } = await chrome.storage.sync.get('mergeButtonSelector');
@@ -130,10 +130,7 @@ const BitbucketMergeController = (() => {
       if (payload.featureEnabled === false) {
         applyMergeButtonLogic(MERGE_STATUS.ALLOWED, payload.channelName);
       } else {
-        applyMergeButtonLogic(
-          payload.mergeStatus as keyof typeof MERGE_STATUS,
-          payload.channelName
-        );
+        applyMergeButtonLogic(payload.mergeStatus as MERGE_STATUS, payload.channelName);
       }
     }
   }
