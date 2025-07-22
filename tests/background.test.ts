@@ -15,9 +15,7 @@ process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
   if (
     reason &&
     reason.message &&
-    reason.message.includes(
-      "Cannot read properties of undefined (reading 'messages')",
-    )
+    reason.message.includes("Cannot read properties of undefined (reading 'messages')")
   ) {
     return;
   }
@@ -28,11 +26,7 @@ vi.mock('../src/utils/logger');
 
 describe('Background Script - Enhanced Coverage Tests', () => {
   let backgroundModule: any;
-  let messageHandler: (
-    request: any,
-    sender: any,
-    sendResponse?: (response: any) => void
-  ) => any;
+  let messageHandler: (request: any, sender: any, sendResponse?: (response: any) => void) => any;
   let installedHandler: (details?: { reason: string }) => Promise<void>;
   let startupHandler: () => Promise<void>;
   let alarmHandler: (alarm: { name?: string }) => void;
@@ -64,25 +58,21 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         ...defaultStorage,
         messages: defaultStorage.messages || [],
         featureEnabled:
-          defaultStorage.featureEnabled !== undefined
-            ? defaultStorage.featureEnabled
-            : true,
+          defaultStorage.featureEnabled !== undefined ? defaultStorage.featureEnabled : true,
         lastKnownMergeState: defaultStorage.lastKnownMergeState || {},
       };
 
       if (typeof keys === 'string') {
         const value = safeDefaultStorage[keys as keyof typeof safeDefaultStorage];
         return Promise.resolve({
-          [keys]:
-            value !== undefined ? value : keys === 'messages' ? [] : undefined,
+          [keys]: value !== undefined ? value : keys === 'messages' ? [] : undefined,
         });
       }
       if (Array.isArray(keys)) {
         const result: Record<string, any> = {};
-        keys.forEach((key) => {
+        keys.forEach(key => {
           const value = safeDefaultStorage[key as keyof typeof safeDefaultStorage];
-          result[key] =
-            value !== undefined ? value : key === 'messages' ? [] : undefined;
+          result[key] = value !== undefined ? value : key === 'messages' ? [] : undefined;
         });
         return Promise.resolve(result);
       }
@@ -165,9 +155,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   });
 
   test('should handle onInstalled event', async () => {
-    await expect(
-      async () => await installedHandler({ reason: 'install' }),
-    ).not.toThrow();
+    await expect(async () => await installedHandler({ reason: 'install' })).not.toThrow();
   });
 
   test('should handle onStartup event', async () => {
@@ -181,7 +169,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.GET_DEFAULT_PHRASES },
       {},
-      mockSendResponse,
+      mockSendResponse
     );
 
     expect(mockSendResponse).toHaveBeenCalledWith({
@@ -200,7 +188,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result1 = messageHandler(
       { action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED, payload: { enabled: false } },
-      {},
+      {}
     );
     expect(result1).toBeInstanceOf(Promise);
 
@@ -209,7 +197,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result2 = messageHandler(
       { action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED, payload: { enabled: true } },
-      {},
+      {}
     );
     expect(result2).toBeInstanceOf(Promise);
     await result2;
@@ -222,15 +210,27 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED, payload: { enabled: true } },
-      {},
+      {}
     );
     expect(result).toBeInstanceOf(Promise);
 
     await result;
-    await result;
-    expect(mockStorage.local.set).toHaveBeenCalledWith({
-      featureEnabled: true,
-    });
+    
+    // Should call storage.local.set at least twice
+    expect(mockStorage.local.set).toHaveBeenCalledTimes(2);
+    
+    // Check that the calls include featureEnabled and lastKnownMergeState
+    const calls = mockStorage.local.set.mock.calls;
+    const hasFeatureEnabledCall = calls.some(call => 
+      call[0].hasOwnProperty('featureEnabled') && 
+      !call[0].hasOwnProperty('lastKnownMergeState')
+    );
+    const hasMergeStateCall = calls.some(call => 
+      call[0].hasOwnProperty('lastKnownMergeState')
+    );
+    
+    expect(hasFeatureEnabledCall).toBe(true);
+    expect(hasMergeStateCall).toBe(true);
   });
 
   test('should handle getCountdownStatus message', async () => {
@@ -240,7 +240,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
       {},
-      mockSendResponse,
+      mockSendResponse
     );
     expect(result).toBeInstanceOf(Promise);
 
@@ -256,7 +256,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
-      {},
+      {}
     );
     expect(result).toBeInstanceOf(Promise);
 
@@ -295,12 +295,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should handle alarm events', async () => {
     expect(alarmHandler).toBeDefined();
 
-    await expect(
-      async () => await alarmHandler({ name: 'websocketCheck' }),
-    ).not.toThrow();
-    await expect(
-      async () => await alarmHandler({ name: 'featureReactivation' }),
-    ).not.toThrow();
+    await expect(async () => await alarmHandler({ name: 'websocketCheck' })).not.toThrow();
+    await expect(async () => await alarmHandler({ name: 'featureReactivation' })).not.toThrow();
 
     expect(mockStorage.local.set).toHaveBeenCalled();
   });
@@ -389,7 +385,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
-      {},
+      {}
     );
     await result;
 
@@ -403,7 +399,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
-      {},
+      {}
     );
     await result;
 
@@ -417,7 +413,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
-      {},
+      {}
     );
     await result;
 
@@ -434,7 +430,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED },
-      { tab: { id: 123 } },
+      { tab: { id: 123 } }
     );
     await result;
 
