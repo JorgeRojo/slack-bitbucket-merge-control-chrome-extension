@@ -1,9 +1,7 @@
-// Types for Chrome extension API integration
-
 export interface ChromeStorageItems {
   slackToken?: string;
   slackAppToken?: string;
-  appToken?: string; // Add this for compatibility
+  appToken?: string;
   channelId?: string;
   channelName?: string;
   bitbucketUrl?: string;

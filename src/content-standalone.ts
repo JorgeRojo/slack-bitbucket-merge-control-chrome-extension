@@ -1,6 +1,5 @@
-// Standalone content script without ES6 imports for Chrome Extension compatibility
 
-// Constants copied from constants.ts to avoid import issues
+
 const MERGE_STATUS = {
   ALLOWED: 'allowed',
   DISALLOWED: 'disallowed',
@@ -125,7 +124,7 @@ const BitbucketMergeController = (() => {
   }
 
   function findMergeButton(): HTMLElement | null {
-    // Try multiple selectors for different Bitbucket layouts
+
     const selectors = [
       '[data-testid="merge-button"]',
       'button[data-testid="merge-button"]',
@@ -145,7 +144,6 @@ const BitbucketMergeController = (() => {
       }
     }
 
-    // Fallback: look for buttons with "Merge" text
     const buttons = document.querySelectorAll('button');
     for (let i = 0; i < buttons.length; i++) {
       const button = buttons[i];
@@ -186,7 +184,6 @@ const BitbucketMergeController = (() => {
   };
 })();
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', BitbucketMergeController.init);
 } else {

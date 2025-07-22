@@ -1,5 +1,3 @@
-// Types for Slack API integration
-
 export interface SlackChannel {
   id: string;
   name: string;

@@ -12,9 +12,6 @@ import { ProcessedMessage } from '../types/index.js';
 import { SlackMessage } from '../types/slack.js';
 import { toErrorType, toString } from './type-helpers.js';
 
-/**
- * Normalizes text by removing diacritical marks and standardizing whitespace
- */
 export function normalizeText(text: string | undefined): string {
   if (!text) return '';
   const DIACRITICAL_MARKS_REGEX = /\p{Diacritic}/gu;
@@ -27,9 +24,6 @@ export function normalizeText(text: string | undefined): string {
     .trim();
 }
 
-/**
- * Cleans Slack message text by removing formatting, mentions, etc.
- */
 export function cleanSlackMessageText(text: string | undefined): string {
   if (!text) return '';
 
@@ -59,9 +53,6 @@ interface DetermineMergeStatusResult {
   message: ProcessedMessage | null;
 }
 
-/**
- * Determines merge status based on message content and configured phrases
- */
 export function determineMergeStatus({
   messages,
   allowedPhrases,
@@ -100,9 +91,6 @@ export function determineMergeStatus({
   return { status: MERGE_STATUS.UNKNOWN, message: null };
 }
 
-/**
- * Updates the extension icon based on the current status
- */
 export function updateExtensionIcon(status: MERGE_STATUS): boolean {
   let smallIconPath: string, largeIconPath: string;
   switch (status) {
@@ -142,9 +130,6 @@ export function updateExtensionIcon(status: MERGE_STATUS): boolean {
   return true;
 }
 
-/**
- * Handles Slack API errors and updates app status accordingly
- */
 export async function handleSlackApiError(error: Error | unknown): Promise<void> {
   const errorMessage = error instanceof Error ? error.message : String(error);
 
@@ -168,9 +153,6 @@ export async function handleSlackApiError(error: Error | unknown): Promise<void>
 
 let lastAppStatus: APP_STATUS | null = null;
 
-/**
- * Updates the application status and icon
- */
 export async function updateAppStatus(status: APP_STATUS): Promise<boolean> {
   if (status === lastAppStatus) {
     return false;
@@ -207,9 +189,6 @@ export async function updateAppStatus(status: APP_STATUS): Promise<boolean> {
   return true;
 }
 
-/**
- * Gets the current merge status based on stored messages
- */
 export async function getCurrentMergeStatusFromMessages(): Promise<MERGE_STATUS> {
   const { messages = [] } = await chrome.storage.local.get('messages');
 
@@ -230,17 +209,11 @@ export async function getCurrentMergeStatusFromMessages(): Promise<MERGE_STATUS>
   return status;
 }
 
-/**
- * Updates the extension icon based on current messages
- */
 export async function updateIconBasedOnCurrentMessages(): Promise<void> {
   const iconStatus = await getCurrentMergeStatusFromMessages();
   updateExtensionIcon(iconStatus);
 }
 
-/**
- * Gets phrases from storage or uses defaults
- */
 export async function getPhrasesFromStorage(): Promise<{
   currentAllowedPhrases: string[];
   currentDisallowedPhrases: string[];
@@ -253,10 +226,8 @@ export async function getPhrasesFromStorage(): Promise<{
       'exceptionPhrases',
     ]);
 
-    // Safely destructure with fallback to empty object
     const { allowedPhrases, disallowedPhrases, exceptionPhrases } = result || {};
 
-    // Use statically imported constants to avoid circular dependencies
     const currentAllowedPhrases =
       allowedPhrases && allowedPhrases.trim() ? allowedPhrases.split(',') : DEFAULT_ALLOWED_PHRASES;
 
@@ -276,7 +247,7 @@ export async function getPhrasesFromStorage(): Promise<{
       currentExceptionPhrases,
     };
   } catch (error) {
-    // If there's an error (e.g., during tests), return default values
+
     return {
       currentAllowedPhrases: DEFAULT_ALLOWED_PHRASES,
       currentDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,
@@ -285,9 +256,6 @@ export async function getPhrasesFromStorage(): Promise<{
   }
 }
 
-/**
- * Processes and stores a Slack message
- */
 export async function processAndStoreMessage(message: SlackMessage): Promise<void> {
   if (!message.ts || !message.text) {
     return;

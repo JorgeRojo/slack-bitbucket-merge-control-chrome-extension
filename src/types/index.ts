@@ -1,8 +1,5 @@
-// Common types used across the application
-
 import { MERGE_STATUS, APP_STATUS } from '../constants.js';
 
-// App Configuration
 export interface AppConfig {
   slackToken: string;
   slackAppToken: string;
@@ -16,7 +13,6 @@ export interface AppConfig {
   isEnabled: boolean;
 }
 
-// Message types
 export interface SlackMessage {
   type: string;
   user: string;
@@ -33,10 +29,9 @@ export interface ProcessedMessage {
   timestamp?: string;
   user: string;
   matchType: MERGE_STATUS | null;
-  ts: string; // Timestamp from Slack
+  ts: string;
 }
 
-// Status types
 export interface AppStatusInfo {
   status: APP_STATUS;
   message: string;
@@ -49,7 +44,6 @@ export interface MergeStatusInfo {
   timestamp: string | null;
 }
 
-// Chrome message types
 export interface ChromeMessage {
   action: string;
   payload?: any;
@@ -61,7 +55,6 @@ export interface ChromeMessageResponse {
   error?: string;
 }
 
-// Feature toggle
 export interface FeatureToggleState {
   isEnabled: boolean;
   disabledUntil: number | null;

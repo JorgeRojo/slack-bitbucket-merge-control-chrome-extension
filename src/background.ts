@@ -41,9 +41,6 @@ let bitbucketTabId: number | null = null;
 let rtmWebSocket: WebSocket | null = null;
 let countdownInterval: ReturnType<typeof setInterval> | undefined;
 
-/**
- * Resolves a channel name to its ID using the Slack API
- */
 async function resolveChannelId(slackToken: string, channelName: string): Promise<string> {
   let { channelId, cachedChannelName } = (await chrome.storage.local.get([
     'channelId',
@@ -90,9 +87,6 @@ async function resolveChannelId(slackToken: string, channelName: string): Promis
   return channelId;
 }
 
-/**
- * Updates the merge button state in content scripts
- */
 async function updateContentScriptMergeState(channelName: string): Promise<void> {
   const {
     messages: currentMessages = [],
@@ -156,7 +150,7 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
       action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
     });
   } catch (error) {
-    // Silence connection errors when popup is not open
+
     Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
@@ -183,7 +177,7 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
         },
       });
     } catch (error) {
-      // Silence connection errors when Bitbucket tab is not available
+
       Logger.error(toErrorType(error), 'Background', {
         silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
       });
@@ -191,9 +185,6 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
   }
 }
 
-/**
- * Fetches and stores the team ID from Slack API
- */
 async function fetchAndStoreTeamId(slackToken: string): Promise<void> {
   try {
     const response = await fetch(SLACK_AUTH_TEST_URL, {
@@ -208,9 +199,6 @@ async function fetchAndStoreTeamId(slackToken: string): Promise<void> {
   }
 }
 
-/**
- * Fetches and stores messages from a Slack channel
- */
 async function fetchAndStoreMessages(slackToken: string, channelId: string): Promise<void> {
   if (!channelId) {
     return;
@@ -260,9 +248,6 @@ async function fetchAndStoreMessages(slackToken: string, channelId: string): Pro
   }
 }
 
-/**
- * Connects to Slack using Socket Mode
- */
 async function connectToSlackSocketMode(): Promise<void> {
   const { slackToken, appToken, channelName } = (await chrome.storage.sync.get([
     'slackToken',
@@ -352,9 +337,6 @@ async function connectToSlackSocketMode(): Promise<void> {
   }
 }
 
-/**
- * Sets up an alarm to periodically check WebSocket connection
- */
 function setupWebSocketCheckAlarm(): void {
   chrome.alarms.clear(WEBSOCKET_CHECK_ALARM, () => {
     chrome.alarms.create(WEBSOCKET_CHECK_ALARM, {
@@ -364,9 +346,6 @@ function setupWebSocketCheckAlarm(): void {
   });
 }
 
-/**
- * Checks the WebSocket connection and reconnects if necessary
- */
 async function checkWebSocketConnection(): Promise<void> {
   Logger.log('Checking WebSocket connection status...');
 
@@ -402,9 +381,6 @@ async function checkWebSocketConnection(): Promise<void> {
   }
 }
 
-/**
- * Updates the merge button from the last known merge state
- */
 function updateMergeButtonFromLastKnownMergeState(): void {
   chrome.storage.local.get(
     ['lastKnownMergeState', 'featureEnabled'],
@@ -439,7 +415,7 @@ function updateMergeButtonFromLastKnownMergeState(): void {
             });
           }
         } catch (error) {
-          // Silence connection errors when Bitbucket tab is not available
+
           Logger.error(toErrorType(error), 'Background', {
             silentMessages: [
               ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
@@ -454,9 +430,6 @@ function updateMergeButtonFromLastKnownMergeState(): void {
   );
 }
 
-/**
- * Stops the countdown timer
- */
 function stopCountdown(): void {
   if (countdownInterval) {
     clearInterval(countdownInterval);
@@ -464,9 +437,6 @@ function stopCountdown(): void {
   }
 }
 
-/**
- * Notifies the popup about the countdown status
- */
 async function notifyPopupAboutCountdown(timeLeft: number): Promise<void> {
   try {
     await chrome.runtime.sendMessage({
@@ -474,16 +444,13 @@ async function notifyPopupAboutCountdown(timeLeft: number): Promise<void> {
       payload: { timeLeft },
     });
   } catch (error) {
-    // Silence connection errors when popup is not open to receive countdown updates
+
     Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
   }
 }
 
-/**
- * Reactivates the feature after the countdown
- */
 async function reactivateFeature(): Promise<void> {
   await chrome.storage.local.set({ featureEnabled: true });
 
@@ -493,7 +460,7 @@ async function reactivateFeature(): Promise<void> {
       payload: { enabled: true },
     });
   } catch (error) {
-    // Silence connection errors when popup is not open to receive reactivation notification
+
     Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
@@ -505,9 +472,6 @@ async function reactivateFeature(): Promise<void> {
   }
 }
 
-/**
- * Starts the countdown timer
- */
 async function startCountdown(targetTime: number): Promise<void> {
   stopCountdown();
 
@@ -528,18 +492,12 @@ async function startCountdown(targetTime: number): Promise<void> {
   countdownInterval = setInterval(updateCountdown, 1000);
 }
 
-/**
- * Schedules feature reactivation after a timeout
- */
 async function scheduleFeatureReactivation(): Promise<void> {
   const reactivationTime = Date.now() + FEATURE_REACTIVATION_TIMEOUT;
   await chrome.storage.local.set({ reactivationTime });
   await startCountdown(reactivationTime);
 }
 
-/**
- * Checks for scheduled reactivation on startup
- */
 async function checkScheduledReactivation(): Promise<void> {
   const { reactivationTime, featureEnabled } = (await chrome.storage.local.get([
     'reactivationTime',
@@ -556,9 +514,6 @@ async function checkScheduledReactivation(): Promise<void> {
   }
 }
 
-/**
- * Registers the Bitbucket content script
- */
 async function registerBitbucketContentScript(): Promise<void> {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
@@ -594,7 +549,6 @@ async function registerBitbucketContentScript(): Promise<void> {
   }
 }
 
-// Message handlers for runtime messages
 const messageHandlers: Record<
   string,
   (
@@ -647,7 +601,7 @@ const messageHandlers: Record<
               payload: { error: error instanceof Error ? error.message : String(error) },
             });
           } catch (sendError) {
-            // Silence connection errors when popup is not open to receive error notifications
+
             Logger.error(toErrorType(sendError), 'Background', {
               silentMessages: [
                 ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
@@ -745,7 +699,6 @@ const messageHandlers: Record<
   },
 };
 
-// Set up message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const handler = messageHandlers[request.action];
   if (handler) {
@@ -754,22 +707,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return false;
 });
 
-// Set up alarm listener
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === WEBSOCKET_CHECK_ALARM) {
     checkWebSocketConnection();
   }
 });
 
-// Set up storage change listener
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync' && changes.bitbucketUrl) {
     registerBitbucketContentScript();
   }
 });
 
-// Set up installation and startup listeners
-// Only register listeners if not in test environment
 if (typeof process === 'undefined' || process.env.NODE_ENV !== 'test') {
   chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.sync.get('mergeButtonSelector', result => {
