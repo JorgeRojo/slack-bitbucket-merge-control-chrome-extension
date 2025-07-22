@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -11,7 +14,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/'],
+      include: ['src/**/*.ts', 'src/**/*.tsx'],
+      exclude: ['src/**/*.js', 'src/**/*.jsx', 'src/types/**', 'src/**/*.d.ts'],
       all: true,
       skipFull: false,
       thresholds: {
