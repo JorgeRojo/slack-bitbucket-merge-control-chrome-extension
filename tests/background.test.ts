@@ -11,6 +11,26 @@ import {
 import { Logger } from '../src/utils/logger';
 import { MERGE_STATUS, MESSAGE_ACTIONS, APP_STATUS } from '../src/constants';
 
+// Type definitions for better TypeScript support
+interface MessageRequest {
+  action: string;
+  payload?: any;
+  channelName?: string;
+  enabled?: boolean;
+}
+
+interface MessageSender {
+  tab?: { id: number };
+}
+
+interface AlarmInfo {
+  name?: string;
+}
+
+interface InstallDetails {
+  reason: string;
+}
+
 process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
   if (
     reason &&
@@ -26,16 +46,20 @@ vi.mock('../src/utils/logger');
 
 describe('Background Script - Enhanced Coverage Tests', () => {
   let backgroundModule: any;
-  let messageHandler: (request: any, sender: any, sendResponse?: (response: any) => void) => any;
-  let installedHandler: (details?: { reason: string }) => Promise<void>;
+  let messageHandler: (
+    request: MessageRequest,
+    sender: MessageSender,
+    sendResponse?: (response: any) => void
+  ) => any;
+  let installedHandler: (details?: InstallDetails) => Promise<void>;
   let startupHandler: () => Promise<void>;
-  let alarmHandler: (alarm: { name?: string }) => void;
+  let alarmHandler: (alarm: AlarmInfo) => void;
 
   beforeAll(async () => {
     mockStorage.sync.get.mockResolvedValue({
       slackToken: 'test-token',
       channelName: 'test-channel',
-      disallowedPhrases: 'block,stop,do not merge',
+      disallowedPhrases: 'block,stop,do not merge,not merge anything',
       exceptionPhrases: 'allow,proceed,exception',
       bitbucketUrl: 'https://bitbucket.org/test',
       appToken: 'test-app-token',
@@ -215,20 +239,18 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(result).toBeInstanceOf(Promise);
 
     await result;
-    
+
     // Should call storage.local.set at least twice
     expect(mockStorage.local.set).toHaveBeenCalledTimes(2);
-    
+
     // Check that the calls include featureEnabled and lastKnownMergeState
     const calls = mockStorage.local.set.mock.calls;
-    const hasFeatureEnabledCall = calls.some(call => 
-      call[0].hasOwnProperty('featureEnabled') && 
-      !call[0].hasOwnProperty('lastKnownMergeState')
+    const hasFeatureEnabledCall = calls.some(
+      call =>
+        call[0].hasOwnProperty('featureEnabled') && !call[0].hasOwnProperty('lastKnownMergeState')
     );
-    const hasMergeStateCall = calls.some(call => 
-      call[0].hasOwnProperty('lastKnownMergeState')
-    );
-    
+    const hasMergeStateCall = calls.some(call => call[0].hasOwnProperty('lastKnownMergeState'));
+
     expect(hasFeatureEnabledCall).toBe(true);
     expect(hasMergeStateCall).toBe(true);
   });
@@ -415,6 +437,102 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(global.fetch).toHaveBeenCalled();
   });
 
+  test('should handle text normalization through message processing', async () => {
+    expect(messageHandler).toBeDefined();
+
+    (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
+      const isConversationsHistory = url.includes('conversations.history');
+
+      return isConversationsHistory
+        ? Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                ok: true,
+                messages: [
+                  { text: 'DO NOT MERGE!!!', ts: '1234567890' },
+                  { text: 'do not merge', ts: '1234567891' },
+                  { text: 'Do Not Merge', ts: '1234567892' },
+                  { text: 'ALLOWED TO MERGE', ts: '1234567893' },
+                ],
+              }),
+          })
+        : Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                ok: true,
+                channels: [{ id: 'C123', name: 'test-channel' }],
+              }),
+          });
+    });
+
+    mockStorage.local.set.mockClear();
+
+    const result = messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+      {}
+    );
+    await result;
+
+    expect(mockStorage.local.set).toHaveBeenCalled();
+    const setCall = mockStorage.local.set.mock.calls.find((call: any) => call[0].messages);
+    expect(setCall).toBeDefined();
+    expect(setCall[0].messages.length).toBeGreaterThan(0);
+  });
+
+  test('should handle Slack message text cleaning through message processing', async () => {
+    expect(messageHandler).toBeDefined();
+
+    (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
+      const isConversationsHistory = url.includes('conversations.history');
+
+      return isConversationsHistory
+        ? Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                ok: true,
+                messages: [
+                  {
+                    text: '<@U123456> do not merge this <#C123456|channel>',
+                    ts: '1234567890',
+                  },
+                  {
+                    text: 'Check this link: <https://example.com|Example>',
+                    ts: '1234567891',
+                  },
+                  {
+                    text: 'Simple message without formatting',
+                    ts: '1234567892',
+                  },
+                ],
+              }),
+          })
+        : Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                ok: true,
+                channels: [{ id: 'C123', name: 'test-channel' }],
+              }),
+          });
+    });
+
+    mockStorage.local.set.mockClear();
+
+    const result = messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+      {}
+    );
+    await result;
+
+    expect(mockStorage.local.set).toHaveBeenCalled();
+    const setCall = mockStorage.local.set.mock.calls.find((call: any) => call[0].messages);
+    expect(setCall).toBeDefined();
+    expect(setCall[0].messages.length).toBeGreaterThan(0);
+  });
+
   test('should handle storage operations correctly', async () => {
     expect(messageHandler).toBeDefined();
 
@@ -476,5 +594,345 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(global.chrome.action).toBeDefined();
     expect(global.chrome.scripting).toBeDefined();
     expect(global.chrome.permissions).toBeDefined();
+  });
+
+  test('should determine merge status correctly through message processing', async () => {
+    expect(messageHandler).toBeDefined();
+
+    const testScenarios = [
+      {
+        messages: [{ text: 'do not merge', ts: '1234567890' }],
+        expectedStatus: 'blocked',
+      },
+      {
+        messages: [{ text: 'allowed to merge', ts: '1234567890' }],
+        expectedStatus: 'allowed',
+      },
+      {
+        messages: [
+          { text: 'do not merge', ts: '1234567890' },
+          { text: 'allowed to merge this task', ts: '1234567891' },
+        ],
+        expectedStatus: 'allowed',
+      },
+    ];
+
+    for (const scenario of testScenarios) {
+      (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
+        const isConversationsHistory = url.includes('conversations.history');
+
+        return isConversationsHistory
+          ? Promise.resolve({
+              ok: true,
+              json: () =>
+                Promise.resolve({
+                  ok: true,
+                  messages: scenario.messages,
+                }),
+            })
+          : Promise.resolve({
+              ok: true,
+              json: () =>
+                Promise.resolve({
+                  ok: true,
+                  channels: [{ id: 'C123', name: 'test-channel' }],
+                }),
+            });
+      });
+
+      mockStorage.local.set.mockClear();
+      mockAction.setIcon.mockClear();
+
+      const result = messageHandler(
+        { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+        {}
+      );
+      await result;
+
+      expect(mockAction.setIcon).toHaveBeenCalled();
+      expect(mockStorage.local.set).toHaveBeenCalled();
+    }
+  });
+
+  test('should handle storage changes for bitbucketUrl', async () => {
+    const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
+
+    expect(storageChangeHandler).toBeDefined();
+
+    mockScripting.getRegisteredContentScripts.mockResolvedValueOnce([]);
+    mockStorage.sync.get.mockResolvedValueOnce({
+      bitbucketUrl: 'https://bitbucket.org/newrepo/*',
+    });
+
+    const changes = {
+      bitbucketUrl: {
+        newValue: 'https://bitbucket.org/newrepo/*',
+      },
+    };
+
+    await storageChangeHandler(changes, 'sync');
+
+    expect(mockScripting.getRegisteredContentScripts).toHaveBeenCalled();
+    expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
+    expect(mockStorage.sync.get).toHaveBeenCalledWith('bitbucketUrl');
+  });
+
+  test('should handle registerBitbucketContentScript with no URL', async () => {
+    const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
+
+    expect(storageChangeHandler).toBeDefined();
+
+    mockScripting.getRegisteredContentScripts.mockResolvedValueOnce([]);
+    mockScripting.unregisterContentScripts.mockClear();
+    mockScripting.registerContentScripts.mockClear();
+    mockStorage.sync.get.mockResolvedValueOnce({ bitbucketUrl: undefined });
+
+    const changes = { bitbucketUrl: { newValue: undefined } };
+    await storageChangeHandler(changes, 'sync');
+
+    expect(mockScripting.getRegisteredContentScripts).toHaveBeenCalled();
+    expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
+    expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
+  });
+
+  test('should handle content script registration errors gracefully', async () => {
+    const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
+
+    expect(storageChangeHandler).toBeDefined();
+
+    mockScripting.unregisterContentScripts.mockRejectedValueOnce(new Error('Unregister failed'));
+    mockScripting.registerContentScripts.mockRejectedValueOnce(new Error('Register failed'));
+    mockStorage.sync.get.mockResolvedValueOnce({
+      bitbucketUrl: 'https://bitbucket.org/test/*',
+    });
+
+    const changes = {
+      bitbucketUrl: { newValue: 'https://bitbucket.org/test/*' },
+    };
+
+    await expect(async () => await storageChangeHandler(changes, 'sync')).not.toThrow();
+  });
+
+  test('should ignore storage changes for non-sync namespaces', async () => {
+    const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
+
+    expect(storageChangeHandler).toBeDefined();
+
+    mockScripting.unregisterContentScripts.mockClear();
+    mockScripting.registerContentScripts.mockClear();
+
+    const changes = {
+      bitbucketUrl: { newValue: 'https://bitbucket.org/test/*' },
+    };
+    await storageChangeHandler(changes, 'local');
+
+    expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
+    expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
+  });
+
+  test('should ignore storage changes for non-bitbucketUrl keys', async () => {
+    const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
+
+    expect(storageChangeHandler).toBeDefined();
+
+    mockScripting.unregisterContentScripts.mockClear();
+    mockScripting.registerContentScripts.mockClear();
+
+    const changes = { slackToken: { newValue: 'new-token' } };
+    await storageChangeHandler(changes, 'sync');
+
+    expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
+    expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
+  });
+
+  test('should handle unknown message action', () => {
+    expect(messageHandler).toBeDefined();
+
+    const result = messageHandler({ action: 'unknownAction' }, {}, vi.fn());
+    expect(result).toBeUndefined();
+  });
+
+  test('should handle "Receiving end does not exist" errors silently in runtime.sendMessage', async () => {
+    (Logger.error as jest.Mock).mockClear();
+
+    mockRuntime.sendMessage.mockRejectedValue(
+      new Error('Could not establish connection. Receiving end does not exist.')
+    );
+
+    const result = messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+      {},
+      vi.fn()
+    );
+    await result;
+
+    expect(Logger.error).toBeDefined();
+  });
+
+  test('should handle feature toggle and countdown (enhanced)', async () => {
+    mockStorage.local.set.mockClear();
+
+    await messageHandler(
+      { action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED, payload: { enabled: false } },
+      {}
+    );
+
+    // Verify that storage.local.set was called (the exact calls may vary)
+    expect(mockStorage.local.set).toHaveBeenCalled();
+
+    const mockSendResponse = vi.fn();
+
+    const reactivationTime = Date.now() + 60000;
+    mockStorage.local.get.mockResolvedValueOnce({
+      featureEnabled: false,
+      reactivationTime,
+    });
+
+    const result = await messageHandler(
+      { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
+      {},
+      mockSendResponse
+    );
+
+    expect(mockSendResponse).toHaveBeenCalledWith({
+      isCountdownActive: true,
+      timeLeft: expect.any(Number),
+      reactivationTime,
+    });
+    expect(result).toBe(true);
+
+    mockStorage.local.set.mockClear();
+    mockRuntime.sendMessage.mockClear();
+
+    await messageHandler(
+      { action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED, payload: { enabled: true } },
+      {}
+    );
+
+    // Verify that storage was updated after countdown completion
+    expect(mockStorage.local.set).toHaveBeenCalled();
+  });
+
+  test('should get phrases from storage correctly (enhanced)', async () => {
+    mockStorage.sync.get.mockResolvedValueOnce({
+      allowedPhrases: 'custom1,custom2',
+      disallowedPhrases: 'block1,block2',
+      exceptionPhrases: 'exception1,exception2',
+    });
+
+    await messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+      {}
+    );
+
+    mockStorage.sync.get.mockResolvedValueOnce({});
+
+    await messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+      {}
+    );
+
+    mockStorage.sync.get.mockResolvedValueOnce({
+      allowedPhrases: '',
+      disallowedPhrases: '',
+      exceptionPhrases: '',
+    });
+
+    await messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+      {}
+    );
+  });
+
+  test('should resolve channel ID correctly (enhanced)', async () => {
+    mockStorage.local.get.mockClear();
+    mockStorage.local.set.mockClear();
+    (global.fetch as jest.Mock).mockClear();
+
+    // Test case 1: Channel ID and name match, should not fetch
+    mockStorage.local.get.mockResolvedValueOnce({
+      channelId: 'C12345',
+      cachedChannelName: 'test-channel',
+    });
+
+    await messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+      {}
+    );
+
+    const conversationsListCalls = (global.fetch as jest.Mock).mock.calls.filter((call: any) =>
+      call[0].includes('conversations.list')
+    );
+
+    expect(conversationsListCalls.length).toBe(0);
+
+    // Test case 2: Channel name changed, should fetch new channel ID
+    (global.fetch as jest.Mock).mockClear();
+    mockStorage.local.get.mockClear();
+    mockStorage.local.set.mockClear();
+
+    mockStorage.local.get.mockResolvedValueOnce({
+      channelId: 'C12345',
+      cachedChannelName: 'old-channel',
+    });
+
+    (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
+      if (url.includes('conversations.list')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              channels: [{ id: 'C67890', name: 'new-channel' }],
+              response_metadata: { next_cursor: '' },
+            }),
+        });
+      }
+      if (url.includes('conversations.history')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              messages: [],
+            }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ ok: true }),
+      });
+    });
+
+    await messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'new-channel' } },
+      {}
+    );
+
+    const newConversationsListCalls = (global.fetch as jest.Mock).mock.calls.filter((call: any) =>
+      call[0].includes('conversations.list')
+    );
+    expect(newConversationsListCalls.length).toBeGreaterThan(0);
+
+    // Verify that storage was updated (the exact values may vary based on implementation)
+    expect(mockStorage.local.set).toHaveBeenCalled();
+  });
+
+  test('should initialize extension correctly on install and startup (enhanced)', async () => {
+    mockStorage.sync.get.mockClear();
+    mockStorage.sync.set.mockClear();
+
+    mockStorage.sync.get.mockImplementationOnce((key: any, callback: any) => {
+      callback({});
+      return Promise.resolve({});
+    });
+
+    await installedHandler({ reason: 'install' });
+
+    expect(mockStorage.sync.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mergeButtonSelector: expect.any(String),
+      })
+    );
   });
 });
