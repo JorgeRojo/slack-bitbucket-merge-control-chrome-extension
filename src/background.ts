@@ -39,7 +39,7 @@ import { ChromeRuntimeMessage } from './types/chrome.js';
 
 let bitbucketTabId: number | null = null;
 let rtmWebSocket: WebSocket | null = null;
-let countdownInterval: number | undefined;
+let countdownInterval: ReturnType<typeof setInterval> | undefined;
 
 /**
  * Resolves a channel name to its ID using the Slack API
@@ -525,7 +525,7 @@ async function startCountdown(targetTime: number): Promise<void> {
   };
 
   await updateCountdown();
-  countdownInterval = window.setInterval(updateCountdown, 1000);
+  countdownInterval = setInterval(updateCountdown, 1000);
 }
 
 /**

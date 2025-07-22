@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
           await chrome.runtime.sendMessage({
             action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
-            payload: { 
+            payload: {
               channelName: channelName,
               skipErrorNotification: true,
             },
