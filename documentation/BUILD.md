@@ -1,33 +1,59 @@
 # Build Process Documentation
 
-This document explains the modern Vite-based build process for the Chrome extension.
+This document explains the modern Vite-based build process with custom Chrome Extension plugin.
 
 ## Overview
 
-The project uses a **hybrid build system** optimized for Chrome Extensions:
+The project uses **Vite with a custom plugin** optimized for Chrome Extensions:
 
-- **Vite** for main application files (background, popup, options) with modern bundling
-- **esbuild** for content script in IIFE format (Chrome Extension requirement)
+- **Vite** for main application files (background, popup, options, help) with modern bundling
+- **Custom Plugin** that intercepts content script and builds it with esbuild in IIFE format
 - **Static file copying** for HTML, CSS, images, and manifest.json
 - **TypeScript compilation** with full type checking and source maps
+
+## Build Architecture
+
+### Custom Chrome Extension Plugin
+
+The build system includes a custom Vite plugin (`chromeExtensionContentScript`) that:
+
+1. **Intercepts** the content script during Vite's bundle generation
+2. **Removes** content.js from Vite's ES module bundle
+3. **Rebuilds** content script separately using esbuild with IIFE format
+4. **Ensures** Chrome Extension compatibility for content scripts
+
+### Build Process Flow
+
+```
+npm run build
+    ↓
+Vite Build Process
+    ↓
+Plugin Intercepts content.ts
+    ↓
+Vite builds: background, popup, options, help (ES modules)
+    ↓
+Plugin builds: content.js (IIFE format with esbuild)
+    ↓
+Static files copied
+    ↓
+Build Complete
+```
 
 ## Build Scripts
 
 ### `npm run build`
 
-Main build command using the Vite + esbuild hybrid approach:
+Main build command using Vite with custom Chrome Extension plugin:
 
-- Uses **Vite** to bundle background, popup, and options scripts with modern optimizations
-- Uses **esbuild** to create IIFE-format content script for Chrome Extension compatibility
+- Uses **Vite** to bundle background, popup, options, help scripts with modern optimizations
+- **Custom plugin** intercepts and rebuilds content script as IIFE using esbuild
 - Copies all static files (HTML, CSS, images, manifest.json) to dist directory
 - Generates optimized bundles with source maps and compression analysis
 - Provides detailed build summary with file sizes and performance metrics
+- **Single command** handles entire build process
 
-### `npm run build:vite-only`
-
-Pure Vite build (for testing and development):
-
-- Uses only Vite for all files including content script
+### `npm run clean`
 - May not be Chrome Extension compatible for content scripts (uses ES modules)
 - Useful for development, testing, and analyzing bundle composition
 - Generates detailed chunk analysis and dependency graphs

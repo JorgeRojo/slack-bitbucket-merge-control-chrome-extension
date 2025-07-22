@@ -27,8 +27,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "prepare": "husky install",
-    "build": "node build.cjs",
-    "build:vite-only": "vite build",
+    "build": "vite build",
     "build:tsc": "tsc",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"

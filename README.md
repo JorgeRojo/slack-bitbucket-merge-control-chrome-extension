@@ -26,7 +26,7 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
   npm run build
   ```
 
-  This uses Vite for fast, optimized bundling of TypeScript files and esbuild for the content script.
+  This uses Vite with a custom Chrome Extension plugin that handles content script compilation automatically.
 
   To check TypeScript types without compiling:
 
