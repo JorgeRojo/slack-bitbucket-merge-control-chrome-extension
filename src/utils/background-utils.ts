@@ -1,11 +1,11 @@
-import { 
-  MERGE_STATUS, 
-  APP_STATUS, 
+import {
+  MERGE_STATUS,
+  APP_STATUS,
   ERROR_MESSAGES,
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
-  MAX_MESSAGES
+  MAX_MESSAGES,
 } from '../constants.js';
 import { Logger } from './logger.js';
 import { ProcessedMessage } from '../types/index.js';

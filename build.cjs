@@ -23,8 +23,13 @@ const staticFiles = [
   { from: 'src/manifest.json', to: 'dist/manifest.json' },
   { from: 'src/popup.html', to: 'dist/popup.html' },
   { from: 'src/options.html', to: 'dist/options.html' },
+  { from: 'src/help.html', to: 'dist/help.html' },
   { from: 'src/images', to: 'dist/images' },
   { from: 'src/styles', to: 'dist/styles' },
+  {
+    from: 'src/components/toggle-switch/toggle-switch.css',
+    to: 'dist/components/toggle-switch/toggle-switch.css',
+  },
 ];
 
 staticFiles.forEach(({ from, to }) => {

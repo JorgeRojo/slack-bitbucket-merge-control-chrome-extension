@@ -19,5 +19,11 @@
   },
   "icons": {
     "128": "images/icon128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["components/toggle-switch/toggle-switch.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
