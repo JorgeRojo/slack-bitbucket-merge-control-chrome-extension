@@ -89,6 +89,7 @@ This project follows specific coding standards and development practices:
 
 All project documentation is organized in the `documentation/` directory:
 
+- **[BUILD.md](./documentation/BUILD.md)** - Build process and development setup instructions
 - **[CONTRIBUTING.md](./documentation/CONTRIBUTING.md)** - Contribution guidelines and development workflow
 - **[CODE_STYLE.md](./documentation/CODE_STYLE.md)** - Detailed coding style rules and best practices
 - **[TESTING_GUIDELINES.md](./documentation/TESTING_GUIDELINES.md)** - Testing strategies and guidelines
