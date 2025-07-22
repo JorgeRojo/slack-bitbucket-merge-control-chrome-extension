@@ -1,4 +1,12 @@
-import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../constants.js';
+import { 
+  MERGE_STATUS, 
+  APP_STATUS, 
+  ERROR_MESSAGES,
+  DEFAULT_ALLOWED_PHRASES,
+  DEFAULT_DISALLOWED_PHRASES,
+  DEFAULT_EXCEPTION_PHRASES,
+  MAX_MESSAGES
+} from '../constants.js';
 import { Logger } from './logger.js';
 import { ProcessedMessage } from '../types/index.js';
 import { SlackMessage } from '../types/slack.js';
@@ -248,10 +256,7 @@ export async function getPhrasesFromStorage(): Promise<{
     // Safely destructure with fallback to empty object
     const { allowedPhrases, disallowedPhrases, exceptionPhrases } = result || {};
 
-    // Import these directly in the function to avoid circular dependencies
-    const { DEFAULT_ALLOWED_PHRASES, DEFAULT_DISALLOWED_PHRASES, DEFAULT_EXCEPTION_PHRASES } =
-      await import('../constants');
-
+    // Use statically imported constants to avoid circular dependencies
     const currentAllowedPhrases =
       allowedPhrases && allowedPhrases.trim() ? allowedPhrases.split(',') : DEFAULT_ALLOWED_PHRASES;
 
@@ -272,9 +277,6 @@ export async function getPhrasesFromStorage(): Promise<{
     };
   } catch (error) {
     // If there's an error (e.g., during tests), return default values
-    const { DEFAULT_ALLOWED_PHRASES, DEFAULT_DISALLOWED_PHRASES, DEFAULT_EXCEPTION_PHRASES } =
-      await import('../constants');
-
     return {
       currentAllowedPhrases: DEFAULT_ALLOWED_PHRASES,
       currentDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,
@@ -309,7 +311,6 @@ export async function processAndStoreMessage(message: SlackMessage): Promise<voi
 
   messages.sort((a: ProcessedMessage, b: ProcessedMessage) => Number(b.ts) - Number(a.ts));
 
-  const MAX_MESSAGES = (await import('../constants')).MAX_MESSAGES;
   if (messages.length > MAX_MESSAGES) {
     messages = messages.slice(0, MAX_MESSAGES);
   }
