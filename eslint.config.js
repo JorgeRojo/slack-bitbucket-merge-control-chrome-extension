@@ -6,6 +6,20 @@ import pluginImport from 'eslint-plugin-import';
 
 export default [
   {
+    ignores: [
+      'dist/**',
+      'coverage/**',
+      'node_modules/**',
+      '*.log',
+      '.DS_Store',
+      'Thumbs.db',
+      '.vscode/**',
+      '.idea/**',
+      '*.tmp',
+      '*.temp',
+    ],
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.browser,

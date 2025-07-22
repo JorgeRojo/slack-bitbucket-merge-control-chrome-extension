@@ -1,0 +1,23 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Coverage reports
+coverage/
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
