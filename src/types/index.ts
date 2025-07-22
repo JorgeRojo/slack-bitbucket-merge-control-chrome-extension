@@ -32,18 +32,19 @@ export interface ProcessedMessage {
   text: string;
   timestamp: string;
   user: string;
-  matchType: keyof typeof MERGE_STATUS | null;
+  matchType: MERGE_STATUS | null;
+  ts?: string; // Add ts property for compatibility
 }
 
 // Status types
 export interface AppStatusInfo {
-  status: keyof typeof APP_STATUS;
+  status: APP_STATUS;
   message: string;
   timestamp: string;
 }
 
 export interface MergeStatusInfo {
-  status: keyof typeof MERGE_STATUS;
+  status: MERGE_STATUS;
   message: string | null;
   timestamp: string | null;
 }

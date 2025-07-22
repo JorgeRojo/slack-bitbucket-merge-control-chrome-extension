@@ -16,7 +16,7 @@ export class Logger {
     context: ErrorContext = {}
   ): void {
     const { silentMessages, ...restContext } = context;
-    return ErrorHandler.handle(error, {
+    ErrorHandler.handle(error, {
       component,
       context: restContext,
       silentMessages: silentMessages || [],

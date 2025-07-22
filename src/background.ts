@@ -17,6 +17,7 @@ import {
   MAX_MESSAGES,
 } from './constants';
 import { Logger } from './utils/logger';
+import { toErrorType, toString } from './utils/type-helpers';
 import {
   normalizeText,
   cleanSlackMessageText,
@@ -153,7 +154,7 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
     });
   } catch (error) {
     // Silence connection errors when popup is not open
-    Logger.error(error, 'Background', {
+    Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
   }

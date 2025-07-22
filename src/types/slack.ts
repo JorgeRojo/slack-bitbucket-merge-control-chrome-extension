@@ -26,6 +26,13 @@ export interface SlackUser {
   };
 }
 
+export interface SlackMessage {
+  type: string;
+  user: string;
+  text: string;
+  ts: string;
+}
+
 export interface SlackConversationsListResponse {
   ok: boolean;
   channels?: SlackChannel[];
@@ -34,12 +41,7 @@ export interface SlackConversationsListResponse {
 
 export interface SlackConversationsHistoryResponse {
   ok: boolean;
-  messages?: Array<{
-    type: string;
-    user: string;
-    text: string;
-    ts: string;
-  }>;
+  messages?: SlackMessage[];
   has_more?: boolean;
   error?: string;
 }

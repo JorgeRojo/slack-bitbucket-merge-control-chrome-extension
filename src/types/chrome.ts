@@ -3,6 +3,7 @@
 export interface ChromeStorageItems {
   slackToken?: string;
   slackAppToken?: string;
+  appToken?: string; // Add this for compatibility
   channelId?: string;
   channelName?: string;
   bitbucketUrl?: string;

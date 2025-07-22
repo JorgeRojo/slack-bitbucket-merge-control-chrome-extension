@@ -23,7 +23,7 @@ class NavLinks extends HTMLElement {
     const helpLink = this.querySelector('#help-link');
 
     if (optionsLink) {
-      optionsLink.addEventListener('click', (e: MouseEvent) => {
+      optionsLink.addEventListener('click', (e: Event) => {
         e.preventDefault();
         if (chrome.runtime.openOptionsPage) {
           chrome.runtime.openOptionsPage();
@@ -34,7 +34,7 @@ class NavLinks extends HTMLElement {
     }
 
     if (helpLink) {
-      helpLink.addEventListener('click', (e: MouseEvent) => {
+      helpLink.addEventListener('click', (e: Event) => {
         e.preventDefault();
         window.open(chrome.runtime.getURL('help.html'));
       });

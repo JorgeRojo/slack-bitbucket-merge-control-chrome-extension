@@ -2,6 +2,7 @@ import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../constants';
 import { Logger } from './logger';
 import { ProcessedMessage } from '../types/index';
 import { SlackMessage } from '../types/slack';
+import { toErrorType, toString } from './type-helpers';
 
 /**
  * Normalizes text by removing diacritical marks and standardizing whitespace
@@ -46,7 +47,7 @@ interface DetermineMergeStatusParams {
 }
 
 interface DetermineMergeStatusResult {
-  status: keyof typeof MERGE_STATUS;
+  status: MERGE_STATUS;
   message: ProcessedMessage | null;
 }
 
@@ -94,7 +95,7 @@ export function determineMergeStatus({
 /**
  * Updates the extension icon based on the current status
  */
-export function updateExtensionIcon(status: keyof typeof MERGE_STATUS): boolean {
+export function updateExtensionIcon(status: MERGE_STATUS): boolean {
   let smallIconPath: string, largeIconPath: string;
   switch (status) {
     case MERGE_STATUS.LOADING:
@@ -162,7 +163,7 @@ let lastAppStatus: keyof typeof APP_STATUS | null = null;
 /**
  * Updates the application status and icon
  */
-export async function updateAppStatus(status: keyof typeof APP_STATUS): Promise<boolean> {
+export async function updateAppStatus(status: APP_STATUS): Promise<boolean> {
   if (status === lastAppStatus) {
     return false;
   }
@@ -177,7 +178,7 @@ export async function updateAppStatus(status: keyof typeof APP_STATUS): Promise<
     },
   });
 
-  let iconStatus: keyof typeof MERGE_STATUS;
+  let iconStatus: MERGE_STATUS;
   switch (status) {
     case APP_STATUS.OK:
       iconStatus = await getCurrentMergeStatusFromMessages();
@@ -201,7 +202,7 @@ export async function updateAppStatus(status: keyof typeof APP_STATUS): Promise<
 /**
  * Gets the current merge status based on stored messages
  */
-export async function getCurrentMergeStatusFromMessages(): Promise<keyof typeof MERGE_STATUS> {
+export async function getCurrentMergeStatusFromMessages(): Promise<MERGE_STATUS> {
   const { messages = [] } = await chrome.storage.local.get('messages');
 
   if (messages.length === 0) {

@@ -24,8 +24,12 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "prepare": "husky install",
-    "build": "tsc",
-    "watch": "tsc --watch",
-    "type-check": "tsc --noEmit"
+    "build": "node build.cjs",
+    "build:tsc": "tsc",
+    "watch": "node watch.cjs",
+    "watch:tsc": "tsc --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "dev": "npm run build && npm run watch"
   }
 }
