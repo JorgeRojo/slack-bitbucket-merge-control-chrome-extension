@@ -17,7 +17,7 @@ describe('Options Page', () => {
   // Mock DOM elements
   interface MockElements {
     [key: string]: {
-      addEventListener?: jest.Mock;
+      addEventListener?: typeof vi.fn;
       value?: string;
       textContent?: string;
       className?: string;
