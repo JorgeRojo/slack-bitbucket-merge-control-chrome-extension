@@ -1,9 +1,6 @@
 import { MERGE_STATUS, MESSAGE_ACTIONS } from './constants.js';
 import { ChromeRuntimeMessage } from './types/chrome.js';
 
-const BITBUCKET_TAB_LOADED = MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED;
-const UPDATE_MERGE_BUTTON = MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON;
-
 interface MergeButtonWithHandler extends HTMLElement {
   _customMergeHandler?: (event: MouseEvent) => void;
 }
@@ -125,7 +122,7 @@ const BitbucketMergeController = (() => {
   }
 
   function handleRuntimeMessage(request: ChromeRuntimeMessage): void {
-    if (request.action === UPDATE_MERGE_BUTTON) {
+    if (request.action === MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON) {
       const payload = request.payload || {};
       if (payload.featureEnabled === false) {
         applyMergeButtonLogic(MERGE_STATUS.ALLOWED, payload.channelName);
@@ -136,7 +133,7 @@ const BitbucketMergeController = (() => {
   }
 
   function init(): void {
-    chrome.runtime.sendMessage({ action: BITBUCKET_TAB_LOADED });
+    chrome.runtime.sendMessage({ action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED });
     chrome.runtime.onMessage.addListener(handleRuntimeMessage);
     observeMergeButton();
   }
