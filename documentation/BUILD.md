@@ -54,6 +54,7 @@ Main build command using Vite with custom Chrome Extension plugin:
 - **Single command** handles entire build process
 
 ### `npm run clean`
+
 - May not be Chrome Extension compatible for content scripts (uses ES modules)
 - Useful for development, testing, and analyzing bundle composition
 - Generates detailed chunk analysis and dependency graphs

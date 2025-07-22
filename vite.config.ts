@@ -10,14 +10,16 @@ function chromeExtensionContentScript(): Plugin {
     apply: 'build',
     async generateBundle(options, bundle) {
       // Find and remove content script from the bundle
-      const contentChunkName = Object.keys(bundle).find(name => 
-        name === 'content.js' || (bundle[name].type === 'chunk' && bundle[name].name === 'content')
+      const contentChunkName = Object.keys(bundle).find(
+        name =>
+          name === 'content.js' ||
+          (bundle[name].type === 'chunk' && bundle[name].name === 'content')
       );
-      
+
       if (contentChunkName) {
         // Remove the content script from Vite's bundle
         delete bundle[contentChunkName];
-        
+
         // Build content script separately with esbuild as IIFE
         console.log('🔧 Building content script with esbuild (IIFE format)...');
         try {
@@ -37,7 +39,7 @@ function chromeExtensionContentScript(): Plugin {
           throw error;
         }
       }
-    }
+    },
   };
 }
 
