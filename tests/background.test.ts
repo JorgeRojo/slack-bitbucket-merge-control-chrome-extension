@@ -217,11 +217,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(messageHandler).toBeDefined();
 
     const mockSendResponse = vi.fn();
-    const result = messageHandler(
+    const result = await messageHandler(
       { action: MESSAGE_ACTIONS.GET_DEFAULT_PHRASES },
       {},
       mockSendResponse
     );
+
+    // Wait a bit for the async import to complete
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(mockSendResponse).toHaveBeenCalledWith({
       defaultAllowedPhrases: expect.any(Array),

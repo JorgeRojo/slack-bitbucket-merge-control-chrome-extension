@@ -597,13 +597,13 @@ const messageHandlers: Record<
     sendResponse: (response?: any) => void
   ) => any
 > = {
-  [MESSAGE_ACTIONS.GET_DEFAULT_PHRASES]: (_request, _sender, sendResponse) => {
+  [MESSAGE_ACTIONS.GET_DEFAULT_PHRASES]: async (_request, _sender, sendResponse) => {
     // Import these directly in the function to avoid circular dependencies
     const {
       DEFAULT_ALLOWED_PHRASES,
       DEFAULT_DISALLOWED_PHRASES,
       DEFAULT_EXCEPTION_PHRASES,
-    } = require('./constants');
+    } = await import('./constants');
 
     sendResponse({
       defaultAllowedPhrases: DEFAULT_ALLOWED_PHRASES,

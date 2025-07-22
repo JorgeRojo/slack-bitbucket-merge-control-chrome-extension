@@ -66,19 +66,28 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (result.allowedPhrases) {
-        allowedPhrasesInput.value = formatCommaToMultiline(result.allowedPhrases);
+        const phrasesValue = Array.isArray(result.allowedPhrases) 
+          ? result.allowedPhrases.join(',') 
+          : result.allowedPhrases;
+        allowedPhrasesInput.value = formatCommaToMultiline(phrasesValue);
       } else {
         allowedPhrasesInput.value = DEFAULT_ALLOWED_PHRASES.join('\n');
       }
 
       if (result.disallowedPhrases) {
-        disallowedPhrasesInput.value = formatCommaToMultiline(result.disallowedPhrases);
+        const phrasesValue = Array.isArray(result.disallowedPhrases) 
+          ? result.disallowedPhrases.join(',') 
+          : result.disallowedPhrases;
+        disallowedPhrasesInput.value = formatCommaToMultiline(phrasesValue);
       } else {
         disallowedPhrasesInput.value = DEFAULT_DISALLOWED_PHRASES.join('\n');
       }
 
       if (result.exceptionPhrases) {
-        exceptionPhrasesInput.value = formatCommaToMultiline(result.exceptionPhrases);
+        const phrasesValue = Array.isArray(result.exceptionPhrases) 
+          ? result.exceptionPhrases.join(',') 
+          : result.exceptionPhrases;
+        exceptionPhrasesInput.value = formatCommaToMultiline(phrasesValue);
       } else {
         exceptionPhrasesInput.value = DEFAULT_EXCEPTION_PHRASES.join('\n');
       }

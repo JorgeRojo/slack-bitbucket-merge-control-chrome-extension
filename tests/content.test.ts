@@ -7,24 +7,24 @@ vi.mock('../src/utils/logger');
 
 describe('Content Script Structure', () => {
   test('should have proper encapsulation pattern', () => {
-    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.ts'), 'utf8');
 
     expect(contentScript).toContain('BitbucketMergeController');
     expect(contentScript).toContain('(() => {');
-    expect(contentScript).toContain('let mergeButtonObserver = null;');
+    expect(contentScript).toContain('let mergeButtonObserver: MutationObserver | null = null;');
 
     expect(contentScript).not.toMatch(/^let mergeButtonObserver/m);
     expect(contentScript).not.toMatch(/^var mergeButtonObserver/m);
   });
 
   test('should initialize the controller', () => {
-    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.ts'), 'utf8');
 
     expect(contentScript).toContain('BitbucketMergeController.init()');
   });
 
   test('should have all required functions encapsulated', () => {
-    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.ts'), 'utf8');
 
     expect(contentScript).toContain('function disableMergeButton');
     expect(contentScript).toContain('function enableMergeButton');
