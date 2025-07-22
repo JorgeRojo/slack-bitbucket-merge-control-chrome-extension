@@ -34,9 +34,9 @@ export default defineConfig({
         { src: 'src/help.html', dest: '.' },
         { src: 'src/styles', dest: '.' },
         { src: 'src/images', dest: '.' },
-        { 
-          src: 'src/components/toggle-switch/toggle-switch.css', 
-          dest: 'components/toggle-switch' 
+        {
+          src: 'src/components/toggle-switch/toggle-switch.css',
+          dest: 'components/toggle-switch',
         },
       ],
     }),

@@ -15,22 +15,22 @@ The project uses a **hybrid build system** optimized for Chrome Extensions:
 
 ### `npm run build`
 
-Main build command using the modern Vite + esbuild hybrid approach:
+Main build command using the Vite + esbuild hybrid approach:
 
-- Uses **Vite** to bundle background, popup, and options scripts
+- Uses **Vite** to bundle background, popup, and options scripts with modern optimizations
 - Uses **esbuild** to create IIFE-format content script for Chrome Extension compatibility
-- Copies all static files (HTML, CSS, images, manifest.json)
+- Copies all static files (HTML, CSS, images, manifest.json) to dist directory
 - Generates optimized bundles with source maps and compression analysis
-- Provides detailed build summary with file sizes
+- Provides detailed build summary with file sizes and performance metrics
 
-### `npm run build:legacy`
+### `npm run build:vite-only`
 
-Fallback to the original TypeScript-based build system:
+Pure Vite build (for testing and development):
 
-- Compiles TypeScript files individually
-- Uses esbuild for content script bundling
-- Copies all static files manually
-- Provides compatibility with older build process
+- Uses only Vite for all files including content script
+- May not be Chrome Extension compatible for content scripts (uses ES modules)
+- Useful for development, testing, and analyzing bundle composition
+- Generates detailed chunk analysis and dependency graphs
 
 ### `npm run clean`
 
