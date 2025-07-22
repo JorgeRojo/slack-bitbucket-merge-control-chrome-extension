@@ -49,7 +49,7 @@ class ToggleSwitch extends HTMLElement {
   }
 
   async render(checked: boolean, disabled: boolean, label: string): Promise<void> {
-    const response = await fetch(new URL('./toggle-switch.css', import.meta.url));
+    const response = await fetch('./components/toggle-switch/toggle-switch.css');
     const css = await response.text();
 
     if (this.shadowRoot) {

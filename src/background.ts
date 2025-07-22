@@ -15,6 +15,9 @@ import {
   MESSAGE_ACTIONS,
   CONTENT_SCRIPT_ID,
   MAX_MESSAGES,
+  DEFAULT_ALLOWED_PHRASES,
+  DEFAULT_DISALLOWED_PHRASES,
+  DEFAULT_EXCEPTION_PHRASES,
 } from './constants';
 import { Logger } from './utils/logger';
 import { toErrorType, toString } from './utils/type-helpers';
@@ -597,14 +600,7 @@ const messageHandlers: Record<
     sendResponse: (response?: any) => void
   ) => any
 > = {
-  [MESSAGE_ACTIONS.GET_DEFAULT_PHRASES]: async (_request, _sender, sendResponse) => {
-    // Import these directly in the function to avoid circular dependencies
-    const {
-      DEFAULT_ALLOWED_PHRASES,
-      DEFAULT_DISALLOWED_PHRASES,
-      DEFAULT_EXCEPTION_PHRASES,
-    } = await import('./constants');
-
+  [MESSAGE_ACTIONS.GET_DEFAULT_PHRASES]: (_request, _sender, sendResponse) => {
     sendResponse({
       defaultAllowedPhrases: DEFAULT_ALLOWED_PHRASES,
       defaultDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,

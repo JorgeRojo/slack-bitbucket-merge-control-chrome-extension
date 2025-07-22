@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (result.allowedPhrases) {
-        const phrasesValue = Array.isArray(result.allowedPhrases) 
-          ? result.allowedPhrases.join(',') 
+        const phrasesValue = Array.isArray(result.allowedPhrases)
+          ? result.allowedPhrases.join(',')
           : result.allowedPhrases;
         allowedPhrasesInput.value = formatCommaToMultiline(phrasesValue);
       } else {
@@ -75,8 +75,8 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (result.disallowedPhrases) {
-        const phrasesValue = Array.isArray(result.disallowedPhrases) 
-          ? result.disallowedPhrases.join(',') 
+        const phrasesValue = Array.isArray(result.disallowedPhrases)
+          ? result.disallowedPhrases.join(',')
           : result.disallowedPhrases;
         disallowedPhrasesInput.value = formatCommaToMultiline(phrasesValue);
       } else {
@@ -84,8 +84,8 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (result.exceptionPhrases) {
-        const phrasesValue = Array.isArray(result.exceptionPhrases) 
-          ? result.exceptionPhrases.join(',') 
+        const phrasesValue = Array.isArray(result.exceptionPhrases)
+          ? result.exceptionPhrases.join(',')
           : result.exceptionPhrases;
         exceptionPhrasesInput.value = formatCommaToMultiline(phrasesValue);
       } else {
