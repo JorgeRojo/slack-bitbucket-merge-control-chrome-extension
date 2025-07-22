@@ -224,8 +224,10 @@ describe('Options Page', () => {
 
     expect(mockRuntime.sendMessage).toHaveBeenCalledWith({
       action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
-      channelName: 'test-channel',
-      skipErrorNotification: true,
+      payload: {
+        channelName: 'test-channel',
+        skipErrorNotification: true,
+      },
     });
 
     // Verify setTimeout was called

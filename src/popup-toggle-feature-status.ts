@@ -111,7 +111,7 @@ function setupToggleEventListeners(featureToggle: HTMLElement): void {
       chrome.runtime.sendMessage(
         {
           action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
-          enabled: isChecked,
+          payload: { enabled: isChecked },
         },
         _response => {
           if (chrome.runtime.lastError) {
