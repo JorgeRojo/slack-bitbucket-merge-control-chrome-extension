@@ -128,7 +128,8 @@ function updateExtensionIcon(status) {
 let lastAppStatus = null;
 
 async function getCurrentMergeStatusFromMessages() {
-  const { messages = [] } = await chrome.storage.local.get('messages');
+  const result = await chrome.storage.local.get('messages');
+  const messages = result?.messages || [];
 
   if (messages.length === 0) {
     return MERGE_STATUS.UNKNOWN;
@@ -159,7 +160,8 @@ async function updateAppStatus(status) {
 
   lastAppStatus = status;
 
-  const { lastKnownMergeState = {} } = await chrome.storage.local.get('lastKnownMergeState');
+  const result = await chrome.storage.local.get('lastKnownMergeState');
+  const lastKnownMergeState = result?.lastKnownMergeState || {};
   await chrome.storage.local.set({
     lastKnownMergeState: {
       ...lastKnownMergeState,
@@ -189,10 +191,12 @@ async function updateAppStatus(status) {
 }
 
 async function resolveChannelId(slackToken, channelName) {
-  let { channelId, cachedChannelName } = await chrome.storage.local.get([
+  const result = await chrome.storage.local.get([
     'channelId',
     'cachedChannelName',
   ]);
+  let channelId = result?.channelId;
+  let cachedChannelName = result?.cachedChannelName;
 
   if (cachedChannelName !== channelName) {
     channelId = null;
@@ -239,7 +243,8 @@ async function processAndStoreMessage(message) {
 
   const messageTs = message.ts;
 
-  let messages = (await chrome.storage.local.get('messages')).messages || [];
+  const result = await chrome.storage.local.get('messages');
+  let messages = result?.messages || [];
   const existMessage = messages.some(m => m.ts === messageTs);
 
   if (existMessage) {
@@ -324,11 +329,10 @@ async function handleSlackApiError(error) {
 }
 
 async function updateContentScriptMergeState(channelName) {
-  const {
-    messages: currentMessages = [],
-    featureEnabled,
-    lastKnownMergeState = {},
-  } = await chrome.storage.local.get(['messages', 'featureEnabled', 'lastKnownMergeState']);
+  const result = await chrome.storage.local.get(['messages', 'featureEnabled', 'lastKnownMergeState']);
+  const currentMessages = result?.messages || [];
+  const featureEnabled = result?.featureEnabled;
+  const lastKnownMergeState = result?.lastKnownMergeState || {};
 
   const appStatus = lastKnownMergeState?.appStatus;
 
@@ -531,7 +535,8 @@ async function checkWebSocketConnection() {
     return;
   }
 
-  const { lastWebSocketConnectTime } = await chrome.storage.local.get('lastWebSocketConnectTime');
+  const result = await chrome.storage.local.get('lastWebSocketConnectTime');
+  const lastWebSocketConnectTime = result?.lastWebSocketConnectTime;
   const currentTime = Date.now();
   const connectionAge = currentTime - (lastWebSocketConnectTime || 0);
 

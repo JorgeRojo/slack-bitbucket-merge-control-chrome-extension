@@ -58,6 +58,8 @@ console.log(`\n🔧 Found ${tsFiles.length} TypeScript files to compile`);
 // Compile TypeScript files that can be compiled
 let successCount = 0;
 let failCount = 0;
+let fallbackCount = 0;
+const fallbackFiles = [];
 
 for (const tsFile of tsFiles) {
   const relativePath = path.relative(srcDir, tsFile);
@@ -66,8 +68,9 @@ for (const tsFile of tsFiles) {
   
   try {
     // Try to compile individual file
-    execSync(`npx tsc "${tsFile}" --outDir "${distDir}" --rootDir "${srcDir}" --target ES2020 --module ESNext --moduleResolution node --esModuleInterop --allowJs --skipLibCheck --noEmitOnError false`, { 
-      stdio: 'pipe' 
+    const result = execSync(`npx tsc "${tsFile}" --outDir "${distDir}" --rootDir "${srcDir}" --target ES2020 --module ESNext --moduleResolution node --esModuleInterop --allowJs --skipLibCheck --noEmitOnError`, { 
+      stdio: 'pipe',
+      encoding: 'utf8'
     });
     console.log(`✅ Compiled: ${relativePath}`);
     successCount++;
@@ -75,19 +78,29 @@ for (const tsFile of tsFiles) {
     // If TypeScript compilation fails, copy the JavaScript version if it exists
     if (fs.existsSync(jsFile)) {
       fs.copyFileSync(jsFile, distJsFile);
-      console.log(`📋 Copied JS fallback: ${relativePath.replace('.ts', '.js')}`);
-      successCount++;
+      console.log(`📋 Copied JS fallback: ${relativePath.replace('.ts', '.js')} (TS compilation failed)`);
+      fallbackCount++;
+      fallbackFiles.push(relativePath);
     } else {
-      console.log(`❌ Failed to compile: ${relativePath}`);
+      console.log(`❌ Failed to compile: ${relativePath} (no JS fallback available)`);
       failCount++;
     }
   }
 }
 
 console.log(`\n📊 Build Summary:`);
-console.log(`   ✅ Success: ${successCount}`);
+console.log(`   ✅ TypeScript compiled: ${successCount}`);
+console.log(`   📋 JavaScript fallbacks: ${fallbackCount}`);
 console.log(`   ❌ Failed: ${failCount}`);
 console.log(`   📁 Output: ${distDir}`);
+
+if (fallbackFiles.length > 0) {
+  console.log(`\n⚠️  Files using JavaScript fallbacks:`);
+  fallbackFiles.forEach(file => {
+    console.log(`   - ${file}`);
+  });
+  console.log(`\n💡 Run 'npm run type-check' to see TypeScript errors for these files.`);
+}
 
 if (failCount === 0) {
   console.log(`\n🎉 Build completed successfully!`);

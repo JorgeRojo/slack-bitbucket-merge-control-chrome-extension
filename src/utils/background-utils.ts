@@ -158,7 +158,7 @@ export async function handleSlackApiError(error: Error | unknown): Promise<void>
   }
 }
 
-let lastAppStatus: keyof typeof APP_STATUS | null = null;
+let lastAppStatus: APP_STATUS | null = null;
 
 /**
  * Updates the application status and icon
