@@ -562,6 +562,8 @@ async function checkScheduledReactivation(): Promise<void> {
 async function registerBitbucketContentScript(): Promise<void> {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
+  Logger.log('Registering content script for URL:', bitbucketUrl);
+
   try {
     const existingScripts = await chrome.scripting.getRegisteredContentScripts();
     const scriptExists = existingScripts.some(script => script.id === CONTENT_SCRIPT_ID);
@@ -585,6 +587,7 @@ async function registerBitbucketContentScript(): Promise<void> {
           runAt: 'document_idle',
         },
       ]);
+      Logger.log('Content script registered successfully for:', bitbucketUrl);
     } catch (error) {
       Logger.error(toErrorType(error), ERROR_MESSAGES.SCRIPT_REGISTRATION);
     }

@@ -69,3 +69,23 @@ staticFiles.forEach(({ from, to }) => {
 });
 
 console.log('Build completed successfully!');
+
+// Compile standalone content script
+console.log('Compiling standalone content script...');
+try {
+  execSync(
+    'npx tsc src/content-standalone.ts --outDir dist --target es2020 --lib es2020,dom --skipLibCheck',
+    { stdio: 'inherit' }
+  );
+
+  // Rename the compiled file to content.js (overwrite the modular version)
+  const fs = require('fs');
+  if (fs.existsSync('dist/content-standalone.js')) {
+    fs.copyFileSync('dist/content-standalone.js', 'dist/content.js');
+    fs.unlinkSync('dist/content-standalone.js'); // Clean up
+    console.log('Standalone content script compiled successfully!');
+  }
+} catch (error) {
+  console.error('Standalone content script compilation failed:', error);
+  process.exit(1);
+}
