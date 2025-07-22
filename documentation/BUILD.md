@@ -1,26 +1,36 @@
 # Build Process Documentation
 
-This document explains the TypeScript compilation and build process for the Chrome extension.
+This document explains the modern Vite-based build process for the Chrome extension.
 
 ## Overview
 
-The project uses a hybrid approach during the TypeScript migration:
+The project uses a **hybrid build system** optimized for Chrome Extensions:
 
-- **TypeScript files** (`.ts`) are compiled to JavaScript when possible
-- **JavaScript files** (`.js`) are used as fallbacks when TypeScript compilation fails
-- All assets (HTML, CSS, images, manifest) are copied to the `dist/` directory
+- **Vite** for main application files (background, popup, options) with modern bundling
+- **esbuild** for content script in IIFE format (Chrome Extension requirement)
+- **Static file copying** for HTML, CSS, images, and manifest.json
+- **TypeScript compilation** with full type checking and source maps
 
 ## Build Scripts
 
 ### `npm run build`
 
-Builds the entire project using our custom build script:
+Main build command using the modern Vite + esbuild hybrid approach:
 
-- Cleans the `dist/` directory
-- Copies all non-TypeScript files (JS, HTML, CSS, images, etc.)
-- Attempts to compile each TypeScript file individually
-- Falls back to JavaScript versions when TypeScript compilation fails
-- Provides detailed build summary
+- Uses **Vite** to bundle background, popup, and options scripts
+- Uses **esbuild** to create IIFE-format content script for Chrome Extension compatibility
+- Copies all static files (HTML, CSS, images, manifest.json)
+- Generates optimized bundles with source maps and compression analysis
+- Provides detailed build summary with file sizes
+
+### `npm run build:legacy`
+
+Fallback to the original TypeScript-based build system:
+
+- Compiles TypeScript files individually
+- Uses esbuild for content script bundling
+- Copies all static files manually
+- Provides compatibility with older build process
 
 ### `npm run clean`
 
