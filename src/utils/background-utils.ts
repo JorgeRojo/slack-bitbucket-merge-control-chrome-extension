@@ -1,8 +1,8 @@
-import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../constants';
-import { Logger } from './logger';
-import { ProcessedMessage } from '../types/index';
-import { SlackMessage } from '../types/slack';
-import { toErrorType, toString } from './type-helpers';
+import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../constants.js';
+import { Logger } from './logger.js';
+import { ProcessedMessage } from '../types/index.js';
+import { SlackMessage } from '../types/slack.js';
+import { toErrorType, toString } from './type-helpers.js';
 
 /**
  * Normalizes text by removing diacritical marks and standardizing whitespace

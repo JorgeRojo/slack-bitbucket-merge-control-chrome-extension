@@ -1,6 +1,6 @@
 // Common types used across the application
 
-import { MERGE_STATUS, APP_STATUS } from '../constants';
+import { MERGE_STATUS, APP_STATUS } from '../constants.js';
 
 // App Configuration
 export interface AppConfig {

@@ -1,5 +1,5 @@
-import { MERGE_STATUS, MESSAGE_ACTIONS } from './constants';
-import { ChromeRuntimeMessage } from './types/chrome';
+import { MERGE_STATUS, MESSAGE_ACTIONS } from './constants.js';
+import { ChromeRuntimeMessage } from './types/chrome.js';
 
 const BITBUCKET_TAB_LOADED = MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED;
 const UPDATE_MERGE_BUTTON = MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON;

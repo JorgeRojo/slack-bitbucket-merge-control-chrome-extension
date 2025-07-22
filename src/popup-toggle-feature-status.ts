@@ -1,7 +1,7 @@
-import { Logger } from './utils/logger';
-import { MESSAGE_ACTIONS, ERROR_MESSAGES } from './constants';
-import { ChromeRuntimeMessage } from './types/chrome';
-import { toErrorType } from './utils/type-helpers';
+import { Logger } from './utils/logger.js';
+import { MESSAGE_ACTIONS, ERROR_MESSAGES } from './constants.js';
+import { ChromeRuntimeMessage } from './types/chrome.js';
+import { toErrorType } from './utils/type-helpers.js';
 
 interface CountdownOptions {
   show: boolean;
