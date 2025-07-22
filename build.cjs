@@ -1,26 +1,21 @@
 const { execSync } = require('child_process');
 
-console.log('Building with Vite...');
-try {
-  // Build main files with Vite
-  execSync('npx vite build', { stdio: 'inherit' });
-  console.log('Vite build successful!');
-} catch (error) {
-  console.error('Vite build failed:', error);
-  process.exit(1);
-}
+console.log('🚀 Building Chrome Extension with Vite + esbuild...');
 
-console.log('Bundling content script with esbuild...');
 try {
-  // Bundle content script separately with esbuild (IIFE format for Chrome Extension compatibility)
+  // Build main files with Vite (background, popup, options, help)
+  console.log('📦 Building main scripts with Vite...');
+  execSync('npx vite build', { stdio: 'inherit' });
+
+  // Build content script with esbuild (IIFE format for Chrome Extension)
+  console.log('🔧 Building content script with esbuild...');
   execSync(
-    'npx esbuild src/content.ts --bundle --outfile=dist/content.js --format=iife --target=es2020 --platform=browser',
+    'npx esbuild src/content.ts --bundle --outfile=dist/content.js --format=iife --target=es2020 --platform=browser --sourcemap',
     { stdio: 'inherit' }
   );
-  console.log('Content script bundled successfully!');
+
+  console.log('✅ Build completed successfully!');
 } catch (error) {
-  console.error('Content script bundling failed:', error);
+  console.error('❌ Build failed:', error.message);
   process.exit(1);
 }
-
-console.log('Hybrid Vite + esbuild build completed successfully!');
