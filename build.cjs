@@ -70,22 +70,15 @@ staticFiles.forEach(({ from, to }) => {
 
 console.log('Build completed successfully!');
 
-// Compile standalone content script
-console.log('Compiling standalone content script...');
+// Bundle content script with esbuild
+console.log('Bundling content script...');
 try {
   execSync(
-    'npx tsc src/content-standalone.ts --outDir dist --target es2020 --lib es2020,dom --skipLibCheck',
+    'npx esbuild src/content.ts --bundle --outfile=dist/content.js --format=iife --target=es2020 --platform=browser',
     { stdio: 'inherit' }
   );
-
-  // Rename the compiled file to content.js (overwrite the modular version)
-  const fs = require('fs');
-  if (fs.existsSync('dist/content-standalone.js')) {
-    fs.copyFileSync('dist/content-standalone.js', 'dist/content.js');
-    fs.unlinkSync('dist/content-standalone.js'); // Clean up
-    console.log('Standalone content script compiled successfully!');
-  }
+  console.log('Content script bundled successfully!');
 } catch (error) {
-  console.error('Standalone content script compilation failed:', error);
+  console.error('Content script bundling failed:', error);
   process.exit(1);
 }
