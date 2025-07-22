@@ -1,3 +1,4 @@
+import './components/nav-links.js';
 import {
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,

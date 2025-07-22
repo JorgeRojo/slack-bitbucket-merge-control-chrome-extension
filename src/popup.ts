@@ -2,6 +2,7 @@ import { Logger } from './utils/logger.js';
 import { SLACK_BASE_URL, MERGE_STATUS, APP_STATUS } from './constants.js';
 import { literals } from './literals.js';
 import './components/toggle-switch/index.js';
+import './components/nav-links.js';
 import { initializeToggleFeatureStatus } from './popup-toggle-feature-status.js';
 import { ProcessedMessage, MergeStatusInfo, AppStatusInfo } from './types/index.js';
 import { toErrorType } from './utils/type-helpers.js';
