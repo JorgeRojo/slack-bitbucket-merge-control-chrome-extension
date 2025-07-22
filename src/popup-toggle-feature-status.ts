@@ -32,7 +32,7 @@ function updateCountdownText(element: HTMLElement, timeLeft: number): void {
 }
 
 function updateCountdownDisplay(timeLeft: number): void {
-  chrome.storage.local.get(['featureEnabled'], (result) => {
+  chrome.storage.local.get(['featureEnabled'], result => {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled) {
@@ -62,20 +62,17 @@ function checkCountdownStatus(): void {
         if (!response?.isCountdownActive) return;
 
         updateCountdownDisplay(response.timeLeft);
-      },
+      }
     );
   } catch (error) {
     Logger.error(error, 'Popup', {
-      silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
-      ],
+      silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.MESSAGE_PORT_CLOSED],
     });
   }
 }
 
 async function initializeToggle(toggleElement: HTMLElement): Promise<void> {
-  chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
+  chrome.storage.local.get(['featureEnabled', 'reactivationTime'], result => {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled) {
@@ -115,7 +112,7 @@ function setupToggleEventListeners(featureToggle: HTMLElement): void {
           action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
           enabled: isChecked,
         },
-        (_response) => {
+        _response => {
           if (chrome.runtime.lastError) {
             Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
               silentMessages: [
@@ -125,7 +122,7 @@ function setupToggleEventListeners(featureToggle: HTMLElement): void {
             });
             return;
           }
-        },
+        }
       );
     } catch (error) {
       Logger.error(error, 'Popup', {
@@ -148,7 +145,10 @@ interface BackgroundMessageHandlerOptions {
   featureToggle: HTMLElement;
 }
 
-function handleBackgroundMessages(request: ChromeRuntimeMessage, { featureToggle }: BackgroundMessageHandlerOptions): void {
+function handleBackgroundMessages(
+  request: ChromeRuntimeMessage,
+  { featureToggle }: BackgroundMessageHandlerOptions
+): void {
   if (request.action === MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY) {
     handleCountdownUpdate(request);
   } else if (request.action === MESSAGE_ACTIONS.COUNTDOWN_COMPLETED) {
@@ -157,7 +157,7 @@ function handleBackgroundMessages(request: ChromeRuntimeMessage, { featureToggle
 }
 
 function handleCountdownUpdate(request: ChromeRuntimeMessage): void {
-  chrome.storage.local.get(['featureEnabled'], (result) => {
+  chrome.storage.local.get(['featureEnabled'], result => {
     const isEnabled = result.featureEnabled !== false;
 
     if (!isEnabled) {

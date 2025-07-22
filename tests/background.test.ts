@@ -392,6 +392,29 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(global.fetch).toHaveBeenCalled();
   });
 
+  test('should handle new disallowed phrase "not merge anything"', async () => {
+    expect(messageHandler).toBeDefined();
+
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            messages: [{ text: 'not merge anything today', ts: '1234567890' }],
+          }),
+      })
+    );
+
+    const result = messageHandler(
+      { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
+      {}
+    );
+    await result;
+
+    expect(global.fetch).toHaveBeenCalled();
+  });
+
   test('should handle storage operations correctly', async () => {
     expect(messageHandler).toBeDefined();
 

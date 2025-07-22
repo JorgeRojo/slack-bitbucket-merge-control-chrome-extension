@@ -1,8 +1,4 @@
-import {
-  MERGE_STATUS,
-  APP_STATUS,
-  ERROR_MESSAGES,
-} from '../constants';
+import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../constants';
 import { Logger } from './logger';
 import { ProcessedMessage } from '../types/index';
 import { SlackMessage } from '../types/slack';
@@ -70,22 +66,22 @@ export function determineMergeStatus({
   for (const message of messages) {
     const normalizedMessageText = normalizeText(message.text);
 
-    const matchingExceptionPhrase = normalizedExceptionPhrases.find((keyword) =>
-      normalizedMessageText.includes(keyword),
+    const matchingExceptionPhrase = normalizedExceptionPhrases.find(keyword =>
+      normalizedMessageText.includes(keyword)
     );
     if (matchingExceptionPhrase) {
       return { status: MERGE_STATUS.EXCEPTION, message };
     }
 
-    const matchingDisallowedPhrase = normalizedDisallowedPhrases.find(
-      (keyword) => normalizedMessageText.includes(keyword),
+    const matchingDisallowedPhrase = normalizedDisallowedPhrases.find(keyword =>
+      normalizedMessageText.includes(keyword)
     );
     if (matchingDisallowedPhrase) {
       return { status: MERGE_STATUS.DISALLOWED, message };
     }
 
-    const matchingAllowedPhrase = normalizedAllowedPhrases.find((keyword) =>
-      normalizedMessageText.includes(keyword),
+    const matchingAllowedPhrase = normalizedAllowedPhrases.find(keyword =>
+      normalizedMessageText.includes(keyword)
     );
     if (matchingAllowedPhrase) {
       return { status: MERGE_STATUS.ALLOWED, message };
@@ -173,9 +169,7 @@ export async function updateAppStatus(status: keyof typeof APP_STATUS): Promise<
 
   lastAppStatus = status;
 
-  const { lastKnownMergeState = {} } = await chrome.storage.local.get(
-    'lastKnownMergeState',
-  );
+  const { lastKnownMergeState = {} } = await chrome.storage.local.get('lastKnownMergeState');
   await chrome.storage.local.set({
     lastKnownMergeState: {
       ...lastKnownMergeState,
@@ -214,11 +208,8 @@ export async function getCurrentMergeStatusFromMessages(): Promise<keyof typeof 
     return MERGE_STATUS.UNKNOWN;
   }
 
-  const {
-    currentAllowedPhrases,
-    currentDisallowedPhrases,
-    currentExceptionPhrases,
-  } = await getPhrasesFromStorage();
+  const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
+    await getPhrasesFromStorage();
 
   const { status } = determineMergeStatus({
     messages,
@@ -246,19 +237,15 @@ export async function getPhrasesFromStorage(): Promise<{
   currentDisallowedPhrases: string[];
   currentExceptionPhrases: string[];
 }> {
-  const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
-    await chrome.storage.sync.get([
-      'allowedPhrases',
-      'disallowedPhrases',
-      'exceptionPhrases',
-    ]);
+  const { allowedPhrases, disallowedPhrases, exceptionPhrases } = await chrome.storage.sync.get([
+    'allowedPhrases',
+    'disallowedPhrases',
+    'exceptionPhrases',
+  ]);
 
   // Import these directly in the function to avoid circular dependencies
-  const { 
-    DEFAULT_ALLOWED_PHRASES, 
-    DEFAULT_DISALLOWED_PHRASES, 
-    DEFAULT_EXCEPTION_PHRASES 
-  } = await import('../constants');
+  const { DEFAULT_ALLOWED_PHRASES, DEFAULT_DISALLOWED_PHRASES, DEFAULT_EXCEPTION_PHRASES } =
+    await import('../constants');
 
   const currentAllowedPhrases = allowedPhrases
     ? allowedPhrases.split(',')
@@ -314,11 +301,8 @@ export async function processAndStoreMessage(message: SlackMessage): Promise<voi
     messages: messages,
   });
 
-  const {
-    currentAllowedPhrases,
-    currentDisallowedPhrases,
-    currentExceptionPhrases,
-  } = await getPhrasesFromStorage();
+  const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
+    await getPhrasesFromStorage();
 
   const { message: matchingMessage } = determineMergeStatus({
     messages: messages,

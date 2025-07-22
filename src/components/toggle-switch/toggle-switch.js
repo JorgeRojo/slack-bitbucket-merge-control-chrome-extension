@@ -20,7 +20,7 @@ class ToggleSwitch extends HTMLElement {
   async setupEventListeners() {
     const switchInput = this.shadowRoot.querySelector('input');
     if (switchInput) {
-      switchInput.addEventListener('change', (e) => {
+      switchInput.addEventListener('change', e => {
         const isChecked = e.target.checked;
 
         if (isChecked) {
@@ -34,7 +34,7 @@ class ToggleSwitch extends HTMLElement {
             bubbles: true,
             composed: true,
             detail: { checked: isChecked },
-          }),
+          })
         );
       });
     } else {
@@ -46,9 +46,7 @@ class ToggleSwitch extends HTMLElement {
   }
 
   async render(checked, disabled, label) {
-    const response = await fetch(
-      new URL('./toggle-switch.css', import.meta.url),
-    );
+    const response = await fetch(new URL('./toggle-switch.css', import.meta.url));
     const css = await response.text();
 
     this.shadowRoot.innerHTML = `
@@ -71,8 +69,7 @@ class ToggleSwitch extends HTMLElement {
   attributeChangedCallback(attributeName, _oldValue, _newValue) {
     if (!this._initialized) return;
 
-    if (!this.shadowRoot || !this.shadowRoot.querySelector('.switch-container'))
-      return;
+    if (!this.shadowRoot || !this.shadowRoot.querySelector('.switch-container')) return;
 
     const switchInput = this.shadowRoot.querySelector('input');
     const labelElement = this.shadowRoot.querySelector('.switch-label');
@@ -85,8 +82,7 @@ class ToggleSwitch extends HTMLElement {
         if (switchInput) switchInput.disabled = this.hasAttribute('disabled');
         break;
       case 'label':
-        if (labelElement)
-          labelElement.textContent = this.getAttribute('label') || '';
+        if (labelElement) labelElement.textContent = this.getAttribute('label') || '';
         break;
     }
   }

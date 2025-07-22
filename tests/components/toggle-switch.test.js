@@ -7,11 +7,11 @@ vi.mock('../../src/utils/logger.js');
 global.fetch = vi.fn(() =>
   Promise.resolve({
     text: () => Promise.resolve('/* mocked CSS */'),
-  }),
+  })
 );
 
 const waitForRender = async () => {
-  return new Promise((resolve) => setTimeout(resolve, 50));
+  return new Promise(resolve => setTimeout(resolve, 50));
 };
 
 describe('ToggleSwitch Component', () => {
@@ -138,8 +138,7 @@ describe('ToggleSwitch Component', () => {
   });
 
   test('should have correct DOM structure', async () => {
-    const container =
-      toggleSwitch.shadowRoot.querySelector('.switch-container');
+    const container = toggleSwitch.shadowRoot.querySelector('.switch-container');
     const switchLabel = toggleSwitch.shadowRoot.querySelector('.switch');
     const input = toggleSwitch.shadowRoot.querySelector('input');
     const slider = toggleSwitch.shadowRoot.querySelector('.slider');

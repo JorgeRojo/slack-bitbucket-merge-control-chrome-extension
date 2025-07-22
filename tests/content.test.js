@@ -7,10 +7,7 @@ describe('Content Script Structure', () => {
   test('should have proper encapsulation pattern', () => {
     const fs = require('fs');
     const path = require('path');
-    const contentScript = fs.readFileSync(
-      path.join(__dirname, '../src/content.js'),
-      'utf8',
-    );
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
 
     expect(contentScript).toContain('BitbucketMergeController');
     expect(contentScript).toContain('(() => {');
@@ -23,10 +20,7 @@ describe('Content Script Structure', () => {
   test('should initialize the controller', () => {
     const fs = require('fs');
     const path = require('path');
-    const contentScript = fs.readFileSync(
-      path.join(__dirname, '../src/content.js'),
-      'utf8',
-    );
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
 
     expect(contentScript).toContain('BitbucketMergeController.init()');
   });
@@ -34,10 +28,7 @@ describe('Content Script Structure', () => {
   test('should have all required functions encapsulated', () => {
     const fs = require('fs');
     const path = require('path');
-    const contentScript = fs.readFileSync(
-      path.join(__dirname, '../src/content.js'),
-      'utf8',
-    );
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
 
     expect(contentScript).toContain('function disableMergeButton');
     expect(contentScript).toContain('function enableMergeButton');
@@ -105,7 +96,7 @@ describe('Content Script Initialization', () => {
       expect.objectContaining({
         childList: true,
         subtree: true,
-      }),
+      })
     );
   });
 
@@ -125,7 +116,7 @@ describe('Content Script Initialization', () => {
     expect(observer.disconnect).toHaveBeenCalled();
     expect(mockStorage.local.get).toHaveBeenCalledWith(
       ['lastKnownMergeState', 'featureEnabled'],
-      expect.any(Function),
+      expect.any(Function)
     );
   });
 
@@ -138,18 +129,14 @@ describe('Content Script Initialization', () => {
       removeEventListener: vi.fn(),
     };
 
-    document.querySelector
-      .mockReturnValueOnce(null)
-      .mockReturnValueOnce(mockMergeButton);
+    document.querySelector.mockReturnValueOnce(null).mockReturnValueOnce(mockMergeButton);
 
     await import('../src/content.js');
 
     const observer = global.MutationObserver.mock.instances[0];
     observer.callback([], observer);
 
-    expect(document.querySelector).toHaveBeenCalledWith(
-      '.merge-button-container > .merge-button',
-    );
+    expect(document.querySelector).toHaveBeenCalledWith('.merge-button-container > .merge-button');
   });
 });
 

@@ -12,16 +12,14 @@ export const CONTENT_SCRIPT_ID = 'slack-bitbucket-extension-content-script';
 
 export const MAX_MESSAGES = 50;
 
-export const DEFAULT_ALLOWED_PHRASES = [
-  'allowed to merge',
-  'no restrictions on merging.',
-];
+export const DEFAULT_ALLOWED_PHRASES = ['allowed to merge', 'no restrictions on merging.'];
 
 export const DEFAULT_DISALLOWED_PHRASES = [
   'not allowed to merge',
   'do not merge without consent',
   'closing versions. do not merge',
   'ask me before merging',
+  'not merge anything',
 ];
 
 export const DEFAULT_EXCEPTION_PHRASES = [
@@ -34,8 +32,7 @@ export const DEFAULT_EXCEPTION_PHRASES = [
   'do not merge in',
 ];
 
-export const DEFAULT_MERGE_BUTTON_SELECTOR =
-  '.merge-button-container > .merge-button';
+export const DEFAULT_MERGE_BUTTON_SELECTOR = '.merge-button-container > .merge-button';
 
 export const DEFAULT_BITBUCKET_URL =
   'https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*';

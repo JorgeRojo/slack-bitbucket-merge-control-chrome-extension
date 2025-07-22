@@ -9,7 +9,7 @@ global.document = {
   getElementById: vi.fn(),
 };
 
-global.requestAnimationFrame = vi.fn((callback) => {
+global.requestAnimationFrame = vi.fn(callback => {
   setTimeout(callback, 0);
   return 1;
 });
@@ -37,7 +37,7 @@ describe('popup-toggle-feature-status.js', () => {
       textContent: '',
     };
 
-    global.document.getElementById.mockImplementation((id) => {
+    global.document.getElementById.mockImplementation(id => {
       if (id === 'countdown-timer') return mockCountdownElement;
       return null;
     });
@@ -51,9 +51,7 @@ describe('popup-toggle-feature-status.js', () => {
 
   describe('initializeToggleFeatureStatus', () => {
     test('should handle null toggle element', async () => {
-      await expect(
-        initializeToggleFeatureStatus(null),
-      ).resolves.toBeUndefined();
+      await expect(initializeToggleFeatureStatus(null)).resolves.toBeUndefined();
     });
 
     test('should initialize toggle with enabled state', async () => {
@@ -65,12 +63,9 @@ describe('popup-toggle-feature-status.js', () => {
       await initializeToggleFeatureStatus(mockToggleElement);
 
       // Wait for the async storage call to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
-      expect(mockToggleElement.setAttribute).toHaveBeenCalledWith(
-        'checked',
-        '',
-      );
+      expect(mockToggleElement.setAttribute).toHaveBeenCalledWith('checked', '');
       expect(mockCountdownElement.style.display).toBe('none');
     });
 
@@ -81,7 +76,7 @@ describe('popup-toggle-feature-status.js', () => {
 
       await initializeToggleFeatureStatus(mockToggleElement);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockToggleElement.removeAttribute).toHaveBeenCalledWith('checked');
     });
@@ -95,7 +90,7 @@ describe('popup-toggle-feature-status.js', () => {
 
       expect(mockToggleElement.addEventListener).toHaveBeenCalledWith(
         'toggle',
-        expect.any(Function),
+        expect.any(Function)
       );
     });
 
@@ -106,9 +101,7 @@ describe('popup-toggle-feature-status.js', () => {
 
       await initializeToggleFeatureStatus(mockToggleElement);
 
-      expect(mockRuntime.onMessage.addListener).toHaveBeenCalledWith(
-        expect.any(Function),
-      );
+      expect(mockRuntime.onMessage.addListener).toHaveBeenCalledWith(expect.any(Function));
     });
   });
 
@@ -121,7 +114,7 @@ describe('popup-toggle-feature-status.js', () => {
       await initializeToggleFeatureStatus(mockToggleElement);
 
       const toggleHandler = mockToggleElement.addEventListener.mock.calls.find(
-        (call) => call[0] === 'toggle',
+        call => call[0] === 'toggle'
       )[1];
 
       const mockEvent = {
@@ -138,7 +131,7 @@ describe('popup-toggle-feature-status.js', () => {
           action: 'featureToggleChanged',
           enabled: true,
         },
-        expect.any(Function),
+        expect.any(Function)
       );
     });
 
@@ -156,7 +149,7 @@ describe('popup-toggle-feature-status.js', () => {
       await initializeToggleFeatureStatus(mockToggleElement);
 
       const toggleHandler = mockToggleElement.addEventListener.mock.calls.find(
-        (call) => call[0] === 'toggle',
+        call => call[0] === 'toggle'
       )[1];
 
       const mockEvent = {
@@ -171,7 +164,7 @@ describe('popup-toggle-feature-status.js', () => {
       // When unchecked, it calls checkCountdownStatus instead of immediately hiding
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
         { action: 'getCountdownStatus' },
-        expect.any(Function),
+        expect.any(Function)
       );
     });
 
@@ -191,7 +184,7 @@ describe('popup-toggle-feature-status.js', () => {
       await initializeToggleFeatureStatus(mockToggleElement);
 
       const toggleHandler = mockToggleElement.addEventListener.mock.calls.find(
-        (call) => call[0] === 'toggle',
+        call => call[0] === 'toggle'
       )[1];
 
       expect(() => {
@@ -203,11 +196,8 @@ describe('popup-toggle-feature-status.js', () => {
         expect.any(Error),
         'Popup',
         expect.objectContaining({
-          silentMessages: [
-            'Receiving end does not exist',
-            'message port closed before a response',
-          ],
-        }),
+          silentMessages: ['Receiving end does not exist', 'message port closed before a response'],
+        })
       );
     });
 
@@ -225,7 +215,7 @@ describe('popup-toggle-feature-status.js', () => {
       await initializeToggleFeatureStatus(mockToggleElement);
 
       const toggleHandler = mockToggleElement.addEventListener.mock.calls.find(
-        (call) => call[0] === 'toggle',
+        call => call[0] === 'toggle'
       )[1];
 
       expect(() => {
@@ -237,11 +227,8 @@ describe('popup-toggle-feature-status.js', () => {
         expect.any(Error),
         'Popup',
         expect.objectContaining({
-          silentMessages: [
-            'Receiving end does not exist',
-            'message port closed before a response',
-          ],
-        }),
+          silentMessages: ['Receiving end does not exist', 'message port closed before a response'],
+        })
       );
     });
   });
@@ -279,10 +266,7 @@ describe('popup-toggle-feature-status.js', () => {
       });
 
       expect(mockCountdownElement.style.display).toBe('none');
-      expect(mockToggleElement.setAttribute).toHaveBeenCalledWith(
-        'checked',
-        '',
-      );
+      expect(mockToggleElement.setAttribute).toHaveBeenCalledWith('checked', '');
     });
 
     test('should ignore unknown messages', async () => {
@@ -345,9 +329,7 @@ describe('popup-toggle-feature-status.js', () => {
         callback({ featureEnabled: false });
       });
 
-      await expect(
-        initializeToggleFeatureStatus(mockToggleElement),
-      ).resolves.not.toThrow();
+      await expect(initializeToggleFeatureStatus(mockToggleElement)).resolves.not.toThrow();
     });
 
     test('should format countdown text correctly', async () => {
@@ -402,7 +384,7 @@ describe('popup-toggle-feature-status.js', () => {
 
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
         { action: 'getCountdownStatus' },
-        expect.any(Function),
+        expect.any(Function)
       );
     });
 
@@ -419,20 +401,15 @@ describe('popup-toggle-feature-status.js', () => {
         delete mockRuntime.lastError;
       });
 
-      await expect(
-        initializeToggleFeatureStatus(mockToggleElement),
-      ).resolves.not.toThrow();
+      await expect(initializeToggleFeatureStatus(mockToggleElement)).resolves.not.toThrow();
 
       // Verificar que se llamó a Logger.error para el error de countdown
       expect(Logger.error).toHaveBeenCalledWith(
         expect.any(Error),
         'Popup',
         expect.objectContaining({
-          silentMessages: [
-            'Receiving end does not exist',
-            'message port closed before a response',
-          ],
-        }),
+          silentMessages: ['Receiving end does not exist', 'message port closed before a response'],
+        })
       );
     });
 
@@ -447,20 +424,15 @@ describe('popup-toggle-feature-status.js', () => {
         throw new Error('Connection failed');
       });
 
-      await expect(
-        initializeToggleFeatureStatus(mockToggleElement),
-      ).resolves.not.toThrow();
+      await expect(initializeToggleFeatureStatus(mockToggleElement)).resolves.not.toThrow();
 
       // Verificar que se llamó a Logger.error para la excepción de countdown
       expect(Logger.error).toHaveBeenCalledWith(
         expect.any(Error),
         'Popup',
         expect.objectContaining({
-          silentMessages: [
-            'Receiving end does not exist',
-            'message port closed before a response',
-          ],
-        }),
+          silentMessages: ['Receiving end does not exist', 'message port closed before a response'],
+        })
       );
     });
   });
@@ -537,7 +509,7 @@ describe('popup-toggle-feature-status.js', () => {
 
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
         { action: 'getCountdownStatus' },
-        expect.any(Function),
+        expect.any(Function)
       );
     });
 
@@ -556,7 +528,7 @@ describe('popup-toggle-feature-status.js', () => {
 
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
         { action: 'getCountdownStatus' },
-        expect.any(Function),
+        expect.any(Function)
       );
     });
   });

@@ -53,12 +53,7 @@ function cleanSlackMessageText(text) {
   return cleanedText;
 }
 
-function determineMergeStatus({
-  messages,
-  allowedPhrases,
-  disallowedPhrases,
-  exceptionPhrases,
-}) {
+function determineMergeStatus({ messages, allowedPhrases, disallowedPhrases, exceptionPhrases }) {
   const normalizedAllowedPhrases = allowedPhrases.map(normalizeText);
   const normalizedDisallowedPhrases = disallowedPhrases.map(normalizeText);
   const normalizedExceptionPhrases = exceptionPhrases.map(normalizeText);
@@ -66,22 +61,22 @@ function determineMergeStatus({
   for (const message of messages) {
     const normalizedMessageText = normalizeText(message.text);
 
-    const matchingExceptionPhrase = normalizedExceptionPhrases.find((keyword) =>
-      normalizedMessageText.includes(keyword),
+    const matchingExceptionPhrase = normalizedExceptionPhrases.find(keyword =>
+      normalizedMessageText.includes(keyword)
     );
     if (matchingExceptionPhrase) {
       return { status: MERGE_STATUS.EXCEPTION, message };
     }
 
-    const matchingDisallowedPhrase = normalizedDisallowedPhrases.find(
-      (keyword) => normalizedMessageText.includes(keyword),
+    const matchingDisallowedPhrase = normalizedDisallowedPhrases.find(keyword =>
+      normalizedMessageText.includes(keyword)
     );
     if (matchingDisallowedPhrase) {
       return { status: MERGE_STATUS.DISALLOWED, message };
     }
 
-    const matchingAllowedPhrase = normalizedAllowedPhrases.find((keyword) =>
-      normalizedMessageText.includes(keyword),
+    const matchingAllowedPhrase = normalizedAllowedPhrases.find(keyword =>
+      normalizedMessageText.includes(keyword)
     );
     if (matchingAllowedPhrase) {
       return { status: MERGE_STATUS.ALLOWED, message };
@@ -139,11 +134,8 @@ async function getCurrentMergeStatusFromMessages() {
     return MERGE_STATUS.UNKNOWN;
   }
 
-  const {
-    currentAllowedPhrases,
-    currentDisallowedPhrases,
-    currentExceptionPhrases,
-  } = await getPhrasesFromStorage();
+  const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
+    await getPhrasesFromStorage();
 
   const { status } = determineMergeStatus({
     messages,
@@ -167,9 +159,7 @@ async function updateAppStatus(status) {
 
   lastAppStatus = status;
 
-  const { lastKnownMergeState = {} } = await chrome.storage.local.get(
-    'lastKnownMergeState',
-  );
+  const { lastKnownMergeState = {} } = await chrome.storage.local.get('lastKnownMergeState');
   await chrome.storage.local.set({
     lastKnownMergeState: {
       ...lastKnownMergeState,
@@ -211,10 +201,10 @@ async function resolveChannelId(slackToken, channelName) {
   if (!channelId) {
     const fetchAllChannels = async () => {
       const channelTypes = ['public_channel', 'private_channel'];
-      const promises = channelTypes.map((type) =>
+      const promises = channelTypes.map(type =>
         fetch(`${SLACK_CONVERSATIONS_LIST_URL}?types=${type}`, {
           headers: { Authorization: `Bearer ${slackToken}` },
-        }).then((res) => res.json()),
+        }).then(res => res.json())
       );
 
       const results = await Promise.all(promises);
@@ -227,7 +217,7 @@ async function resolveChannelId(slackToken, channelName) {
     };
 
     const allChannels = await fetchAllChannels();
-    const foundChannel = allChannels.find((c) => c.name === channelName);
+    const foundChannel = allChannels.find(c => c.name === channelName);
 
     if (!foundChannel) {
       throw new Error(ERROR_MESSAGES.CHANNEL_NOT_FOUND);
@@ -250,7 +240,7 @@ async function processAndStoreMessage(message) {
   const messageTs = message.ts;
 
   let messages = (await chrome.storage.local.get('messages')).messages || [];
-  const existMessage = messages.some((m) => m.ts === messageTs);
+  const existMessage = messages.some(m => m.ts === messageTs);
 
   if (existMessage) {
     return;
@@ -271,11 +261,8 @@ async function processAndStoreMessage(message) {
     messages: messages,
   });
 
-  const {
-    currentAllowedPhrases,
-    currentDisallowedPhrases,
-    currentExceptionPhrases,
-  } = await getPhrasesFromStorage();
+  const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
+    await getPhrasesFromStorage();
 
   const { message: matchingMessage } = determineMergeStatus({
     messages: messages,
@@ -290,12 +277,11 @@ async function processAndStoreMessage(message) {
 }
 
 async function getPhrasesFromStorage() {
-  const { allowedPhrases, disallowedPhrases, exceptionPhrases } =
-    await chrome.storage.sync.get([
-      'allowedPhrases',
-      'disallowedPhrases',
-      'exceptionPhrases',
-    ]);
+  const { allowedPhrases, disallowedPhrases, exceptionPhrases } = await chrome.storage.sync.get([
+    'allowedPhrases',
+    'disallowedPhrases',
+    'exceptionPhrases',
+  ]);
 
   const currentAllowedPhrases = allowedPhrases
     ? allowedPhrases.split(',')
@@ -342,24 +328,15 @@ async function updateContentScriptMergeState(channelName) {
     messages: currentMessages = [],
     featureEnabled,
     lastKnownMergeState = {},
-  } = await chrome.storage.local.get([
-    'messages',
-    'featureEnabled',
-    'lastKnownMergeState',
-  ]);
+  } = await chrome.storage.local.get(['messages', 'featureEnabled', 'lastKnownMergeState']);
 
   const appStatus = lastKnownMergeState?.appStatus;
 
   const lastSlackMessage =
-    currentMessages.length > 0
-      ? currentMessages[currentMessages.length - 1]
-      : null;
+    currentMessages.length > 0 ? currentMessages[currentMessages.length - 1] : null;
 
-  const {
-    currentAllowedPhrases,
-    currentDisallowedPhrases,
-    currentExceptionPhrases,
-  } = await getPhrasesFromStorage();
+  const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
+    await getPhrasesFromStorage();
 
   let mergeStatusForContentScript = MERGE_STATUS.UNKNOWN;
   let matchingMessageForContentScript = null;
@@ -406,19 +383,14 @@ async function updateContentScriptMergeState(channelName) {
   } catch (error) {
     // Silence connection errors when popup is not open
     Logger.error(error, 'Background', {
-      silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.CONNECTION_FAILED,
-      ],
+      silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
   }
 
   if (bitbucketTabId) {
     try {
       const effectiveMergeStatus =
-        featureEnabled === false
-          ? MERGE_STATUS.ALLOWED
-          : mergeStatusForContentScript;
+        featureEnabled === false ? MERGE_STATUS.ALLOWED : mergeStatusForContentScript;
       const effectiveIsMergeDisabled =
         featureEnabled === false
           ? false
@@ -436,10 +408,7 @@ async function updateContentScriptMergeState(channelName) {
     } catch (error) {
       // Silence connection errors when Bitbucket tab is not available
       Logger.error(error, 'Background', {
-        silentMessages: [
-          ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-          ERROR_MESSAGES.CONNECTION_FAILED,
-        ],
+        silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
       });
     }
   }
@@ -479,8 +448,8 @@ async function connectToSlackSocketMode() {
   try {
     await Promise.all([
       fetchAndStoreTeamId(slackToken),
-      resolveChannelId(slackToken, channelName).then((channelId) =>
-        fetchAndStoreMessages(slackToken, channelId),
+      resolveChannelId(slackToken, channelName).then(channelId =>
+        fetchAndStoreMessages(slackToken, channelId)
       ),
     ]);
 
@@ -507,7 +476,7 @@ async function connectToSlackSocketMode() {
       setupWebSocketCheckAlarm();
     };
 
-    rtmWebSocket.onmessage = async (event) => {
+    rtmWebSocket.onmessage = async event => {
       const envelope = JSON.parse(event.data);
       if (envelope.payload && envelope.payload.event) {
         const message = envelope.payload.event;
@@ -529,7 +498,7 @@ async function connectToSlackSocketMode() {
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
-    rtmWebSocket.onerror = async (error) => {
+    rtmWebSocket.onerror = async error => {
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       Logger.error(error, 'WebSocket', { type: 'connection' });
       rtmWebSocket.close();
@@ -549,9 +518,7 @@ function setupWebSocketCheckAlarm() {
     chrome.alarms.create(WEBSOCKET_CHECK_ALARM, {
       periodInMinutes: WEBSOCKET_CHECK_INTERVAL,
     });
-    Logger.log(
-      `Alarm set to check WebSocket every ${WEBSOCKET_CHECK_INTERVAL} minutes`,
-    );
+    Logger.log(`Alarm set to check WebSocket every ${WEBSOCKET_CHECK_INTERVAL} minutes`);
   });
 }
 
@@ -564,9 +531,7 @@ async function checkWebSocketConnection() {
     return;
   }
 
-  const { lastWebSocketConnectTime } = await chrome.storage.local.get(
-    'lastWebSocketConnectTime',
-  );
+  const { lastWebSocketConnectTime } = await chrome.storage.local.get('lastWebSocketConnectTime');
   const currentTime = Date.now();
   const connectionAge = currentTime - (lastWebSocketConnectTime || 0);
 
@@ -601,22 +566,19 @@ async function fetchAndStoreMessages(slackToken, channelId) {
       `${SLACK_CONVERSATIONS_HISTORY_URL}?channel=${channelId}&limit=${MAX_MESSAGES}`,
       {
         headers: { Authorization: `Bearer ${slackToken}` },
-      },
+      }
     );
     const data = await response.json();
 
     if (data.ok) {
-      const messages = data.messages.map((msg) => ({
+      const messages = data.messages.map(msg => ({
         text: cleanSlackMessageText(msg.text),
         ts: msg.ts,
       }));
       await chrome.storage.local.set({ messages });
 
-      const {
-        currentAllowedPhrases,
-        currentDisallowedPhrases,
-        currentExceptionPhrases,
-      } = await getPhrasesFromStorage();
+      const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
+        await getPhrasesFromStorage();
 
       const { message: matchingMessage } = determineMergeStatus({
         messages,
@@ -648,7 +610,7 @@ const messageHandlers = {
     });
     return true;
   },
-  [MESSAGE_ACTIONS.FETCH_NEW_MESSAGES]: async (request) => {
+  [MESSAGE_ACTIONS.FETCH_NEW_MESSAGES]: async request => {
     const { slackToken, channelName } = await chrome.storage.sync.get([
       'slackToken',
       'channelName',
@@ -698,9 +660,7 @@ const messageHandlers = {
     }
   },
   [MESSAGE_ACTIONS.RECONNECT_SLACK]: async () => {
-    const { lastKnownMergeState = {} } = await chrome.storage.local.get(
-      'lastKnownMergeState',
-    );
+    const { lastKnownMergeState = {} } = await chrome.storage.local.get('lastKnownMergeState');
     const appStatus = lastKnownMergeState?.appStatus;
 
     if (rtmWebSocket) {
@@ -727,7 +687,7 @@ const messageHandlers = {
       }
     }
   },
-  [MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED]: async (request) => {
+  [MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED]: async request => {
     const { enabled } = request;
     await chrome.storage.local.set({ featureEnabled: enabled });
 
@@ -741,7 +701,7 @@ const messageHandlers = {
     }
   },
 
-  [MESSAGE_ACTIONS.COUNTDOWN_COMPLETED]: async (request) => {
+  [MESSAGE_ACTIONS.COUNTDOWN_COMPLETED]: async request => {
     const { enabled } = request;
     await chrome.storage.local.set({ featureEnabled: enabled });
 
@@ -751,14 +711,11 @@ const messageHandlers = {
     }
   },
 
-  [MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS]: async (
-    request,
-    sender,
-    sendResponse,
-  ) => {
-    const { reactivationTime, featureEnabled } = await chrome.storage.local.get(
-      ['reactivationTime', 'featureEnabled'],
-    );
+  [MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS]: async (request, sender, sendResponse) => {
+    const { reactivationTime, featureEnabled } = await chrome.storage.local.get([
+      'reactivationTime',
+      'featureEnabled',
+    ]);
 
     if (featureEnabled === false && reactivationTime) {
       const currentTime = Date.now();
@@ -789,43 +746,38 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 const updateMergeButtonFromLastKnownMergeState = () => {
-  chrome.storage.local.get(
-    ['lastKnownMergeState', 'featureEnabled'],
-    async (result) => {
-      if (result.lastKnownMergeState) {
-        const { isMergeDisabled, lastSlackMessage, channelName, mergeStatus } =
-          result.lastKnownMergeState;
+  chrome.storage.local.get(['lastKnownMergeState', 'featureEnabled'], async result => {
+    if (result.lastKnownMergeState) {
+      const { isMergeDisabled, lastSlackMessage, channelName, mergeStatus } =
+        result.lastKnownMergeState;
 
-        const finalIsMergeDisabled =
-          result.featureEnabled === false ? false : isMergeDisabled;
-        const finalMergeStatus =
-          result.featureEnabled === false ? MERGE_STATUS.ALLOWED : mergeStatus;
+      const finalIsMergeDisabled = result.featureEnabled === false ? false : isMergeDisabled;
+      const finalMergeStatus = result.featureEnabled === false ? MERGE_STATUS.ALLOWED : mergeStatus;
 
-        try {
-          await chrome.tabs.sendMessage(bitbucketTabId, {
-            action: 'updateMergeButton',
-            lastSlackMessage: lastSlackMessage,
-            channelName: channelName,
-            isMergeDisabled: finalIsMergeDisabled,
-            mergeStatus: finalMergeStatus,
-            featureEnabled: result.featureEnabled !== false,
-          });
-        } catch (error) {
-          // Silence connection errors when Bitbucket tab is not available
-          const result = Logger.error(error, 'Background', {
-            silentMessages: [
-              ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-              ERROR_MESSAGES.CONNECTION_FAILED,
-            ],
-          });
-          bitbucketTabId = null;
-          if (result.silenced) {
-            return;
-          }
+      try {
+        await chrome.tabs.sendMessage(bitbucketTabId, {
+          action: 'updateMergeButton',
+          lastSlackMessage: lastSlackMessage,
+          channelName: channelName,
+          isMergeDisabled: finalIsMergeDisabled,
+          mergeStatus: finalMergeStatus,
+          featureEnabled: result.featureEnabled !== false,
+        });
+      } catch (error) {
+        // Silence connection errors when Bitbucket tab is not available
+        const result = Logger.error(error, 'Background', {
+          silentMessages: [
+            ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+            ERROR_MESSAGES.CONNECTION_FAILED,
+          ],
+        });
+        bitbucketTabId = null;
+        if (result.silenced) {
+          return;
         }
       }
-    },
-  );
+    }
+  });
 };
 
 let countdownInterval;
@@ -866,10 +818,7 @@ async function notifyPopupAboutCountdown(timeLeft) {
   } catch (error) {
     // Silence connection errors when popup is not open to receive countdown updates
     Logger.error(error, 'Background', {
-      silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.CONNECTION_FAILED,
-      ],
+      silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
   }
 }
@@ -907,10 +856,7 @@ async function reactivateFeature() {
   } catch (error) {
     // Silence connection errors when popup is not open to receive reactivation notification
     Logger.error(error, 'Background', {
-      silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.CONNECTION_FAILED,
-      ],
+      silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
   }
 
@@ -921,7 +867,7 @@ async function reactivateFeature() {
 }
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.get('mergeButtonSelector', (result) => {
+  chrome.storage.sync.get('mergeButtonSelector', result => {
     if (!result.mergeButtonSelector) {
       chrome.storage.sync.set({
         mergeButtonSelector: DEFAULT_MERGE_BUTTON_SELECTOR,
@@ -941,7 +887,7 @@ chrome.runtime.onStartup.addListener(() => {
   setupWebSocketCheckAlarm();
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === WEBSOCKET_CHECK_ALARM) {
     checkWebSocketConnection();
   }
@@ -957,11 +903,8 @@ async function registerBitbucketContentScript() {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
 
   try {
-    const existingScripts =
-      await chrome.scripting.getRegisteredContentScripts();
-    const scriptExists = existingScripts.some(
-      (script) => script.id === CONTENT_SCRIPT_ID,
-    );
+    const existingScripts = await chrome.scripting.getRegisteredContentScripts();
+    const scriptExists = existingScripts.some(script => script.id === CONTENT_SCRIPT_ID);
 
     if (scriptExists) {
       await chrome.scripting.unregisterContentScripts({

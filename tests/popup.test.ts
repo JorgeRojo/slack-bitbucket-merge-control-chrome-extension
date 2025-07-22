@@ -161,16 +161,12 @@ describe('popup.js', () => {
     test('should initialize all UI elements and setup event listeners', async () => {
       await domContentLoadedHandler();
 
-      expect(mockInitializeToggleFeatureStatus).toHaveBeenCalledWith(
-        mockFeatureToggle,
-      );
+      expect(mockInitializeToggleFeatureStatus).toHaveBeenCalledWith(mockFeatureToggle);
       expect(mockOpenOptionsButton.addEventListener).toHaveBeenCalledWith(
         'click',
-        expect.any(Function),
+        expect.any(Function)
       );
-      expect(mockStorage.onChanged.addListener).toHaveBeenCalledWith(
-        expect.any(Function),
-      );
+      expect(mockStorage.onChanged.addListener).toHaveBeenCalledWith(expect.any(Function));
     });
 
     test('should handle missing UI elements gracefully', async () => {
@@ -208,7 +204,7 @@ describe('popup.js', () => {
 
       await domContentLoadedHandler();
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
       expect(mockOpenOptionsButton.style.display).toBe('block');
@@ -228,7 +224,7 @@ describe('popup.js', () => {
       });
 
       await domContentLoadedHandler();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
       expect(mockOpenOptionsButton.style.display).toBe('block');
@@ -248,7 +244,7 @@ describe('popup.js', () => {
       });
 
       await domContentLoadedHandler();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
       expect(mockOpenOptionsButton.style.display).toBe('block');
@@ -268,7 +264,7 @@ describe('popup.js', () => {
       });
 
       await domContentLoadedHandler();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
       expect(mockOpenOptionsButton.style.display).toBe('block');
@@ -346,7 +342,7 @@ describe('popup.js', () => {
                 appToken: 'valid-app-token',
                 channelName: 'valid-channel',
               }),
-            0,
+            0
           );
         }
         return Promise.resolve({
@@ -357,7 +353,7 @@ describe('popup.js', () => {
       });
 
       await domContentLoadedHandler();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });
@@ -515,10 +511,9 @@ describe('popup.js', () => {
 
       await domContentLoadedHandler();
 
-      const clickHandler =
-        mockOpenOptionsButton.addEventListener.mock.calls.find(
-          (call) => call[0] === 'click',
-        )[1];
+      const clickHandler = mockOpenOptionsButton.addEventListener.mock.calls.find(
+        call => call[0] === 'click'
+      )[1];
 
       clickHandler();
 
@@ -531,10 +526,9 @@ describe('popup.js', () => {
 
       await domContentLoadedHandler();
 
-      const clickHandler =
-        mockOpenOptionsButton.addEventListener.mock.calls.find(
-          (call) => call[0] === 'click',
-        )[1];
+      const clickHandler = mockOpenOptionsButton.addEventListener.mock.calls.find(
+        call => call[0] === 'click'
+      )[1];
 
       clickHandler();
 
@@ -614,7 +608,7 @@ describe('popup.js', () => {
         'PopupUI',
         expect.objectContaining({
           action: 'processMessages',
-        }),
+        })
       );
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.DISALLOWED);
     });
@@ -630,7 +624,7 @@ describe('popup.js', () => {
         'PopupUI',
         expect.objectContaining({
           action: 'processMessages',
-        }),
+        })
       );
     });
 
@@ -678,7 +672,7 @@ describe('popup.js', () => {
       });
 
       await domContentLoadedHandler();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockOptionsLinkContainer.style.display).toBe('none');
     });
@@ -726,13 +720,9 @@ describe('popup.js', () => {
     });
 
     test('should handle toggle initialization failure gracefully', async () => {
-      mockInitializeToggleFeatureStatus.mockRejectedValue(
-        new Error('Toggle init failed'),
-      );
+      mockInitializeToggleFeatureStatus.mockRejectedValue(new Error('Toggle init failed'));
 
-      await expect(domContentLoadedHandler()).rejects.toThrow(
-        'Toggle init failed',
-      );
+      await expect(domContentLoadedHandler()).rejects.toThrow('Toggle init failed');
     });
 
     test('should maintain proper execution order', async () => {
@@ -779,7 +769,7 @@ describe('popup.js', () => {
       mockStorage.local.get.mockResolvedValue({});
 
       await domContentLoadedHandler();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });
@@ -826,7 +816,7 @@ describe('popup.js', () => {
       });
 
       await domContentLoadedHandler();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });
@@ -845,7 +835,7 @@ describe('popup.js', () => {
       });
 
       await domContentLoadedHandler();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });

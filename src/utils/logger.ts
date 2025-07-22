@@ -10,7 +10,11 @@ export class Logger {
     console.log(...args);
   }
 
-  static error(error: Error | string, component: string = 'General', context: ErrorContext = {}): void {
+  static error(
+    error: Error | string,
+    component: string = 'General',
+    context: ErrorContext = {}
+  ): void {
     const { silentMessages, ...restContext } = context;
     return ErrorHandler.handle(error, {
       component,

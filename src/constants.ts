@@ -22,6 +22,7 @@ export const DEFAULT_DISALLOWED_PHRASES: string[] = [
   'do not merge without consent',
   'closing versions. do not merge',
   'ask me before merging',
+  'not merge anything',
 ];
 
 export const DEFAULT_EXCEPTION_PHRASES: string[] = [
@@ -34,8 +35,7 @@ export const DEFAULT_EXCEPTION_PHRASES: string[] = [
   'do not merge in',
 ];
 
-export const DEFAULT_MERGE_BUTTON_SELECTOR =
-  '.merge-button-container > .merge-button';
+export const DEFAULT_MERGE_BUTTON_SELECTOR = '.merge-button-container > .merge-button';
 
 export const DEFAULT_BITBUCKET_URL =
   'https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*';

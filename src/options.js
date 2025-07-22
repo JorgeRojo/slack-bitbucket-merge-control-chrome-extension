@@ -13,8 +13,8 @@ function formatMultilineInput(text) {
   return text
     .trim()
     .split('\n')
-    .map((phrase) => phrase.trim())
-    .filter((phrase) => phrase !== '')
+    .map(phrase => phrase.trim())
+    .filter(phrase => phrase !== '')
     .join(',');
 }
 
@@ -31,9 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const disallowedPhrasesInput = document.getElementById('disallowedPhrases');
   const exceptionPhrasesInput = document.getElementById('exceptionPhrases');
   const bitbucketUrlInput = document.getElementById('bitbucketUrl');
-  const mergeButtonSelectorInput = document.getElementById(
-    'mergeButtonSelector',
-  );
+  const mergeButtonSelectorInput = document.getElementById('mergeButtonSelector');
   const statusDiv = document.getElementById('status');
 
   chrome.storage.sync.get(
@@ -63,25 +61,19 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (result.allowedPhrases) {
-        allowedPhrasesInput.value = formatCommaToMultiline(
-          result.allowedPhrases,
-        );
+        allowedPhrasesInput.value = formatCommaToMultiline(result.allowedPhrases);
       } else {
         allowedPhrasesInput.value = DEFAULT_ALLOWED_PHRASES.join('\n');
       }
 
       if (result.disallowedPhrases) {
-        disallowedPhrasesInput.value = formatCommaToMultiline(
-          result.disallowedPhrases,
-        );
+        disallowedPhrasesInput.value = formatCommaToMultiline(result.disallowedPhrases);
       } else {
         disallowedPhrasesInput.value = DEFAULT_DISALLOWED_PHRASES.join('\n');
       }
 
       if (result.exceptionPhrases) {
-        exceptionPhrasesInput.value = formatCommaToMultiline(
-          result.exceptionPhrases,
-        );
+        exceptionPhrasesInput.value = formatCommaToMultiline(result.exceptionPhrases);
       } else {
         exceptionPhrasesInput.value = DEFAULT_EXCEPTION_PHRASES.join('\n');
       }
@@ -97,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         mergeButtonSelectorInput.value = DEFAULT_MERGE_BUTTON_SELECTOR;
       }
-    },
+    }
   );
 
   saveButton.addEventListener('click', function () {
@@ -105,20 +97,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const appToken = appTokenInput.value.trim();
     const channelName = channelInput.value.trim().replace(/^#/, '');
     const allowedPhrases = formatMultilineInput(allowedPhrasesInput.value);
-    const disallowedPhrases = formatMultilineInput(
-      disallowedPhrasesInput.value,
-    );
+    const disallowedPhrases = formatMultilineInput(disallowedPhrasesInput.value);
     const exceptionPhrases = formatMultilineInput(exceptionPhrasesInput.value);
     const bitbucketUrl = bitbucketUrlInput.value.trim();
     const mergeButtonSelector = mergeButtonSelectorInput.value.trim();
 
-    if (
-      slackToken &&
-      appToken &&
-      channelName &&
-      bitbucketUrl &&
-      mergeButtonSelector
-    ) {
+    if (slackToken && appToken && channelName && bitbucketUrl && mergeButtonSelector) {
       statusDiv.textContent = 'Saving options...';
       statusDiv.className = 'status-message status-loading';
 
@@ -153,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
             statusDiv.textContent = '';
             statusDiv.className = 'status-message';
           }, 3000);
-        },
+        }
       );
     } else {
       statusDiv.textContent = literals.options.textFillAllFields;

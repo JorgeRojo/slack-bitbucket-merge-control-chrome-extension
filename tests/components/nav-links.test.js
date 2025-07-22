@@ -3,7 +3,7 @@ import { mockRuntime } from '../setup.js';
 import '../../src/components/nav-links.js';
 
 const waitForRender = async () => {
-  return new Promise((resolve) => setTimeout(resolve, 50));
+  return new Promise(resolve => setTimeout(resolve, 50));
 };
 
 describe('NavLinks Component', () => {
@@ -16,7 +16,7 @@ describe('NavLinks Component', () => {
     originalGetURL = mockRuntime.getURL;
 
     mockRuntime.openOptionsPage = vi.fn();
-    mockRuntime.getURL = vi.fn((path) => `chrome-extension://fake-id/${path}`);
+    mockRuntime.getURL = vi.fn(path => `chrome-extension://fake-id/${path}`);
 
     navLinks = document.createElement('nav-links');
     document.body.appendChild(navLinks);
@@ -79,9 +79,7 @@ describe('NavLinks Component', () => {
     optionsLink.click();
 
     expect(window.open).toHaveBeenCalledTimes(1);
-    expect(window.open).toHaveBeenCalledWith(
-      'chrome-extension://fake-id/options.html',
-    );
+    expect(window.open).toHaveBeenCalledWith('chrome-extension://fake-id/options.html');
 
     window.open = originalWindowOpen;
   });
@@ -94,9 +92,7 @@ describe('NavLinks Component', () => {
     helpLink.click();
 
     expect(window.open).toHaveBeenCalledTimes(1);
-    expect(window.open).toHaveBeenCalledWith(
-      'chrome-extension://fake-id/help.html',
-    );
+    expect(window.open).toHaveBeenCalledWith('chrome-extension://fake-id/help.html');
 
     window.open = originalWindowOpen;
   });

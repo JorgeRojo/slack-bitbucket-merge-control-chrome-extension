@@ -7,11 +7,11 @@ vi.mock('../../src/utils/logger');
 (global as any).fetch = vi.fn(() =>
   Promise.resolve({
     text: () => Promise.resolve('/* mocked CSS */'),
-  }),
+  })
 );
 
 const waitForRender = async (): Promise<void> => {
-  return new Promise((resolve) => setTimeout(resolve, 50));
+  return new Promise(resolve => setTimeout(resolve, 50));
 };
 
 describe('ToggleSwitch Component', () => {
@@ -20,7 +20,9 @@ describe('ToggleSwitch Component', () => {
   beforeEach(async () => {
     (fetch as jest.Mock).mockClear();
 
-    toggleSwitch = document.createElement('toggle-switch') as HTMLElement & { shadowRoot: ShadowRoot };
+    toggleSwitch = document.createElement('toggle-switch') as HTMLElement & {
+      shadowRoot: ShadowRoot;
+    };
     document.body.appendChild(toggleSwitch);
 
     await waitForRender();
@@ -42,7 +44,9 @@ describe('ToggleSwitch Component', () => {
 
   test('should initialize with checked attribute', async () => {
     document.body.removeChild(toggleSwitch);
-    toggleSwitch = document.createElement('toggle-switch') as HTMLElement & { shadowRoot: ShadowRoot };
+    toggleSwitch = document.createElement('toggle-switch') as HTMLElement & {
+      shadowRoot: ShadowRoot;
+    };
     toggleSwitch.setAttribute('checked', '');
     document.body.appendChild(toggleSwitch);
 
@@ -54,7 +58,9 @@ describe('ToggleSwitch Component', () => {
 
   test('should initialize with disabled attribute', async () => {
     document.body.removeChild(toggleSwitch);
-    toggleSwitch = document.createElement('toggle-switch') as HTMLElement & { shadowRoot: ShadowRoot };
+    toggleSwitch = document.createElement('toggle-switch') as HTMLElement & {
+      shadowRoot: ShadowRoot;
+    };
     toggleSwitch.setAttribute('disabled', '');
     document.body.appendChild(toggleSwitch);
 
@@ -68,7 +74,9 @@ describe('ToggleSwitch Component', () => {
     const testLabel = 'Test Label';
 
     document.body.removeChild(toggleSwitch);
-    toggleSwitch = document.createElement('toggle-switch') as HTMLElement & { shadowRoot: ShadowRoot };
+    toggleSwitch = document.createElement('toggle-switch') as HTMLElement & {
+      shadowRoot: ShadowRoot;
+    };
     toggleSwitch.setAttribute('label', testLabel);
     document.body.appendChild(toggleSwitch);
 
@@ -138,8 +146,7 @@ describe('ToggleSwitch Component', () => {
   });
 
   test('should have correct DOM structure', async () => {
-    const container =
-      toggleSwitch.shadowRoot.querySelector('.switch-container');
+    const container = toggleSwitch.shadowRoot.querySelector('.switch-container');
     const switchLabel = toggleSwitch.shadowRoot.querySelector('.switch');
     const input = toggleSwitch.shadowRoot.querySelector('input');
     const slider = toggleSwitch.shadowRoot.querySelector('.slider');

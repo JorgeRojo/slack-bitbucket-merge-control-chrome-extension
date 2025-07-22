@@ -154,9 +154,11 @@ async function loadAndDisplayData({
   optionsLinkContainer,
 }) {
   try {
-    const { slackToken, appToken, channelName } = await chrome.storage.sync.get(
-      ['slackToken', 'appToken', 'channelName'],
-    );
+    const { slackToken, appToken, channelName } = await chrome.storage.sync.get([
+      'slackToken',
+      'appToken',
+      'channelName',
+    ]);
 
     if (!slackToken || !appToken || !channelName) {
       showConfigNeededUI({
@@ -213,65 +215,59 @@ function showConfigNeededUI({
   errorDetailsDiv.id = 'error-details';
   errorDetailsDiv.className = 'error-details';
 
-  chrome.storage.sync.get(
-    ['slackToken', 'appToken', 'channelName'],
-    (result) => {
-      const { slackToken, appToken, channelName } = result;
-      const errors = [];
+  chrome.storage.sync.get(['slackToken', 'appToken', 'channelName'], result => {
+    const { slackToken, appToken, channelName } = result;
+    const errors = [];
 
-      if (!slackToken) {
-        errors.push(literals.popup.errorDetails.slackTokenMissing);
-      }
+    if (!slackToken) {
+      errors.push(literals.popup.errorDetails.slackTokenMissing);
+    }
 
-      if (!appToken) {
-        errors.push(literals.popup.errorDetails.appTokenMissing);
-      }
+    if (!appToken) {
+      errors.push(literals.popup.errorDetails.appTokenMissing);
+    }
 
-      if (!channelName) {
-        errors.push(literals.popup.errorDetails.channelNameMissing);
-      }
+    if (!channelName) {
+      errors.push(literals.popup.errorDetails.channelNameMissing);
+    }
 
-      if (errors.length === 0) {
-        errors.push(literals.popup.errorDetails.configIncomplete);
-      }
+    if (errors.length === 0) {
+      errors.push(literals.popup.errorDetails.configIncomplete);
+    }
 
-      errorDetailsDiv.innerHTML = `
+    errorDetailsDiv.innerHTML = `
       <h3>Configuration Issues:</h3>
       <ul>
-        ${errors.map((error) => `<li>${error}</li>`).join('')}
+        ${errors.map(error => `<li>${error}</li>`).join('')}
       </ul>
     `;
 
-      const popupContent = document.querySelector('.popup-content');
-      const existingErrorDetails = document.getElementById('error-details');
+    const popupContent = document.querySelector('.popup-content');
+    const existingErrorDetails = document.getElementById('error-details');
 
-      if (existingErrorDetails) {
-        existingErrorDetails.remove();
-      }
+    if (existingErrorDetails) {
+      existingErrorDetails.remove();
+    }
 
-      if (popupContent) {
-        popupContent.appendChild(errorDetailsDiv);
-      }
+    if (popupContent) {
+      popupContent.appendChild(errorDetailsDiv);
+    }
 
-      updateUI({
-        statusIcon,
-        statusText,
-        openOptionsButton,
-        slackChannelLink,
-        matchingMessageDiv,
-        optionsLinkContainer,
-        state: MERGE_STATUS.CONFIG_NEEDED,
-        message: literals.popup.errorDetails.textConfigNeeded,
-      });
-    },
-  );
+    updateUI({
+      statusIcon,
+      statusText,
+      openOptionsButton,
+      slackChannelLink,
+      matchingMessageDiv,
+      optionsLinkContainer,
+      state: MERGE_STATUS.CONFIG_NEEDED,
+      message: literals.popup.errorDetails.textConfigNeeded,
+    });
+  });
 }
 
 async function setupSlackChannelLink(slackChannelLink) {
-  const { channelId, teamId } = await chrome.storage.local.get([
-    'channelId',
-    'teamId',
-  ]);
+  const { channelId, teamId } = await chrome.storage.local.get(['channelId', 'teamId']);
 
   if (channelId && teamId) {
     slackChannelLink.href = `${SLACK_BASE_URL}${teamId}/${channelId}`;
@@ -286,9 +282,7 @@ async function showMergeStatus({
   matchingMessageDiv,
   optionsLinkContainer,
 }) {
-  const { lastKnownMergeState } = await chrome.storage.local.get(
-    'lastKnownMergeState',
-  );
+  const { lastKnownMergeState } = await chrome.storage.local.get('lastKnownMergeState');
 
   if (!lastKnownMergeState?.mergeStatus) {
     showLoadingUI({
@@ -302,11 +296,7 @@ async function showMergeStatus({
     return;
   }
 
-  const {
-    mergeStatus: status,
-    lastSlackMessage,
-    appStatus,
-  } = lastKnownMergeState;
+  const { mergeStatus: status, lastSlackMessage, appStatus } = lastKnownMergeState;
 
   if (appStatus === APP_STATUS.CHANNEL_NOT_FOUND) {
     updateUI({
@@ -413,10 +403,7 @@ function setupEventListeners({
   });
 
   chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (
-      namespace === 'local' &&
-      (changes.lastKnownMergeState || changes.lastMatchingMessage)
-    ) {
+    if (namespace === 'local' && (changes.lastKnownMergeState || changes.lastMatchingMessage)) {
       loadAndDisplayData({
         statusIcon,
         statusText,

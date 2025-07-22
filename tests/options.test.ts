@@ -48,7 +48,7 @@ describe('Options Page', () => {
     vi.resetAllMocks();
 
     // Reset mock elements
-    Object.keys(mockElements).forEach((key) => {
+    Object.keys(mockElements).forEach(key => {
       if (key === 'save') {
         mockElements[key].addEventListener = vi.fn();
       } else if (key === 'status') {
@@ -89,7 +89,7 @@ describe('Options Page', () => {
     // Verify that the event listener was added
     expect(document.addEventListener).toHaveBeenCalledWith(
       'DOMContentLoaded',
-      expect.any(Function),
+      expect.any(Function)
     );
 
     // Get the DOMContentLoaded handler
@@ -99,10 +99,7 @@ describe('Options Page', () => {
     domContentLoadedHandler();
 
     // Verify that save button event listener was added
-    expect(mockElements.save.addEventListener).toHaveBeenCalledWith(
-      'click',
-      expect.any(Function),
-    );
+    expect(mockElements.save.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
   });
 
   test('should load default values when no stored values exist', async () => {
@@ -123,19 +120,11 @@ describe('Options Page', () => {
 
     // Verify default values were set
     expect(mockElements.channelName.value).toBe(DEFAULT_CHANNEL_NAME);
-    expect(mockElements.allowedPhrases.value).toBe(
-      DEFAULT_ALLOWED_PHRASES.join('\n'),
-    );
-    expect(mockElements.disallowedPhrases.value).toBe(
-      DEFAULT_DISALLOWED_PHRASES.join('\n'),
-    );
-    expect(mockElements.exceptionPhrases.value).toBe(
-      DEFAULT_EXCEPTION_PHRASES.join('\n'),
-    );
+    expect(mockElements.allowedPhrases.value).toBe(DEFAULT_ALLOWED_PHRASES.join('\n'));
+    expect(mockElements.disallowedPhrases.value).toBe(DEFAULT_DISALLOWED_PHRASES.join('\n'));
+    expect(mockElements.exceptionPhrases.value).toBe(DEFAULT_EXCEPTION_PHRASES.join('\n'));
     expect(mockElements.bitbucketUrl.value).toBe(DEFAULT_BITBUCKET_URL);
-    expect(mockElements.mergeButtonSelector.value).toBe(
-      DEFAULT_MERGE_BUTTON_SELECTOR,
-    );
+    expect(mockElements.mergeButtonSelector.value).toBe(DEFAULT_MERGE_BUTTON_SELECTOR);
   });
 
   test('should load stored values when they exist', async () => {
@@ -168,13 +157,9 @@ describe('Options Page', () => {
     expect(mockElements.appToken.value).toBe('test-app-token');
     expect(mockElements.channelName.value).toBe('test-channel');
     expect(mockElements.allowedPhrases.value).toBe('phrase1\nphrase2');
-    expect(mockElements.disallowedPhrases.value).toBe(
-      'disallowed1\ndisallowed2',
-    );
+    expect(mockElements.disallowedPhrases.value).toBe('disallowed1\ndisallowed2');
     expect(mockElements.exceptionPhrases.value).toBe('exception1\nexception2');
-    expect(mockElements.bitbucketUrl.value).toBe(
-      'https://test-bitbucket-url.com/*',
-    );
+    expect(mockElements.bitbucketUrl.value).toBe('https://test-bitbucket-url.com/*');
     expect(mockElements.mergeButtonSelector.value).toBe('.test-selector');
   });
 
@@ -189,8 +174,7 @@ describe('Options Page', () => {
     domContentLoadedHandler();
 
     // Get the save button click handler
-    const saveClickHandler =
-      (mockElements.save.addEventListener as jest.Mock).mock.calls[0][1];
+    const saveClickHandler = (mockElements.save.addEventListener as jest.Mock).mock.calls[0][1];
 
     // Set input values
     mockElements.slackToken.value = 'test-slack-token';
@@ -217,7 +201,7 @@ describe('Options Page', () => {
         bitbucketUrl: 'https://test-bitbucket-url.com/*',
         mergeButtonSelector: '.test-selector',
       },
-      expect.any(Function),
+      expect.any(Function)
     );
 
     // Get the storage.sync.set callback
@@ -227,16 +211,11 @@ describe('Options Page', () => {
     await storageSetCallback();
 
     // Verify status message was updated to success
-    expect(mockElements.status.textContent).toBe(
-      literals.options.textOptionsSaved,
-    );
+    expect(mockElements.status.textContent).toBe(literals.options.textOptionsSaved);
     expect(mockElements.status.className).toBe('status-message status-success');
 
     // Verify local storage was cleared
-    expect(mockStorage.local.remove).toHaveBeenCalledWith([
-      'channelId',
-      'lastFetchTs',
-    ]);
+    expect(mockStorage.local.remove).toHaveBeenCalledWith(['channelId', 'lastFetchTs']);
 
     // Verify runtime messages were sent
     expect(mockRuntime.sendMessage).toHaveBeenCalledWith({
@@ -272,8 +251,7 @@ describe('Options Page', () => {
     domContentLoadedHandler();
 
     // Get the save button click handler
-    const saveClickHandler =
-      (mockElements.save.addEventListener as jest.Mock).mock.calls[0][1];
+    const saveClickHandler = (mockElements.save.addEventListener as jest.Mock).mock.calls[0][1];
 
     // Set incomplete input values (missing slackToken)
     mockElements.slackToken.value = '';
@@ -286,9 +264,7 @@ describe('Options Page', () => {
     saveClickHandler();
 
     // Verify error message was shown
-    expect(mockElements.status.textContent).toBe(
-      literals.options.textFillAllFields,
-    );
+    expect(mockElements.status.textContent).toBe(literals.options.textFillAllFields);
     expect(mockElements.status.className).toBe('status-message status-error');
 
     // Verify storage.sync.set was not called
@@ -306,8 +282,7 @@ describe('Options Page', () => {
     domContentLoadedHandler();
 
     // Get the save button click handler
-    const saveClickHandler =
-      (mockElements.save.addEventListener as jest.Mock).mock.calls[0][1];
+    const saveClickHandler = (mockElements.save.addEventListener as jest.Mock).mock.calls[0][1];
 
     // Set input values with leading hash in channel name
     mockElements.slackToken.value = 'test-slack-token';
@@ -327,7 +302,7 @@ describe('Options Page', () => {
       expect.objectContaining({
         channelName: 'test-channel', // Hash should be removed
       }),
-      expect.any(Function),
+      expect.any(Function)
     );
   });
 
@@ -342,8 +317,7 @@ describe('Options Page', () => {
     domContentLoadedHandler();
 
     // Get the save button click handler
-    const saveClickHandler =
-      (mockElements.save.addEventListener as jest.Mock).mock.calls[0][1];
+    const saveClickHandler = (mockElements.save.addEventListener as jest.Mock).mock.calls[0][1];
 
     // Set input values with extra whitespace and empty lines
     mockElements.slackToken.value = 'test-slack-token';
@@ -363,7 +337,7 @@ describe('Options Page', () => {
       expect.objectContaining({
         allowedPhrases: 'phrase1,phrase2',
       }),
-      expect.any(Function),
+      expect.any(Function)
     );
   });
 });

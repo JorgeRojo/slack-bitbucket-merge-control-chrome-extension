@@ -17,8 +17,8 @@ const BitbucketMergeController = (() => {
   let mergeButtonObserver: MutationObserver | null = null;
 
   function disableMergeButton(
-    mergeButton: MergeButtonWithHandler, 
-    channelName: string | undefined, 
+    mergeButton: MergeButtonWithHandler,
+    channelName: string | undefined,
     mergeStatus: keyof typeof MERGE_STATUS
   ): void {
     if (mergeStatus === MERGE_STATUS.EXCEPTION) {
@@ -29,11 +29,7 @@ const BitbucketMergeController = (() => {
     }
 
     if (mergeButton._customMergeHandler) {
-      mergeButton.removeEventListener(
-        'click',
-        mergeButton._customMergeHandler,
-        true,
-      );
+      mergeButton.removeEventListener('click', mergeButton._customMergeHandler, true);
     }
 
     mergeButton._customMergeHandler = (event: MouseEvent) => {
@@ -58,11 +54,7 @@ const BitbucketMergeController = (() => {
       }
     };
 
-    mergeButton.addEventListener(
-      'click',
-      mergeButton._customMergeHandler,
-      true,
-    );
+    mergeButton.addEventListener('click', mergeButton._customMergeHandler, true);
   }
 
   function enableMergeButton(mergeButton: MergeButtonWithHandler): void {
@@ -72,23 +64,17 @@ const BitbucketMergeController = (() => {
 
     if (!mergeButton._customMergeHandler) return;
 
-    mergeButton.removeEventListener(
-      'click',
-      mergeButton._customMergeHandler,
-      true,
-    );
+    mergeButton.removeEventListener('click', mergeButton._customMergeHandler, true);
     mergeButton._customMergeHandler = undefined;
   }
 
   async function applyMergeButtonLogic(
-    mergeStatus: keyof typeof MERGE_STATUS, 
+    mergeStatus: keyof typeof MERGE_STATUS,
     channelName: string | undefined
   ): Promise<void> {
-    const { mergeButtonSelector } = await chrome.storage.sync.get(
-      'mergeButtonSelector',
-    );
+    const { mergeButtonSelector } = await chrome.storage.sync.get('mergeButtonSelector');
     const mergeButton = document.querySelector(
-      mergeButtonSelector || '.merge-button-container > .merge-button',
+      mergeButtonSelector || '.merge-button-container > .merge-button'
     ) as MergeButtonWithHandler | null;
 
     if (!mergeButton) {
@@ -105,10 +91,7 @@ const BitbucketMergeController = (() => {
   function applyInitialMergeState(): void {
     chrome.storage.local.get(
       ['lastKnownMergeState', 'featureEnabled'],
-      (result: { 
-        lastKnownMergeState?: LastKnownMergeState; 
-        featureEnabled?: boolean 
-      }) => {
+      (result: { lastKnownMergeState?: LastKnownMergeState; featureEnabled?: boolean }) => {
         if (result.lastKnownMergeState) {
           const { mergeStatus, channelName } = result.lastKnownMergeState;
 
@@ -118,20 +101,18 @@ const BitbucketMergeController = (() => {
             applyMergeButtonLogic(mergeStatus, channelName);
           }
         }
-      },
+      }
     );
   }
 
   async function observeMergeButton(): Promise<void> {
     const targetNode = document.body;
     const config: MutationObserverInit = { childList: true, subtree: true };
-    const { mergeButtonSelector } = await chrome.storage.sync.get(
-      'mergeButtonSelector',
-    );
+    const { mergeButtonSelector } = await chrome.storage.sync.get('mergeButtonSelector');
 
     const callback = function (_mutationsList: MutationRecord[], observer: MutationObserver) {
       const mergeButton = document.querySelector(
-        mergeButtonSelector || '.merge-button-container > .merge-button',
+        mergeButtonSelector || '.merge-button-container > .merge-button'
       );
       if (mergeButton) {
         observer.disconnect();
@@ -149,7 +130,10 @@ const BitbucketMergeController = (() => {
       if (payload.featureEnabled === false) {
         applyMergeButtonLogic(MERGE_STATUS.ALLOWED, payload.channelName);
       } else {
-        applyMergeButtonLogic(payload.mergeStatus as keyof typeof MERGE_STATUS, payload.channelName);
+        applyMergeButtonLogic(
+          payload.mergeStatus as keyof typeof MERGE_STATUS,
+          payload.channelName
+        );
       }
     }
   }

@@ -81,7 +81,7 @@ global.WebSocket = vi.fn().mockImplementation(() => ({
 
 global.fetch = vi.fn();
 
-global.requestAnimationFrame = vi.fn((callback) => {
+global.requestAnimationFrame = vi.fn(callback => {
   callback();
   return 1;
 });

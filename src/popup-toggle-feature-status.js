@@ -21,7 +21,7 @@ function updateCountdownText(element, timeLeft) {
 }
 
 function updateCountdownDisplay(timeLeft) {
-  chrome.storage.local.get(['featureEnabled'], (result) => {
+  chrome.storage.local.get(['featureEnabled'], result => {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled) {
@@ -35,36 +35,30 @@ function updateCountdownDisplay(timeLeft) {
 
 function checkCountdownStatus() {
   try {
-    chrome.runtime.sendMessage(
-      { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
-      (response) => {
-        if (chrome.runtime.lastError) {
-          Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
-            silentMessages: [
-              ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-              ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
-            ],
-          });
-          return;
-        }
+    chrome.runtime.sendMessage({ action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS }, response => {
+      if (chrome.runtime.lastError) {
+        Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
+          silentMessages: [
+            ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+            ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
+          ],
+        });
+        return;
+      }
 
-        if (!response?.isCountdownActive) return;
+      if (!response?.isCountdownActive) return;
 
-        updateCountdownDisplay(response.timeLeft);
-      },
-    );
+      updateCountdownDisplay(response.timeLeft);
+    });
   } catch (error) {
     Logger.error(error, 'Popup', {
-      silentMessages: [
-        ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-        ERROR_MESSAGES.MESSAGE_PORT_CLOSED,
-      ],
+      silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.MESSAGE_PORT_CLOSED],
     });
   }
 }
 
 async function initializeToggle(toggleElement) {
-  chrome.storage.local.get(['featureEnabled', 'reactivationTime'], (result) => {
+  chrome.storage.local.get(['featureEnabled', 'reactivationTime'], result => {
     const isEnabled = result.featureEnabled !== false;
 
     if (isEnabled) {
@@ -93,7 +87,7 @@ async function initializeToggle(toggleElement) {
 }
 
 function setupToggleEventListeners(featureToggle) {
-  featureToggle.addEventListener('toggle', (event) => {
+  featureToggle.addEventListener('toggle', event => {
     const isChecked = event.detail.checked;
     chrome.storage.local.set({ featureEnabled: isChecked });
 
@@ -103,7 +97,7 @@ function setupToggleEventListeners(featureToggle) {
           action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
           enabled: isChecked,
         },
-        (_response) => {
+        _response => {
           if (chrome.runtime.lastError) {
             Logger.error(new Error(chrome.runtime.lastError.message), 'Popup', {
               silentMessages: [
@@ -113,7 +107,7 @@ function setupToggleEventListeners(featureToggle) {
             });
             return;
           }
-        },
+        }
       );
     } catch (error) {
       Logger.error(error, 'Popup', {
@@ -141,7 +135,7 @@ function handleBackgroundMessages(request, { featureToggle }) {
 }
 
 function handleCountdownUpdate(request) {
-  chrome.storage.local.get(['featureEnabled'], (result) => {
+  chrome.storage.local.get(['featureEnabled'], result => {
     const isEnabled = result.featureEnabled !== false;
 
     if (!isEnabled) {

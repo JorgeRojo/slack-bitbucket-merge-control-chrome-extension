@@ -59,7 +59,6 @@
   --ft-form-item-padding-x: 12px;
   --ft-form-item-border-wight: 1px;
   --ft-form-item-border-color: var(--ft-color-grey-1);
-  --ft-form-item-border: var(--ft-form-item-border-wight) solid
-    var(--ft-form-item-border-color);
+  --ft-form-item-border: var(--ft-form-item-border-wight) solid var(--ft-form-item-border-color);
   --ft-form-item-bg-color: var(--ft-color-lightest);
 }

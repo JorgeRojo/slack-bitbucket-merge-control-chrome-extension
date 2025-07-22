@@ -91,7 +91,7 @@ class MockWebSocket {
   onclose: (() => void) | null = null;
   onerror: ((error: any) => void) | null = null;
   readyState: number = WebSocket.OPEN;
-  
+
   addEventListener = vi.fn();
   removeEventListener = vi.fn();
   send = vi.fn();

@@ -7,10 +7,7 @@ vi.mock('../src/utils/logger');
 
 describe('Content Script Structure', () => {
   test('should have proper encapsulation pattern', () => {
-    const contentScript = fs.readFileSync(
-      path.join(__dirname, '../src/content.js'),
-      'utf8',
-    );
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
 
     expect(contentScript).toContain('BitbucketMergeController');
     expect(contentScript).toContain('(() => {');
@@ -21,19 +18,13 @@ describe('Content Script Structure', () => {
   });
 
   test('should initialize the controller', () => {
-    const contentScript = fs.readFileSync(
-      path.join(__dirname, '../src/content.js'),
-      'utf8',
-    );
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
 
     expect(contentScript).toContain('BitbucketMergeController.init()');
   });
 
   test('should have all required functions encapsulated', () => {
-    const contentScript = fs.readFileSync(
-      path.join(__dirname, '../src/content.js'),
-      'utf8',
-    );
+    const contentScript = fs.readFileSync(path.join(__dirname, '../src/content.js'), 'utf8');
 
     expect(contentScript).toContain('function disableMergeButton');
     expect(contentScript).toContain('function enableMergeButton');
@@ -58,7 +49,7 @@ describe('Content Script Initialization', () => {
   };
 
   // Mock MutationObserver
-  (global as any).MutationObserver = vi.fn(function(this: any, callback: Function) {
+  (global as any).MutationObserver = vi.fn(function (this: any, callback: Function) {
     this.observe = vi.fn();
     this.disconnect = vi.fn();
     this.callback = callback;
@@ -110,7 +101,7 @@ describe('Content Script Initialization', () => {
       expect.objectContaining({
         childList: true,
         subtree: true,
-      }),
+      })
     );
   });
 
@@ -130,7 +121,7 @@ describe('Content Script Initialization', () => {
     expect(observer.disconnect).toHaveBeenCalled();
     expect(mockStorage.local.get).toHaveBeenCalledWith(
       ['lastKnownMergeState', 'featureEnabled'],
-      expect.any(Function),
+      expect.any(Function)
     );
   });
 
@@ -152,9 +143,7 @@ describe('Content Script Initialization', () => {
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
 
-    expect(document.querySelector).toHaveBeenCalledWith(
-      '.merge-button-container > .merge-button',
-    );
+    expect(document.querySelector).toHaveBeenCalledWith('.merge-button-container > .merge-button');
   });
 });
 
@@ -229,7 +218,7 @@ describe('Content Script Message Handling', () => {
         featureEnabled: true,
         mergeStatus: 'allowed',
         channelName: 'test-channel',
-      }
+      },
     });
 
     expect(mockMergeButton.removeEventListener).not.toHaveBeenCalled();
@@ -253,7 +242,7 @@ describe('Content Script Message Handling', () => {
         featureEnabled: true,
         mergeStatus: 'disallowed',
         channelName: 'test-channel',
-      }
+      },
     });
   });
 
@@ -275,7 +264,7 @@ describe('Content Script Message Handling', () => {
         featureEnabled: true,
         mergeStatus: 'exception',
         channelName: 'test-channel',
-      }
+      },
     });
   });
 
@@ -298,7 +287,7 @@ describe('Content Script Message Handling', () => {
         featureEnabled: true,
         mergeStatus: 'allowed',
         channelName: 'test-channel',
-      }
+      },
     });
   });
 
@@ -320,7 +309,7 @@ describe('Content Script Message Handling', () => {
         featureEnabled: false,
         mergeStatus: 'disallowed',
         channelName: 'test-channel',
-      }
+      },
     });
   });
 
@@ -337,7 +326,7 @@ describe('Content Script Message Handling', () => {
         featureEnabled: true,
         mergeStatus: 'disallowed',
         channelName: 'test-channel',
-      }
+      },
     });
   });
 });
@@ -357,7 +346,7 @@ describe('Initial Merge State Application', () => {
   };
 
   // Mock MutationObserver
-  (global as any).MutationObserver = vi.fn(function(this: any, callback: Function) {
+  (global as any).MutationObserver = vi.fn(function (this: any, callback: Function) {
     this.observe = vi.fn();
     this.disconnect = vi.fn();
     this.callback = callback;
@@ -547,7 +536,7 @@ describe('Merge Button Event Handlers', () => {
         featureEnabled: true,
         mergeStatus: 'disallowed',
         channelName: 'test-channel',
-      }
+      },
     });
   });
 
@@ -570,7 +559,7 @@ describe('Merge Button Event Handlers', () => {
         featureEnabled: true,
         mergeStatus: 'exception',
         channelName: 'test-channel',
-      }
+      },
     });
   });
 });

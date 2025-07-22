@@ -29,7 +29,7 @@ describe('ErrorHandler', () => {
     ErrorHandler.handle(originalError, { component: 'Test' });
 
     const errorCall = console.error.mock.calls.find(
-      (call) => call[0] === '[Test]' && call[1] === originalError,
+      call => call[0] === '[Test]' && call[1] === originalError
     );
 
     expect(errorCall).toBeDefined();
@@ -94,10 +94,7 @@ describe('ErrorHandler', () => {
     ErrorHandler.handle(error, { callback });
 
     expect(callback).toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalledWith(
-      'Error in callback handler',
-      callbackError,
-    );
+    expect(console.error).toHaveBeenCalledWith('Error in callback handler', callbackError);
   });
 
   test('should handle null and undefined errors gracefully', () => {
@@ -115,7 +112,7 @@ describe('ErrorHandler', () => {
     const result = ErrorHandler.handle(originalError);
 
     const errorCall = console.error.mock.calls.find(
-      (call) => call[0] === '[General]' && call[1] === originalError,
+      call => call[0] === '[General]' && call[1] === originalError
     );
 
     expect(errorCall[1]).toBe(originalError);
@@ -134,9 +131,7 @@ describe('ErrorHandler', () => {
   });
 
   test('should silence errors with partial message matches', () => {
-    const error = new Error(
-      'Could not establish connection. Receiving end does not exist.',
-    );
+    const error = new Error('Could not establish connection. Receiving end does not exist.');
     const silentMessages = ['Receiving end does not exist'];
 
     const result = ErrorHandler.handle(error, { silentMessages });
@@ -162,9 +157,7 @@ describe('ErrorHandler', () => {
     ];
 
     const error1 = new Error('Receiving end does not exist');
-    const error2 = new Error(
-      'The message port closed before a response was received',
-    );
+    const error2 = new Error('The message port closed before a response was received');
     const error3 = new Error('Some other error');
 
     const result1 = ErrorHandler.handle(error1, { silentMessages });

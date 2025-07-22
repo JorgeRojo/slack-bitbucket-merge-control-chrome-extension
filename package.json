@@ -3,6 +3,8 @@
   "devDependencies": {
     "@types/chrome": "^0.1.1",
     "@types/node": "^20.11.30",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^10.1.5",
@@ -11,8 +13,8 @@
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "prettier": "^3.6.2",
-    "typescript": "^5.4.5",
     "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
     "vitest": "^3.2.4"
   },
   "type": "module",
