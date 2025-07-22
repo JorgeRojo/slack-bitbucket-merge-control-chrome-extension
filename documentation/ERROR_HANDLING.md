@@ -14,8 +14,7 @@ Error messages are now separated into two categories in `src/constants.js`:
 export const ERROR_MESSAGES = {
   // Chrome extension connection errors (silenceable)
   RECEIVING_END_NOT_EXIST: 'Receiving end does not exist',
-  CONNECTION_FAILED:
-    'Could not establish connection. Receiving end does not exist',
+  CONNECTION_FAILED: 'Could not establish connection. Receiving end does not exist',
   MESSAGE_PORT_CLOSED: 'The message port closed before a response was received',
 
   // Slack API errors (internal)
@@ -44,12 +43,9 @@ export const USER_ERROR_MESSAGES = {
   COULD_NOT_DETERMINE_STATUS: 'Could not determine status',
 
   // Configuration errors
-  SLACK_TOKEN_MISSING:
-    'Slack Bot Token is missing. Please add it in the options page',
-  APP_TOKEN_MISSING:
-    'Slack App Token is missing. Please add it in the options page',
-  CHANNEL_NAME_MISSING:
-    'Channel name is missing. Please add it in the options page',
+  SLACK_TOKEN_MISSING: 'Slack Bot Token is missing. Please add it in the options page',
+  APP_TOKEN_MISSING: 'Slack App Token is missing. Please add it in the options page',
+  CHANNEL_NAME_MISSING: 'Channel name is missing. Please add it in the options page',
   CONFIGURATION_INCOMPLETE:
     'Configuration is incomplete. Please check all required fields in the options page',
 
@@ -251,8 +247,7 @@ function updateUI(appStatus) {
       statusElement.textContent = USER_ERROR_MESSAGES.CONFIG_NEEDED;
       break;
     default:
-      statusElement.textContent =
-        USER_ERROR_MESSAGES.COULD_NOT_DETERMINE_STATUS;
+      statusElement.textContent = USER_ERROR_MESSAGES.COULD_NOT_DETERMINE_STATUS;
   }
 }
 ```
@@ -315,10 +310,7 @@ errorElement.textContent = USER_ERROR_MESSAGES.NEW_USER_ERROR;
 ## Testing
 
 ```javascript
-import {
-  CONSOLE_ERROR_MESSAGES,
-  USER_ERROR_MESSAGES,
-} from '../src/constants.js';
+import { CONSOLE_ERROR_MESSAGES, USER_ERROR_MESSAGES } from '../src/constants.js';
 
 test('should handle console errors with silentMessages', () => {
   expect(() => {

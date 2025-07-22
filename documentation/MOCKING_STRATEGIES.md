@@ -31,9 +31,7 @@ beforeEach(() => {
 
 test('should do something', () => {
   // Use the global chrome mock
-  chrome.storage.local.get.mockImplementation(() =>
-    Promise.resolve({ key: 'value' }),
-  );
+  chrome.storage.local.get.mockImplementation(() => Promise.resolve({ key: 'value' }));
   // ...
 });
 ```
@@ -65,9 +63,7 @@ global.chrome = {
 
 test('should do something', () => {
   // Use the local mock
-  mockStorage.local.get.mockImplementation(() =>
-    Promise.resolve({ key: 'value' }),
-  );
+  mockStorage.local.get.mockImplementation(() => Promise.resolve({ key: 'value' }));
   // ...
 });
 ```

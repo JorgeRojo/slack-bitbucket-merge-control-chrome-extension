@@ -2,6 +2,8 @@
 
 This is a Chrome extension designed to read messages from specified Slack channels (both public and private) and control merge button availability on Bitbucket pull request pages. The extension popup displays the current merge status and the latest matching message that determined the merge control decision.
 
+**🎉 Now fully migrated to TypeScript!** This project has been successfully migrated from JavaScript to TypeScript, providing better type safety, improved development experience, and enhanced code maintainability.
+
 ## Features
 
 - Reads messages from a configurable Slack channel.
@@ -9,6 +11,7 @@ This is a Chrome extension designed to read messages from specified Slack channe
 - Receives messages in real-time via Slack Socket Mode.
 - Displays the current merge status and latest matching message in the extension popup.
 - **Bitbucket Integration:** Controls the merge button on Bitbucket pull request pages based on keywords in Slack messages.
+- **TypeScript Support:** Full type safety and enhanced development experience.
 
 ## Code Quality
 
@@ -71,7 +74,7 @@ All project documentation is organized in the `documentation/` directory:
 - **[CODE_STYLE.md](./documentation/CODE_STYLE.md)** - Detailed coding style rules and best practices
 - **[TESTING_GUIDELINES.md](./documentation/TESTING_GUIDELINES.md)** - Testing strategies and guidelines
 - **[MOCKING_STRATEGIES.md](./documentation/MOCKING_STRATEGIES.md)** - Mocking patterns and strategies for tests
-- **[TYPESCRIPT_MIGRATION.md](./documentation/TYPESCRIPT_MIGRATION.md)** - Plan for migrating the project to TypeScript
+- **[TYPESCRIPT_MIGRATION.md](./documentation/TYPESCRIPT_MIGRATION.md)** - TypeScript migration status and documentation
 
 ## Installation
 

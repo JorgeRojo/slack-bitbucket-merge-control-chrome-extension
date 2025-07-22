@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to this project! This document outlines the coding standards, development workflow, and best practices to follow when contributing.
 
+**Note**: This project has been migrated to TypeScript. All new code should be written in TypeScript following the established patterns and type definitions.
+
 ## Code Style and Standards
 
 > **Important**: All contributors must follow the detailed style guidelines in [CODE_STYLE.md](./CODE_STYLE.md).
@@ -15,7 +17,7 @@ Thank you for your interest in contributing to this project! This document outli
 - Add comments for complex logic, but prefer self-documenting code
 - Use English for all code, comments, and documentation
 
-### JavaScript Style
+### TypeScript Style
 
 - We use ESLint and Prettier for code formatting and linting
 - Run `npm run format` before committing to ensure consistent formatting
@@ -28,6 +30,9 @@ Thank you for your interest in contributing to this project! This document outli
   - Use destructuring where appropriate
   - Use async/await for asynchronous code
   - Use camelCase for variables and functions
+  - Always provide explicit types for function parameters and return values
+  - Use interfaces for object shapes and type aliases for unions
+  - Avoid `any` type - use `unknown` or specific types instead
   - Use PascalCase for classes and components
   - Use UPPER_SNAKE_CASE for constants
 

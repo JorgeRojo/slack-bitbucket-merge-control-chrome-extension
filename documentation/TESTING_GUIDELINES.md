@@ -30,7 +30,7 @@ beforeEach(() => {
 2. **Mock implementations for specific test cases**:
 
 ```javascript
-chrome.storage.local.get.mockImplementation((keys) => {
+chrome.storage.local.get.mockImplementation(keys => {
   if (Array.isArray(keys) && keys.includes('appStatus')) {
     return Promise.resolve({
       appStatus: 'config_error',
@@ -46,7 +46,7 @@ chrome.storage.local.get.mockImplementation((keys) => {
 expect(chrome.storage.local.set).toHaveBeenCalledWith(
   expect.objectContaining({
     appStatus: 'web_socket_error',
-  }),
+  })
 );
 ```
 
@@ -58,7 +58,7 @@ Here's an example from `tests/background/background-status-handling.test.js`:
 describe('App Status Error Handling', () => {
   beforeEach(() => {
     // Reset mocks before each test
-    vi.spyOn(chrome.storage.local, 'get').mockImplementation((keys) => {
+    vi.spyOn(chrome.storage.local, 'get').mockImplementation(keys => {
       if (Array.isArray(keys) && keys.includes('messages')) {
         return Promise.resolve({
           messages: [],
@@ -77,12 +77,8 @@ describe('App Status Error Handling', () => {
       });
     });
 
-    vi.spyOn(chrome.storage.local, 'set').mockImplementation(() =>
-      Promise.resolve(),
-    );
-    vi.spyOn(chrome.runtime, 'sendMessage').mockImplementation(() =>
-      Promise.resolve(),
-    );
+    vi.spyOn(chrome.storage.local, 'set').mockImplementation(() => Promise.resolve());
+    vi.spyOn(chrome.runtime, 'sendMessage').mockImplementation(() => Promise.resolve());
   });
 
   test('should set merge status to ERROR when app status is UNKNOWN_ERROR', async () => {
@@ -101,7 +97,7 @@ describe('App Status Error Handling', () => {
         lastKnownMergeState: expect.objectContaining({
           mergeStatus: MERGE_STATUS.ERROR,
         }),
-      }),
+      })
     );
   });
 });

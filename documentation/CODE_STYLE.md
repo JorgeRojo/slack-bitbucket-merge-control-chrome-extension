@@ -2,6 +2,74 @@
 
 This document provides detailed coding style guidelines for the Slack-Bitbucket Merge Control Chrome Extension project.
 
+## TypeScript
+
+### Type Definitions
+
+- **Interfaces**: Use PascalCase for interface names
+
+  ```typescript
+  interface SlackMessage {
+    text: string;
+    user: string;
+    timestamp: string;
+  }
+  ```
+
+- **Type Aliases**: Use PascalCase for type aliases
+
+  ```typescript
+  type MessageHandler = (message: SlackMessage) => void;
+  type Status = 'active' | 'inactive' | 'pending';
+  ```
+
+- **Enums**: Use PascalCase for enum names and UPPER_SNAKE_CASE for values
+
+  ```typescript
+  enum AppStatus {
+    OK = 'ok',
+    ERROR = 'error',
+    LOADING = 'loading',
+  }
+  ```
+
+### Function Typing
+
+- **Always type function parameters and return values**:
+
+  ```typescript
+  function processMessage(message: SlackMessage): string {
+    return message.text;
+  }
+  ```
+
+- **Use arrow functions with explicit types for callbacks**:
+
+  ```typescript
+  const handleClick = (event: MouseEvent): void => {
+    // Handle click
+  };
+  ```
+
+### Best Practices
+
+- **Avoid `any` type**: Use `unknown` or specific types instead
+- **Use utility types**: Leverage `Partial<T>`, `Pick<T, K>`, `Omit<T, K>` when appropriate
+- **Use generics**: For reusable functions and interfaces
+- **Document complex types**: Add JSDoc comments for interfaces and types
+
+  ```typescript
+  /**
+   * Represents a Slack message with merge control information
+   */
+  interface MergeControlMessage extends SlackMessage {
+    /** Whether this message allows or blocks merging */
+    allowsMerge: boolean;
+    /** Keywords that triggered the merge control decision */
+    matchedKeywords: string[];
+  }
+  ```
+
 ## JavaScript
 
 ### Naming Conventions
@@ -125,8 +193,8 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   // Avoid
   function fetchData() {
     return fetch(url)
-      .then((response) => response.json())
-      .catch((error) => console.error(error));
+      .then(response => response.json())
+      .catch(error => console.error(error));
   }
   ```
 
