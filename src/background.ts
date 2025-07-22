@@ -150,7 +150,6 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
       action: MESSAGE_ACTIONS.UPDATE_MESSAGES,
     });
   } catch (error) {
-
     Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
@@ -177,7 +176,6 @@ async function updateContentScriptMergeState(channelName: string): Promise<void>
         },
       });
     } catch (error) {
-
       Logger.error(toErrorType(error), 'Background', {
         silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
       });
@@ -415,7 +413,6 @@ function updateMergeButtonFromLastKnownMergeState(): void {
             });
           }
         } catch (error) {
-
           Logger.error(toErrorType(error), 'Background', {
             silentMessages: [
               ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
@@ -444,7 +441,6 @@ async function notifyPopupAboutCountdown(timeLeft: number): Promise<void> {
       payload: { timeLeft },
     });
   } catch (error) {
-
     Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
@@ -460,7 +456,6 @@ async function reactivateFeature(): Promise<void> {
       payload: { enabled: true },
     });
   } catch (error) {
-
     Logger.error(toErrorType(error), 'Background', {
       silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
     });
@@ -601,7 +596,6 @@ const messageHandlers: Record<
               payload: { error: error instanceof Error ? error.message : String(error) },
             });
           } catch (sendError) {
-
             Logger.error(toErrorType(sendError), 'Background', {
               silentMessages: [
                 ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,

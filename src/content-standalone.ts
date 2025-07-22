@@ -1,5 +1,3 @@
-
-
 const MERGE_STATUS = {
   ALLOWED: 'allowed',
   DISALLOWED: 'disallowed',
@@ -124,7 +122,6 @@ const BitbucketMergeController = (() => {
   }
 
   function findMergeButton(): HTMLElement | null {
-
     const selectors = [
       '[data-testid="merge-button"]',
       'button[data-testid="merge-button"]',

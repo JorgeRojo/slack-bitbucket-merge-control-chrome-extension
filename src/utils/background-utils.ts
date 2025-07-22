@@ -247,7 +247,6 @@ export async function getPhrasesFromStorage(): Promise<{
       currentExceptionPhrases,
     };
   } catch (error) {
-
     return {
       currentAllowedPhrases: DEFAULT_ALLOWED_PHRASES,
       currentDisallowedPhrases: DEFAULT_DISALLOWED_PHRASES,
