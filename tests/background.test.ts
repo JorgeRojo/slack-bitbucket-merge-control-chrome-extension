@@ -11,7 +11,7 @@ import {
 import { Logger } from '../src/modules/common/utils/logger';
 import { MERGE_STATUS, MESSAGE_ACTIONS, APP_STATUS } from '../src/modules/common/constants';
 import { ChromeRuntimeMessage } from '../src/modules/common/types/chrome';
-import { ProcessedMessage } from '../src/modules/common/types';
+import { ProcessedMessage } from '../src/modules/common/types/app';
 
 // Type definitions for better TypeScript support
 interface MessageRequest {
@@ -51,7 +51,7 @@ process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
 vi.mock('../src/modules/common/utils/logger');
 
 describe('Background Script - Enhanced Coverage Tests', () => {
-  let backgroundModule: typeof import('../src/modules/background');
+  let backgroundModule: typeof import('../src/modules/background/background');
   let messageHandler: (
     request: MessageRequest,
     sender: MessageSender,
@@ -164,7 +164,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       });
     });
 
-    backgroundModule = await import('../src/modules/background');
+    backgroundModule = await import('../src/modules/background/background');
 
     messageHandler = mockRuntime.onMessage.addListener.mock.calls[0]?.[0];
     installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
@@ -976,11 +976,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   describe('Chrome Event Listeners Coverage', () => {
     test('should handle chrome.alarms.onAlarm listener', async () => {
       // Import background to register listeners
-      await import('../src/modules/background');
+      await import('../src/modules/background/background');
 
       // Mock the checkWebSocketConnection function
       const mockCheckWebSocket = vi.fn();
-      vi.doMock('../src/modules/background', () => ({
+      vi.doMock('../src/modules/background/background', () => ({
         checkWebSocketConnection: mockCheckWebSocket,
       }));
 
@@ -995,7 +995,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     test('should handle chrome.storage.onChanged listener for bitbucketUrl', async () => {
       // Import background to register listeners
-      await import('../src/modules/background');
+      await import('../src/modules/background/background');
 
       // Get the storage change handler
       const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
@@ -1024,7 +1024,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       try {
         // Re-import background to trigger production code
         vi.resetModules();
-        await import('../src/modules/background');
+        await import('../src/modules/background/background');
 
         // Get the onInstalled handler
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
@@ -1058,7 +1058,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       try {
         // Re-import background to trigger production code
         vi.resetModules();
-        await import('../src/modules/background');
+        await import('../src/modules/background/background');
 
         // Get the onStartup handler
         const startupHandler = mockRuntime.onStartup.addListener.mock.calls[0]?.[0];
@@ -1083,7 +1083,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       try {
         // Re-import background
         vi.resetModules();
-        await import('../src/modules/background');
+        await import('../src/modules/background/background');
 
         // In test environment, production listeners should not be registered
         // This test verifies the conditional logic works
@@ -1095,7 +1095,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     test('should handle alarm with correct name', async () => {
-      await import('../src/modules/background');
+      await import('../src/modules/background/background');
 
       const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
 
@@ -1111,7 +1111,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     test('should handle storage changes for non-bitbucketUrl keys', async () => {
-      await import('../src/modules/background');
+      await import('../src/modules/background/background');
 
       const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
 
@@ -1132,7 +1132,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     test('should handle storage changes in local namespace', async () => {
-      await import('../src/modules/background');
+      await import('../src/modules/background/background');
 
       const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
 
@@ -1157,7 +1157,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       try {
         vi.resetModules();
-        await import('../src/modules/background');
+        await import('../src/modules/background/background');
 
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
 
@@ -1195,8 +1195,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         const mockSetupWebSocketCheckAlarm = vi.fn();
 
         // Mock the module to return our mocked functions
-        vi.doMock('../src/modules/background', async () => {
-          const actual = await vi.importActual('../src/modules/background');
+        vi.doMock('../src/modules/background/background', async () => {
+          const actual = await vi.importActual('../src/modules/background/background');
           return {
             ...actual,
             connectToSlackSocketMode: mockConnectToSlackSocketMode,
@@ -1207,7 +1207,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         });
 
         vi.resetModules();
-        await import('../src/modules/background');
+        await import('../src/modules/background/background');
 
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
 
@@ -1233,7 +1233,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       try {
         vi.resetModules();
-        await import('../src/modules/background');
+        await import('../src/modules/background/background');
 
         const startupHandler = mockRuntime.onStartup.addListener.mock.calls[0]?.[0];
 
@@ -1249,7 +1249,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     test('should handle checkWebSocketConnection in alarm listener', async () => {
-      await import('../src/modules/background');
+      await import('../src/modules/background/background');
 
       const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
 
@@ -1263,7 +1263,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     test('should handle registerBitbucketContentScript in storage change listener', async () => {
-      await import('../src/modules/background');
+      await import('../src/modules/background/background');
 
       const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
 

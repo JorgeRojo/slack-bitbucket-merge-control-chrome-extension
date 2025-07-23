@@ -2,13 +2,12 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mockStorage, mockRuntime } from './setup';
 import { Logger } from '../src/modules/common/utils/logger';
 import { MERGE_STATUS, APP_STATUS } from '../src/modules/common/constants';
+import { initializeToggleFeatureStatus } from '../src/modules/popup/popup-toggle-feature-status.ts';
+
+// Use vi.hoisted to ensure the mock function is available during hoisting
 
 vi.mock('../src/modules/common/utils/logger');
-vi.mock('../src/modules/popup/popup-toggle-feature-status', () => ({
-  initializeToggleFeatureStatus: mockInitializeToggleFeatureStatus,
-}));
-
-const mockInitializeToggleFeatureStatus = vi.fn();
+vi.mock('../src/modules/popup/popup-toggle-feature-status');
 
 interface MockElement {
   className: string;
@@ -25,6 +24,7 @@ interface MockElement {
   addEventListener: jest.Mock;
   appendChild: jest.Mock;
   remove: jest.Mock;
+  querySelector: jest.Mock;
 }
 
 const createMockElement = (): MockElement => ({
@@ -39,25 +39,12 @@ const createMockElement = (): MockElement => ({
   addEventListener: vi.fn(),
   appendChild: vi.fn(),
   remove: vi.fn(),
+  querySelector: vi.fn(),
 });
 
-interface MockDocument {
-  getElementById: jest.Mock;
-  addEventListener: jest.Mock;
-  createElement: jest.Mock;
-  querySelector: jest.Mock;
-}
-
-const createMockDocument = (): MockDocument => ({
-  getElementById: vi.fn(),
-  addEventListener: vi.fn(),
-  createElement: vi.fn(() => createMockElement()),
-  querySelector: vi.fn(() => createMockElement()),
-});
-
-console.error = vi.fn();
-console.log = vi.fn();
 window.open = vi.fn();
+
+const initializeToggleFeatureStatusMock = vi.mocked(initializeToggleFeatureStatus);
 
 describe('popup.js', () => {
   let mockStatusIcon: MockElement,
@@ -76,8 +63,6 @@ describe('popup.js', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    (console.error as jest.Mock).mockClear();
-    (console.log as jest.Mock).mockClear();
     (Logger.error as jest.Mock).mockClear();
 
     mockStatusIcon = createMockElement();
@@ -86,11 +71,11 @@ describe('popup.js', () => {
     mockSlackChannelLink = createMockElement();
     mockMatchingMessageDiv = createMockElement();
     mockFeatureToggle = createMockElement();
+    // Configure querySelector to return a mock toggle-switch element
+    mockFeatureToggle.querySelector.mockReturnValue(createMockElement());
     mockOptionsLinkContainer = createMockElement();
     mockPopupContent = createMockElement();
     mockErrorDetails = createMockElement();
-
-    (global as any).document = createMockDocument();
 
     (document.getElementById as jest.Mock) = vi.fn((id: string) => {
       switch (id) {
@@ -150,7 +135,7 @@ describe('popup.js', () => {
       storageChangeHandler = handler;
     });
 
-    await import('../src/modules/popup');
+    await import('../src/modules/popup/popup');
   });
 
   afterEach(() => {
@@ -161,7 +146,7 @@ describe('popup.js', () => {
     test('should initialize all UI elements and setup event listeners', async () => {
       await domContentLoadedHandler();
 
-      expect(mockInitializeToggleFeatureStatus).toHaveBeenCalledWith(mockFeatureToggle);
+      expect(initializeToggleFeatureStatusMock).toHaveBeenCalledWith(mockFeatureToggle);
       expect(mockOpenOptionsButton.addEventListener).toHaveBeenCalledWith(
         'click',
         expect.any(Function)
@@ -186,7 +171,7 @@ describe('popup.js', () => {
       await expect(domContentLoadedHandler()).resolves.not.toThrow();
       // In TypeScript version, initializeToggleFeatureStatus is not called when featureToggle is null
       // This is safer behavior than the JavaScript version
-      expect(mockInitializeToggleFeatureStatus).not.toHaveBeenCalled();
+      expect(initializeToggleFeatureStatusMock).not.toHaveBeenCalled();
     });
   });
 
@@ -717,12 +702,12 @@ describe('popup.js', () => {
 
       expect(mockStorage.sync.get).toHaveBeenCalled();
       expect(mockStorage.local.get).toHaveBeenCalled();
-      expect(mockInitializeToggleFeatureStatus).toHaveBeenCalled();
+      expect(initializeToggleFeatureStatusMock).toHaveBeenCalled();
       expect(mockStorage.onChanged.addListener).toHaveBeenCalled();
     });
 
     test('should handle toggle initialization failure gracefully', async () => {
-      mockInitializeToggleFeatureStatus.mockRejectedValue(new Error('Toggle init failed'));
+      initializeToggleFeatureStatusMock.mockRejectedValue(new Error('Toggle init failed'));
 
       await expect(domContentLoadedHandler()).rejects.toThrow('Toggle init failed');
     });
@@ -746,7 +731,7 @@ describe('popup.js', () => {
         });
       });
 
-      mockInitializeToggleFeatureStatus.mockImplementation(() => {
+      initializeToggleFeatureStatusMock.mockImplementation(() => {
         callOrder.push('toggle-init');
         return Promise.resolve();
       });

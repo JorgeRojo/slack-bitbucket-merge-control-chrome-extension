@@ -57,7 +57,7 @@ export default [
       sourceType: 'module',
       parser: typescriptParser,
       parserOptions: {
-        project: './tsconfig.json',
+        project: './tsconfig.eslint.json',
       },
     },
     plugins: {
@@ -83,6 +83,27 @@ export default [
           ignoreRestSiblings: true,
         },
       ],
+    },
+  },
+  // Configuración específica para archivos de prueba
+  {
+    files: ['**/*.test.ts', '**/*.test.js', '**/tests/**/*.ts', '**/tests/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        ...globals.browser,
+        ...globals.node,
+        chrome: 'readonly',
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        jest: 'readonly',
+      },
     },
   },
 ];

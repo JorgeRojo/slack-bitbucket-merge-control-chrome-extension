@@ -1,5 +1,13 @@
 import { Logger } from '../../utils/logger.js';
 
+type ToggleSwitchEvent = CustomEvent<{ checked: boolean }>;
+
+declare global {
+  interface HTMLElementEventMap {
+    toggle: ToggleSwitchEvent;
+  }
+}
+
 class ToggleSwitch extends HTMLElement {
   private _initialized: boolean;
 
@@ -22,8 +30,8 @@ class ToggleSwitch extends HTMLElement {
   async setupEventListeners(): Promise<void> {
     const switchInput = this.shadowRoot?.querySelector('input');
     if (switchInput) {
-      switchInput.addEventListener('change', (e: Event) => {
-        const target = e.target as HTMLInputElement;
+      switchInput.addEventListener('change', (event: Event) => {
+        const target = event.target as HTMLInputElement;
         const isChecked = target.checked;
 
         if (isChecked) {

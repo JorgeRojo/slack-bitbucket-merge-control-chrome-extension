@@ -8,9 +8,9 @@ import {
   updateIconBasedOnCurrentMessages,
   getPhrasesFromStorage,
   processAndStoreMessage,
-} from '../../src/modules/common/utils/background-utils';
+} from '../../src/modules/background/utils/background-utils';
 import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../../src/modules/common/constants';
-import { ProcessedMessage } from '../../src/modules/common/types';
+import { ProcessedMessage } from '../../src/modules/common/types/app';
 import { SlackMessage } from '../../src/modules/common/types/slack';
 
 // Mock Chrome API

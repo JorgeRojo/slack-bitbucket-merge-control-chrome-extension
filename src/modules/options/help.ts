@@ -1,4 +1,4 @@
-import '../common/components/nav-links';
+import '../common/components/nav-links/nav-links';
 
 // Help page initialization
 document.addEventListener('DOMContentLoaded', () => {

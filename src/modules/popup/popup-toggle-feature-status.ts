@@ -1,5 +1,5 @@
 import ToggleSwitch from '../common/components/toggle-switch/toggle-switch';
-import { MESSAGE_ACTIONS } from '../common/constants';
+import { ERROR_MESSAGES, MESSAGE_ACTIONS } from '../common/constants';
 import { Logger } from '../common/utils/logger';
 import { toErrorType } from '../common/utils/type-helpers';
 
@@ -39,7 +39,7 @@ export async function initializeToggleFeatureStatus(
       }
     } catch (error) {
       Logger.error(toErrorType(error), 'toggleSwitch', {
-        silentMessages: ['The message port closed before a response was received'],
+        silentMessages: [ERROR_MESSAGES.MESSAGE_PORT_CLOSED],
       });
     }
   });
@@ -67,7 +67,7 @@ async function checkCountdownStatus(countdownDisplay: HTMLElement): Promise<void
     updateCountdownDisplay(countdownDisplay, response.timeLeft);
   } catch (error) {
     Logger.error(toErrorType(error), 'Popup', {
-      silentMessages: ['The message port closed before a response was received'],
+      silentMessages: [ERROR_MESSAGES.MESSAGE_PORT_CLOSED],
     });
   }
 }

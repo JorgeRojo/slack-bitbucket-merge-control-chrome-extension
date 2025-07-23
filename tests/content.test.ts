@@ -87,7 +87,7 @@ describe('Content Script Initialization', () => {
   });
 
   test('should send bitbucketTabLoaded message on init', async () => {
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     expect(mockRuntime.sendMessage).toHaveBeenCalledWith({
       action: 'bitbucketTabLoaded',
@@ -95,13 +95,13 @@ describe('Content Script Initialization', () => {
   });
 
   test('should set up message listener on init', async () => {
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     expect(mockRuntime.onMessage.addListener).toHaveBeenCalled();
   });
 
   test('should observe for merge button on init', async () => {
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     expect((global as any).MutationObserver).toHaveBeenCalled();
     const observer = (global as any).MutationObserver.mock.instances[0];
@@ -122,7 +122,7 @@ describe('Content Script Initialization', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
@@ -147,7 +147,7 @@ describe('Content Script Initialization', () => {
       .mockReturnValueOnce(null)
       .mockReturnValueOnce(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
@@ -196,7 +196,7 @@ describe('Content Script Message Handling', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -217,7 +217,7 @@ describe('Content Script Message Handling', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -241,7 +241,7 @@ describe('Content Script Message Handling', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -263,7 +263,7 @@ describe('Content Script Message Handling', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -286,7 +286,7 @@ describe('Content Script Message Handling', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -308,7 +308,7 @@ describe('Content Script Message Handling', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -325,7 +325,7 @@ describe('Content Script Message Handling', () => {
   test('should do nothing when merge button is not found', async () => {
     (document.querySelector as jest.Mock).mockReturnValueOnce(null);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -387,7 +387,7 @@ describe('Initial Merge State Application', () => {
       });
     });
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
@@ -414,7 +414,7 @@ describe('Initial Merge State Application', () => {
       });
     });
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
@@ -438,7 +438,7 @@ describe('Initial Merge State Application', () => {
       });
     });
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
@@ -463,7 +463,7 @@ describe('Initial Merge State Application', () => {
       });
     });
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
@@ -487,7 +487,7 @@ describe('Initial Merge State Application', () => {
       });
     });
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
@@ -535,7 +535,7 @@ describe('Merge Button Event Handlers', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -558,7 +558,7 @@ describe('Merge Button Event Handlers', () => {
     };
     (document.querySelector as jest.Mock).mockReturnValue(mockMergeButton);
 
-    await import('../src/modules/content');
+    await import('../src/modules/content/content');
 
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 

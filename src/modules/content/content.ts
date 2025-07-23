@@ -1,5 +1,5 @@
-import { MERGE_STATUS, MESSAGE_ACTIONS } from './constants.js';
-import { ChromeRuntimeMessage } from './types/chrome.js';
+import { MERGE_STATUS, MESSAGE_ACTIONS } from '../common/constants';
+import { ChromeRuntimeMessage } from '../common/types/chrome';
 
 interface MergeButtonWithHandler extends HTMLElement {
   _customMergeHandler?: (event: MouseEvent) => void;

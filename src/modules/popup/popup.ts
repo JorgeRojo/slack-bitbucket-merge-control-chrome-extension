@@ -1,11 +1,11 @@
-import { Logger } from './utils/logger.js';
-import { SLACK_BASE_URL, MERGE_STATUS, APP_STATUS } from './constants.js';
-import { literals } from './literals.js';
-import './components/toggle-switch/index.js';
-import './components/nav-links.js';
-import { initializeToggleFeatureStatus } from './popup-toggle-feature-status.js';
-import { ProcessedMessage, MergeStatusInfo, AppStatusInfo } from './types/index.js';
-import { toErrorType } from './utils/type-helpers.js';
+import { Logger } from '../common/utils/logger';
+import { SLACK_BASE_URL, MERGE_STATUS, APP_STATUS } from '../common/constants';
+import { literals } from '../common/literals';
+import '../common/components/toggle-switch/toggle-switch';
+import '../common/components/nav-links/nav-links';
+import { initializeToggleFeatureStatus } from './popup-toggle-feature-status';
+import { ProcessedMessage, MergeStatusInfo, AppStatusInfo } from '../common/types/app';
+import { toErrorType } from '../common/utils/type-helpers';
 
 interface UIElements {
   statusIcon: HTMLElement | null;

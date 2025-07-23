@@ -5,11 +5,11 @@ import { build } from 'esbuild';
 import fs from 'fs/promises';
 
 const entries = {
-  background: resolve(__dirname, 'src/modules/background/index.ts'),
-  popup: resolve(__dirname, 'src/modules/popup/index.ts'),
-  options: resolve(__dirname, 'src/modules/options/index.ts'),
+  background: resolve(__dirname, 'src/modules/background/background.ts'),
+  popup: resolve(__dirname, 'src/modules/popup/popup.ts'),
+  options: resolve(__dirname, 'src/modules/options/options.ts'),
   help: resolve(__dirname, 'src/modules/options/help.ts'),
-  content: resolve(__dirname, 'src/modules/content/index.ts'),
+  content: resolve(__dirname, 'src/modules/content/content.ts'),
 };
 
 function generateIIFEFiles(): Plugin {

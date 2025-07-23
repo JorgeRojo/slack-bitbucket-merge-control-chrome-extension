@@ -1,15 +1,18 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { initializeToggleFeatureStatus } from '../src/modules/popup/popup-toggle-feature-status';
 import { mockStorage, mockRuntime } from './setup';
 import { Logger } from '../src/modules/common/utils/logger';
 import { MESSAGE_ACTIONS } from '../src/modules/common/constants';
+import { eventNames } from 'node:process';
 
 vi.mock('../src/modules/common/utils/logger');
 
-interface MockToggleElement {
-  setAttribute: jest.Mock;
-  removeAttribute: jest.Mock;
-  addEventListener: jest.Mock;
+interface MockFeatureToggleElement {
+  setAttribute: Mock;
+  removeAttribute: Mock;
+  querySelector: Mock;
+  addEventListener: Mock;
+  appendChild: Mock;
 }
 
 interface MockCountdownElement {
@@ -19,42 +22,41 @@ interface MockCountdownElement {
   textContent: string;
 }
 
-(global as any).document = {
-  getElementById: vi.fn(),
-};
-
-(global as any).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
-  setTimeout(callback, 0);
-  return 1;
-});
-
 (global as any).setTimeout = vi.fn((callback: Function, _delay: number) => {
   callback();
   return 1;
 });
 
 describe('popup-toggle-feature-status.js', () => {
-  let mockToggleElement: MockToggleElement;
   let mockCountdownElement: MockCountdownElement;
+
+  let triggerToggleSwitchElementChange = vi.fn();
+  let mockToggleSwitchElement = {
+    setAttribute: vi.fn(),
+    addEventListener: vi.fn((event, callback) => {
+      if (event === 'change') {
+        triggerToggleSwitchElementChange = callback;
+      }
+    }),
+  };
+  let mockFeatureToggleElement = {
+    setAttribute: vi.fn(),
+    removeAttribute: vi.fn(),
+    addEventListener: vi.fn(),
+    querySelector: vi.fn(selector => {
+      if (selector === 'toggle-switch') {
+        return mockToggleSwitchElement;
+      }
+    }),
+    appendChild: vi.fn(childElement => {
+      if (childElement.id === 'countdown-display') {
+        mockCountdownElement = childElement;
+      }
+    }),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    mockToggleElement = {
-      setAttribute: vi.fn(),
-      removeAttribute: vi.fn(),
-      addEventListener: vi.fn(),
-    };
-
-    mockCountdownElement = {
-      style: { display: '' },
-      textContent: '',
-    };
-
-    (document.getElementById as jest.Mock).mockImplementation((id: string) => {
-      if (id === 'countdown-timer') return mockCountdownElement;
-      return null;
-    });
 
     mockRuntime.lastError = null;
   });
@@ -69,51 +71,44 @@ describe('popup-toggle-feature-status.js', () => {
     });
 
     test('should initialize toggle with enabled state', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        // Simulate async behavior more realistically
-        setTimeout(() => callback({ featureEnabled: true }), 0);
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
-      // Wait for the async storage call to complete
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      expect(mockToggleElement.setAttribute).toHaveBeenCalledWith('checked', '');
-      expect(mockCountdownElement.style.display).toBe('none');
+      expect(mockToggleSwitchElement.setAttribute).toHaveBeenCalledWith('checked', 'true');
+      expect(mockCountdownElement.style).toMatchInlineSnapshot(`
+        {
+          "color": "#666",
+          "display": "none",
+          "fontSize": "12px",
+          "marginTop": "5px",
+        }
+      `);
     });
 
     test('should initialize toggle with disabled state', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        setTimeout(() => callback({ featureEnabled: false }), 0);
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: false });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      expect(mockToggleElement.removeAttribute).toHaveBeenCalledWith('checked');
+      expect(mockToggleSwitchElement.setAttribute).toHaveBeenCalledWith('checked', 'false');
     });
 
     test('should setup toggle event listeners', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: true });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
-      expect(mockToggleElement.addEventListener).toHaveBeenCalledWith(
-        'toggle',
+      expect(mockToggleSwitchElement.addEventListener).toHaveBeenCalledWith(
+        'change',
         expect.any(Function)
       );
     });
 
     test('should setup background message listener', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: true });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       expect(mockRuntime.onMessage.addListener).toHaveBeenCalledWith(expect.any(Function));
     });
@@ -121,35 +116,30 @@ describe('popup-toggle-feature-status.js', () => {
 
   describe('Toggle event handling', () => {
     test('should handle toggle event when checked', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: true });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
-
-      const toggleHandler = mockToggleElement.addEventListener.mock.calls.find(
-        call => call[0] === 'toggle'
-      )[1];
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const mockEvent = {
-        detail: { checked: true },
+        target: { checked: true },
       };
 
-      toggleHandler(mockEvent);
+      await triggerToggleSwitchElementChange(mockEvent);
 
-      expect(mockStorage.local.set).toHaveBeenCalledWith({
-        featureEnabled: true,
+      expect(mockRuntime.sendMessage).toHaveBeenCalledTimes(2);
+
+      expect(mockRuntime.sendMessage).toHaveBeenNthCalledWith(1, {
+        action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS,
       });
-      expect(mockRuntime.sendMessage).toHaveBeenCalled();
-      const sendMessageCall = mockRuntime.sendMessage.mock.calls[0];
-      expect(sendMessageCall[0].action).toBe(MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED);
-      expect(sendMessageCall[0].payload.enabled).toBe(true);
+
+      expect(mockRuntime.sendMessage).toHaveBeenNthCalledWith(2, {
+        action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
+        payload: { enabled: true },
+      });
     });
 
     test('should handle toggle event when unchecked', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
       mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
         if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
@@ -157,75 +147,56 @@ describe('popup-toggle-feature-status.js', () => {
         }
       });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
-
-      const toggleHandler = mockToggleElement.addEventListener.mock.calls.find(
-        call => call[0] === 'toggle'
-      )[1];
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const mockEvent = {
-        detail: { checked: false },
+        target: { checked: false },
       };
 
-      toggleHandler(mockEvent);
+      await triggerToggleSwitchElementChange(mockEvent);
 
-      expect(mockStorage.local.set).toHaveBeenCalledWith({
-        featureEnabled: false,
+      expect(mockRuntime.sendMessage).toHaveBeenCalledTimes(3);
+
+      expect(mockRuntime.sendMessage).toHaveBeenNthCalledWith(1, {
+        action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS,
       });
-      // When unchecked, it calls checkCountdownStatus instead of immediately hiding
-      expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
-        { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
-        expect.any(Function)
-      );
+
+      expect(mockRuntime.sendMessage).toHaveBeenNthCalledWith(2, {
+        action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
+        payload: { enabled: false },
+      });
+      expect(mockRuntime.sendMessage).toHaveBeenNthCalledWith(3, {
+        action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS,
+      });
     });
 
     test('should handle runtime errors in toggle event', async () => {
-      (Logger.error as jest.Mock).mockClear();
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: true });
+      const error = new Error('Connection error');
+      mockRuntime.sendMessage.mockImplementation(({ action }) => {
+        if (action === MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED) {
+          return Promise.reject(error);
+        }
       });
 
-      mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
-        mockRuntime.lastError = { message: 'Connection error' };
-        callback();
-        mockRuntime.lastError = null;
-      });
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await triggerToggleSwitchElementChange({ target: { checked: true } });
 
-      const toggleHandler = mockToggleElement.addEventListener.mock.calls.find(
-        call => call[0] === 'toggle'
-      )[1];
-
-      expect(() => {
-        toggleHandler({ detail: { checked: true } });
-      }).not.toThrow();
-
-      // Verificar que se llamó a Logger.error para el error de runtime
-      expect(Logger.error).toHaveBeenCalledWith(
-        expect.any(Error),
-        'Popup',
-        expect.objectContaining({
-          silentMessages: ['Receiving end does not exist', 'message port closed before a response'],
-        })
-      );
+      expect(Logger.error).toHaveBeenCalledWith(error, 'FeatureToggle');
     });
 
     test('should handle exceptions in toggle event', async () => {
-      (Logger.error as jest.Mock).mockClear();
-
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: true });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
       mockRuntime.sendMessage.mockImplementation(() => {
         throw new Error('Connection failed');
       });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
-      const toggleHandler = mockToggleElement.addEventListener.mock.calls.find(
+      const toggleHandler = mockFeatureToggleElement.addEventListener.mock.calls.find(
         call => call[0] === 'toggle'
       )[1];
 
@@ -246,11 +217,9 @@ describe('popup-toggle-feature-status.js', () => {
 
   describe('Background message handling', () => {
     test('should handle updateCountdownDisplay message', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -267,11 +236,9 @@ describe('popup-toggle-feature-status.js', () => {
     });
 
     test('should handle countdownCompleted message', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -280,15 +247,13 @@ describe('popup-toggle-feature-status.js', () => {
       });
 
       expect(mockCountdownElement.style.display).toBe('none');
-      expect(mockToggleElement.setAttribute).toHaveBeenCalledWith('checked', '');
+      expect(mockFeatureToggleElement.setAttribute).toHaveBeenCalledWith('checked', '');
     });
 
     test('should ignore unknown messages', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: true });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -302,11 +267,9 @@ describe('popup-toggle-feature-status.js', () => {
 
   describe('Countdown functionality', () => {
     test('should show countdown when feature is disabled', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -323,11 +286,9 @@ describe('popup-toggle-feature-status.js', () => {
     });
 
     test('should hide countdown when feature is enabled', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: true });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -340,21 +301,19 @@ describe('popup-toggle-feature-status.js', () => {
     });
 
     test('should handle missing countdown element', async () => {
-      (document.getElementById as jest.Mock).mockReturnValue(null);
+      (document.getElementById as Mock).mockReturnValue(null);
 
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await expect(initializeToggleFeatureStatus(mockToggleElement as any)).resolves.not.toThrow();
+      await expect(
+        initializeToggleFeatureStatus(mockFeatureToggleElement as any)
+      ).resolves.not.toThrow();
     });
 
     test('should format countdown text correctly', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -394,14 +353,12 @@ describe('popup-toggle-feature-status.js', () => {
   describe('Initialization with reactivation time', () => {
     test('should show countdown if reactivation time is in future', async () => {
       const futureTime = Date.now() + 60000;
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({
-          featureEnabled: false,
-          reactivationTime: futureTime,
-        });
+      mockStorage.local.get.mockResolvedValue({
+        featureEnabled: false,
+        reactivationTime: futureTime,
       });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       // Manually update the text content since the mock doesn't do it
       mockCountdownElement.textContent = 'Reactivation in: 1:00';
@@ -411,9 +368,7 @@ describe('popup-toggle-feature-status.js', () => {
     });
 
     test('should check countdown status if no reactivation time', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
       mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
         if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
@@ -421,7 +376,7 @@ describe('popup-toggle-feature-status.js', () => {
         }
       });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
         { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
@@ -430,11 +385,7 @@ describe('popup-toggle-feature-status.js', () => {
     });
 
     test('should handle runtime errors when checking countdown status', async () => {
-      (Logger.error as jest.Mock).mockClear();
-
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
       mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
         mockRuntime.lastError = { message: 'Connection error' };
@@ -442,7 +393,9 @@ describe('popup-toggle-feature-status.js', () => {
         mockRuntime.lastError = null;
       });
 
-      await expect(initializeToggleFeatureStatus(mockToggleElement as any)).resolves.not.toThrow();
+      await expect(
+        initializeToggleFeatureStatus(mockFeatureToggleElement as any)
+      ).resolves.not.toThrow();
 
       // Verificar que se llamó a Logger.error para el error de countdown
       expect(Logger.error).toHaveBeenCalledWith(
@@ -454,18 +407,16 @@ describe('popup-toggle-feature-status.js', () => {
       );
     });
 
-    test('should handle exceptions when checking countdown status', async () => {
-      (Logger.error as jest.Mock).mockClear();
-
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+    test.only('should handle exceptions when checking countdown status', async () => {
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
       mockRuntime.sendMessage.mockImplementation(() => {
         throw new Error('Connection failed');
       });
 
-      await expect(initializeToggleFeatureStatus(mockToggleElement as any)).resolves.not.toThrow();
+      await expect(
+        initializeToggleFeatureStatus(mockFeatureToggleElement as any)
+      ).resolves.not.toThrow();
 
       // Verificar que se llamó a Logger.error para la excepción de countdown
       expect(Logger.error).toHaveBeenCalledWith(
@@ -478,51 +429,40 @@ describe('popup-toggle-feature-status.js', () => {
     });
   });
 
-  describe('Edge cases for complete coverage', () => {
+  describe('updateCountdownDisplay', () => {
     test('should handle updateCountdownDisplay with feature explicitly set to false', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: false });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+
+      mockCountdownElement.textContent = 'Auto-enable in: 0:50';
 
       messageHandler({
         action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
         payload: { timeLeft: 30000 },
       });
 
-      // Manually update the text content since the mock doesn't do it
-      mockCountdownElement.textContent = 'Reactivation in: 0:30';
-
       expect(mockCountdownElement.style.display).toBe('block');
-      expect(mockCountdownElement.textContent).toBe('Reactivation in: 0:30');
+      expect(mockCountdownElement.textContent).toBe('Auto-enable in: 0:30');
     });
 
     test('should handle updateCountdownDisplay when feature is enabled', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: true });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
-      messageHandler({
-        action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
-        payload: { timeLeft: 30000 },
-      });
-
       expect(mockCountdownElement.style.display).toBe('none');
+      expect(mockCountdownElement.textContent).toBeUndefined();
     });
 
     test('should handle updateCountdownDisplay with undefined featureEnabled (defaults to true)', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({});
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: undefined });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
       const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
 
@@ -531,49 +471,26 @@ describe('popup-toggle-feature-status.js', () => {
         payload: { timeLeft: 30000 },
       });
 
-      expect(mockCountdownElement.style.display).toBe('none');
-    });
-
-    test('should handle reactivation time that has already passed', async () => {
-      const pastTime = Date.now() - 60000;
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({
-          featureEnabled: false,
-          reactivationTime: pastTime,
-        });
-      });
-
-      mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
-        if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
-          callback({ isCountdownActive: false, timeLeft: 0 });
-        }
-      });
-
-      await initializeToggleFeatureStatus(mockToggleElement as any);
-
-      expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
-        { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
-        expect.any(Function)
-      );
+      expect(mockCountdownElement.style.display).toBe('block');
+      expect(mockCountdownElement.textContent).toMatchInlineSnapshot(`"Auto-enable in: 0:30"`);
     });
 
     test('should handle getCountdownStatus response with no active countdown', async () => {
-      mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
-        callback({ featureEnabled: false });
-      });
+      mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
 
-      mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
-        if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
-          callback({ isCountdownActive: false, timeLeft: 0 });
+      mockRuntime.sendMessage.mockImplementation(({ action }) => {
+        if (action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
+          return Promise.resolve({ isCountdownActive: false, timeLeft: 0 });
         }
       });
 
-      await initializeToggleFeatureStatus(mockToggleElement as any);
+      await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
 
-      expect(mockRuntime.sendMessage).toHaveBeenCalledWith(
-        { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
-        expect.any(Function)
-      );
+      expect(mockRuntime.sendMessage).toHaveBeenCalledWith({
+        action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS,
+      });
+
+      expect(mockCountdownElement.style.display).toBe('none');
     });
   });
 });

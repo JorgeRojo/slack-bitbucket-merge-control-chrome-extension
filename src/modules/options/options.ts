@@ -1,4 +1,4 @@
-import './components/nav-links.js';
+import '../common/components/nav-links/nav-links';
 import {
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
@@ -7,9 +7,9 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   DEFAULT_CHANNEL_NAME,
   MESSAGE_ACTIONS,
-} from './constants.js';
-import { literals } from './literals.js';
-import { ChromeStorageItems } from './types/chrome.js';
+} from '../common/constants';
+import { literals } from '../common/literals';
+import { ChromeStorageItems } from '../common/types/chrome';
 
 function formatMultilineInput(text: string): string {
   return text

@@ -115,12 +115,6 @@ class MockWebSocket {
 // Mock fetch
 (global as any).fetch = vi.fn();
 
-// Mock requestAnimationFrame
-(global as any).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
-  callback(0);
-  return 1;
-});
-
 // Mock document methods
 (global as any).document = {
   getElementById: vi.fn(),
@@ -136,4 +130,9 @@ class MockWebSocket {
   querySelectorAll: vi.fn(() => []),
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
+  body: {
+    appendChild: vi.fn(),
+    removeChild: vi.fn(),
+    contains: vi.fn(() => true),
+  },
 };

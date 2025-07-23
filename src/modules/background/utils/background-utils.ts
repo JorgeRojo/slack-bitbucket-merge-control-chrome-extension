@@ -6,11 +6,11 @@ import {
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
   MAX_MESSAGES,
-} from '../constants.js';
-import { Logger } from './logger.js';
-import { ProcessedMessage } from '../types/index.js';
-import { SlackMessage } from '../types/slack.js';
-import { toErrorType, toString } from './type-helpers.js';
+} from '../../common/constants';
+import { Logger } from '../../common/utils/logger';
+import { ProcessedMessage } from '../../common/types/app';
+import { SlackMessage } from '../../common/types/slack';
+import { toErrorType, toString } from '../../common/utils/type-helpers';
 
 function normalizeText(text: string | undefined): string {
   if (!text) return '';

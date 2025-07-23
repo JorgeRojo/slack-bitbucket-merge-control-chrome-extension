@@ -71,7 +71,7 @@ h1 {
   box-sizing: border-box;
 }
 
-#countdown-timer {
+#countdown-display {
   display: none;
   margin-top: 10px;
   color: var(--ft-color-error);
