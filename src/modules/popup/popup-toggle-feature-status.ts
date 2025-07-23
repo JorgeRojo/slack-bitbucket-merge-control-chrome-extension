@@ -24,7 +24,6 @@ export async function initializeToggleFeatureStatus(
     const isChecked = event.detail.checked;
 
     try {
-      // Actualizar inmediatamente la visualización del contador
       if (isChecked) {
         countdownDisplay.style.display = 'none';
       }

@@ -48,7 +48,7 @@ describe('Background Utils', () => {
     vi.clearAllMocks();
     mockChrome.storage.local.get.mockResolvedValue({});
     mockChrome.storage.sync.get.mockResolvedValue({});
-    mockChrome.storage.local.set.mockResolvedValue();
+    mockChrome.storage.local.set.mockResolvedValue({});
   });
   afterEach(() => {
     vi.resetAllMocks();

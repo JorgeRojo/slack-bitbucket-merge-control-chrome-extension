@@ -1,10 +1,3 @@
-/**
- * Utility functions for type handling and conversion
- */
-
-/**
- * Converts unknown error to Error type
- */
 export function toErrorType(error: unknown): Error {
   if (error instanceof Error) {
     return error;
@@ -15,9 +8,6 @@ export function toErrorType(error: unknown): Error {
   return new Error(String(error));
 }
 
-/**
- * Converts unknown value to string
- */
 export function toString(value: unknown): string {
   if (typeof value === 'string') {
     return value;
@@ -28,9 +18,6 @@ export function toString(value: unknown): string {
   return String(value);
 }
 
-/**
- * Safely gets string value from unknown, with optional fallback
- */
 export function toStringOrUndefined(value: unknown): string | undefined {
   if (typeof value === 'string') {
     return value;
@@ -44,16 +31,10 @@ export function toStringOrUndefined(value: unknown): string | undefined {
   return undefined;
 }
 
-/**
- * Type guard to check if value is a string
- */
 export function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
 
-/**
- * Type guard to check if value is an Error
- */
 export function isError(value: unknown): value is Error {
   return value instanceof Error;
 }

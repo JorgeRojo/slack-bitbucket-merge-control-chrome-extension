@@ -42,7 +42,6 @@ class NavLinks extends HTMLElement {
   }
 }
 
-// Only register if not already registered
 if (!customElements.get('nav-links')) {
   customElements.define('nav-links', NavLinks);
 }

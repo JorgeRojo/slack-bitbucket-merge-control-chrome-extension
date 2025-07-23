@@ -683,9 +683,7 @@ const messageHandlers: Record<
         if (enabled === false) {
           await scheduleFeatureReactivation();
         } else {
-          // Si el usuario activa manualmente la función, detener el contador
           stopCountdown();
-          // Limpiar el tiempo de reactivación programado
           await chrome.storage.local.remove('reactivationTime');
         }
 
@@ -726,7 +724,6 @@ const messageHandlers: Record<
   [MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS]: (_request, _sender, sendResponse) => {
     console.log('[Background] Received GET_COUNTDOWN_STATUS message');
 
-    // Use an async IIFE to handle the async operations
     (async () => {
       try {
         const { reactivationTime, featureEnabled } = (await chrome.storage.local.get([
@@ -764,7 +761,6 @@ const messageHandlers: Record<
       }
     })();
 
-    // Return true immediately to keep the message port open
     return true;
   },
 };
