@@ -7,7 +7,10 @@ vi.mock('../src/modules/common/utils/logger');
 
 describe('Content Script Structure', () => {
   test('should have proper encapsulation pattern', () => {
-    const contentScript = fs.readFileSync(path.join(__dirname, '../src/modules/content/content.ts'), 'utf8');
+    const contentScript = fs.readFileSync(
+      path.join(__dirname, '../src/modules/content/content.ts'),
+      'utf8'
+    );
 
     expect(contentScript).toContain('BitbucketMergeController');
     expect(contentScript).toContain('(() => {');
@@ -18,13 +21,19 @@ describe('Content Script Structure', () => {
   });
 
   test('should initialize the controller', () => {
-    const contentScript = fs.readFileSync(path.join(__dirname, '../src/modules/content/content.ts'), 'utf8');
+    const contentScript = fs.readFileSync(
+      path.join(__dirname, '../src/modules/content/content.ts'),
+      'utf8'
+    );
 
     expect(contentScript).toContain('BitbucketMergeController.init()');
   });
 
   test('should have all required functions encapsulated', () => {
-    const contentScript = fs.readFileSync(path.join(__dirname, '../src/modules/content/content.ts'), 'utf8');
+    const contentScript = fs.readFileSync(
+      path.join(__dirname, '../src/modules/content/content.ts'),
+      'utf8'
+    );
 
     expect(contentScript).toContain('function disableMergeButton');
     expect(contentScript).toContain('function enableMergeButton');

@@ -120,3 +120,20 @@ class MockWebSocket {
   callback(0);
   return 1;
 });
+
+// Mock document methods
+(global as any).document = {
+  getElementById: vi.fn(),
+  createElement: vi.fn(() => ({
+    id: '',
+    style: { display: '', fontSize: '', marginTop: '', color: '' },
+    appendChild: vi.fn(),
+    setAttribute: vi.fn(),
+    removeAttribute: vi.fn(),
+    addEventListener: vi.fn(),
+  })),
+  querySelector: vi.fn(),
+  querySelectorAll: vi.fn(() => []),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+};
