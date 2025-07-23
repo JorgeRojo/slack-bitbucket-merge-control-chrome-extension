@@ -3,6 +3,8 @@ import pluginJs from '@eslint/js';
 import pluginPrettier from 'eslint-plugin-prettier';
 import configPrettier from 'eslint-config-prettier';
 import pluginImport from 'eslint-plugin-import';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import typescriptParser from '@typescript-eslint/parser';
 
 export default [
   {
@@ -19,7 +21,9 @@ export default [
       '*.temp',
     ],
   },
+  // Configuración para archivos JavaScript
   {
+    files: ['**/*.js', '**/*.cjs', '**/*.mjs'],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -38,6 +42,47 @@ export default [
       ...configPrettier.rules,
       'prettier/prettier': 'error',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+  // Configuración para archivos TypeScript
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        chrome: 'readonly',
+      },
+      ecmaVersion: 2020,
+      sourceType: 'module',
+      parser: typescriptParser,
+      parserOptions: {
+        project: './tsconfig.json',
+      },
+    },
+    plugins: {
+      prettier: pluginPrettier,
+      import: pluginImport,
+      '@typescript-eslint': typescriptEslint,
+    },
+    rules: {
+      ...pluginJs.configs.recommended.rules,
+      ...configPrettier.rules,
+      'prettier/prettier': 'error',
+      // Desactivamos la regla nativa de ESLint para variables no utilizadas
+      'no-unused-vars': 'off',
+      // Activamos la regla de TypeScript para variables y parámetros no utilizados
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          vars: 'all',
+          args: 'all',
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
 ];

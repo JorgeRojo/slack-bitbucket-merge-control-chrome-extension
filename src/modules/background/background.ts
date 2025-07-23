@@ -18,9 +18,9 @@ import {
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
-} from './constants.js';
-import { Logger } from './utils/logger.js';
-import { toErrorType, toString } from './utils/type-helpers.js';
+} from '../common/constants';
+import { Logger } from '../common/utils/logger';
+import { toErrorType } from '../common/utils/type-helpers';
 import {
   cleanSlackMessageText,
   determineMergeStatus,
@@ -30,10 +30,10 @@ import {
   updateIconBasedOnCurrentMessages,
   getPhrasesFromStorage,
   processAndStoreMessage,
-} from './utils/background-utils.js';
-import { ProcessedMessage } from './types/index.js';
-import { SlackMessage, SlackChannel, SlackConversationsListResponse } from './types/slack.js';
-import { ChromeRuntimeMessage } from './types/chrome.js';
+} from './utils/background-utils';
+import { ProcessedMessage } from '../common/types/app';
+import { SlackMessage, SlackChannel, SlackConversationsListResponse } from '../common/types/slack';
+import { ChromeRuntimeMessage } from '../common/types/chrome';
 
 let bitbucketTabId: number | null = null;
 let rtmWebSocket: WebSocket | null = null;
@@ -559,134 +559,212 @@ const messageHandlers: Record<
     return true;
   },
 
-  [MESSAGE_ACTIONS.FETCH_NEW_MESSAGES]: async request => {
-    const { slackToken, channelName } = (await chrome.storage.sync.get([
-      'slackToken',
-      'channelName',
-    ])) as { slackToken?: string; channelName?: string };
-
-    const targetChannelName = request?.payload?.channelName || channelName;
-
-    if (slackToken && targetChannelName) {
+  [MESSAGE_ACTIONS.FETCH_NEW_MESSAGES]: (request, _sender, sendResponse) => {
+    (async () => {
       try {
-        updateExtensionIcon(MERGE_STATUS.LOADING);
+        const { slackToken, channelName } = (await chrome.storage.sync.get([
+          'slackToken',
+          'channelName',
+        ])) as { slackToken?: string; channelName?: string };
 
-        await chrome.storage.local.set({ lastMatchingMessage: null });
+        const targetChannelName = request?.payload?.channelName || channelName;
 
-        const channelId = await resolveChannelId(slackToken, targetChannelName);
-
-        await updateAppStatus(APP_STATUS.OK);
-        await chrome.storage.local.set({
-          channelId: channelId,
-        });
-
-        await fetchAndStoreMessages(slackToken, channelId);
-
-        await updateContentScriptMergeState(targetChannelName);
-      } catch (error) {
-        Logger.error(toErrorType(error), ERROR_MESSAGES.FETCHING_MESSAGES);
-        await handleSlackApiError(error);
-
-        if (request?.payload?.channelName && !request?.payload?.skipErrorNotification) {
+        if (slackToken && targetChannelName) {
           try {
-            await chrome.runtime.sendMessage({
-              action: MESSAGE_ACTIONS.CHANNEL_CHANGE_ERROR,
-              payload: { error: error instanceof Error ? error.message : String(error) },
+            updateExtensionIcon(MERGE_STATUS.LOADING);
+
+            await chrome.storage.local.set({ lastMatchingMessage: null });
+
+            const channelId = await resolveChannelId(slackToken, targetChannelName);
+
+            await updateAppStatus(APP_STATUS.OK);
+            await chrome.storage.local.set({
+              channelId: channelId,
             });
-          } catch (sendError) {
-            Logger.error(toErrorType(sendError), 'Background', {
-              silentMessages: [
-                ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
-                ERROR_MESSAGES.CONNECTION_FAILED,
-              ],
-            });
+
+            await fetchAndStoreMessages(slackToken, channelId);
+
+            await updateContentScriptMergeState(targetChannelName);
+            
+            sendResponse({ success: true });
+          } catch (error) {
+            Logger.error(toErrorType(error), ERROR_MESSAGES.FETCHING_MESSAGES);
+            await handleSlackApiError(error);
+
+            if (request?.payload?.channelName && !request?.payload?.skipErrorNotification) {
+              try {
+                await chrome.runtime.sendMessage({
+                  action: MESSAGE_ACTIONS.CHANNEL_CHANGE_ERROR,
+                  payload: { error: error instanceof Error ? error.message : String(error) },
+                });
+              } catch (sendError) {
+                Logger.error(toErrorType(sendError), 'Background', {
+                  silentMessages: [
+                    ERROR_MESSAGES.RECEIVING_END_NOT_EXIST,
+                    ERROR_MESSAGES.CONNECTION_FAILED,
+                  ],
+                });
+              }
+            }
+            
+            sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+          }
+        } else {
+          await updateAppStatus(APP_STATUS.CONFIG_ERROR);
+          sendResponse({ success: false, error: 'Missing slackToken or channelName' });
+        }
+      } catch (error) {
+        console.error('[Background] Error in FETCH_NEW_MESSAGES:', error);
+        sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+      }
+    })();
+    return true;
+  },
+
+  [MESSAGE_ACTIONS.RECONNECT_SLACK]: (_request, _sender, sendResponse) => {
+    (async () => {
+      try {
+        const { lastKnownMergeState = {} } = (await chrome.storage.local.get(
+          'lastKnownMergeState'
+        )) as { lastKnownMergeState?: Record<string, any> };
+
+        const appStatus = lastKnownMergeState?.appStatus as APP_STATUS | undefined;
+
+        if (rtmWebSocket) {
+          rtmWebSocket.close();
+        }
+
+        if (!appStatus || appStatus === APP_STATUS.OK) {
+          updateExtensionIcon(MERGE_STATUS.LOADING);
+        }
+
+        connectToSlackSocketMode();
+        
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error('[Background] Error in RECONNECT_SLACK:', error);
+        sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+      }
+    })();
+    return true;
+  },
+
+  [MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED]: (_request, sender, sendResponse) => {
+    (async () => {
+      try {
+        if (sender.tab) {
+          const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
+          if (bitbucketUrl) {
+            const wildcardToRegexPattern = bitbucketUrl.replace(/\*/g, '.*');
+            const bitbucketRegex = new RegExp(wildcardToRegexPattern);
+
+            if (sender.tab.url && bitbucketRegex.test(sender.tab.url)) {
+              bitbucketTabId = sender.tab.id || null;
+              updateMergeButtonFromLastKnownMergeState();
+            }
           }
         }
+        
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error('[Background] Error in BITBUCKET_TAB_LOADED:', error);
+        sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
       }
-    } else {
-      await updateAppStatus(APP_STATUS.CONFIG_ERROR);
-    }
+    })();
+    return true;
   },
 
-  [MESSAGE_ACTIONS.RECONNECT_SLACK]: async () => {
-    const { lastKnownMergeState = {} } = (await chrome.storage.local.get(
-      'lastKnownMergeState'
-    )) as { lastKnownMergeState?: Record<string, any> };
+  [MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED]: (request, _sender, sendResponse) => {
+    (async () => {
+      try {
+        const { enabled } = request.payload || {};
+        await chrome.storage.local.set({ featureEnabled: enabled });
 
-    const appStatus = lastKnownMergeState?.appStatus as APP_STATUS | undefined;
-
-    if (rtmWebSocket) {
-      rtmWebSocket.close();
-    }
-
-    if (!appStatus || appStatus === APP_STATUS.OK) {
-      updateExtensionIcon(MERGE_STATUS.LOADING);
-    }
-
-    connectToSlackSocketMode();
-  },
-
-  [MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED]: async (_request, sender) => {
-    if (sender.tab) {
-      const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
-      if (bitbucketUrl) {
-        const wildcardToRegexPattern = bitbucketUrl.replace(/\*/g, '.*');
-        const bitbucketRegex = new RegExp(wildcardToRegexPattern);
-
-        if (sender.tab.url && bitbucketRegex.test(sender.tab.url)) {
-          bitbucketTabId = sender.tab.id || null;
-          updateMergeButtonFromLastKnownMergeState();
+        if (enabled === false) {
+          await scheduleFeatureReactivation();
+        } else {
+          // Si el usuario activa manualmente la función, detener el contador
+          stopCountdown();
+          // Limpiar el tiempo de reactivación programado
+          await chrome.storage.local.remove('reactivationTime');
         }
+
+        const { channelName } = await chrome.storage.sync.get('channelName');
+        if (channelName) {
+          await updateContentScriptMergeState(channelName);
+        }
+        
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error('[Background] Error in FEATURE_TOGGLE_CHANGED:', error);
+        sendResponse({ success: false, error: error.message });
       }
-    }
+    })();
+    return true;
   },
 
-  [MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED]: async request => {
-    const { enabled } = request.payload || {};
-    await chrome.storage.local.set({ featureEnabled: enabled });
+  [MESSAGE_ACTIONS.COUNTDOWN_COMPLETED]: (request, _sender, sendResponse) => {
+    (async () => {
+      try {
+        const { enabled } = request.payload || {};
+        await chrome.storage.local.set({ featureEnabled: enabled });
 
-    if (enabled === false) {
-      await scheduleFeatureReactivation();
-    }
-
-    const { channelName } = await chrome.storage.sync.get('channelName');
-    if (channelName) {
-      await updateContentScriptMergeState(channelName);
-    }
+        const { channelName } = await chrome.storage.sync.get('channelName');
+        if (channelName) {
+          await updateContentScriptMergeState(channelName);
+        }
+        
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error('[Background] Error in COUNTDOWN_COMPLETED:', error);
+        sendResponse({ success: false, error: error.message });
+      }
+    })();
+    return true;
   },
 
-  [MESSAGE_ACTIONS.COUNTDOWN_COMPLETED]: async request => {
-    const { enabled } = request.payload || {};
-    await chrome.storage.local.set({ featureEnabled: enabled });
+  [MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS]: (_request, _sender, sendResponse) => {
+    console.log('[Background] Received GET_COUNTDOWN_STATUS message');
 
-    const { channelName } = await chrome.storage.sync.get('channelName');
-    if (channelName) {
-      await updateContentScriptMergeState(channelName);
-    }
-  },
+    // Use an async IIFE to handle the async operations
+    (async () => {
+      try {
+        const { reactivationTime, featureEnabled } = (await chrome.storage.local.get([
+          'reactivationTime',
+          'featureEnabled',
+        ])) as { reactivationTime?: number; featureEnabled?: boolean };
 
-  [MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS]: async (_request, _sender, sendResponse) => {
-    const { reactivationTime, featureEnabled } = (await chrome.storage.local.get([
-      'reactivationTime',
-      'featureEnabled',
-    ])) as { reactivationTime?: number; featureEnabled?: boolean };
+        console.log('[Background] Storage values:', { reactivationTime, featureEnabled });
 
-    if (featureEnabled === false && reactivationTime) {
-      const currentTime = Date.now();
-      const timeLeft = Math.max(0, reactivationTime - currentTime);
+        if (featureEnabled === false && reactivationTime) {
+          const currentTime = Date.now();
+          const timeLeft = Math.max(0, reactivationTime - currentTime);
 
-      sendResponse({
-        isCountdownActive: true,
-        timeLeft: timeLeft,
-        reactivationTime: reactivationTime,
-      });
-    } else {
-      sendResponse({
-        isCountdownActive: false,
-        timeLeft: 0,
-        reactivationTime: null,
-      });
-    }
+          const response = {
+            isCountdownActive: true,
+            timeLeft: timeLeft,
+            reactivationTime: reactivationTime,
+          };
+
+          console.log('[Background] Sending countdown active response:', response);
+          sendResponse(response);
+        } else {
+          const response = {
+            isCountdownActive: false,
+            timeLeft: 0,
+            reactivationTime: null,
+          };
+
+          console.log('[Background] Sending countdown inactive response:', response);
+          sendResponse(response);
+        }
+      } catch (error) {
+        console.error('[Background] Error in GET_COUNTDOWN_STATUS handler:', error);
+        sendResponse({ isCountdownActive: false, timeLeft: 0, reactivationTime: null });
+      }
+    })();
+
+    // Return true immediately to keep the message port open
     return true;
   },
 };
