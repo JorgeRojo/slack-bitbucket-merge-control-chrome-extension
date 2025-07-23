@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock the nav-links component import at the module level
-vi.mock('../src/components/nav-links.js', () => ({}));
+vi.mock('../src/modules/common/components/nav-links', () => ({}));
 
 describe('Help Page', () => {
   let mockConsoleLog: ReturnType<typeof vi.spyOn>;
@@ -30,13 +30,13 @@ describe('Help Page', () => {
     // This test verifies that the mock is working by importing the help module
     // which internally imports nav-links
     expect(async () => {
-      await import('../src/help.ts');
+      await import('../src/modules/options/help.ts');
     }).not.toThrow();
   });
 
   it('should add DOMContentLoaded event listener when module loads', async () => {
     // Import the help module
-    await import('../src/help.ts');
+    await import('../src/modules/options/help.ts');
 
     // Verify that addEventListener was called with DOMContentLoaded
     expect(mockAddEventListener).toHaveBeenCalledWith('DOMContentLoaded', expect.any(Function));
@@ -44,7 +44,7 @@ describe('Help Page', () => {
 
   it('should log message when DOMContentLoaded callback is executed', async () => {
     // Import the help module
-    await import('../src/help.ts');
+    await import('../src/modules/options/help.ts');
 
     // Get the callback function that was passed to addEventListener
     const addEventListenerCalls = mockAddEventListener.mock.calls;
@@ -65,7 +65,7 @@ describe('Help Page', () => {
 
   it('should handle callback execution without errors', async () => {
     // Import the help module
-    await import('../src/help.ts');
+    await import('../src/modules/options/help.ts');
 
     // Get the callback function
     const addEventListenerCalls = mockAddEventListener.mock.calls;
@@ -81,7 +81,7 @@ describe('Help Page', () => {
 
   it('should register exactly one DOMContentLoaded listener', async () => {
     // Import the help module
-    await import('../src/help.ts');
+    await import('../src/modules/options/help.ts');
 
     // Count DOMContentLoaded listeners
     const domContentLoadedCalls = mockAddEventListener.mock.calls.filter(
@@ -93,7 +93,7 @@ describe('Help Page', () => {
 
   it('should execute module initialization code', async () => {
     // Import should trigger the module's top-level code
-    await import('../src/help.ts');
+    await import('../src/modules/options/help.ts');
 
     // Verify that addEventListener was called (indicating module executed)
     expect(mockAddEventListener).toHaveBeenCalled();

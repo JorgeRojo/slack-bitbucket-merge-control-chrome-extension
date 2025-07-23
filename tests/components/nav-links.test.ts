@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mockRuntime } from '../setup';
-import '../../src/components/nav-links';
+import '../../src/modules/common/components/nav-links';
 
 const waitForRender = async (): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, 50));

@@ -8,10 +8,10 @@ import {
   updateIconBasedOnCurrentMessages,
   getPhrasesFromStorage,
   processAndStoreMessage,
-} from '../../src/utils/background-utils';
-import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../../src/constants';
-import { ProcessedMessage } from '../../src/types';
-import { SlackMessage } from '../../src/types/slack';
+} from '../../src/modules/common/utils/background-utils';
+import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../../src/modules/common/constants';
+import { ProcessedMessage } from '../../src/modules/common/types';
+import { SlackMessage } from '../../src/modules/common/types/slack';
 
 // Mock Chrome API
 const mockChrome = {
@@ -377,9 +377,9 @@ describe('Background Utils', () => {
       mockChrome.storage.sync.get.mockResolvedValue({});
 
       const phrases = await getPhrasesFromStorage();
-      expect(phrases.currentAllowedPhrases).toEqual(['allow', 'proceed', 'merge']);
-      expect(phrases.currentDisallowedPhrases).toEqual(['block', 'stop', 'do not merge']);
-      expect(phrases.currentExceptionPhrases).toEqual(['exception', 'override']);
+      expect(phrases.currentAllowedPhrases).toEqual(['allowed to merge', 'no restrictions on merging.']);
+      expect(phrases.currentDisallowedPhrases).toEqual(['not allowed to merge', 'do not merge without consent', 'closing versions. do not merge', 'ask me before merging', 'not merge anything']);
+      expect(phrases.currentExceptionPhrases).toEqual(['allowed to merge this task', 'except everything related to']);
     });
 
     test('should handle empty strings in storage', async () => {
@@ -391,9 +391,9 @@ describe('Background Utils', () => {
 
       const phrases = await getPhrasesFromStorage();
       // Empty strings should use default phrases, not create arrays with empty strings
-      expect(phrases.currentAllowedPhrases).toEqual(['allow', 'proceed', 'merge']);
-      expect(phrases.currentDisallowedPhrases).toEqual(['block', 'stop', 'do not merge']);
-      expect(phrases.currentExceptionPhrases).toEqual(['exception', 'override']);
+      expect(phrases.currentAllowedPhrases).toEqual(['allowed to merge', 'no restrictions on merging.']);
+      expect(phrases.currentDisallowedPhrases).toEqual(['not allowed to merge', 'do not merge without consent', 'closing versions. do not merge', 'ask me before merging', 'not merge anything']);
+      expect(phrases.currentExceptionPhrases).toEqual(['allowed to merge this task', 'except everything related to']);
     });
   });
 

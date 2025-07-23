@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import '../../src/components/toggle-switch/toggle-switch';
-import { Logger } from '../../src/utils/logger';
+import '../../src/modules/common/components/toggle-switch/toggle-switch';
+import { Logger } from '../../src/modules/common/utils/logger';
 
-vi.mock('../../src/utils/logger');
+vi.mock('../../src/modules/common/utils/logger');
 
 (global as any).fetch = vi.fn(() =>
   Promise.resolve({

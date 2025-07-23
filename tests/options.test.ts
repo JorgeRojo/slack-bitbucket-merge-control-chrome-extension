@@ -8,10 +8,10 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   DEFAULT_CHANNEL_NAME,
   MESSAGE_ACTIONS,
-} from '../src/constants';
-import { literals } from '../src/literals';
+} from '../src/modules/common/constants';
+import { literals } from '../src/modules/common/literals';
 
-vi.mock('../src/utils/logger');
+vi.mock('../src/modules/common/utils/logger');
 
 describe('Options Page', () => {
   // Mock DOM elements
@@ -84,7 +84,7 @@ describe('Options Page', () => {
 
   test('should initialize DOM event listeners on DOMContentLoaded', async () => {
     // Import the module to trigger DOMContentLoaded handler
-    await import('../src/options');
+    await import('../src/modules/options');
 
     // Verify that the event listener was added
     expect(document.addEventListener).toHaveBeenCalledWith(
@@ -104,7 +104,7 @@ describe('Options Page', () => {
 
   test('should load default values when no stored values exist', async () => {
     // Import the module to trigger DOMContentLoaded handler
-    await import('../src/options');
+    await import('../src/modules/options');
 
     // Get the DOMContentLoaded handler
     const domContentLoadedHandler = (document.addEventListener as jest.Mock).mock.calls[0][1];
@@ -129,7 +129,7 @@ describe('Options Page', () => {
 
   test('should load stored values when they exist', async () => {
     // Import the module to trigger DOMContentLoaded handler
-    await import('../src/options');
+    await import('../src/modules/options');
 
     // Get the DOMContentLoaded handler
     const domContentLoadedHandler = (document.addEventListener as jest.Mock).mock.calls[0][1];
@@ -165,7 +165,7 @@ describe('Options Page', () => {
 
   test('should save options when save button is clicked with valid inputs', async () => {
     // Import the module to trigger DOMContentLoaded handler
-    await import('../src/options');
+    await import('../src/modules/options');
 
     // Get the DOMContentLoaded handler
     const domContentLoadedHandler = (document.addEventListener as jest.Mock).mock.calls[0][1];
@@ -244,7 +244,7 @@ describe('Options Page', () => {
 
   test('should show error when save button is clicked with missing inputs', async () => {
     // Import the module to trigger DOMContentLoaded handler
-    await import('../src/options');
+    await import('../src/modules/options');
 
     // Get the DOMContentLoaded handler
     const domContentLoadedHandler = (document.addEventListener as jest.Mock).mock.calls[0][1];
@@ -275,7 +275,7 @@ describe('Options Page', () => {
 
   test('should handle channel name with leading hash', async () => {
     // Import the module to trigger DOMContentLoaded handler
-    await import('../src/options');
+    await import('../src/modules/options');
 
     // Get the DOMContentLoaded handler
     const domContentLoadedHandler = (document.addEventListener as jest.Mock).mock.calls[0][1];
@@ -310,7 +310,7 @@ describe('Options Page', () => {
 
   test('should handle multiline input formatting', async () => {
     // Import the module to trigger DOMContentLoaded handler
-    await import('../src/options');
+    await import('../src/modules/options');
 
     // Get the DOMContentLoaded handler
     const domContentLoadedHandler = (document.addEventListener as jest.Mock).mock.calls[0][1];

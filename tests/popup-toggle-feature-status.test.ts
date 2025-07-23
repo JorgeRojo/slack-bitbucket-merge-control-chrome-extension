@@ -1,10 +1,10 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { initializeToggleFeatureStatus } from '../src/popup-toggle-feature-status';
+import { initializeToggleFeatureStatus } from '../src/modules/popup/popup-toggle-feature-status';
 import { mockStorage, mockRuntime } from './setup';
-import { Logger } from '../src/utils/logger';
-import { MESSAGE_ACTIONS } from '../src/constants';
+import { Logger } from '../src/modules/common/utils/logger';
+import { MESSAGE_ACTIONS } from '../src/modules/common/constants';
 
-vi.mock('../src/utils/logger');
+vi.mock('../src/modules/common/utils/logger');
 
 interface MockToggleElement {
   setAttribute: jest.Mock;
