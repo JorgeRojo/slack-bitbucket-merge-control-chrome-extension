@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+
 export const mockStorage = {
   sync: {
     get: vi.fn().mockResolvedValue({}),
@@ -14,23 +15,23 @@ export const mockStorage = {
     addListener: vi.fn(),
   },
 };
+
 export const mockRuntime = {
   onMessage: {
     addListener: vi.fn(),
   },
   onInstalled: {
-    addListener: vi.fn(callback => {
-    }),
+    addListener: vi.fn(_callback => {}),
   },
   onStartup: {
-    addListener: vi.fn(callback => {
-    }),
+    addListener: vi.fn(_callback => {}),
   },
   sendMessage: vi.fn().mockResolvedValue(undefined),
   openOptionsPage: vi.fn().mockResolvedValue(undefined),
   getURL: vi.fn(() => ''),
   lastError: null,
 };
+
 export const mockAlarms = {
   onAlarm: {
     addListener: vi.fn(),
@@ -38,25 +39,30 @@ export const mockAlarms = {
   create: vi.fn().mockResolvedValue(undefined),
   clear: vi.fn().mockResolvedValue(undefined),
 };
+
 export const mockTabs = {
   query: vi.fn().mockResolvedValue([]),
   sendMessage: vi.fn().mockResolvedValue(undefined),
 };
+
 export const mockAction = {
   setIcon: vi.fn().mockResolvedValue(undefined),
   setBadgeText: vi.fn().mockResolvedValue(undefined),
   setBadgeBackgroundColor: vi.fn().mockResolvedValue(undefined),
 };
+
 export const mockScripting = {
   registerContentScripts: vi.fn().mockResolvedValue(undefined),
   unregisterContentScripts: vi.fn().mockResolvedValue(undefined),
   getRegisteredContentScripts: vi.fn().mockResolvedValue([]),
 };
+
 export const mockPermissions = {
   request: vi.fn().mockResolvedValue(true),
   contains: vi.fn().mockResolvedValue(true),
 };
-interface ChromeMock {
+
+interface _ChromeMock {
   storage: typeof mockStorage;
   runtime: typeof mockRuntime;
   alarms: typeof mockAlarms;
@@ -65,6 +71,7 @@ interface ChromeMock {
   scripting: typeof mockScripting;
   permissions: typeof mockPermissions;
 }
+
 (global as any).chrome = {
   storage: mockStorage,
   runtime: mockRuntime,
@@ -74,23 +81,29 @@ interface ChromeMock {
   scripting: mockScripting,
   permissions: mockPermissions,
 };
+
 class MockWebSocket {
   onopen: (() => void) | null = null;
   onmessage: ((event: any) => void) | null = null;
   onclose: (() => void) | null = null;
   onerror: ((error: any) => void) | null = null;
   readyState: number = WebSocket.OPEN;
+
   addEventListener = vi.fn();
   removeEventListener = vi.fn();
   send = vi.fn();
   close = vi.fn();
 }
+
 (global as any).WebSocket = vi.fn().mockImplementation(() => new MockWebSocket());
+
 (global.WebSocket as any).CONNECTING = 0;
 (global.WebSocket as any).OPEN = 1;
 (global.WebSocket as any).CLOSING = 2;
 (global.WebSocket as any).CLOSED = 3;
+
 (global as any).fetch = vi.fn();
+
 (global as any).document = {
   getElementById: vi.fn(),
   createElement: vi.fn(() => ({

@@ -148,7 +148,7 @@ describe('popup.js', () => {
   });
   describe('Configuration handling', () => {
     test('should show config needed UI when slackToken is missing', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {
           slackToken: null,
           appToken: 'xapp-token',
@@ -165,7 +165,7 @@ describe('popup.js', () => {
       expect(mockOpenOptionsButton.style.display).toBe('block');
     });
     test('should show config needed UI when appToken is missing', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {
           slackToken: 'xoxb-token',
           appToken: null,
@@ -182,7 +182,7 @@ describe('popup.js', () => {
       expect(mockOpenOptionsButton.style.display).toBe('block');
     });
     test('should show config needed UI when channelName is missing', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {
           slackToken: 'xoxb-token',
           appToken: 'xapp-token',
@@ -199,7 +199,7 @@ describe('popup.js', () => {
       expect(mockOpenOptionsButton.style.display).toBe('block');
     });
     test('should show config needed UI when all tokens are missing', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {
           slackToken: null,
           appToken: null,
@@ -221,7 +221,7 @@ describe('popup.js', () => {
         appToken: 'xapp-token',
         channelName: null,
       });
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         if (typeof callback === 'function') {
           callback({
             slackToken: null,
@@ -251,7 +251,7 @@ describe('popup.js', () => {
         }
         return createMockElement();
       });
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         if (typeof callback === 'function') {
           callback({
             slackToken: null,
@@ -269,7 +269,7 @@ describe('popup.js', () => {
       expect(mockErrorDetails.remove).toHaveBeenCalled();
     });
     test('should handle edge case where no specific errors but config is incomplete', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         if (typeof callback === 'function') {
           setTimeout(
             () =>
@@ -520,7 +520,7 @@ describe('popup.js', () => {
       expect(mockOptionsLinkContainer.style.display).toBe('block');
     });
     test('should hide options link container when options button is shown', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {
           slackToken: null,
           appToken: null,
@@ -602,7 +602,7 @@ describe('popup.js', () => {
   });
   describe('Edge cases', () => {
     test('should handle empty storage responses', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {};
         if (typeof callback === 'function') {
           setTimeout(() => callback(result), 0);
@@ -623,7 +623,7 @@ describe('popup.js', () => {
     });
     test('should handle missing popup content element', async () => {
       (document.querySelector as Mock) = vi.fn(() => null);
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {
           slackToken: null,
           appToken: null,
@@ -637,7 +637,7 @@ describe('popup.js', () => {
       await expect(domContentLoadedHandler()).resolves.not.toThrow();
     });
     test('should handle config with empty strings', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {
           slackToken: '',
           appToken: '',
@@ -653,7 +653,7 @@ describe('popup.js', () => {
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });
     test('should handle partial configuration correctly', async () => {
-      mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+      mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
         const result = {
           slackToken: 'token',
           appToken: '',

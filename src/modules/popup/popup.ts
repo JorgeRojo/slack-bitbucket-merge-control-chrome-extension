@@ -4,7 +4,7 @@ import { literals } from '../common/literals';
 import '../common/components/toggle-switch/toggle-switch';
 import '../common/components/nav-links/nav-links';
 import { initializeToggleFeatureStatus } from './popup-toggle-feature-status';
-import { ProcessedMessage, MergeStatusInfo, AppStatusInfo } from '../common/types/app';
+import { ProcessedMessage } from '../common/types/app';
 import { toErrorType } from '../common/utils/type-helpers';
 
 interface UIElements {

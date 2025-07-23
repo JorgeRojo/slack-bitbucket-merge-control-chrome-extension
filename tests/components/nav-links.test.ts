@@ -1,27 +1,33 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mockRuntime } from '../setup';
 import '../../src/modules/common/components/nav-links/nav-links';
+
 const waitForRender = async (): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, 50));
 };
+
 describe('NavLinks Component', () => {
   let navLinks: HTMLElement;
   let originalOpenOptionsPage: typeof mockRuntime.openOptionsPage;
   let originalGetURL: typeof mockRuntime.getURL;
+
   beforeEach(async () => {
     originalOpenOptionsPage = mockRuntime.openOptionsPage;
     originalGetURL = mockRuntime.getURL;
     mockRuntime.openOptionsPage = vi.fn();
-    mockRuntime.getURL = vi.fn(path => `chrome-extension:
+    mockRuntime.getURL = vi.fn(path => `chrome-extension://extension-id${path}`);
+
     navLinks = document.createElement('nav-links');
     document.body.appendChild(navLinks);
     await waitForRender();
   });
+
   afterEach(() => {
     document.body.contains(navLinks) && document.body.removeChild(navLinks);
     mockRuntime.openOptionsPage = originalOpenOptionsPage;
     mockRuntime.getURL = originalGetURL;
   });
+
   test('should render with default attributes', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     if (!navLinks.shadowRoot) {
@@ -54,6 +60,7 @@ describe('NavLinks Component', () => {
     expect(helpLink?.textContent).toBe('Help');
     expect(separator?.textContent).toBe('|');
   });
+
   test('should apply custom id and class attributes', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     document.body.removeChild(navLinks);
@@ -70,6 +77,7 @@ describe('NavLinks Component', () => {
     expect(container?.id).toBe('custom-id');
     expect(container?.className).toBe('custom-class');
   });
+
   test('should open options page when options link is clicked', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     if (!navLinks.shadowRoot) {
@@ -80,6 +88,7 @@ describe('NavLinks Component', () => {
     optionsLink?.click();
     expect(mockRuntime.openOptionsPage).toHaveBeenCalledTimes(1);
   });
+
   test('should open options page via URL when mockRuntime.openOptionsPage is not available', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     mockRuntime.openOptionsPage = undefined as any;
@@ -92,9 +101,10 @@ describe('NavLinks Component', () => {
     const optionsLink = navLinks.shadowRoot.querySelector('#options-link');
     optionsLink?.click();
     expect(window.open).toHaveBeenCalledTimes(1);
-    expect(window.open).toHaveBeenCalledWith('chrome-extension:
+    expect(window.open).toHaveBeenCalledWith('chrome-extension://extension-id/options.html');
     window.open = originalWindowOpen;
   });
+
   test('should open help page when help link is clicked', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     const originalWindowOpen = window.open;
@@ -106,9 +116,10 @@ describe('NavLinks Component', () => {
     const helpLink = navLinks.shadowRoot.querySelector('#help-link');
     helpLink?.click();
     expect(window.open).toHaveBeenCalledTimes(1);
-    expect(window.open).toHaveBeenCalledWith('chrome-extension:
+    expect(window.open).toHaveBeenCalledWith('chrome-extension://extension-id/help.html');
     window.open = originalWindowOpen;
   });
+
   test('should handle missing links gracefully', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     document.body.removeChild(navLinks);

@@ -1,4 +1,4 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { mockStorage, mockRuntime } from './setup';
 import {
   DEFAULT_ALLOWED_PHRASES,
@@ -48,17 +48,17 @@ describe('Options Page', () => {
         mockElements[key].value = '';
       }
     });
-    mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
+    mockStorage.sync.get.mockImplementation((_keys: string[], callback: Function) => {
       callback({});
     });
-    mockStorage.sync.set.mockImplementation((data: Record<string, any>, callback?: Function) => {
+    mockStorage.sync.set.mockImplementation((_data: Record<string, any>, callback?: Function) => {
       if (callback) callback();
     });
-    mockStorage.local.remove.mockImplementation((keys: string[], callback?: Function) => {
+    mockStorage.local.remove.mockImplementation((_keys: string[], callback?: Function) => {
       if (callback) callback();
     });
     vi.spyOn(global, 'setTimeout').mockImplementation((_fn: Function) => {
-      return 123 as any; 
+      return 123 as any;
     });
   });
   afterEach(() => {
@@ -99,7 +99,7 @@ describe('Options Page', () => {
       allowedPhrases: 'phrase1,phrase2',
       disallowedPhrases: 'disallowed1,disallowed2',
       exceptionPhrases: 'exception1,exception2',
-      bitbucketUrl: 'https:
+      bitbucketUrl: 'https://example.com',
       mergeButtonSelector: '.test-selector',
     });
     expect(mockElements.slackToken.value).toBe('test-slack-token');
@@ -108,7 +108,7 @@ describe('Options Page', () => {
     expect(mockElements.allowedPhrases.value).toBe('phrase1\nphrase2');
     expect(mockElements.disallowedPhrases.value).toBe('disallowed1\ndisallowed2');
     expect(mockElements.exceptionPhrases.value).toBe('exception1\nexception2');
-    expect(mockElements.bitbucketUrl.value).toBe('https:
+    expect(mockElements.bitbucketUrl.value).toBe('https://example.com');
     expect(mockElements.mergeButtonSelector.value).toBe('.test-selector');
   });
   test('should save options when save button is clicked with valid inputs', async () => {
@@ -122,7 +122,7 @@ describe('Options Page', () => {
     mockElements.allowedPhrases.value = 'phrase1\nphrase2';
     mockElements.disallowedPhrases.value = 'disallowed1\ndisallowed2';
     mockElements.exceptionPhrases.value = 'exception1\nexception2';
-    mockElements.bitbucketUrl.value = 'https:
+    mockElements.bitbucketUrl.value = 'https://example.com';
     mockElements.mergeButtonSelector.value = '.test-selector';
     saveClickHandler();
     expect(mockStorage.sync.set).toHaveBeenCalledWith(
@@ -133,7 +133,7 @@ describe('Options Page', () => {
         allowedPhrases: 'phrase1,phrase2',
         disallowedPhrases: 'disallowed1,disallowed2',
         exceptionPhrases: 'exception1,exception2',
-        bitbucketUrl: 'https:
+        bitbucketUrl: 'https://example.com',
         mergeButtonSelector: '.test-selector',
       },
       expect.any(Function)
@@ -167,7 +167,7 @@ describe('Options Page', () => {
     mockElements.slackToken.value = '';
     mockElements.appToken.value = 'test-app-token';
     mockElements.channelName.value = 'test-channel';
-    mockElements.bitbucketUrl.value = 'https:
+    mockElements.bitbucketUrl.value = 'https://example.com';
     mockElements.mergeButtonSelector.value = '.test-selector';
     saveClickHandler();
     expect(mockElements.status.textContent).toBe(literals.options.textFillAllFields);
@@ -185,12 +185,12 @@ describe('Options Page', () => {
     mockElements.allowedPhrases.value = 'phrase1\nphrase2';
     mockElements.disallowedPhrases.value = 'disallowed1\ndisallowed2';
     mockElements.exceptionPhrases.value = 'exception1\nexception2';
-    mockElements.bitbucketUrl.value = 'https:
+    mockElements.bitbucketUrl.value = 'https://example.com';
     mockElements.mergeButtonSelector.value = '.test-selector';
     saveClickHandler();
     expect(mockStorage.sync.set).toHaveBeenCalledWith(
       expect.objectContaining({
-        channelName: 'test-channel', 
+        channelName: 'test-channel',
       }),
       expect.any(Function)
     );
@@ -206,7 +206,7 @@ describe('Options Page', () => {
     mockElements.allowedPhrases.value = '  phrase1  \n\n  phrase2  \n\n';
     mockElements.disallowedPhrases.value = 'disallowed1\ndisallowed2';
     mockElements.exceptionPhrases.value = 'exception1\nexception2';
-    mockElements.bitbucketUrl.value = 'https:
+    mockElements.bitbucketUrl.value = 'https://example.com';
     mockElements.mergeButtonSelector.value = '.test-selector';
     saveClickHandler();
     expect(mockStorage.sync.set).toHaveBeenCalledWith(

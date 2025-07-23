@@ -3,9 +3,8 @@ import { initializeToggleFeatureStatus } from '../src/modules/popup/popup-toggle
 import { mockStorage, mockRuntime } from './setup';
 import { Logger } from '../src/modules/common/utils/logger';
 import { MESSAGE_ACTIONS } from '../src/modules/common/constants';
-import { eventNames } from 'node:process';
 vi.mock('../src/modules/common/utils/logger');
-interface MockFeatureToggleElement {
+interface _MockFeatureToggleElement {
   setAttribute: Mock;
   removeAttribute: Mock;
   querySelector: Mock;
@@ -280,7 +279,7 @@ describe('popup-toggle-feature-status.js', () => {
     });
     test('should handle runtime errors when checking countdown status', async () => {
       mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
-      mockRuntime.sendMessage.mockImplementation((message: any, callback: Function) => {
+      mockRuntime.sendMessage.mockImplementation((_message: any, callback: Function) => {
         mockRuntime.lastError = { message: 'Connection error' };
         callback();
         mockRuntime.lastError = null;
@@ -329,7 +328,7 @@ describe('popup-toggle-feature-status.js', () => {
     test('should handle updateCountdownDisplay when feature is enabled', async () => {
       mockStorage.local.get.mockResolvedValue({ featureEnabled: true });
       await initializeToggleFeatureStatus(mockFeatureToggleElement as any);
-      const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
+      const _messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
       expect(mockCountdownElement.style.display).toBe('none');
       expect(mockCountdownElement.textContent).toBeUndefined();
     });

@@ -585,7 +585,7 @@ const messageHandlers: Record<
             await fetchAndStoreMessages(slackToken, channelId);
 
             await updateContentScriptMergeState(targetChannelName);
-            
+
             sendResponse({ success: true });
           } catch (error) {
             Logger.error(toErrorType(error), ERROR_MESSAGES.FETCHING_MESSAGES);
@@ -606,8 +606,11 @@ const messageHandlers: Record<
                 });
               }
             }
-            
-            sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+
+            sendResponse({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
         } else {
           await updateAppStatus(APP_STATUS.CONFIG_ERROR);
@@ -615,7 +618,10 @@ const messageHandlers: Record<
         }
       } catch (error) {
         console.error('[Background] Error in FETCH_NEW_MESSAGES:', error);
-        sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     })();
     return true;
@@ -639,11 +645,14 @@ const messageHandlers: Record<
         }
 
         connectToSlackSocketMode();
-        
+
         sendResponse({ success: true });
       } catch (error) {
         console.error('[Background] Error in RECONNECT_SLACK:', error);
-        sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     })();
     return true;
@@ -664,11 +673,14 @@ const messageHandlers: Record<
             }
           }
         }
-        
+
         sendResponse({ success: true });
       } catch (error) {
         console.error('[Background] Error in BITBUCKET_TAB_LOADED:', error);
-        sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     })();
     return true;
@@ -691,7 +703,7 @@ const messageHandlers: Record<
         if (channelName) {
           await updateContentScriptMergeState(channelName);
         }
-        
+
         sendResponse({ success: true });
       } catch (error) {
         console.error('[Background] Error in FEATURE_TOGGLE_CHANGED:', error);
@@ -711,7 +723,7 @@ const messageHandlers: Record<
         if (channelName) {
           await updateContentScriptMergeState(channelName);
         }
-        
+
         sendResponse({ success: true });
       } catch (error) {
         console.error('[Background] Error in COUNTDOWN_COMPLETED:', error);

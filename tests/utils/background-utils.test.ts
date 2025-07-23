@@ -58,7 +58,7 @@ describe('Background Utils', () => {
       expect(cleanSlackMessageText('<@U123456> Hello <#C123456|channel>')).toBe(
         '@MENTION Hello @CHANNEL'
       );
-      expect(cleanSlackMessageText('Check this link: <https:
+      expect(cleanSlackMessageText('Check this link: <https://example.com>')).toBe(
         'Check this link:'
       );
       expect(cleanSlackMessageText('Line 1\nLine 2\tTab')).toBe('Line 1 Line 2 Tab');
@@ -427,8 +427,8 @@ describe('Background Utils', () => {
         call => call[0].messages !== undefined
       );
       expect(setCall).toBeDefined();
-      expect(setCall[0].messages[0].ts).toBe('1234567891'); 
-      expect(setCall[0].messages[1].ts).toBe('1234567890'); 
+      expect(setCall[0].messages[0].ts).toBe('1234567891');
+      expect(setCall[0].messages[1].ts).toBe('1234567890');
     });
     test('should limit the number of messages', async () => {
       const messages = Array.from({ length: 60 }, (_, i) => ({
@@ -457,8 +457,8 @@ describe('Background Utils', () => {
       expect(setCall[0].messages[0].ts).toBe('9999999999');
     });
     test('should handle invalid messages', async () => {
-      const invalidMessage1: any = { user: 'U123' }; 
-      const invalidMessage2: any = { ts: '1234567890' }; 
+      const invalidMessage1: any = { user: 'U123' };
+      const invalidMessage2: any = { ts: '1234567890' };
       await processAndStoreMessage(invalidMessage1);
       await processAndStoreMessage(invalidMessage2);
       const setCalls = mockChrome.storage.local.set.mock.calls.filter(

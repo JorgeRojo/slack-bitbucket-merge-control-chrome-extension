@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { mockStorage, mockRuntime } from './setup';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -55,7 +56,7 @@ describe('Content Script Initialization', () => {
     mockStorage.sync.get.mockResolvedValue({
       mergeButtonSelector: '.test-merge-button',
     });
-    mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
+    mockStorage.local.get.mockImplementation((_keys: string[], callback: Function) => {
       callback({
         lastKnownMergeState: {
           mergeStatus: 'allowed',
@@ -297,7 +298,7 @@ describe('Initial Merge State Application', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
+    mockStorage.local.get.mockImplementation((_keys: string[], callback: Function) => {
       callback({
         featureEnabled: true,
       });
@@ -315,7 +316,7 @@ describe('Initial Merge State Application', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
+    mockStorage.local.get.mockImplementation((_keys: string[], callback: Function) => {
       callback({
         lastKnownMergeState: {
           mergeStatus: 'disallowed',
@@ -335,7 +336,7 @@ describe('Initial Merge State Application', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
+    mockStorage.local.get.mockImplementation((_keys: string[], callback: Function) => {
       callback({
         lastKnownMergeState: {
           mergeStatus: 'exception',
@@ -356,7 +357,7 @@ describe('Initial Merge State Application', () => {
       _customMergeHandler: () => {},
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
+    mockStorage.local.get.mockImplementation((_keys: string[], callback: Function) => {
       callback({
         lastKnownMergeState: {
           mergeStatus: 'allowed',
@@ -376,7 +377,7 @@ describe('Initial Merge State Application', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    mockStorage.local.get.mockImplementation((keys: string[], callback: Function) => {
+    mockStorage.local.get.mockImplementation((_keys: string[], callback: Function) => {
       callback({
         lastKnownMergeState: {
           mergeStatus: 'disallowed',

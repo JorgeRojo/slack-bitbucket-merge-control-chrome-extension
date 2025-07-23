@@ -1,4 +1,4 @@
-import { vi, describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { vi, describe, test, expect, beforeAll, afterAll, Mock } from 'vitest';
 import {
   mockStorage,
   mockRuntime,
@@ -9,9 +9,9 @@ import {
   mockPermissions,
 } from './setup';
 import { Logger } from '../src/modules/common/utils/logger';
-import { MERGE_STATUS, MESSAGE_ACTIONS, APP_STATUS } from '../src/modules/common/constants';
-import { ChromeRuntimeMessage } from '../src/modules/common/types/chrome';
-import { ProcessedMessage } from '../src/modules/common/types/app';
+import { _MERGE_STATUS, MESSAGE_ACTIONS, _APP_STATUS } from '../src/modules/common/constants';
+import { _ChromeRuntimeMessage } from '../src/modules/common/types/chrome';
+import { _ProcessedMessage } from '../src/modules/common/types/app';
 interface MessageRequest {
   action: string;
   payload?: {
@@ -58,7 +58,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       channelName: 'test-channel',
       disallowedPhrases: 'block,stop,do not merge,not merge anything',
       exceptionPhrases: 'allow,proceed,exception',
-      bitbucketUrl: 'https:
+      bitbucketUrl: 'https://bitbucket.example.com',
       appToken: 'test-app-token',
     });
     const defaultStorage = {
@@ -140,7 +140,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
           json: () =>
             Promise.resolve({
               ok: true,
-              url: 'wss:
+              url: 'wss://example.com/websocket',
             }),
         });
       }
@@ -234,9 +234,12 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const calls = mockStorage.local.set.mock.calls;
     const hasFeatureEnabledCall = calls.some(
       call =>
-        call[0].hasOwnProperty('featureEnabled') && !call[0].hasOwnProperty('lastKnownMergeState')
+        Object.prototype.hasOwnProperty.call(call[0], 'featureEnabled') &&
+        !Object.prototype.hasOwnProperty.call(call[0], 'lastKnownMergeState')
     );
-    const hasMergeStateCall = calls.some(call => call[0].hasOwnProperty('lastKnownMergeState'));
+    const hasMergeStateCall = calls.some(call =>
+      Object.prototype.hasOwnProperty.call(call[0], 'lastKnownMergeState')
+    );
     expect(hasFeatureEnabledCall).toBe(true);
     expect(hasMergeStateCall).toBe(true);
   });
@@ -424,7 +427,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
                     ts: '1234567890',
                   },
                   {
-                    text: 'Check this link: <https:
+                    text: 'Check this link: <https://example.com>',
                     ts: '1234567891',
                   },
                   {
@@ -477,9 +480,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should handle Bitbucket tab communication', async () => {
     expect(messageHandler).toBeDefined();
     mockTabs.sendMessage.mockClear();
-    mockTabs.query.mockResolvedValueOnce([
-      { id: 123, url: 'https:
-    ]);
+    mockTabs.query.mockResolvedValueOnce([{ id: 123, url: 'https://example.com' }]);
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED },
       { tab: { id: 123 } }
@@ -558,11 +559,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(storageChangeHandler).toBeDefined();
     mockScripting.getRegisteredContentScripts.mockResolvedValueOnce([]);
     mockStorage.sync.get.mockResolvedValueOnce({
-      bitbucketUrl: 'https:
+      bitbucketUrl: 'https://example.com',
     });
     const changes = {
       bitbucketUrl: {
-        newValue: 'https:
+        newValue: 'https://example.com/new',
       },
     };
     await storageChangeHandler(changes, 'sync');
@@ -589,10 +590,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     mockScripting.unregisterContentScripts.mockRejectedValueOnce(new Error('Unregister failed'));
     mockScripting.registerContentScripts.mockRejectedValueOnce(new Error('Register failed'));
     mockStorage.sync.get.mockResolvedValueOnce({
-      bitbucketUrl: 'https:
+      bitbucketUrl: 'https://example.com',
     });
     const changes = {
-      bitbucketUrl: { newValue: 'https:
+      bitbucketUrl: { newValue: 'https://example.com/new' },
     };
     await expect(async () => await storageChangeHandler(changes, 'sync')).not.toThrow();
   });
@@ -602,7 +603,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     mockScripting.unregisterContentScripts.mockClear();
     mockScripting.registerContentScripts.mockClear();
     const changes = {
-      bitbucketUrl: { newValue: 'https:
+      bitbucketUrl: { newValue: 'https://example.com/new' },
     };
     await storageChangeHandler(changes, 'local');
     expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
@@ -760,7 +761,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     }
     mockStorage.sync.get.mockClear();
     mockStorage.sync.set.mockClear();
-    mockStorage.sync.get.mockImplementationOnce((key: any, callback: any) => {
+    mockStorage.sync.get.mockImplementationOnce((_key: any, callback: any) => {
       callback({});
       return Promise.resolve({});
     });
@@ -790,8 +791,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       if (storageChangeHandler) {
         const changes = {
           bitbucketUrl: {
-            oldValue: 'https:
-            newValue: 'https:
+            oldValue: 'https://example.com/old',
+            newValue: 'https://example.com/new',
           },
         };
         await storageChangeHandler(changes, 'sync');
@@ -806,7 +807,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         await import('../src/modules/background/background');
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
         if (installedHandler) {
-          mockStorage.sync.get.mockImplementationOnce((key: any, callback: any) => {
+          mockStorage.sync.get.mockImplementationOnce((_key: any, callback: any) => {
             callback({});
           });
           await installedHandler({ reason: 'install' });
@@ -891,7 +892,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         await import('../src/modules/background/background');
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
         if (installedHandler) {
-          mockStorage.sync.get.mockImplementationOnce((key: any, callback: any) => {
+          mockStorage.sync.get.mockImplementationOnce((_key: any, callback: any) => {
             callback({ mergeButtonSelector: 'existing-selector' });
           });
           mockStorage.sync.set.mockClear();
@@ -928,7 +929,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         await import('../src/modules/background/background');
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
         if (installedHandler) {
-          mockStorage.sync.get.mockImplementationOnce((key: any, callback: any) => {
+          mockStorage.sync.get.mockImplementationOnce((_key: any, callback: any) => {
             callback({});
           });
           await installedHandler({ reason: 'install' });
@@ -968,8 +969,8 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       if (storageChangeHandler) {
         const changes = {
           bitbucketUrl: {
-            oldValue: 'https:
-            newValue: 'https:
+            oldValue: 'https://example.com/old',
+            newValue: 'https://example.com/new',
           },
         };
         await storageChangeHandler(changes, 'sync');
