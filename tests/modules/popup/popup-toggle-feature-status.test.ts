@@ -3,7 +3,7 @@ import { initializeToggleFeatureStatus } from '@src/modules/popup/popup-toggle-f
 import { MESSAGE_ACTIONS } from '@src/modules/common/constants';
 
 // Mock Logger
-vi.mock('../src/modules/common/utils/Logger', () => ({
+vi.mock('@src/modules/common/utils/Logger', () => ({
   Logger: {
     error: vi.fn(),
   },

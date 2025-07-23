@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Logger } from '../../src/modules/common/utils/logger';
+import { Logger } from '@src/modules/common/utils/logger';
 
 describe('Logger', () => {
   const originalConsoleLog = console.log;

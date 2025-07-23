@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { mockStorage, mockRuntime } from './setup';
+import { mockStorage, mockRuntime } from '@src/../tests/setup';
 import {
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,

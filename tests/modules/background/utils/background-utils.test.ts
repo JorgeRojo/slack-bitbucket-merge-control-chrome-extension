@@ -8,10 +8,10 @@ import {
   updateIconBasedOnCurrentMessages,
   getPhrasesFromStorage,
   processAndStoreMessage,
-} from '../../src/modules/background/utils/background-utils';
-import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '../../src/modules/common/constants';
-import { ProcessedMessage } from '../../src/modules/common/types/app';
-import { SlackMessage } from '../../src/modules/common/types/slack';
+} from '@src/modules/background/utils/background-utils';
+import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '@src/modules/common/constants';
+import { ProcessedMessage } from '@src/modules/common/types/app';
+import { SlackMessage } from '@src/modules/common/types/slack';
 const mockChrome = {
   action: {
     setIcon: vi.fn(),

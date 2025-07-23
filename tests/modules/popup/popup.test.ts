@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
-import { mockStorage, mockRuntime } from './setup';
+import { mockStorage, mockRuntime } from '@src/../tests/setup';
 import { Logger } from '@src/modules/common/utils/logger';
 import { MERGE_STATUS, APP_STATUS } from '@src/modules/common/constants';
 import { initializeToggleFeatureStatus } from '@src/modules/popup/popup-toggle-feature-status.ts';

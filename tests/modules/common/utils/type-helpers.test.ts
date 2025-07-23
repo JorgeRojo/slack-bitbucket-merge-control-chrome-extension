@@ -5,7 +5,7 @@ import {
   toStringOrUndefined,
   isString,
   isError,
-} from '../../src/modules/common/utils/type-helpers';
+} from '@src/modules/common/utils/type-helpers';
 describe('Type Helpers', () => {
   describe('toErrorType', () => {
     test('should return Error instance as-is', () => {
