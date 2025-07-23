@@ -2,41 +2,50 @@ import { defineConfig, Plugin } from 'vite';
 import { resolve } from 'path';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { build } from 'esbuild';
+import fs from 'fs/promises';
 
-// Custom plugin to handle content script as IIFE
-function chromeExtensionContentScript(): Plugin {
+const entries = {
+  background: resolve(__dirname, 'src/background.ts'),
+  popup: resolve(__dirname, 'src/popup.ts'),
+  options: resolve(__dirname, 'src/options.ts'),
+  help: resolve(__dirname, 'src/help.ts'),
+  content: resolve(__dirname, 'src/content.ts'),
+};
+
+function generateIIFEFiles(): Plugin {
   return {
-    name: 'chrome-extension-content-script',
+    name: 'generate-iife-files',
     apply: 'build',
-    async generateBundle(options, bundle) {
-      // Find and remove content script from the bundle
-      const contentChunkName = Object.keys(bundle).find(
-        name =>
-          name === 'content.js' ||
-          (bundle[name].type === 'chunk' && bundle[name].name === 'content')
-      );
-
-      if (contentChunkName) {
-        // Remove the content script from Vite's bundle
-        delete bundle[contentChunkName];
-
-        // Build content script separately with esbuild as IIFE
-        console.log('🔧 Building content script with esbuild (IIFE format)...');
+    closeBundle: async () => {
+      try {
+        const files = await fs.readdir(resolve(__dirname, 'dist/assets'));
+        for (const file of files) {
+          if (file.startsWith('index-') && file.endsWith('.js')) {
+            await fs.unlink(resolve(__dirname, 'dist/assets', file));
+            console.log(`✅ Removed ${file}`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error removing unnecessary files:', error);
+      }
+      
+      for (const [name, entry] of Object.entries(entries)) {
+        console.log(`Building ${name} as IIFE...`);
+        
         try {
           await build({
-            entryPoints: [resolve(__dirname, 'src/content.ts')],
+            entryPoints: [entry],
             bundle: true,
-            outfile: resolve(__dirname, 'dist/content.js'),
+            outfile: resolve(__dirname, `dist/${name}.js`),
             format: 'iife',
             target: 'es2020',
             platform: 'browser',
             sourcemap: true,
             minify: false,
           });
-          console.log('✅ Content script built successfully!');
+          console.log(`✅ ${name}.js built successfully!`);
         } catch (error) {
-          console.error('❌ Content script build failed:', error);
-          throw error;
+          console.error(`❌ Error building ${name}:`, error);
         }
       }
     },
@@ -49,27 +58,15 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        background: resolve(__dirname, 'src/background.ts'),
-        popup: resolve(__dirname, 'src/popup.ts'),
-        options: resolve(__dirname, 'src/options.ts'),
-        help: resolve(__dirname, 'src/help.ts'),
-        content: resolve(__dirname, 'src/content.ts'), // Will be intercepted by plugin
+        index: resolve(__dirname, 'src/manifest.json'),
       },
       output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: 'chunks/[name].js',
-        assetFileNames: 'assets/[name].[ext]',
-        format: 'es',
-        manualChunks: undefined,
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
-      external: [],
     },
-    target: 'es2020',
-    minify: false,
-    sourcemap: true,
   },
   plugins: [
-    chromeExtensionContentScript(),
+    generateIIFEFiles(),
     viteStaticCopy({
       targets: [
         { src: 'src/manifest.json', dest: '.' },
@@ -85,7 +82,4 @@ export default defineConfig({
       ],
     }),
   ],
-  resolve: {
-    extensions: ['.ts'],
-  },
 });
