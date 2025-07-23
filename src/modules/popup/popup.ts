@@ -6,6 +6,7 @@ import '../common/components/nav-links/nav-links';
 import { initializeToggleFeatureStatus } from './popup-toggle-feature-status';
 import { ProcessedMessage } from '../common/types/app';
 import { toErrorType } from '../common/utils/type-helpers';
+import ToggleSwitch from '../common/components/toggle-switch/toggle-switch';
 
 interface UIElements {
   statusIcon: HTMLElement | null;
@@ -13,7 +14,7 @@ interface UIElements {
   openOptionsButton: HTMLElement | null;
   slackChannelLink: HTMLAnchorElement | null;
   matchingMessageDiv: HTMLElement | null;
-  featureToggle?: HTMLElement | null;
+  featureToggle?: ToggleSwitch | null;
   optionsLinkContainer: HTMLElement | null;
 }
 
@@ -36,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     openOptionsButton: document.getElementById('open-options'),
     slackChannelLink: document.getElementById('slack-channel-link') as HTMLAnchorElement,
     matchingMessageDiv: document.getElementById('matching-message'),
-    featureToggle: document.getElementById('feature-toggle'),
+    featureToggle: document.getElementById('feature-toggle') as ToggleSwitch,
     optionsLinkContainer: document.getElementById('options-link-container'),
   };
 
