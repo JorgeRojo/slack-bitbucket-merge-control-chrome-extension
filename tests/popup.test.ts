@@ -1,14 +1,10 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
 import { mockStorage, mockRuntime } from './setup';
 import { Logger } from '../src/modules/common/utils/logger';
 import { MERGE_STATUS, APP_STATUS } from '../src/modules/common/constants';
 import { initializeToggleFeatureStatus } from '../src/modules/popup/popup-toggle-feature-status.ts';
-
-// Use vi.hoisted to ensure the mock function is available during hoisting
-
 vi.mock('../src/modules/common/utils/logger');
 vi.mock('../src/modules/popup/popup-toggle-feature-status');
-
 interface MockElement {
   className: string;
   textContent: string;
@@ -19,14 +15,13 @@ interface MockElement {
   href: string;
   innerHTML: string;
   id: string;
-  setAttribute: jest.Mock;
-  removeAttribute: jest.Mock;
-  addEventListener: jest.Mock;
-  appendChild: jest.Mock;
-  remove: jest.Mock;
-  querySelector: jest.Mock;
+  setAttribute: Mock;
+  removeAttribute: Mock;
+  addEventListener: Mock;
+  appendChild: Mock;
+  remove: Mock;
+  querySelector: Mock;
 }
-
 const createMockElement = (): MockElement => ({
   className: '',
   textContent: '',
@@ -41,11 +36,8 @@ const createMockElement = (): MockElement => ({
   remove: vi.fn(),
   querySelector: vi.fn(),
 });
-
 window.open = vi.fn();
-
 const initializeToggleFeatureStatusMock = vi.mocked(initializeToggleFeatureStatus);
-
 describe('popup.js', () => {
   let mockStatusIcon: MockElement,
     mockStatusText: MockElement,
@@ -56,28 +48,22 @@ describe('popup.js', () => {
     mockOptionsLinkContainer: MockElement,
     mockPopupContent: MockElement,
     mockErrorDetails: MockElement;
-
   let domContentLoadedHandler: () => Promise<void>;
   let storageChangeHandler: (changes: Record<string, any>, namespace: string) => void;
-
   beforeEach(async () => {
     vi.clearAllMocks();
-
-    (Logger.error as jest.Mock).mockClear();
-
+    (Logger.error as Mock).mockClear();
     mockStatusIcon = createMockElement();
     mockStatusText = createMockElement();
     mockOpenOptionsButton = createMockElement();
     mockSlackChannelLink = createMockElement();
     mockMatchingMessageDiv = createMockElement();
     mockFeatureToggle = createMockElement();
-    // Configure querySelector to return a mock toggle-switch element
     mockFeatureToggle.querySelector.mockReturnValue(createMockElement());
     mockOptionsLinkContainer = createMockElement();
     mockPopupContent = createMockElement();
     mockErrorDetails = createMockElement();
-
-    (document.getElementById as jest.Mock) = vi.fn((id: string) => {
+    (document.getElementById as Mock) = vi.fn((id: string) => {
       switch (id) {
         case 'status-icon':
           return mockStatusIcon;
@@ -99,28 +85,23 @@ describe('popup.js', () => {
           return null;
       }
     });
-
-    (document.querySelector as jest.Mock) = vi.fn((selector: string) => {
+    (document.querySelector as Mock) = vi.fn((selector: string) => {
       if (selector === '.popup-content') {
         return mockPopupContent;
       }
       return null;
     });
-
-    (document.addEventListener as jest.Mock) = vi.fn((event: string, handler: any) => {
+    (document.addEventListener as Mock) = vi.fn((event: string, handler: any) => {
       if (event === 'DOMContentLoaded') {
         domContentLoadedHandler = handler;
       }
     });
-
-    (document.createElement as jest.Mock) = vi.fn(() => createMockElement());
-
+    (document.createElement as Mock) = vi.fn(() => createMockElement());
     mockStorage.sync.get.mockResolvedValue({
       slackToken: 'xoxb-token',
       appToken: 'xapp-token',
       channelName: 'general',
     });
-
     mockStorage.local.get.mockResolvedValue({
       channelId: 'C123456',
       teamId: 'T123456',
@@ -130,22 +111,17 @@ describe('popup.js', () => {
         appStatus: APP_STATUS.OK,
       },
     });
-
     mockStorage.onChanged.addListener.mockImplementation((handler: any) => {
       storageChangeHandler = handler;
     });
-
     await import('../src/modules/popup/popup');
   });
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
-
   describe('DOMContentLoaded event', () => {
     test('should initialize all UI elements and setup event listeners', async () => {
       await domContentLoadedHandler();
-
       expect(initializeToggleFeatureStatusMock).toHaveBeenCalledWith(mockFeatureToggle);
       expect(mockOpenOptionsButton.addEventListener).toHaveBeenCalledWith(
         'click',
@@ -153,9 +129,8 @@ describe('popup.js', () => {
       );
       expect(mockStorage.onChanged.addListener).toHaveBeenCalledWith(expect.any(Function));
     });
-
     test('should handle missing UI elements gracefully', async () => {
-      (document.getElementById as jest.Mock) = vi.fn((id: string) => {
+      (document.getElementById as Mock) = vi.fn((id: string) => {
         switch (id) {
           case 'open-options':
             return mockOpenOptionsButton;
@@ -167,14 +142,10 @@ describe('popup.js', () => {
             return null;
         }
       });
-
       await expect(domContentLoadedHandler()).resolves.not.toThrow();
-      // In TypeScript version, initializeToggleFeatureStatus is not called when featureToggle is null
-      // This is safer behavior than the JavaScript version
       expect(initializeToggleFeatureStatusMock).not.toHaveBeenCalled();
     });
   });
-
   describe('Configuration handling', () => {
     test('should show config needed UI when slackToken is missing', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
@@ -188,15 +159,11 @@ describe('popup.js', () => {
         }
         return Promise.resolve(result);
       });
-
       await domContentLoadedHandler();
-
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
       expect(mockOpenOptionsButton.style.display).toBe('block');
     });
-
     test('should show config needed UI when appToken is missing', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         const result = {
@@ -209,14 +176,11 @@ describe('popup.js', () => {
         }
         return Promise.resolve(result);
       });
-
       await domContentLoadedHandler();
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
       expect(mockOpenOptionsButton.style.display).toBe('block');
     });
-
     test('should show config needed UI when channelName is missing', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         const result = {
@@ -229,14 +193,11 @@ describe('popup.js', () => {
         }
         return Promise.resolve(result);
       });
-
       await domContentLoadedHandler();
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
       expect(mockOpenOptionsButton.style.display).toBe('block');
     });
-
     test('should show config needed UI when all tokens are missing', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         const result = {
@@ -249,21 +210,17 @@ describe('popup.js', () => {
         }
         return Promise.resolve(result);
       });
-
       await domContentLoadedHandler();
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
       expect(mockOpenOptionsButton.style.display).toBe('block');
     });
-
     test('should create error details div with specific missing configuration', async () => {
       mockStorage.sync.get.mockResolvedValue({
         slackToken: null,
         appToken: 'xapp-token',
         channelName: null,
       });
-
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         if (typeof callback === 'function') {
           callback({
@@ -278,27 +235,22 @@ describe('popup.js', () => {
           channelName: null,
         });
       });
-
       await domContentLoadedHandler();
-
       expect(document.createElement).toHaveBeenCalledWith('div');
       expect(mockPopupContent.appendChild).toHaveBeenCalled();
     });
-
     test('should remove existing error details before adding new ones', async () => {
       mockStorage.sync.get.mockResolvedValue({
         slackToken: null,
         appToken: null,
         channelName: null,
       });
-
-      (document.getElementById as jest.Mock) = vi.fn((id: string) => {
+      (document.getElementById as Mock) = vi.fn((id: string) => {
         if (id === 'error-details') {
           return mockErrorDetails;
         }
         return createMockElement();
       });
-
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         if (typeof callback === 'function') {
           callback({
@@ -313,12 +265,9 @@ describe('popup.js', () => {
           channelName: null,
         });
       });
-
       await domContentLoadedHandler();
-
       expect(mockErrorDetails.remove).toHaveBeenCalled();
     });
-
     test('should handle edge case where no specific errors but config is incomplete', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         if (typeof callback === 'function') {
@@ -338,14 +287,11 @@ describe('popup.js', () => {
           channelName: null,
         });
       });
-
       await domContentLoadedHandler();
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });
   });
-
   describe('Merge status display', () => {
     test('should display ALLOWED status correctly', async () => {
       mockStorage.local.get.mockResolvedValue({
@@ -355,14 +301,11 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.ALLOWED);
       expect(mockMatchingMessageDiv.textContent).toBe('Merge approved');
       expect(mockMatchingMessageDiv.style.display).toBe('block');
     });
-
     test('should display DISALLOWED status correctly', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
@@ -371,14 +314,11 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.DISALLOWED);
       expect(mockMatchingMessageDiv.textContent).toBe('Do not merge');
       expect(mockMatchingMessageDiv.style.display).toBe('block');
     });
-
     test('should display EXCEPTION status correctly', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
@@ -387,14 +327,11 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.EXCEPTION);
       expect(mockSlackChannelLink.style.display).toBe('block');
       expect(mockMatchingMessageDiv.textContent).toBe('Merge with caution');
     });
-
     test('should handle unknown merge status', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
@@ -403,34 +340,25 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.UNKNOWN);
     });
-
     test('should show loading UI when no merge state exists', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: null,
       });
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.LOADING);
     });
-
     test('should show loading UI when merge state has no status', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
           mergeStatus: null,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.LOADING);
     });
-
     test('should handle channel not found error', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
@@ -438,13 +366,10 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.CHANNEL_NOT_FOUND,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.DISALLOWED);
     });
   });
-
   describe('Slack channel link setup', () => {
     test('should setup slack channel link with valid channelId and teamId', async () => {
       mockStorage.local.get.mockResolvedValue({
@@ -455,12 +380,9 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockSlackChannelLink.href).toContain('T123456/C123456');
     });
-
     test('should not setup slack channel link when channelId is missing', async () => {
       mockStorage.local.get.mockResolvedValue({
         channelId: null,
@@ -470,12 +392,9 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockSlackChannelLink.href).toBe('');
     });
-
     test('should not setup slack channel link when teamId is missing', async () => {
       mockStorage.local.get.mockResolvedValue({
         channelId: 'C123456',
@@ -485,111 +404,78 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockSlackChannelLink.href).toBe('');
     });
   });
-
   describe('Event handlers', () => {
     test('should handle options button click with openOptionsPage', async () => {
       mockRuntime.openOptionsPage = vi.fn();
-
       await domContentLoadedHandler();
-
       const clickHandler = mockOpenOptionsButton.addEventListener.mock.calls.find(
         call => call[0] === 'click'
       )[1];
-
       clickHandler();
-
       expect(mockRuntime.openOptionsPage).toHaveBeenCalled();
     });
-
     test('should handle options button click without openOptionsPage', async () => {
       mockRuntime.openOptionsPage = undefined as any;
       mockRuntime.getURL = vi.fn().mockReturnValue('options.html');
-
       await domContentLoadedHandler();
-
       const clickHandler = mockOpenOptionsButton.addEventListener.mock.calls.find(
         call => call[0] === 'click'
       )[1];
-
       clickHandler();
-
       expect(window.open).toHaveBeenCalledWith('options.html');
     });
-
     test('should handle storage changes for lastKnownMergeState', async () => {
       await domContentLoadedHandler();
-
       const changes = {
         lastKnownMergeState: {
           newValue: { mergeStatus: MERGE_STATUS.DISALLOWED },
         },
       };
-
       storageChangeHandler(changes, 'local');
-
       expect(mockStorage.sync.get).toHaveBeenCalled();
     });
-
     test('should handle storage changes for lastMatchingMessage', async () => {
       await domContentLoadedHandler();
-
       const changes = {
         lastMatchingMessage: {
           newValue: { text: 'New message' },
         },
       };
-
       storageChangeHandler(changes, 'local');
-
       expect(mockStorage.sync.get).toHaveBeenCalled();
     });
-
     test('should ignore storage changes for non-local namespace', async () => {
       await domContentLoadedHandler();
-
       mockStorage.sync.get.mockClear();
-
       const changes = {
         lastKnownMergeState: {
           newValue: { mergeStatus: MERGE_STATUS.DISALLOWED },
         },
       };
-
       storageChangeHandler(changes, 'sync');
-
       expect(mockStorage.sync.get).not.toHaveBeenCalled();
     });
-
     test('should ignore storage changes for irrelevant keys', async () => {
       await domContentLoadedHandler();
-
       mockStorage.sync.get.mockClear();
-
       const changes = {
         someOtherKey: {
           newValue: 'some value',
         },
       };
-
       storageChangeHandler(changes, 'local');
-
       expect(mockStorage.sync.get).not.toHaveBeenCalled();
     });
   });
-
   describe('Error handling', () => {
     test('should handle storage sync error gracefully', async () => {
-      (Logger.error as jest.Mock).mockClear();
+      (Logger.error as Mock).mockClear();
       mockStorage.sync.get.mockRejectedValue(new Error('Storage sync error'));
-
       await domContentLoadedHandler();
-
       expect(Logger.error).toHaveBeenCalledWith(
         expect.any(Error),
         'PopupUI',
@@ -599,13 +485,10 @@ describe('popup.js', () => {
       );
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.DISALLOWED);
     });
-
     test('should handle storage local error gracefully', async () => {
-      (Logger.error as jest.Mock).mockClear();
+      (Logger.error as Mock).mockClear();
       mockStorage.local.get.mockRejectedValue(new Error('Storage local error'));
-
       await domContentLoadedHandler();
-
       expect(Logger.error).toHaveBeenCalledWith(
         expect.any(Error),
         'PopupUI',
@@ -614,24 +497,18 @@ describe('popup.js', () => {
         })
       );
     });
-
     test('should show error UI when processing fails', async () => {
       mockStorage.sync.get.mockRejectedValue(new Error('Processing error'));
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.DISALLOWED);
     });
   });
-
   describe('UI state management', () => {
     test('should hide all elements initially and show relevant ones based on state', async () => {
       await domContentLoadedHandler();
-
       expect(mockOpenOptionsButton.style.display).toBe('none');
       expect(mockSlackChannelLink.style.display).toBe('none');
     });
-
     test('should show options link container when options button is hidden', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
@@ -639,12 +516,9 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockOptionsLinkContainer.style.display).toBe('block');
     });
-
     test('should hide options link container when options button is shown', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         const result = {
@@ -657,13 +531,10 @@ describe('popup.js', () => {
         }
         return Promise.resolve(result);
       });
-
       await domContentLoadedHandler();
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockOptionsLinkContainer.style.display).toBe('none');
     });
-
     test('should handle null matching message gracefully', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
@@ -672,14 +543,11 @@ describe('popup.js', () => {
           appStatus: APP_STATUS.OK,
         },
       });
-
       await domContentLoadedHandler();
-
       expect(mockMatchingMessageDiv.style.display).toBe('none');
     });
-
     test('should handle missing UI elements in updateUI', async () => {
-      (document.getElementById as jest.Mock) = vi.fn((id: string) => {
+      (document.getElementById as Mock) = vi.fn((id: string) => {
         switch (id) {
           case 'open-options':
             return mockOpenOptionsButton;
@@ -691,30 +559,23 @@ describe('popup.js', () => {
             return null;
         }
       });
-
       await expect(domContentLoadedHandler()).resolves.not.toThrow();
     });
   });
-
   describe('Integration tests', () => {
     test('should complete full initialization flow successfully', async () => {
       await domContentLoadedHandler();
-
       expect(mockStorage.sync.get).toHaveBeenCalled();
       expect(mockStorage.local.get).toHaveBeenCalled();
       expect(initializeToggleFeatureStatusMock).toHaveBeenCalled();
       expect(mockStorage.onChanged.addListener).toHaveBeenCalled();
     });
-
     test('should handle toggle initialization failure gracefully', async () => {
       initializeToggleFeatureStatusMock.mockRejectedValue(new Error('Toggle init failed'));
-
       await expect(domContentLoadedHandler()).rejects.toThrow('Toggle init failed');
     });
-
     test('should maintain proper execution order', async () => {
       const callOrder: string[] = [];
-
       mockStorage.sync.get.mockImplementation(() => {
         callOrder.push('sync-get');
         return Promise.resolve({
@@ -723,27 +584,22 @@ describe('popup.js', () => {
           channelName: 'channel',
         });
       });
-
       mockStorage.local.get.mockImplementation(() => {
         callOrder.push('local-get');
         return Promise.resolve({
           lastKnownMergeState: { mergeStatus: MERGE_STATUS.ALLOWED },
         });
       });
-
       initializeToggleFeatureStatusMock.mockImplementation(() => {
         callOrder.push('toggle-init');
         return Promise.resolve();
       });
-
       await domContentLoadedHandler();
-
       expect(callOrder).toContain('sync-get');
       expect(callOrder).toContain('local-get');
       expect(callOrder[callOrder.length - 1]).toBe('toggle-init');
     });
   });
-
   describe('Edge cases', () => {
     test('should handle empty storage responses', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
@@ -754,26 +610,19 @@ describe('popup.js', () => {
         return Promise.resolve(result);
       });
       mockStorage.local.get.mockResolvedValue({});
-
       await domContentLoadedHandler();
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });
-
     test('should handle malformed lastKnownMergeState', async () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: 'invalid-data',
       });
-
       await domContentLoadedHandler();
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.LOADING);
     });
-
     test('should handle missing popup content element', async () => {
-      (document.querySelector as jest.Mock) = vi.fn(() => null);
-
+      (document.querySelector as Mock) = vi.fn(() => null);
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         const result = {
           slackToken: null,
@@ -785,10 +634,8 @@ describe('popup.js', () => {
         }
         return Promise.resolve(result);
       });
-
       await expect(domContentLoadedHandler()).resolves.not.toThrow();
     });
-
     test('should handle config with empty strings', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         const result = {
@@ -801,13 +648,10 @@ describe('popup.js', () => {
         }
         return Promise.resolve(result);
       });
-
       await domContentLoadedHandler();
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });
-
     test('should handle partial configuration correctly', async () => {
       mockStorage.sync.get.mockImplementation((keys: string[], callback: Function) => {
         const result = {
@@ -820,10 +664,8 @@ describe('popup.js', () => {
         }
         return Promise.resolve(result);
       });
-
       await domContentLoadedHandler();
       await new Promise(resolve => setTimeout(resolve, 10));
-
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.CONFIG_NEEDED);
     });
   });
