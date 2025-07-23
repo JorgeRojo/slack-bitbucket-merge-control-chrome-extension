@@ -1,4 +1,4 @@
-import { Logger } from '../../utils/logger.js';
+import { Logger } from '../../utils/Logger.js';
 
 type ToggleSwitchEvent = CustomEvent<{ checked: boolean }>;
 

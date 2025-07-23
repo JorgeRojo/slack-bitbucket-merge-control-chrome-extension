@@ -19,7 +19,7 @@ import {
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
 } from '../common/constants';
-import { Logger } from '../common/utils/logger';
+import { Logger } from '../common/utils/Logger';
 import { toErrorType } from '../common/utils/type-helpers';
 import {
   cleanSlackMessageText,
@@ -617,7 +617,7 @@ const messageHandlers: Record<
           sendResponse({ success: false, error: 'Missing slackToken or channelName' });
         }
       } catch (error) {
-        console.error('[Background] Error in FETCH_NEW_MESSAGES:', error);
+        Logger.error(toErrorType(error), 'Background');
         sendResponse({
           success: false,
           error: error instanceof Error ? error.message : String(error),
@@ -648,7 +648,7 @@ const messageHandlers: Record<
 
         sendResponse({ success: true });
       } catch (error) {
-        console.error('[Background] Error in RECONNECT_SLACK:', error);
+        Logger.error(toErrorType(error), 'Background');
         sendResponse({
           success: false,
           error: error instanceof Error ? error.message : String(error),
@@ -676,7 +676,7 @@ const messageHandlers: Record<
 
         sendResponse({ success: true });
       } catch (error) {
-        console.error('[Background] Error in BITBUCKET_TAB_LOADED:', error);
+        Logger.error(toErrorType(error), 'Background');
         sendResponse({
           success: false,
           error: error instanceof Error ? error.message : String(error),
@@ -706,8 +706,8 @@ const messageHandlers: Record<
 
         sendResponse({ success: true });
       } catch (error) {
-        console.error('[Background] Error in FEATURE_TOGGLE_CHANGED:', error);
-        sendResponse({ success: false, error: error.message });
+        Logger.error(toErrorType(error), 'Background');
+        sendResponse({ success: false, error: toErrorType(error).message });
       }
     })();
     return true;
@@ -726,24 +726,20 @@ const messageHandlers: Record<
 
         sendResponse({ success: true });
       } catch (error) {
-        console.error('[Background] Error in COUNTDOWN_COMPLETED:', error);
-        sendResponse({ success: false, error: error.message });
+        Logger.error(toErrorType(error), 'Background');
+        sendResponse({ success: false, error: toErrorType(error).message });
       }
     })();
     return true;
   },
 
   [MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS]: (_request, _sender, sendResponse) => {
-    console.log('[Background] Received GET_COUNTDOWN_STATUS message');
-
     (async () => {
       try {
         const { reactivationTime, featureEnabled } = (await chrome.storage.local.get([
           'reactivationTime',
           'featureEnabled',
         ])) as { reactivationTime?: number; featureEnabled?: boolean };
-
-        console.log('[Background] Storage values:', { reactivationTime, featureEnabled });
 
         if (featureEnabled === false && reactivationTime) {
           const currentTime = Date.now();
@@ -755,7 +751,6 @@ const messageHandlers: Record<
             reactivationTime: reactivationTime,
           };
 
-          console.log('[Background] Sending countdown active response:', response);
           sendResponse(response);
         } else {
           const response = {
@@ -764,11 +759,10 @@ const messageHandlers: Record<
             reactivationTime: null,
           };
 
-          console.log('[Background] Sending countdown inactive response:', response);
           sendResponse(response);
         }
       } catch (error) {
-        console.error('[Background] Error in GET_COUNTDOWN_STATUS handler:', error);
+        Logger.error(toErrorType(error), 'Background');
         sendResponse({ isCountdownActive: false, timeLeft: 0, reactivationTime: null });
       }
     })();

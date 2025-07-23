@@ -1,6 +1,6 @@
 import ToggleSwitch from '../common/components/toggle-switch/toggle-switch';
 import { ERROR_MESSAGES, MESSAGE_ACTIONS } from '../common/constants';
-import { Logger } from '../common/utils/logger';
+import { Logger } from '../common/utils/Logger';
 import { toErrorType } from '../common/utils/type-helpers';
 
 interface CountdownResponse {

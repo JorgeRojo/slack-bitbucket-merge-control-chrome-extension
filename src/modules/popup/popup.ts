@@ -1,4 +1,4 @@
-import { Logger } from '../common/utils/logger';
+import { Logger } from '../common/utils/Logger';
 import { SLACK_BASE_URL, MERGE_STATUS, APP_STATUS } from '../common/constants';
 import { literals } from '../common/literals';
 import '../common/components/toggle-switch/toggle-switch';

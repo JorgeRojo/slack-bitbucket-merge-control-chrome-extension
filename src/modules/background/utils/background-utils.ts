@@ -7,7 +7,7 @@ import {
   DEFAULT_EXCEPTION_PHRASES,
   MAX_MESSAGES,
 } from '../../common/constants';
-import { _Logger } from '../../common/utils/logger';
+import { _Logger } from '../../common/utils/Logger';
 import { ProcessedMessage } from '../../common/types/app';
 import { SlackMessage } from '../../common/types/slack';
 import { _toErrorType } from '../../common/utils/type-helpers';

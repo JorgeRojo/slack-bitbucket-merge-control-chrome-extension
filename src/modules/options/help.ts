@@ -1,5 +1,6 @@
 import '../common/components/nav-links/nav-links';
+import Logger from '../common/utils/Logger';
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Help page loaded');
+  Logger.log('Help page loaded');
 });

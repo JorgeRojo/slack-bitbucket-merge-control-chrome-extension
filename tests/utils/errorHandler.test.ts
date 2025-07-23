@@ -4,9 +4,11 @@ describe('ErrorHandler', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
+
   test('should log error object directly preserving stack trace', () => {
     const error = new Error('Test error');
     const component = 'TestComponent';
@@ -16,6 +18,7 @@ describe('ErrorHandler', () => {
     expect(console.error).toHaveBeenCalledWith('Context:', context);
     expect(result).toEqual({ error, context, silenced: false });
   });
+
   test('should preserve original Error object with stack trace', () => {
     const originalError = new Error('Original error');
     const originalStack = originalError.stack;
@@ -27,17 +30,20 @@ describe('ErrorHandler', () => {
     expect(errorCall[1]).toBe(originalError);
     expect(errorCall[1].stack).toBe(originalStack);
   });
+
   test('should work with string errors', () => {
     const errorMessage = 'String error message';
     const component = 'TestComponent';
     ErrorHandler.handle(errorMessage, { component });
     expect(console.error).toHaveBeenCalledWith(`[${component}]`, errorMessage);
   });
+
   test('should use default component if not provided', () => {
     const error = new Error('Test error');
     ErrorHandler.handle(error);
     expect(console.error).toHaveBeenCalledWith('[General]', error);
   });
+
   test('should not log context if empty', () => {
     const error = new Error('Test error');
     const emptyContext = {};
@@ -45,6 +51,7 @@ describe('ErrorHandler', () => {
     expect(console.error).toHaveBeenCalledWith('[General]', error);
     expect(console.error).not.toHaveBeenCalledWith('Context:', emptyContext);
   });
+
   test('should log context only when it has content', () => {
     const error = new Error('Test error');
     const context = { key: 'value', another: 'data' };
@@ -52,6 +59,7 @@ describe('ErrorHandler', () => {
     expect(console.error).toHaveBeenCalledWith('[General]', error);
     expect(console.error).toHaveBeenCalledWith('Context:', context);
   });
+
   test('should execute callback if provided', () => {
     const error = new Error('Test error');
     const callback = vi.fn();
@@ -59,6 +67,7 @@ describe('ErrorHandler', () => {
     ErrorHandler.handle(error, { callback, context });
     expect(callback).toHaveBeenCalledWith(error, context);
   });
+
   test('should catch errors in callback and preserve their stack trace', () => {
     const error = new Error('Test error');
     const callbackError = new Error('Callback error');
@@ -69,12 +78,14 @@ describe('ErrorHandler', () => {
     expect(callback).toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledWith('Error in callback handler', callbackError);
   });
+
   test('should handle null and undefined errors gracefully', () => {
     ErrorHandler.handle(null, { component: 'Test' });
     ErrorHandler.handle(undefined, { component: 'Test' });
     expect(console.error).toHaveBeenCalledWith('[Test]', null);
     expect(console.error).toHaveBeenCalledWith('[Test]', undefined);
   });
+
   test('should maintain error object identity', () => {
     const originalError = new Error('Test error');
     (originalError as any).customProperty = 'custom value';
@@ -86,6 +97,7 @@ describe('ErrorHandler', () => {
     expect((errorCall[1] as any).customProperty).toBe('custom value');
     expect(result.error).toBe(originalError);
   });
+
   test('should silence errors that match silentMessages', () => {
     const error = new Error('Receiving end does not exist');
     const silentMessages = ['Receiving end does not exist'];
@@ -93,6 +105,7 @@ describe('ErrorHandler', () => {
     expect(console.error).not.toHaveBeenCalled();
     expect(result).toEqual({ error, context: {}, silenced: true });
   });
+
   test('should silence errors with partial message matches', () => {
     const error = new Error('Could not establish connection. Receiving end does not exist.');
     const silentMessages = ['Receiving end does not exist'];
@@ -100,6 +113,7 @@ describe('ErrorHandler', () => {
     expect(console.error).not.toHaveBeenCalled();
     expect(result.silenced).toBe(true);
   });
+
   test('should not silence errors that do not match silentMessages', () => {
     const error = new Error('Some other error');
     const silentMessages = ['Receiving end does not exist'];
@@ -107,6 +121,7 @@ describe('ErrorHandler', () => {
     expect(console.error).toHaveBeenCalledWith('[General]', error);
     expect(result.silenced).toBe(false);
   });
+
   test('should handle multiple silent messages', () => {
     const silentMessages = [
       'Receiving end does not exist',
@@ -122,6 +137,7 @@ describe('ErrorHandler', () => {
     expect(result2.silenced).toBe(true);
     expect(result3.silenced).toBe(false);
   });
+
   test('should handle string errors with silent messages', () => {
     const errorMessage = 'Receiving end does not exist';
     const silentMessages = ['Receiving end does not exist'];

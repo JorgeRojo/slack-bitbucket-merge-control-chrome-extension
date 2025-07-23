@@ -8,8 +8,10 @@ import {
   mockScripting,
   mockPermissions,
 } from './setup';
-import { Logger } from '../src/modules/common/utils/logger';
+import { Logger } from '../src/modules/common/utils/Logger';
 import { MESSAGE_ACTIONS } from '../src/modules/common/constants';
+
+vi.mock('../src/modules/common/utils/Logger');
 
 interface MessageRequest {
   action: string;
@@ -295,18 +297,19 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should handle getCountdownStatus message', async () => {
     expect(messageHandler).toBeDefined();
+
     const mockSendResponse = vi.fn();
+
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS },
       {},
       mockSendResponse
     );
-    // El manejador devuelve true, no una promesa
+
     expect(result).toBe(true);
-    // Esperamos a que se completen las operaciones asíncronas
+
     await new Promise(resolve => setTimeout(resolve, 10));
-    // Esperamos a que se completen las operaciones asíncronas
-    await new Promise(resolve => setTimeout(resolve, 10));
+
     expect(mockSendResponse).toHaveBeenCalled();
   });
 
