@@ -5,11 +5,11 @@ import { build } from 'esbuild';
 import fs from 'fs/promises';
 
 const entries = {
-  background: resolve(__dirname, 'src/background.ts'),
-  popup: resolve(__dirname, 'src/popup.ts'),
-  options: resolve(__dirname, 'src/options.ts'),
-  help: resolve(__dirname, 'src/help.ts'),
-  content: resolve(__dirname, 'src/content.ts'),
+  background: resolve(__dirname, 'src/modules/background/index.ts'),
+  popup: resolve(__dirname, 'src/modules/popup/index.ts'),
+  options: resolve(__dirname, 'src/modules/options/index.ts'),
+  help: resolve(__dirname, 'src/modules/options/help.ts'),
+  content: resolve(__dirname, 'src/modules/content/index.ts'),
 };
 
 function generateIIFEFiles(): Plugin {
@@ -28,10 +28,10 @@ function generateIIFEFiles(): Plugin {
       } catch (error) {
         console.error('❌ Error removing unnecessary files:', error);
       }
-      
+
       for (const [name, entry] of Object.entries(entries)) {
         console.log(`Building ${name} as IIFE...`);
-        
+
         try {
           await build({
             entryPoints: [entry],
@@ -70,13 +70,13 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         { src: 'src/manifest.json', dest: '.' },
-        { src: 'src/popup.html', dest: '.' },
-        { src: 'src/options.html', dest: '.' },
-        { src: 'src/help.html', dest: '.' },
-        { src: 'src/styles', dest: '.' },
-        { src: 'src/images', dest: '.' },
+        { src: 'src/modules/popup/popup.html', dest: '.' },
+        { src: 'src/modules/options/options.html', dest: '.' },
+        { src: 'src/modules/options/help.html', dest: '.' },
+        { src: 'src/modules/common/styles', dest: '.' },
+        { src: 'src/modules/common/images', dest: '.' },
         {
-          src: 'src/components/toggle-switch/toggle-switch.css',
+          src: 'src/modules/common/components/toggle-switch/toggle-switch.css',
           dest: 'components/toggle-switch',
         },
       ],
