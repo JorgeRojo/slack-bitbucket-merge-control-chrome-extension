@@ -107,9 +107,9 @@ class MockWebSocket {
 // Mock para el objeto document global
 (global as any).document = {
   getElementById: vi.fn(),
-  
+
   // Mock para createElement que soporta Shadow DOM
-  createElement: vi.fn((tagName) => {
+  createElement: vi.fn(tagName => {
     // Crear un mock para el shadowRoot
     const shadowRoot = {
       innerHTML: '',
@@ -117,16 +117,16 @@ class MockWebSocket {
       querySelectorAll: vi.fn(() => []),
       appendChild: vi.fn(),
     };
-    
+
     // Crear un elemento mock con soporte para Shadow DOM
     const element = {
       tagName,
       id: '',
-      style: { 
-        display: '', 
-        fontSize: '', 
-        marginTop: '', 
-        color: '' 
+      style: {
+        display: '',
+        fontSize: '',
+        marginTop: '',
+        color: '',
       },
       appendChild: vi.fn(),
       setAttribute: vi.fn(),
@@ -134,22 +134,22 @@ class MockWebSocket {
       addEventListener: vi.fn(),
       hasAttribute: vi.fn().mockReturnValue(false),
       getAttribute: vi.fn().mockReturnValue(null),
-      
+
       // Método para crear un Shadow DOM
       attachShadow: vi.fn(() => shadowRoot),
-      
+
       // Propiedad shadowRoot pre-configurada
       shadowRoot: shadowRoot,
     };
-    
+
     return element;
   }),
-  
+
   querySelector: vi.fn(),
   querySelectorAll: vi.fn(() => []),
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
-  
+
   // Mock para el body del documento
   body: {
     appendChild: vi.fn(),

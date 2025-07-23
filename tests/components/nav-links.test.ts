@@ -38,11 +38,11 @@ describe('NavLinks Component', () => {
     originalOpenOptionsPage = mockRuntime.openOptionsPage;
     originalGetURL = mockRuntime.getURL;
     originalWindowOpen = window.open;
-    
+
     mockRuntime.openOptionsPage = vi.fn();
     mockRuntime.getURL = vi.fn(path => `chrome-extension://extension-id${path}`);
     window.open = vi.fn();
-    
+
     // Crear mocks para los elementos del shadow DOM
     mockOptionsLink = {
       textContent: 'Options',
@@ -57,7 +57,7 @@ describe('NavLinks Component', () => {
         }
       }),
     };
-    
+
     mockHelpLink = {
       textContent: 'Help',
       addEventListener: vi.fn((event, handler) => {
@@ -71,11 +71,11 @@ describe('NavLinks Component', () => {
         }
       }),
     };
-    
+
     // Crear un mock para el shadowRoot
     mockShadowRoot = {
       innerHTML: '',
-      querySelector: vi.fn((selector) => {
+      querySelector: vi.fn(selector => {
         if (selector === 'div') return { id: '', className: '' };
         if (selector === '#options-link') return mockOptionsLink;
         if (selector === '#help-link') return mockHelpLink;
@@ -84,13 +84,13 @@ describe('NavLinks Component', () => {
       }),
       querySelectorAll: vi.fn(() => []),
     };
-    
+
     // Crear un elemento mock con un shadowRoot
     navLinks = {
       tagName: 'NAV-LINKS',
       shadowRoot: mockShadowRoot,
       hasAttribute: vi.fn().mockReturnValue(false),
-      getAttribute: vi.fn((attr) => {
+      getAttribute: vi.fn(attr => {
         if (attr === 'id') return '';
         if (attr === 'class') return '';
         return null;
@@ -105,7 +105,7 @@ describe('NavLinks Component', () => {
         // Simular la implementación de addEventListeners
         const optionsLink = mockShadowRoot.querySelector('#options-link');
         const helpLink = mockShadowRoot.querySelector('#help-link');
-        
+
         if (optionsLink) {
           optionsLink.addEventListener('click', () => {
             if (mockRuntime.openOptionsPage) {
@@ -115,7 +115,7 @@ describe('NavLinks Component', () => {
             }
           });
         }
-        
+
         if (helpLink) {
           helpLink.addEventListener('click', () => {
             window.open(mockRuntime.getURL('/help.html'));
@@ -123,17 +123,17 @@ describe('NavLinks Component', () => {
         }
       }),
     };
-    
+
     // Mock para document.createElement
     document.createElement = vi.fn().mockReturnValue(navLinks);
-    
+
     // Simular la creación del elemento
     navLinks = document.createElement('nav-links');
     document.body.appendChild(navLinks);
-    
+
     // Simular la inicialización del componente
     navLinks.addEventListeners();
-    
+
     await waitForRender();
   });
 
@@ -149,7 +149,7 @@ describe('NavLinks Component', () => {
     const optionsLink = mockShadowRoot.querySelector('#options-link');
     const helpLink = mockShadowRoot.querySelector('#help-link');
     const separator = mockShadowRoot.querySelector('.link-separator');
-    
+
     expect(container).not.toBeNull();
     expect(optionsLink).not.toBeNull();
     expect(helpLink).not.toBeNull();
@@ -166,7 +166,7 @@ describe('NavLinks Component', () => {
     const container = mockShadowRoot.querySelector('div');
     container.id = 'custom-id';
     container.className = 'custom-class';
-    
+
     expect(container.id).toBe('custom-id');
     expect(container.className).toBe('custom-class');
   });
@@ -174,19 +174,19 @@ describe('NavLinks Component', () => {
   test('should open options page when options link is clicked', async () => {
     const optionsLink = mockShadowRoot.querySelector('#options-link');
     optionsLink.click();
-    
+
     expect(mockRuntime.openOptionsPage).toHaveBeenCalledTimes(1);
   });
 
   test('should open options page via URL when mockRuntime.openOptionsPage is not available', async () => {
     mockRuntime.openOptionsPage = undefined as any;
-    
+
     // Necesitamos reinicializar los event listeners
     navLinks.addEventListeners();
-    
+
     const optionsLink = mockShadowRoot.querySelector('#options-link');
     optionsLink.click();
-    
+
     expect(window.open).toHaveBeenCalledTimes(1);
     expect(window.open).toHaveBeenCalledWith('chrome-extension://extension-id/options.html');
   });
@@ -194,7 +194,7 @@ describe('NavLinks Component', () => {
   test('should open help page when help link is clicked', async () => {
     const helpLink = mockShadowRoot.querySelector('#help-link');
     helpLink.click();
-    
+
     expect(window.open).toHaveBeenCalledTimes(1);
     expect(window.open).toHaveBeenCalledWith('chrome-extension://extension-id/help.html');
   });
@@ -202,7 +202,7 @@ describe('NavLinks Component', () => {
   test('should handle missing links gracefully', async () => {
     // Modificar el mock para simular que no se encuentran los enlaces
     mockShadowRoot.querySelector.mockImplementation(() => null);
-    
+
     // Verificar que no se lance ninguna excepción
     expect(() => {
       navLinks.addEventListeners();
