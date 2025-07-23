@@ -12,7 +12,7 @@ import { ProcessedMessage } from '../types/index.js';
 import { SlackMessage } from '../types/slack.js';
 import { toErrorType, toString } from './type-helpers.js';
 
-export function normalizeText(text: string | undefined): string {
+function normalizeText(text: string | undefined): string {
   if (!text) return '';
   const DIACRITICAL_MARKS_REGEX = /\p{Diacritic}/gu;
   const MULTIPLE_WHITESPACE_REGEX = /\s+/g;
@@ -189,7 +189,7 @@ export async function updateAppStatus(status: APP_STATUS): Promise<boolean> {
   return true;
 }
 
-export async function getCurrentMergeStatusFromMessages(): Promise<MERGE_STATUS> {
+async function getCurrentMergeStatusFromMessages(): Promise<MERGE_STATUS> {
   const { messages = [] } = await chrome.storage.local.get('messages');
 
   if (messages.length === 0) {

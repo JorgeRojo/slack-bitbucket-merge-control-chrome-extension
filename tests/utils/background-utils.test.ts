@@ -1,12 +1,10 @@
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import {
-  normalizeText,
   cleanSlackMessageText,
   determineMergeStatus,
   updateExtensionIcon,
   handleSlackApiError,
   updateAppStatus,
-  getCurrentMergeStatusFromMessages,
   updateIconBasedOnCurrentMessages,
   getPhrasesFromStorage,
   processAndStoreMessage,
@@ -66,15 +64,6 @@ describe('Background Utils', () => {
 
   afterEach(() => {
     vi.resetAllMocks();
-  });
-
-  describe('normalizeText', () => {
-    test('should normalize text by removing diacritical marks and standardizing whitespace', () => {
-      expect(normalizeText('  Héllò   Wórld  ')).toBe('hello world');
-      expect(normalizeText('DO NOT MERGE!!!')).toBe('do not merge!!!');
-      expect(normalizeText('áéíóú')).toBe('aeiou');
-      expect(normalizeText(undefined)).toBe('');
-    });
   });
 
   describe('cleanSlackMessageText', () => {
@@ -319,27 +308,54 @@ describe('Background Utils', () => {
     });
   });
 
-  describe('getCurrentMergeStatusFromMessages', () => {
-    test('should return UNKNOWN when no messages', async () => {
-      mockChrome.storage.local.get.mockResolvedValue({ messages: [] });
-      const status = await getCurrentMergeStatusFromMessages();
-      expect(status).toBe(MERGE_STATUS.UNKNOWN);
-    });
-
-    test('should determine status from messages', async () => {
-      mockChrome.storage.local.get.mockResolvedValue({
-        messages: [
-          { text: 'Do not merge this PR', ts: '1234567891', user: 'U123', matchType: null },
-        ],
+  describe('updateIconBasedOnCurrentMessages', () => {
+    test('should update icon based on current messages', async () => {
+      // Mock the storage.local.get to return messages
+      mockChrome.storage.local.get.mockImplementation(key => {
+        if (key === 'messages') {
+          return Promise.resolve({
+            messages: [
+              { text: 'Do not merge this PR', ts: '1234567891', user: 'U123', matchType: null },
+            ],
+          });
+        }
+        return Promise.resolve({});
       });
+
+      // Mock storage.sync.get to return phrases
       mockChrome.storage.sync.get.mockResolvedValue({
         allowedPhrases: 'allow,proceed',
         disallowedPhrases: 'do not merge,block',
         exceptionPhrases: 'exception',
       });
 
-      const status = await getCurrentMergeStatusFromMessages();
-      expect(status).toBe(MERGE_STATUS.DISALLOWED);
+      await updateIconBasedOnCurrentMessages();
+
+      // Should call setIcon with the disallowed icon
+      expect(mockChrome.action.setIcon).toHaveBeenCalledWith(
+        expect.objectContaining({
+          path: expect.objectContaining({
+            16: 'images/icon16_disabled.png',
+            48: 'images/icon48_disabled.png',
+          }),
+        })
+      );
+    });
+
+    test('should handle empty messages', async () => {
+      mockChrome.storage.local.get.mockResolvedValue({ messages: [] });
+
+      await updateIconBasedOnCurrentMessages();
+
+      // Should call setIcon with the unknown icon
+      expect(mockChrome.action.setIcon).toHaveBeenCalledWith(
+        expect.objectContaining({
+          path: expect.objectContaining({
+            16: 'images/icon16.png',
+            48: 'images/icon48.png',
+          }),
+        })
+      );
     });
   });
 

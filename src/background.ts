@@ -22,13 +22,11 @@ import {
 import { Logger } from './utils/logger.js';
 import { toErrorType, toString } from './utils/type-helpers.js';
 import {
-  normalizeText,
   cleanSlackMessageText,
   determineMergeStatus,
   updateExtensionIcon,
   handleSlackApiError,
   updateAppStatus,
-  getCurrentMergeStatusFromMessages,
   updateIconBasedOnCurrentMessages,
   getPhrasesFromStorage,
   processAndStoreMessage,
