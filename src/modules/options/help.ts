@@ -1,4 +1,3 @@
-import '../common/components/nav-links/nav-links';
 import Logger from '../common/utils/Logger';
 
 document.addEventListener('DOMContentLoaded', () => {

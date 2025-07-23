@@ -1,4 +1,3 @@
-import '../common/components/nav-links/nav-links';
 import {
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,

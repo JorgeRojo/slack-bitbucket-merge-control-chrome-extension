@@ -12,6 +12,15 @@ const entries = {
   content: resolve(__dirname, 'src/modules/content/content.ts'),
 };
 
+// Web components to be compiled as IIFE bundles
+const webComponents = {
+  'nav-links': resolve(__dirname, 'src/modules/common/components/nav-links/nav-links.ts'),
+  'toggle-switch': resolve(
+    __dirname,
+    'src/modules/common/components/toggle-switch/toggle-switch.ts'
+  ),
+};
+
 function generateIIFEFiles(): Plugin {
   return {
     name: 'generate-iife-files',
@@ -29,6 +38,7 @@ function generateIIFEFiles(): Plugin {
         console.error('❌ Error removing unnecessary files:', error);
       }
 
+      // Build main entries
       for (const [name, entry] of Object.entries(entries)) {
         console.log(`Building ${name} as IIFE...`);
 
@@ -46,6 +56,27 @@ function generateIIFEFiles(): Plugin {
           console.log(`✅ ${name}.js built successfully!`);
         } catch (error) {
           console.error(`❌ Error building ${name}:`, error);
+        }
+      }
+
+      // Build web components
+      for (const [name, entry] of Object.entries(webComponents)) {
+        console.log(`Building web component ${name} as IIFE...`);
+
+        try {
+          await build({
+            entryPoints: [entry],
+            bundle: true,
+            outfile: resolve(__dirname, `dist/components/${name}/${name}.js`),
+            format: 'iife',
+            target: 'es2020',
+            platform: 'browser',
+            sourcemap: true,
+            minify: false,
+          });
+          console.log(`✅ components/${name}/${name}.js built successfully!`);
+        } catch (error) {
+          console.error(`❌ Error building web component ${name}:`, error);
         }
       }
     },

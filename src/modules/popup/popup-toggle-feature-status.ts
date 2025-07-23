@@ -1,4 +1,4 @@
-import ToggleSwitch from '../common/components/toggle-switch/toggle-switch';
+import type ToggleSwitch from '../common/components/toggle-switch/toggle-switch';
 import { ERROR_MESSAGES, MESSAGE_ACTIONS } from '../common/constants';
 import { Logger } from '../common/utils/Logger';
 import { toErrorType } from '../common/utils/type-helpers';
