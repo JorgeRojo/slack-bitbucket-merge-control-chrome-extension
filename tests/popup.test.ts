@@ -1,10 +1,10 @@
 import { describe, test, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
 import { mockStorage, mockRuntime } from './setup';
-import { Logger } from '../src/modules/common/utils/logger';
-import { MERGE_STATUS, APP_STATUS } from '../src/modules/common/constants';
-import { initializeToggleFeatureStatus } from '../src/modules/popup/popup-toggle-feature-status.ts';
-vi.mock('../src/modules/common/utils/logger');
-vi.mock('../src/modules/popup/popup-toggle-feature-status');
+import { Logger } from '@src/modules/common/utils/logger';
+import { MERGE_STATUS, APP_STATUS } from '@src/modules/common/constants';
+import { initializeToggleFeatureStatus } from '@src/modules/popup/popup-toggle-feature-status.ts';
+vi.mock('@src/modules/common/utils/logger');
+vi.mock('@src/modules/popup/popup-toggle-feature-status');
 interface MockElement {
   className: string;
   textContent: string;
@@ -114,7 +114,7 @@ describe('popup.js', () => {
     mockStorage.onChanged.addListener.mockImplementation((handler: any) => {
       storageChangeHandler = handler;
     });
-    await import('../src/modules/popup/popup');
+    await import('@src/modules/popup/popup');
   });
   afterEach(() => {
     vi.restoreAllMocks();

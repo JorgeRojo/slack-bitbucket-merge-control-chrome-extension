@@ -14,15 +14,15 @@ describe('Help Page', () => {
   });
   it('should have nav-links component mocked correctly', async () => {
     expect(async () => {
-      await import('../src/modules/options/help.ts');
+      await import('@src/modules/options/help.ts');
     }).not.toThrow();
   });
   it('should add DOMContentLoaded event listener when module loads', async () => {
-    await import('../src/modules/options/help.ts');
+    await import('@src/modules/options/help.ts');
     expect(mockAddEventListener).toHaveBeenCalledWith('DOMContentLoaded', expect.any(Function));
   });
   it('should log message when DOMContentLoaded callback is executed', async () => {
-    await import('../src/modules/options/help.ts');
+    await import('@src/modules/options/help.ts');
     const addEventListenerCalls = mockAddEventListener.mock.calls;
     const domContentLoadedCall = addEventListenerCalls.find(call => call[0] === 'DOMContentLoaded');
     expect(domContentLoadedCall).toBeDefined();
@@ -33,7 +33,7 @@ describe('Help Page', () => {
     }
   });
   it('should handle callback execution without errors', async () => {
-    await import('../src/modules/options/help.ts');
+    await import('@src/modules/options/help.ts');
     const addEventListenerCalls = mockAddEventListener.mock.calls;
     const domContentLoadedCall = addEventListenerCalls.find(call => call[0] === 'DOMContentLoaded');
     if (domContentLoadedCall) {
@@ -42,14 +42,14 @@ describe('Help Page', () => {
     }
   });
   it('should register exactly one DOMContentLoaded listener', async () => {
-    await import('../src/modules/options/help.ts');
+    await import('@src/modules/options/help.ts');
     const domContentLoadedCalls = mockAddEventListener.mock.calls.filter(
       call => call[0] === 'DOMContentLoaded'
     );
     expect(domContentLoadedCalls).toHaveLength(1);
   });
   it('should execute module initialization code', async () => {
-    await import('../src/modules/options/help.ts');
+    await import('@src/modules/options/help.ts');
     expect(mockAddEventListener).toHaveBeenCalled();
   });
 });

@@ -8,9 +8,9 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   DEFAULT_CHANNEL_NAME,
   MESSAGE_ACTIONS,
-} from '../src/modules/common/constants';
-import { literals } from '../src/modules/common/literals';
-vi.mock('../src/modules/common/utils/logger');
+} from '@src/modules/common/constants';
+import { literals } from '@src/modules/common/literals';
+vi.mock('@src/modules/common/utils/logger');
 describe('Options Page', () => {
   interface MockElements {
     [key: string]: {
@@ -65,7 +65,7 @@ describe('Options Page', () => {
     vi.resetModules();
   });
   test('should initialize DOM event listeners on DOMContentLoaded', async () => {
-    await import('../src/modules/options/options');
+    await import('@src/modules/options/options');
     expect(document.addEventListener).toHaveBeenCalledWith(
       'DOMContentLoaded',
       expect.any(Function)
@@ -75,7 +75,7 @@ describe('Options Page', () => {
     expect(mockElements.save.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
   });
   test('should load default values when no stored values exist', async () => {
-    await import('../src/modules/options/options');
+    await import('@src/modules/options/options');
     const domContentLoadedHandler = (document.addEventListener as Mock).mock.calls[0][1];
     domContentLoadedHandler();
     const storageCallback = mockStorage.sync.get.mock.calls[0][1];
@@ -88,7 +88,7 @@ describe('Options Page', () => {
     expect(mockElements.mergeButtonSelector.value).toBe(DEFAULT_MERGE_BUTTON_SELECTOR);
   });
   test('should load stored values when they exist', async () => {
-    await import('../src/modules/options/options');
+    await import('@src/modules/options/options');
     const domContentLoadedHandler = (document.addEventListener as Mock).mock.calls[0][1];
     domContentLoadedHandler();
     const storageCallback = mockStorage.sync.get.mock.calls[0][1];
@@ -112,7 +112,7 @@ describe('Options Page', () => {
     expect(mockElements.mergeButtonSelector.value).toBe('.test-selector');
   });
   test('should save options when save button is clicked with valid inputs', async () => {
-    await import('../src/modules/options/options');
+    await import('@src/modules/options/options');
     const domContentLoadedHandler = (document.addEventListener as Mock).mock.calls[0][1];
     domContentLoadedHandler();
     const saveClickHandler = (mockElements.save.addEventListener as Mock).mock.calls[0][1];
@@ -160,7 +160,7 @@ describe('Options Page', () => {
     expect(mockElements.status.className).toBe('status-message');
   });
   test('should show error when save button is clicked with missing inputs', async () => {
-    await import('../src/modules/options/options');
+    await import('@src/modules/options/options');
     const domContentLoadedHandler = (document.addEventListener as Mock).mock.calls[0][1];
     domContentLoadedHandler();
     const saveClickHandler = (mockElements.save.addEventListener as Mock).mock.calls[0][1];
@@ -175,7 +175,7 @@ describe('Options Page', () => {
     expect(mockStorage.sync.set).not.toHaveBeenCalled();
   });
   test('should handle channel name with leading hash', async () => {
-    await import('../src/modules/options/options');
+    await import('@src/modules/options/options');
     const domContentLoadedHandler = (document.addEventListener as Mock).mock.calls[0][1];
     domContentLoadedHandler();
     const saveClickHandler = (mockElements.save.addEventListener as Mock).mock.calls[0][1];
@@ -196,7 +196,7 @@ describe('Options Page', () => {
     );
   });
   test('should handle multiline input formatting', async () => {
-    await import('../src/modules/options/options');
+    await import('@src/modules/options/options');
     const domContentLoadedHandler = (document.addEventListener as Mock).mock.calls[0][1];
     domContentLoadedHandler();
     const saveClickHandler = (mockElements.save.addEventListener as Mock).mock.calls[0][1];

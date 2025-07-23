@@ -3,7 +3,7 @@ import type { Mock } from 'vitest';
 import { mockStorage, mockRuntime } from './setup';
 import * as fs from 'fs';
 import * as path from 'path';
-vi.mock('../src/modules/common/utils/logger');
+vi.mock('@src/modules/common/utils/logger');
 describe('Content Script Structure', () => {
   test('should have proper encapsulation pattern', () => {
     const contentScript = fs.readFileSync(
@@ -70,17 +70,17 @@ describe('Content Script Initialization', () => {
     vi.resetModules();
   });
   test('should send bitbucketTabLoaded message on init', async () => {
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     expect(mockRuntime.sendMessage).toHaveBeenCalledWith({
       action: 'bitbucketTabLoaded',
     });
   });
   test('should set up message listener on init', async () => {
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     expect(mockRuntime.onMessage.addListener).toHaveBeenCalled();
   });
   test('should observe for merge button on init', async () => {
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     expect((global as any).MutationObserver).toHaveBeenCalled();
     const observer = (global as any).MutationObserver.mock.instances[0];
     expect(observer.observe).toHaveBeenCalledWith(
@@ -98,7 +98,7 @@ describe('Content Script Initialization', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
     expect(observer.disconnect).toHaveBeenCalled();
@@ -115,7 +115,7 @@ describe('Content Script Initialization', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValueOnce(null).mockReturnValueOnce(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
     expect(document.querySelector).toHaveBeenCalledWith('.merge-button-container > .merge-button');
@@ -151,7 +151,7 @@ describe('Content Script Message Handling', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'someOtherAction',
@@ -167,7 +167,7 @@ describe('Content Script Message Handling', () => {
       _customMergeHandler: null,
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'updateMergeButton',
@@ -186,7 +186,7 @@ describe('Content Script Message Handling', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'updateMergeButton',
@@ -204,7 +204,7 @@ describe('Content Script Message Handling', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'updateMergeButton',
@@ -223,7 +223,7 @@ describe('Content Script Message Handling', () => {
       _customMergeHandler: () => {},
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'updateMergeButton',
@@ -241,7 +241,7 @@ describe('Content Script Message Handling', () => {
       removeEventListener: vi.fn(),
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'updateMergeButton',
@@ -254,7 +254,7 @@ describe('Content Script Message Handling', () => {
   });
   test('should do nothing when merge button is not found', async () => {
     (document.querySelector as Mock).mockReturnValueOnce(null);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'updateMergeButton',
@@ -303,7 +303,7 @@ describe('Initial Merge State Application', () => {
         featureEnabled: true,
       });
     });
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
     expect(mockMergeButton.addEventListener).not.toHaveBeenCalled();
@@ -325,7 +325,7 @@ describe('Initial Merge State Application', () => {
         featureEnabled: true,
       });
     });
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
   });
@@ -345,7 +345,7 @@ describe('Initial Merge State Application', () => {
         featureEnabled: true,
       });
     });
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
   });
@@ -366,7 +366,7 @@ describe('Initial Merge State Application', () => {
         featureEnabled: true,
       });
     });
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
   });
@@ -386,7 +386,7 @@ describe('Initial Merge State Application', () => {
         featureEnabled: false,
       });
     });
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const observer = (global as any).MutationObserver.mock.instances[0];
     observer.callback([], observer);
   });
@@ -422,7 +422,7 @@ describe('Merge Button Event Handlers', () => {
       _customMergeHandler: null,
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'updateMergeButton',
@@ -441,7 +441,7 @@ describe('Merge Button Event Handlers', () => {
       _customMergeHandler: null,
     };
     (document.querySelector as Mock).mockReturnValue(mockMergeButton);
-    await import('../src/modules/content/content');
+    await import('@src/modules/content/content');
     const messageHandler = mockRuntime.onMessage.addListener.mock.calls[0][0];
     messageHandler({
       action: 'updateMergeButton',
