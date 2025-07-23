@@ -11,7 +11,6 @@ import {
 import { Logger } from '../src/modules/common/utils/logger';
 import { MESSAGE_ACTIONS } from '../src/modules/common/constants';
 
-// Interfaces para los tipos utilizados en los tests
 interface MessageRequest {
   action: string;
   payload?: {
@@ -35,29 +34,22 @@ interface InstallDetails {
   reason: string;
 }
 
-// Manejador para ignorar ciertos errores específicos durante las pruebas
 process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
-  // Lista de mensajes de error que queremos ignorar
   const ignoredErrorMessages = [
     "Cannot read properties of undefined (reading 'messages')",
     'sendResponse is not a function',
   ];
 
-  // Verificar si el error está en la lista de errores a ignorar
   if (reason && reason.message && ignoredErrorMessages.some(msg => reason.message.includes(msg))) {
-    // Ignorar el error silenciosamente
     return;
   }
 
-  // Para cualquier otro error, mostrarlo en la consola
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// Mock del módulo logger
 vi.mock('../src/modules/common/utils/logger');
 
 describe('Background Script - Enhanced Coverage Tests', () => {
-  // Referencias a los módulos y manejadores que se probarán
   let backgroundModule: typeof import('../src/modules/background/background');
 
   let messageHandler: (
@@ -71,7 +63,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   let alarmHandler: (alarm: AlarmInfo) => void;
 
   beforeAll(async () => {
-    // Configurar los mocks para las pruebas
     mockStorage.sync.get.mockResolvedValue({
       slackToken: 'test-token',
       channelName: 'test-channel',
@@ -81,7 +72,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       appToken: 'test-app-token',
     });
 
-    // Valores por defecto para el almacenamiento local
     const defaultStorage = {
       featureEnabled: true,
       messages: [],
@@ -127,7 +117,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     mockScripting.registerContentScripts.mockResolvedValue();
 
     (global.fetch as Mock).mockImplementation((url: string) => {
-      // Mock para la API de Slack conversations.list
       if (url.includes('conversations.list')) {
         return Promise.resolve({
           ok: true,
@@ -140,7 +129,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         });
       }
 
-      // Mock para la API de Slack conversations.history
       if (url.includes('conversations.history')) {
         return Promise.resolve({
           ok: true,
@@ -155,7 +143,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         });
       }
 
-      // Mock para la API de Slack team.info
       if (url.includes('team.info')) {
         return Promise.resolve({
           ok: true,
@@ -167,7 +154,6 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         });
       }
 
-      // Mock para la API de Slack apps.connections.open
       if (url.includes('apps.connections.open')) {
         return Promise.resolve({
           ok: true,
@@ -179,36 +165,28 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         });
       }
 
-      // Respuesta por defecto para APIs no reconocidas
       return Promise.resolve({
         ok: false,
         json: () => Promise.resolve({ ok: false, error: 'not_found' }),
       });
     });
 
-    // Importar el módulo de background
     backgroundModule = await import('../src/modules/background/background');
 
-    // Obtener el manejador de mensajes original
     messageHandler = mockRuntime.onMessage.addListener.mock.calls[0]?.[0];
 
-    // Guardar una referencia al manejador original
     const originalMessageHandler = messageHandler;
 
-    // Crear un wrapper para el manejador de mensajes que asegure que sendResponse siempre sea una función
     messageHandler = (
       request: MessageRequest,
       sender: MessageSender,
       sendResponse?: ((response: any) => void) | undefined
     ) => {
-      // Si sendResponse no está definido o no es una función, usar un mock
       const safeSendResponse = typeof sendResponse === 'function' ? sendResponse : vi.fn();
 
-      // Llamar al manejador original con el sendResponse seguro
       return originalMessageHandler(request, sender, safeSendResponse);
     };
 
-    // Obtener otros manejadores de eventos
     installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
     startupHandler = mockRuntime.onStartup.addListener.mock.calls[0]?.[0];
     alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
@@ -218,14 +196,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     vi.restoreAllMocks();
   });
 
-  // Tests para verificar la inicialización correcta
   test('should initialize and register all event listeners', () => {
     if (process.env.NODE_ENV === 'test') {
-      // En entorno de prueba, algunos listeners no se registran
       expect(mockRuntime.onInstalled.addListener).not.toHaveBeenCalled();
       expect(mockRuntime.onStartup.addListener).not.toHaveBeenCalled();
     } else {
-      // En entorno normal, todos los listeners deben registrarse
       expect(mockRuntime.onMessage.addListener).toHaveBeenCalled();
       expect(mockRuntime.onInstalled.addListener).toHaveBeenCalled();
       expect(mockRuntime.onStartup.addListener).toHaveBeenCalled();
