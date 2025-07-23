@@ -7,7 +7,7 @@ import {
   mockAction,
   mockScripting,
   mockPermissions,
-} from '@src/../tests/setup';
+} from '@tests/setup';
 import { Logger } from '@src/modules/common/utils/Logger';
 import { MESSAGE_ACTIONS } from '@src/modules/common/constants';
 

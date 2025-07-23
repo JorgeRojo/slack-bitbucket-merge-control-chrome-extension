@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Mock } from 'vitest';
-import { mockStorage, mockRuntime } from '@src/../tests/setup';
+import { mockStorage, mockRuntime } from '@tests/setup';
 import * as fs from 'fs';
 import * as path from 'path';
 vi.mock('@src/modules/common/utils/logger');

@@ -56,6 +56,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@src': resolve(__dirname, './src'),
+      '@tests': resolve(__dirname, './tests'),
     },
   },
   build: {
