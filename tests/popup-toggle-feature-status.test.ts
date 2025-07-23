@@ -15,11 +15,11 @@ import { Logger } from '../src/modules/common/utils/Logger';
 describe('popup-toggle-feature-status', () => {
   // Mock for chrome API
   const originalChrome = global.chrome;
-  
+
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks();
-    
+
     // Mock chrome API
     global.chrome = {
       storage: {
@@ -34,14 +34,14 @@ describe('popup-toggle-feature-status', () => {
         },
       },
     } as any;
-    
+
     // Mock document.getElementById
     document.getElementById = vi.fn().mockReturnValue({
       style: { display: 'none' },
       textContent: '',
     });
   });
-  
+
   afterEach(() => {
     global.chrome = originalChrome;
   });
@@ -53,12 +53,12 @@ describe('popup-toggle-feature-status', () => {
 
   test('should handle null countdown display', async () => {
     document.getElementById = vi.fn().mockReturnValue(null);
-    
+
     const mockToggleSwitch = {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     await expect(initializeToggleFeatureStatus(mockToggleSwitch as any)).resolves.not.toThrow();
     expect(chrome.storage.local.get).not.toHaveBeenCalled();
   });
@@ -68,17 +68,17 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
     chrome.storage.local.get = vi.fn().mockResolvedValue({ featureEnabled: true });
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     expect(chrome.storage.local.get).toHaveBeenCalledWith('featureEnabled');
     expect(mockToggleSwitch.setAttribute).toHaveBeenCalledWith('checked', 'true');
     expect(mockCountdownDisplay.style.display).toBe('none');
@@ -89,17 +89,17 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
     chrome.storage.local.get = vi.fn().mockResolvedValue({ featureEnabled: false });
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     expect(chrome.storage.local.get).toHaveBeenCalledWith('featureEnabled');
     expect(mockToggleSwitch.setAttribute).toHaveBeenCalledWith('checked', 'false');
     expect(mockCountdownDisplay.style.display).toBe('none');
@@ -110,22 +110,22 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     // Get the event listener callback
     const toggleCallback = mockToggleSwitch.addEventListener.mock.calls[0][1];
-    
+
     // Simulate toggle event
     await toggleCallback({ detail: { checked: true } });
-    
+
     expect(mockCountdownDisplay.style.display).toBe('none');
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
       action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
@@ -138,16 +138,16 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     // Mock the sendMessage to return active countdown for GET_COUNTDOWN_STATUS
-    chrome.runtime.sendMessage = vi.fn().mockImplementation((message) => {
+    chrome.runtime.sendMessage = vi.fn().mockImplementation(message => {
       if (message.action === MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS) {
         return Promise.resolve({
           isCountdownActive: true,
@@ -156,24 +156,24 @@ describe('popup-toggle-feature-status', () => {
       }
       return Promise.resolve({});
     });
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     // Get the event listener callback
     const toggleCallback = mockToggleSwitch.addEventListener.mock.calls[0][1];
-    
+
     // Simulate toggle event
     await toggleCallback({ detail: { checked: false } });
-    
+
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
       action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED,
       payload: { enabled: false },
     });
-    
+
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
       action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS,
     });
-    
+
     expect(mockCountdownDisplay.textContent).toContain('Auto-enable in: 2:00');
     expect(mockCountdownDisplay.style.display).toBe('block');
   });
@@ -183,25 +183,25 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     // Mock sendMessage to throw an error
     chrome.runtime.sendMessage = vi.fn().mockRejectedValue(new Error('Test error'));
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     // Get the event listener callback
     const toggleCallback = mockToggleSwitch.addEventListener.mock.calls[0][1];
-    
+
     // Simulate toggle event
     await toggleCallback({ detail: { checked: true } });
-    
+
     expect(Logger.error).toHaveBeenCalled();
   });
 
@@ -210,25 +210,25 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     // Get the message listener callback
     const messageListener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
-    
+
     // Simulate message
     messageListener({
       action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
       payload: { timeLeft: 65000 }, // 1 minute and 5 seconds
     });
-    
+
     expect(mockCountdownDisplay.textContent).toContain('Auto-enable in: 1:05');
     expect(mockCountdownDisplay.style.display).toBe('block');
   });
@@ -238,24 +238,24 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     // Get the message listener callback
     const messageListener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
-    
+
     // Simulate message
     messageListener({
       action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED,
     });
-    
+
     expect(mockCountdownDisplay.style.display).toBe('none');
     expect(mockToggleSwitch.setAttribute).toHaveBeenCalledWith('checked', 'true');
   });
@@ -265,26 +265,26 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     // Mock sendMessage to return active countdown
     chrome.runtime.sendMessage = vi.fn().mockResolvedValue({
       isCountdownActive: true,
       timeLeft: 30000, // 30 seconds
     });
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
       action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS,
     });
-    
+
     expect(mockCountdownDisplay.textContent).toContain('Auto-enable in: 0:30');
     expect(mockCountdownDisplay.style.display).toBe('block');
   });
@@ -294,26 +294,26 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     // Mock sendMessage to return inactive countdown
     chrome.runtime.sendMessage = vi.fn().mockResolvedValue({
       isCountdownActive: false,
       timeLeft: 0,
     });
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
       action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS,
     });
-    
+
     expect(mockCountdownDisplay.style.display).toBe('none');
   });
 
@@ -322,19 +322,19 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     // Mock sendMessage to throw an error
     chrome.runtime.sendMessage = vi.fn().mockRejectedValue(new Error('Test error'));
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     expect(Logger.error).toHaveBeenCalled();
   });
 
@@ -343,33 +343,33 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     // Get the message listener callback
     const messageListener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
-    
+
     // Simulate message with zero time
     messageListener({
       action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
       payload: { timeLeft: 0 },
     });
-    
+
     expect(mockCountdownDisplay.style.display).toBe('none');
-    
+
     // Simulate message with negative time
     messageListener({
       action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
       payload: { timeLeft: -1000 },
     });
-    
+
     expect(mockCountdownDisplay.style.display).toBe('none');
   });
 
@@ -378,35 +378,35 @@ describe('popup-toggle-feature-status', () => {
       setAttribute: vi.fn(),
       addEventListener: vi.fn(),
     };
-    
+
     const mockCountdownDisplay = {
       style: { display: 'none' },
       textContent: '',
     };
-    
+
     document.getElementById = vi.fn().mockReturnValue(mockCountdownDisplay);
-    
+
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
-    
+
     // Get the message listener callback
     const messageListener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
-    
+
     // Test various time formats
     const testCases = [
-      { timeLeft: 1000, expected: '0:01' },      // 1 second
-      { timeLeft: 10000, expected: '0:10' },     // 10 seconds
-      { timeLeft: 60000, expected: '1:00' },     // 1 minute
-      { timeLeft: 61000, expected: '1:01' },     // 1 minute, 1 second
-      { timeLeft: 3599000, expected: '59:59' },  // 59 minutes, 59 seconds
-      { timeLeft: 3600000, expected: '60:00' },  // 60 minutes
+      { timeLeft: 1000, expected: '0:01' }, // 1 second
+      { timeLeft: 10000, expected: '0:10' }, // 10 seconds
+      { timeLeft: 60000, expected: '1:00' }, // 1 minute
+      { timeLeft: 61000, expected: '1:01' }, // 1 minute, 1 second
+      { timeLeft: 3599000, expected: '59:59' }, // 59 minutes, 59 seconds
+      { timeLeft: 3600000, expected: '60:00' }, // 60 minutes
     ];
-    
+
     for (const testCase of testCases) {
       messageListener({
         action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
         payload: { timeLeft: testCase.timeLeft },
       });
-      
+
       expect(mockCountdownDisplay.textContent).toBe(`Auto-enable in: ${testCase.expected}`);
       expect(mockCountdownDisplay.style.display).toBe('block');
     }
