@@ -2,12 +2,12 @@ name: Sync GitHub Issues to Bug Documentation
 
 on:
   issues:
-    types: [labeled]  # Solo se activa cuando se añade una etiqueta, no cuando se crea el issue
+    types: [labeled] # Solo se activa cuando se añade una etiqueta, no cuando se crea el issue
 
 # Define los permisos necesarios para el GITHUB_TOKEN
 permissions:
-  contents: write  # Para hacer push de cambios
-  issues: write    # Para comentar en issues
+  contents: write # Para hacer push de cambios
+  issues: write # Para comentar en issues
 
 jobs:
   sync-to-bug-files:
@@ -20,7 +20,7 @@ jobs:
         with:
           # Use a personal access token to allow the workflow to commit changes
           token: ${{ secrets.PAT_TOKEN }}
-      
+
       - name: Create bug file from issue
         uses: actions/github-script@v6
         with:
@@ -28,15 +28,15 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             // Define the full path to the script
             const scriptPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'scripts', 'sync-issue-to-bug.js');
             console.log(`Loading script from: ${scriptPath}`);
-            
+
             // Import the external script using dynamic import with absolute path
             const syncIssueToDocModule = await import(`file://${scriptPath}`);
             const syncIssueToDoc = syncIssueToDocModule.default;
-            
+
             // Execute the script with all required parameters
             return await syncIssueToDoc({ 
               github, 

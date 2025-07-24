@@ -6,7 +6,7 @@
  */
 export default async ({ fs, path }) => {
   const bugsDir = 'documentation/bugs';
-  
+
   // Ensure the bugs directory exists
   if (!fs.existsSync(bugsDir)) {
     console.log(`Creating bugs directory: ${bugsDir}`);
@@ -14,7 +14,8 @@ export default async ({ fs, path }) => {
   }
 
   // Get all bug files
-  const bugFiles = fs.readdirSync(bugsDir)
+  const bugFiles = fs
+    .readdirSync(bugsDir)
     .filter(f => f.match(/^\d{3}-.+\.md$/) && f !== 'README.md')
     .sort((a, b) => {
       // Sort by bug ID (numeric)
@@ -27,43 +28,43 @@ export default async ({ fs, path }) => {
 
   // Create table entries for each bug file
   const tableEntries = [];
-  
+
   for (const file of bugFiles) {
     try {
       const content = fs.readFileSync(path.join(bugsDir, file), 'utf8');
-      
+
       // Extract bug ID from filename
       const idMatch = file.match(/^(\d{3})/);
       if (!idMatch) continue;
       const bugId = idMatch[1];
-      
+
       // Extract title from content
       const titleMatch = content.match(/# Bug \d+: (.*)/);
       const title = titleMatch ? titleMatch[1].trim() : 'Unknown Title';
-      
+
       // Extract component
       const componentMatch = content.match(/## Component\s+`?([^`\n]+)`?/);
       const component = componentMatch ? componentMatch[1].trim() : 'Unknown';
-      
+
       // Extract status
       const statusMatch = content.match(/## Status\s+([^\n]+)/);
       const status = statusMatch ? statusMatch[1].trim() : 'Unknown';
-      
+
       // Extract severity
       const severityMatch = content.match(/## Severity\s+([^\n]+)/);
       const severity = severityMatch ? severityMatch[1].trim() : 'Unknown';
-      
+
       // Extract date reported
       const dateReportedMatch = content.match(/## Date Reported\s+([^\n]+)/);
       const dateReported = dateReportedMatch ? dateReportedMatch[1].trim() : '';
-      
+
       // Try to extract date fixed if status is Fixed
       let dateFixed = '';
       if (status.toLowerCase() === 'fixed') {
         const dateFixedMatch = content.match(/## Date Fixed\s+([^\n]+)/);
         dateFixed = dateFixedMatch ? dateFixedMatch[1].trim() : '';
       }
-      
+
       // Add table entry
       tableEntries.push({
         id: bugId,
@@ -73,9 +74,9 @@ export default async ({ fs, path }) => {
         status,
         severity,
         dateReported,
-        dateFixed
+        dateFixed,
       });
-      
+
       console.log(`Processed bug #${bugId}: ${title}`);
     } catch (error) {
       console.error(`Error processing file ${file}: ${error.message}`);
@@ -84,7 +85,7 @@ export default async ({ fs, path }) => {
 
   // Create the README.md content
   const indexPath = path.join(bugsDir, 'README.md');
-  
+
   // Create the content with the updated table
   const indexContent = `# Bug Tracking Index
 
@@ -94,9 +95,12 @@ This directory contains documentation for bugs that have been identified and fix
 
 | ID | Title | Component | Status | Severity | Date Reported | Date Fixed |
 | --- | ----- | --------- | ------ | -------- | ------------ | --------- |
-${tableEntries.map(entry => 
-  `| [${entry.id}](./${entry.file}) | ${entry.title} | ${entry.component} | ${entry.status} | ${entry.severity} | ${entry.dateReported} | ${entry.dateFixed} |`
-).join('\n')}
+${tableEntries
+  .map(
+    entry =>
+      `| [${entry.id}](./${entry.file}) | ${entry.title} | ${entry.component} | ${entry.status} | ${entry.severity} | ${entry.dateReported} | ${entry.dateFixed} |`
+  )
+  .join('\n')}
 
 ## How to Add a New Bug
 
@@ -167,6 +171,6 @@ What tests were added or changed to prevent regression
 
   return {
     bugsProcessed: tableEntries.length,
-    indexPath
+    indexPath,
   };
 };

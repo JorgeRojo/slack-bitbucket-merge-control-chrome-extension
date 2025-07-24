@@ -125,7 +125,7 @@ ${additionalContext ? `## Additional Context\n${additionalContext}` : ''}
 
     // Find the table in the index file
     const tableMatch = indexContent.match(
-      /\| ID \| Title \| Component \| Status \| Severity \| Date Reported \| Date Fixed \|\n\|[-\|]+\n([\s\S]*?)(?=\n\n## |$)/
+      /\| ID \| Title \| Component \| Status \| Severity \| Date Reported \| Date Fixed \|\n\|[-|]+\n([\s\S]*?)(?=\n\n## |$)/
     );
 
     if (tableMatch) {

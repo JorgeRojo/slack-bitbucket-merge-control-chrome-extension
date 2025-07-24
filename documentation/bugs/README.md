@@ -14,6 +14,7 @@ This directory contains documentation for bugs that have been identified and fix
 | [006](./006-xxxx-4.md) | XXXX 4 | XXXX 4 | Open | Medium | 2025-07-24 |  |
 | [007](./007-xxxx-5.md) | XXXX 5 | XXXX 5 | Open | Medium | 2025-07-24 |  |
 | [008](./008-xxxx-6.md) | XXXX 6 | XXXX 6 | Open | Medium | 2025-07-24 |  |
+| [009](./009-xxxx-7.md) | XXXX 7 | XXXX 7 | Open | Medium | 2025-07-24 |  |
 
 ## How to Add a New Bug
 

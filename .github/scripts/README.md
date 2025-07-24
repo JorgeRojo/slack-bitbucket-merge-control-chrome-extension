@@ -9,22 +9,24 @@ This directory contains JavaScript scripts used by GitHub Actions workflows. Ext
 Creates a bug documentation file from a GitHub issue.
 
 **Usage**:
+
 ```javascript
 // Using dynamic import for ESM modules
 const syncIssueToDocModule = await import('./.github/scripts/sync-issue-to-bug.js');
 const syncIssueToDoc = syncIssueToDocModule.default;
 
-const result = await syncIssueToDoc({ 
-  github,  // GitHub API client
+const result = await syncIssueToDoc({
+  github, // GitHub API client
   context, // GitHub Actions context
-  core,    // GitHub Actions core library
-  exec,    // GitHub Actions exec library
-  fs,      // Node.js fs module
-  path     // Node.js path module
+  core, // GitHub Actions core library
+  exec, // GitHub Actions exec library
+  fs, // Node.js fs module
+  path, // Node.js path module
 });
 ```
 
 **Returns**:
+
 ```javascript
 {
   bugId: "001",           // The ID of the created bug
@@ -38,23 +40,25 @@ const result = await syncIssueToDoc({
 Creates a GitHub issue from a bug documentation file.
 
 **Usage**:
+
 ```javascript
 // Using dynamic import for ESM modules
 const syncBugToIssueModule = await import('./.github/scripts/sync-bug-to-issue.js');
 const syncBugToIssue = syncBugToIssueModule.default;
 
-const result = await syncBugToIssue({ 
-  github,  // GitHub API client
+const result = await syncBugToIssue({
+  github, // GitHub API client
   context, // GitHub Actions context
-  core,    // GitHub Actions core library
-  exec,    // GitHub Actions exec library
-  fs,      // Node.js fs module
-  path,    // Node.js path module
-  file     // Path to the bug documentation file
+  core, // GitHub Actions core library
+  exec, // GitHub Actions exec library
+  fs, // Node.js fs module
+  path, // Node.js path module
+  file, // Path to the bug documentation file
 });
 ```
 
 **Returns**:
+
 ```javascript
 {
   bugId: "001",           // The ID of the bug
@@ -84,13 +88,13 @@ import syncIssueToDoc from './sync-issue-to-bug.js';
 const context = {
   repo: {
     owner: 'your-username',
-    repo: 'your-repo'
+    repo: 'your-repo',
   },
   payload: {
     issue: {
       // Mock issue data
-    }
-  }
+    },
+  },
 };
 
 // Create GitHub client with your token
