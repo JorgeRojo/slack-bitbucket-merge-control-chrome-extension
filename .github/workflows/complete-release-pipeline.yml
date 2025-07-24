@@ -134,17 +134,22 @@ jobs:
 
       - name: Create Pull Request to Master
         if: github.event.inputs.create_pr == 'true'
-        uses: peter-evans/create-pull-request@v5
+        id: create-pr
+        uses: actions/github-script@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          push-to-fork: false
-          branch: release/${{ github.event.inputs.version }}
-          base: master
-          title: '🚀 Release ${{ github.event.inputs.version }}'
-          body: |
-            ## 🚀 Release ${{ github.event.inputs.version }}
+          script: |
+            try {
+              console.log('🚀 Creating Pull Request from develop to master...');
+              
+              const { data: pullRequest } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🚀 Release ${{ github.event.inputs.version }}',
+                head: 'develop',
+                base: 'master',
+                body: `## 🚀 Release ${{ github.event.inputs.version }}
 
-            This PR merges `develop` into `master` for version ${{ github.event.inputs.version }}.
+            This PR merges \`develop\` into \`master\` for version ${{ github.event.inputs.version }}.
 
             ### 📋 Pre-merge Checklist
             - [x] All tests pass ✅
@@ -155,9 +160,9 @@ jobs:
             - [x] No merge conflicts ✅
 
             ### 🔄 Git Flow Compliance
-            - **Source Branch**: `develop`
-            - **Target Branch**: `master`
-            - **Release Version**: `${{ github.event.inputs.version }}`
+            - **Source Branch**: \`develop\`
+            - **Target Branch**: \`master\`
+            - **Release Version**: \`${{ github.event.inputs.version }}\`
 
             ### ⚡ Next Steps
             1. **Review and approve** this PR
@@ -166,9 +171,29 @@ jobs:
 
             ---
 
-            > 🤖 This PR was automatically created following Git Flow guidelines.
-          draft: false
-          delete-branch: true
+            > 🤖 This PR was automatically created following Git Flow guidelines.`,
+                draft: false
+              });
+
+              console.log(`✅ Pull Request created successfully: #${pullRequest.number}`);
+              console.log(`📋 PR URL: ${pullRequest.html_url}`);
+              
+              // Set output for use in summary
+              core.setOutput('pr_number', pullRequest.number);
+              core.setOutput('pr_url', pullRequest.html_url);
+              
+            } catch (error) {
+              console.error('❌ Failed to create Pull Request:', error.message);
+              
+              if (error.status === 422) {
+                console.error('💡 This might be because:');
+                console.error('   - A PR from develop to master already exists');
+                console.error('   - There are no differences between develop and master');
+                console.error('   - Branch protection rules prevent PR creation');
+              }
+              
+              throw error;
+            }
 
       - name: Direct merge to master and prepare for version closing
         id: merge-result
@@ -203,6 +228,10 @@ jobs:
 
           if [ "${{ github.event.inputs.create_pr }}" = "true" ]; then
             echo "- Pull Request created ✅" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR Number**: #${{ steps.create-pr.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR URL**: ${{ steps.create-pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
             echo "1. Review and approve the PR" >> $GITHUB_STEP_SUMMARY
@@ -431,7 +460,7 @@ jobs:
     if: |
       (github.event_name == 'workflow_dispatch' && needs.close-version.outputs.should_publish == 'true') ||
       (github.event_name == 'pull_request' && needs.close-version.outputs.version_tag != '')
-    
+
     steps:
       - name: Check if version closing was skipped
         id: check-skip
