@@ -7,7 +7,7 @@ import {
   updateAppStatus,
   updateExtensionIcon,
   updateIconBasedOnCurrentMessages,
-} from '@src/modules/background/utils/background-utils.ts';
+} from '@src/modules/background/utils/background-utils';
 import { APP_STATUS, ERROR_MESSAGES, MERGE_STATUS } from '@src/modules/common/constants';
 import { ProcessedMessage } from '@src/modules/common/types/app';
 import { SlackMessage } from '@src/modules/common/types/slack';
