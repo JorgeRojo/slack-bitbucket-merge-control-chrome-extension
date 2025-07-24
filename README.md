@@ -2,7 +2,7 @@
 
 This is a Chrome extension designed to read messages from specified Slack channels (both public and private) and control merge button availability on Bitbucket pull request pages. The extension popup displays the current merge status and the latest matching message that determined the merge control decision.
 
-**🎉 Now fully migrated to TypeScript!** This project has been successfully migrated from JavaScript to TypeScript, providing better type safety, improved development experience, and enhanced code maintainability.
+**🎉 Fully migrated to TypeScript!** This project has been successfully migrated from JavaScript to TypeScript, providing better type safety, improved development experience, and enhanced code maintainability.
 
 ## Features
 
@@ -12,6 +12,8 @@ This is a Chrome extension designed to read messages from specified Slack channe
 - Displays the current merge status and latest matching message in the extension popup.
 - **Bitbucket Integration:** Controls the merge button on Bitbucket pull request pages based on keywords in Slack messages.
 - **TypeScript Support:** Full type safety and enhanced development experience.
+- **Web Components:** Custom elements for UI components.
+- **Comprehensive Testing:** High test coverage with Vitest.
 
 ## Code Quality
 
@@ -90,15 +92,34 @@ All project documentation is organized in the `documentation/` directory:
 - **[CODE_STYLE.md](./documentation/CODE_STYLE.md)** - Detailed coding style rules and best practices
 - **[TESTING_GUIDELINES.md](./documentation/TESTING_GUIDELINES.md)** - Testing strategies and guidelines
 - **[MOCKING_STRATEGIES.md](./documentation/MOCKING_STRATEGIES.md)** - Mocking patterns and strategies for tests
-- **[TYPESCRIPT_MIGRATION.md](./documentation/TYPESCRIPT_MIGRATION.md)** - TypeScript migration status and documentation
+- **[TYPESCRIPT_MIGRATION.md](./documentation/TYPESCRIPT_MIGRATION.md)** - TypeScript migration documentation
+- **[ERROR_HANDLING.md](./documentation/ERROR_HANDLING.md)** - Error handling system documentation
+
+## Project Structure
+
+```
+src/
+├── modules/
+│   ├── background/         # Background script and utilities
+│   ├── common/             # Shared code
+│   │   ├── components/     # Web components
+│   │   ├── images/         # Extension icons
+│   │   ├── styles/         # CSS files
+│   │   ├── types/          # TypeScript type definitions
+│   │   └── utils/          # Utility functions
+│   ├── content/            # Content script for Bitbucket pages
+│   ├── options/            # Options and help pages
+│   └── popup/              # Popup interface
+└── manifest.json           # Extension manifest
+```
 
 ## Installation
 
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/JorgeRojo/slack-frontend-closure.git
-   cd slack-frontend-closure
+   git clone https://github.com/JorgeRojo/slack-bitbucket-merge-control-chrome-extension.git
+   cd slack-bitbucket-merge-control-chrome-extension
    ```
 
 2. **Install dependencies:**
@@ -133,6 +154,16 @@ The help page provides comprehensive instructions for:
 - Configuring the Chrome Extension
 - Using the extension with Bitbucket
 - Understanding the different merge control statuses
+
+## Key Technologies
+
+- **TypeScript** - For type safety and better development experience
+- **Web Components** - For encapsulated, reusable UI components
+- **Vite** - For modern, fast bundling
+- **Vitest** - For comprehensive testing
+- **ESLint & Prettier** - For code quality and consistency
+- **Chrome Extension APIs** - For browser integration
+- **Slack API** - For real-time message monitoring
 
 ---
 

@@ -4,7 +4,7 @@ This document provides guidelines for writing tests for the Slack-Bitbucket Merg
 
 ## Using the Global Chrome Mock
 
-The project uses a global Chrome mock defined in `tests/setup.js` to simulate the Chrome API in tests. This approach provides several benefits:
+The project uses a global Chrome mock defined in `tests/setup.ts` to simulate the Chrome API in tests. This approach provides several benefits:
 
 1. **Consistency**: All tests use the same base mock implementation
 2. **Maintainability**: Changes to the Chrome API mock only need to be made in one place
@@ -14,7 +14,7 @@ The project uses a global Chrome mock defined in `tests/setup.js` to simulate th
 
 1. **Set up spies on the methods you need to test**:
 
-```javascript
+```typescript
 beforeEach(() => {
   vi.clearAllMocks();
 
@@ -29,8 +29,8 @@ beforeEach(() => {
 
 2. **Mock implementations for specific test cases**:
 
-```javascript
-chrome.storage.local.get.mockImplementation(keys => {
+```typescript
+chrome.storage.local.get.mockImplementation((keys) => {
   if (Array.isArray(keys) && keys.includes('appStatus')) {
     return Promise.resolve({
       appStatus: 'config_error',
@@ -42,7 +42,7 @@ chrome.storage.local.get.mockImplementation(keys => {
 
 3. **Verify interactions with the Chrome API**:
 
-```javascript
+```typescript
 expect(chrome.storage.local.set).toHaveBeenCalledWith(
   expect.objectContaining({
     appStatus: 'web_socket_error',
@@ -52,13 +52,16 @@ expect(chrome.storage.local.set).toHaveBeenCalledWith(
 
 ### Example
 
-Here's an example from `tests/background/background-status-handling.test.js`:
+Here's an example from a test file:
 
-```javascript
+```typescript
+import { APP_STATUS, MERGE_STATUS } from '@src/modules/common/constants';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 describe('App Status Error Handling', () => {
   beforeEach(() => {
     // Reset mocks before each test
-    vi.spyOn(chrome.storage.local, 'get').mockImplementation(keys => {
+    vi.spyOn(chrome.storage.local, 'get').mockImplementation((keys) => {
       if (Array.isArray(keys) && keys.includes('messages')) {
         return Promise.resolve({
           messages: [],
@@ -107,11 +110,42 @@ describe('App Status Error Handling', () => {
 
 Tests are organized in directories that mirror the structure of the source code:
 
-- `tests/background/`: Tests for background script functionality
-- `tests/components/`: Tests for UI components
-- `tests/popup/`: Tests for popup functionality
+```
+tests/
+├── modules/
+│   ├── background/         # Tests for background script functionality
+│   │   └── utils/          # Tests for background utilities
+│   ├── common/             # Tests for shared code
+│   │   ├── components/     # Tests for UI components
+│   │   └── utils/          # Tests for utility functions
+│   ├── content/            # Tests for content script
+│   ├── options/            # Tests for options pages
+│   └── popup/              # Tests for popup functionality
+└── setup.ts                # Test setup and global mocks
+```
 
 This organization makes it easier to find and maintain tests related to specific parts of the application.
+
+## TypeScript in Tests
+
+All tests are written in TypeScript, which provides several benefits:
+
+1. **Type safety**: TypeScript helps catch errors at compile time
+2. **Better IDE support**: TypeScript provides better autocompletion and documentation
+3. **Consistency**: Tests use the same language as the source code
+
+### Import Aliases
+
+Tests use import aliases for cleaner imports:
+
+```typescript
+// Instead of relative paths like:
+import { Logger } from '../../../src/modules/common/utils/Logger';
+
+// We use aliases:
+import { Logger } from '@src/modules/common/utils/Logger';
+import { mockRuntime } from '@tests/setup';
+```
 
 ## Best Practices
 
@@ -124,12 +158,13 @@ This organization makes it easier to find and maintain tests related to specific
 7. **Avoid testing implementation details**: Test behavior, not implementation details
 8. **Avoid conditional statements in tests**: Tests should be deterministic and straightforward. Avoid using if/else statements, ternary operators, or other conditional logic within test cases. If you need different test scenarios, create separate test cases instead.
 9. **Avoid trivial assertions**: Never use `expect(true).toBe(true)` or other trivial assertions that always pass. Each assertion should verify something meaningful.
+10. **Type your mocks**: Ensure mocks have proper TypeScript types
 
 ### Example of avoiding conditionals in tests
 
 Instead of:
 
-```javascript
+```typescript
 test('should handle both valid and invalid inputs', () => {
   const validInput = 'valid';
   const invalidInput = '';
@@ -146,7 +181,7 @@ test('should handle both valid and invalid inputs', () => {
 
 Write separate tests:
 
-```javascript
+```typescript
 test('should return true for valid input', () => {
   const validInput = 'valid';
   expect(isValid(validInput)).toBe(true);
@@ -162,7 +197,7 @@ test('should return false for invalid input', () => {
 
 Instead of:
 
-```javascript
+```typescript
 test('should handle missing handler', () => {
   if (handler) {
     // Test with handler
@@ -174,7 +209,7 @@ test('should handle missing handler', () => {
 
 Better approach:
 
-```javascript
+```typescript
 test('should handle handler when available', () => {
   // Verify handler exists before using it
   expect(handler).toBeDefined();

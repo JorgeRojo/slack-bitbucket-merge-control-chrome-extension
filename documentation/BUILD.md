@@ -15,12 +15,12 @@ The project uses **Vite with a custom plugin** optimized for Chrome Extensions:
 
 ### Custom Chrome Extension Plugin
 
-The build system includes a custom Vite plugin (`chromeExtensionContentScript`) that:
+The build system includes a custom Vite plugin (`generateIIFEFiles`) that:
 
 1. **Intercepts** the content script during Vite's bundle generation
-2. **Removes** content.js from Vite's ES module bundle
-3. **Rebuilds** content script separately using esbuild with IIFE format
-4. **Ensures** Chrome Extension compatibility for content scripts
+2. **Removes** unnecessary files from Vite's ES module bundle
+3. **Rebuilds** scripts separately using esbuild with IIFE format
+4. **Ensures** Chrome Extension compatibility for content scripts and web components
 
 ### Build Process Flow
 
@@ -29,11 +29,11 @@ npm run build
     ↓
 Vite Build Process
     ↓
-Plugin Intercepts content.ts
+Plugin Intercepts scripts
     ↓
-Vite builds: background, popup, options, help (ES modules)
+Vite builds main entries (ES modules)
     ↓
-Plugin builds: content.js (IIFE format with esbuild)
+Plugin builds scripts as IIFE format with esbuild
     ↓
 Static files copied
     ↓
@@ -46,22 +46,10 @@ Build Complete
 
 Main build command using Vite with custom Chrome Extension plugin:
 
-- Uses **Vite** to bundle background, popup, options, help scripts with modern optimizations
-- **Custom plugin** intercepts and rebuilds content script as IIFE using esbuild
+- Uses **Vite** to bundle scripts with modern optimizations
+- **Custom plugin** intercepts and rebuilds scripts as IIFE using esbuild
 - Copies all static files (HTML, CSS, images, manifest.json) to dist directory
-- Generates optimized bundles with source maps and compression analysis
-- Provides detailed build summary with file sizes and performance metrics
-- **Single command** handles entire build process
-
-### `npm run clean`
-
-- May not be Chrome Extension compatible for content scripts (uses ES modules)
-- Useful for development, testing, and analyzing bundle composition
-- Generates detailed chunk analysis and dependency graphs
-
-### `npm run clean`
-
-Removes the `dist/` directory completely.
+- Generates optimized bundles with source maps
 
 ### `npm run type-check`
 
@@ -70,12 +58,9 @@ Runs TypeScript compiler in check-only mode (no output files):
 - Useful for checking types without building
 - Shows all TypeScript errors without stopping the build
 
-### `npm run build:tsc`
+### `npm run clean`
 
-Uses the standard TypeScript compiler directly:
-
-- More strict than our custom build script
-- Will fail if any TypeScript errors exist
+Removes the `dist/` directory completely.
 
 ## Build Output
 
@@ -84,87 +69,116 @@ The build process creates a `dist/` directory with the following structure:
 ```
 dist/
 ├── background.js           # Main background script
-├── content.js             # Content script for Bitbucket pages
-├── popup.js               # Popup interface
-├── options.js             # Options page
-├── manifest.json          # Chrome extension manifest
-├── components/            # UI components
-├── utils/                 # Utility functions
-├── types/                 # TypeScript type definitions (compiled)
-├── styles/                # CSS files
-└── images/                # Extension icons
+├── content.js              # Content script for Bitbucket pages
+├── popup.js                # Popup interface
+├── options.js              # Options page
+├── help.js                 # Help page
+├── manifest.json           # Chrome extension manifest
+├── popup.html              # Popup HTML
+├── options.html            # Options page HTML
+├── help.html               # Help page HTML
+├── components/             # Web components
+│   └── toggle-switch/      # Toggle switch component
+│       ├── toggle-switch.js
+│       └── toggle-switch.css
+├── styles/                 # CSS files
+│   ├── base.css
+│   ├── pages.css
+│   ├── popup.css
+│   └── variables.css
+└── images/                 # Extension icons
 ```
 
-## TypeScript Migration Status
+## TypeScript Configuration
 
-The project is in active TypeScript migration. Current status:
+The project uses TypeScript with the following configuration:
 
-### ✅ Fully Migrated
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": true,
+    "checkJs": false,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["src/*"],
+      "@tests/*": ["tests/*"]
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+```
 
-- Type definitions (`types/`)
-- Utility functions (most of `utils/`)
-- UI components (`components/`)
-- Constants and literals
+## Import Aliases
 
-### 🔄 Partially Migrated
+The project uses import aliases for cleaner imports:
 
-- Background script (TypeScript exists, but has type errors)
-- Content script (TypeScript exists, but has type errors)
-- Popup script (TypeScript exists, but has type errors)
+```typescript
+// Instead of relative paths like:
+import { Logger } from '../../../common/utils/Logger';
 
-### 📋 Using JavaScript Fallbacks
-
-When TypeScript compilation fails, the build system automatically uses the JavaScript version as a fallback, ensuring the extension continues to work during the migration process.
+// We use aliases:
+import { Logger } from '@src/modules/common/utils/Logger';
+```
 
 ## Development Workflow
 
-1. **Start development mode:**
-
-   ```bash
-   npm run dev
-   ```
-
-   This compiles TypeScript and copies static files to the `dist/` directory.
-
-2. **Make changes to TypeScript files:**
+1. **Make changes to TypeScript files:**
    - Edit `.ts` files in the `src/` directory
-   - Run `npm run build` to rebuild after changes
-   - Check the console for compilation status
+
+2. **Build the extension:**
+   ```bash
+   npm run build
+   ```
 
 3. **Test the extension:**
    - Load the `dist/` directory as an unpacked extension in Chrome
-   - The extension will use compiled TypeScript where possible, JavaScript fallbacks otherwise
 
 4. **Check types:**
    ```bash
    npm run type-check
    ```
-   This shows TypeScript errors without affecting the build.
+
+## Testing
+
+Run tests with:
+
+```bash
+npm run test
+```
+
+Run tests with coverage:
+
+```bash
+npm run test:coverage
+```
 
 ## Troubleshooting
 
-### Build Fails Completely
+### Build Fails
 
 - Check that Node.js and npm are installed
 - Run `npm install` to ensure dependencies are installed
 - Try `npm run clean && npm run build`
 
-### TypeScript Compilation Errors
+### TypeScript Errors
 
-- The build system is designed to continue working even with TypeScript errors
-- JavaScript fallbacks are used automatically
 - Use `npm run type-check` to see all TypeScript issues
-- Fix TypeScript errors gradually without breaking the extension
+- Fix TypeScript errors before building
 
 ### Extension Not Loading
 
 - Ensure the `dist/` directory exists and contains `manifest.json`
 - Check Chrome's extension management page for error messages
 - Verify that all required files are present in `dist/`
-
-## Future Improvements
-
-1. **Complete TypeScript Migration**: Fix remaining type errors to enable full TypeScript compilation
-2. **Source Maps**: Enable source maps for better debugging
-3. **Minification**: Add minification for production builds
-4. **Bundle Analysis**: Add tools to analyze bundle size and dependencies

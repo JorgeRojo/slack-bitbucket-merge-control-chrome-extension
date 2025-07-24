@@ -10,33 +10,44 @@ The TypeScript migration has been successfully completed as of July 2025. All so
 
 #### Source Files (All Completed)
 
-- `src/constants.js` → `src/constants.ts`
-- `src/literals.js` → `src/literals.ts`
-- `src/utils/logger.js` → `src/utils/logger.ts`
-- `src/utils/errorHandler.js` → `src/utils/errorHandler.ts`
-- `src/components/nav-links.js` → `src/components/nav-links.ts`
-- `src/components/toggle-switch/toggle-switch.js` → `src/components/toggle-switch/toggle-switch.ts`
-- `src/components/toggle-switch/index.js` → `src/components/toggle-switch/index.ts`
-- `src/popup-toggle-feature-status.js` → `src/popup-toggle-feature-status.ts`
-- `src/options.js` → `src/options.ts`
-- `src/popup.js` → `src/popup.ts`
-- `src/content.js` → `src/content.ts`
-- `src/background.js` → `src/background.ts`
-- Created new utility file: `src/utils/background-utils.ts`
+- `src/modules/common/constants.ts`
+- `src/modules/common/literals.ts`
+- `src/modules/common/utils/Logger.ts`
+- `src/modules/common/utils/errorHandler.ts`
+- `src/modules/common/utils/type-helpers.ts`
+- `src/modules/common/components/nav-links/nav-links.ts`
+- `src/modules/common/components/toggle-switch/toggle-switch.ts`
+- `src/modules/popup/popup-toggle-feature-status.ts`
+- `src/modules/options/options.ts`
+- `src/modules/options/help.ts`
+- `src/modules/popup/popup.ts`
+- `src/modules/content/content.ts`
+- `src/modules/background/background.ts`
+- `src/modules/background/utils/background-utils.ts`
+
+#### Type Definitions
+
+- `src/modules/common/types/app.ts`
+- `src/modules/common/types/chrome.ts`
+- `src/modules/common/types/slack.ts`
 
 #### Test Files (All Completed)
 
-- `tests/setup.js` → `tests/setup.ts`
-- `tests/utils/logger.test.js` → `tests/utils/logger.test.ts`
-- `tests/utils/errorHandler.test.js` → `tests/utils/errorHandler.test.ts`
-- `tests/components/nav-links.test.js` → `tests/components/nav-links.test.ts`
-- `tests/components/toggle-switch.test.js` → `tests/components/toggle-switch.test.ts`
-- `tests/content.test.js` → `tests/content.test.ts`
-- `tests/options.test.js` → `tests/options.test.ts`
-- `tests/popup-toggle-feature-status.test.js` → `tests/popup-toggle-feature-status.test.ts`
-- `tests/popup.test.js` → `tests/popup.test.ts`
-- `tests/background.test.js` → `tests/background.test.ts`
-- Added new test file: `tests/utils/background-utils.test.ts`
+- `tests/setup.ts`
+- `tests/modules/common/utils/logger.test.ts`
+- `tests/modules/common/utils/errorHandler.test.ts`
+- `tests/modules/common/utils/type-helpers.test.ts`
+- `tests/modules/common/components/nav-links/nav-links.test.ts`
+- `tests/modules/common/components/toggle-switch/toggle-switch.test.ts`
+- `tests/modules/content/content.test.ts`
+- `tests/modules/options/options.test.ts`
+- `tests/modules/options/help.test.ts`
+- `tests/modules/popup/popup-toggle-feature-status.test.ts`
+- `tests/modules/popup/popup.test.ts`
+- `tests/modules/background/background.test.ts`
+- `tests/modules/background/utils/background-utils.test.ts`
+- `tests/alias-example.test.ts`
+- `tests/tests-alias-example.test.ts`
 
 ### Key Achievements
 
@@ -49,14 +60,6 @@ The TypeScript migration has been successfully completed as of July 2025. All so
 - ✅ TypeScript compilation process configured
 - ✅ Build scripts updated for TypeScript compilation
 
-### Completed Tasks
-
-- ✅ Complete migration of `tests/background.test.js` to TypeScript
-- ✅ Update `manifest.json` to reference compiled TypeScript files
-- ✅ Configure TypeScript compilation process
-- ✅ Update build scripts for TypeScript compilation
-- ✅ Add new test file for background utilities
-
 ## Benefits of Migration
 
 - **Compile-time error detection**: TypeScript identifies errors before running the code
@@ -65,187 +68,90 @@ The TypeScript migration has been successfully completed as of July 2025. All so
 - **Safer refactoring**: API changes are detected by the compiler
 - **Better support for design patterns**: Interfaces, generics, and other advanced concepts
 
-## Prerequisites
+## Project Configuration
 
-- Node.js and npm installed
-- Basic knowledge of TypeScript
+### TypeScript Configuration
 
-## Migration Steps
+The project uses the following TypeScript configuration in `tsconfig.json`:
 
-### 1. Initial Setup
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": true,
+    "checkJs": false,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["src/*"],
+      "@tests/*": ["tests/*"]
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+```
 
-1. **Install TypeScript dependencies**:
+### Build Process
 
-   ```bash
-   npm install --save-dev typescript ts-loader @typescript-eslint/eslint-plugin @typescript-eslint/parser typescript-eslint @types/node
-   ```
+The project uses Vite with a custom Chrome Extension plugin for building:
 
-2. **Create tsconfig.json file**:
+```bash
+npm run build
+```
 
-   ```json
-   {
-     "compilerOptions": {
-       "target": "ES2020",
-       "module": "ESNext",
-       "moduleResolution": "node",
-       "esModuleInterop": true,
-       "strict": true,
-       "sourceMap": true,
-       "outDir": "./dist",
-       "rootDir": "./src",
-       "lib": ["DOM", "DOM.Iterable", "ESNext"],
-       "jsx": "react",
-       "allowJs": true,
-       "checkJs": false,
-       "forceConsistentCasingInFileNames": true,
-       "resolveJsonModule": true
-     },
-     "include": ["src/**/*"],
-     "exclude": ["node_modules", "dist"]
-   }
-   ```
+This command compiles TypeScript files and bundles them for Chrome Extension use.
 
-3. **Update package.json with TypeScript scripts**:
+### Type Checking
 
-   ```json
-   "scripts": {
-     "build": "tsc",
-     "type-check": "tsc --noEmit"
-   }
-   ```
+To check TypeScript types without compiling:
 
-4. **Configure ESLint for TypeScript**:
-   Update `eslint.config.js` to include TypeScript support.
+```bash
+npm run type-check
+```
 
-5. **Configure Prettier**:
-   Create `.prettierrc` with appropriate TypeScript configuration.
+## TypeScript Best Practices Used in the Project
 
-### 2. Gradual Migration Strategy
+- **Interfaces** for defining object shapes
+- **Type aliases** for unions and complex types
+- **Enums** for sets of related values
+- **Generics** for reusable functions
+- **Module augmentation** for extending Chrome API types
+- **Type guards** for runtime type checking
+- **Utility types** like `Partial<T>`, `Pick<T, K>`, and `Omit<T, K>`
 
-The migration will be carried out in phases to minimize risk and allow for continuous testing:
+## Import Aliases
 
-#### Phase 1: Preparation and Configuration
+The project uses import aliases for cleaner imports:
 
-- Configure TypeScript and related tools
-- Create initial type definitions
-- Update build scripts
+```typescript
+// Instead of relative paths like:
+import { Logger } from '../../../common/utils/Logger';
 
-#### Phase 2: Utility and Constants Files Migration
+// We use aliases:
+import { Logger } from '@src/modules/common/utils/Logger';
+```
 
-1. Migrate constants files (`constants.js` → `constants.ts`)
-2. Migrate utilities (`utils/*.js` → `utils/*.ts`)
-3. Define common interfaces and types in `src/types/`
+## Testing with TypeScript
 
-#### Phase 3: Components Migration
+All tests have been migrated to TypeScript, with:
 
-1. Migrate smaller components first
-2. Migrate more complex components
-3. Update related tests
+- Typed mocks for Chrome APIs
+- Type-safe assertions
+- Proper typing for test fixtures
 
-#### Phase 4: Main Scripts Migration
-
-1. Migrate background scripts (`background.js` → `background.ts`)
-2. Migrate content scripts (`content.js` → `content.ts`)
-3. Migrate popup scripts (`popup.js` → `popup.ts`)
-
-#### Phase 5: Testing and Refinement
-
-1. Update all tests for TypeScript
-2. Resolve remaining type issues
-3. Improve type coverage where needed
-
-### 3. File Conversion Guide
-
-For each JavaScript file being migrated to TypeScript:
-
-1. **Change the file extension** from `.js` to `.ts`
-2. **Remove file extensions** in import statements:
-
-   ```typescript
-   // Before
-   import { ErrorHandler } from './errorHandler.js';
-
-   // After
-   import { ErrorHandler } from './errorHandler';
-   ```
-
-3. **Add types** to variables, function parameters, and return values:
-
-   ```typescript
-   // Before
-   function processMessage(message) {
-     return message.text;
-   }
-
-   // After
-   interface Message {
-     text: string;
-     user: string;
-     timestamp: string;
-   }
-
-   function processMessage(message: Message): string {
-     return message.text;
-   }
-   ```
-
-4. **Convert constant objects to enums** when appropriate:
-
-   ```typescript
-   // Before
-   export const APP_STATUS = {
-     OK: 'ok',
-     ERROR: 'error',
-   };
-
-   // After
-   export enum APP_STATUS {
-     OK = 'ok',
-     ERROR = 'error',
-   }
-   ```
-
-### 4. Test Updates
-
-1. Change test file extensions from `.js` to `.ts`
-2. Update imports (remove `.js` extensions)
-3. Add types to test variables
-4. Update test configurations for TypeScript
-
-### 5. Manifest Update
-
-Update `manifest.json` to point to the compiled files in the `dist` folder.
-
-### 6. TypeScript Best Practices
-
-- Use `interface` to define object shapes
-- Use `type` for type aliases and unions
-- Use `enum` for sets of related values
-- Avoid `any` when possible, prefer `unknown`
-- Use generics for reusable functions and classes
-- Document interfaces and types with JSDoc comments
-
-## Useful Resources
+## Resources for TypeScript Development
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
 - [TypeScript Deep Dive](https://basarat.gitbook.io/typescript/)
 - [Chrome Extensions with TypeScript](https://developer.chrome.com/docs/extensions/develop/migrate-to-mv3)
 - [Testing TypeScript with Vitest](https://vitest.dev/guide/testing-types.html)
-
-## Common Issues and Solutions
-
-### Error: Cannot find module
-
-Make sure imports don't include file extensions (`.js`).
-
-### Error: Property does not exist on type
-
-Define interfaces for your objects or use utility types like `Partial<T>` or `Record<K, V>`.
-
-### Error: Implicit any type
-
-Add explicit type annotations to variables and function parameters.
-
-### Error: No overload matches this call
-
-Verify that the arguments you pass to functions match the expected types.

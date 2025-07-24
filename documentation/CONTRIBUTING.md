@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to this project! This document outlines the coding standards, development workflow, and best practices to follow when contributing.
 
-**Note**: This project has been migrated to TypeScript. All new code should be written in TypeScript following the established patterns and type definitions.
+**Note**: This project has been fully migrated to TypeScript. All code should be written in TypeScript following the established patterns and type definitions.
 
 ## Code Style and Standards
 
@@ -96,12 +96,15 @@ Thank you for your interest in contributing to this project! This document outli
 - Write tests for new functionality
 - Ensure all tests pass before submitting a PR
 - Test your changes in different environments (OS, Chrome versions)
+- Follow the guidelines in [TESTING_GUIDELINES.md](./TESTING_GUIDELINES.md)
+- Use the mocking strategies described in [MOCKING_STRATEGIES.md](./MOCKING_STRATEGIES.md)
 
 ## Documentation
 
 - Update README.md if you change functionality
 - Document complex functions and components
 - Keep inline documentation up to date with code changes
+- Follow the error handling guidelines in [ERROR_HANDLING.md](./ERROR_HANDLING.md)
 
 ## Pull Request Process
 

@@ -1,109 +1,284 @@
-# Test Mocking Strategies
+# Mocking Strategies
 
-This document explains the different mocking strategies used in the test suite for the Slack-Bitbucket Merge Control Chrome Extension.
+This document outlines the mocking strategies used in the Slack-Bitbucket Merge Control Chrome Extension tests.
 
-## Global Chrome Mock vs. Local Mocks
-
-The project uses two different approaches for mocking the Chrome API in tests:
-
-1. **Global Chrome Mock** (defined in `setup.js`)
-2. **Local Mocks** (defined in individual test files)
+## Chrome API Mocking
 
 ### Global Chrome Mock
 
-The global Chrome mock is defined in `tests/setup.js` and provides a basic implementation of the Chrome API that can be used across all test files. This approach has several benefits:
+The project uses a global Chrome mock defined in `tests/setup.ts`. This mock simulates the Chrome API and is available in all test files.
 
-- **Consistency**: All tests use the same base mock implementation
-- **Maintainability**: Changes to the Chrome API mock only need to be made in one place
-- **Reduced duplication**: No need to redefine the mock in each test file
-
-Example of using the global Chrome mock:
-
-```javascript
-// In a test file
-beforeEach(() => {
-  // Set up spies on the global chrome mock
-  vi.spyOn(chrome.storage.local, 'get');
-  vi.spyOn(chrome.storage.local, 'set');
-  vi.spyOn(chrome.runtime, 'sendMessage');
-  // ...
-});
-
-test('should do something', () => {
-  // Use the global chrome mock
-  chrome.storage.local.get.mockImplementation(() => Promise.resolve({ key: 'value' }));
-  // ...
-});
-```
-
-### Local Mocks
-
-Some test files define their own local mocks for the Chrome API. This approach is used when:
-
-1. **Special Behavior**: The test requires special behavior from the Chrome API that would be difficult to achieve with the global mock
-2. **Complex Interactions**: The test involves complex interactions between different parts of the Chrome API
-3. **Historical Reasons**: The test was written before the global mock was established
-
-Example of using a local mock:
-
-```javascript
-// In a test file
-const mockStorage = {
-  local: {
-    get: vi.fn(),
-    set: vi.fn(),
+```typescript
+// Example from tests/setup.ts
+export const mockRuntime = {
+  getURL: vi.fn(path => `chrome-extension://mock-extension-id${path}`),
+  sendMessage: vi.fn(),
+  onMessage: {
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
   },
-  // ...
+  openOptionsPage: vi.fn(),
 };
 
 global.chrome = {
-  storage: mockStorage,
-  // ...
-};
+  runtime: mockRuntime,
+  storage: {
+    local: {
+      get: vi.fn(),
+      set: vi.fn(),
+    },
+    sync: {
+      get: vi.fn(),
+      set: vi.fn(),
+    },
+  },
+  action: {
+    setIcon: vi.fn(),
+  },
+  tabs: {
+    query: vi.fn(),
+    sendMessage: vi.fn(),
+  },
+} as unknown as typeof chrome;
+```
 
-test('should do something', () => {
-  // Use the local mock
-  mockStorage.local.get.mockImplementation(() => Promise.resolve({ key: 'value' }));
-  // ...
+### Using the Chrome Mock in Tests
+
+```typescript
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+describe('Chrome API Interaction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    // Configure mock behavior
+    chrome.storage.local.get.mockImplementation((keys) => {
+      if (keys === 'featureEnabled') {
+        return Promise.resolve({ featureEnabled: true });
+      }
+      return Promise.resolve({});
+    });
+  });
+  
+  test('should store data in local storage', async () => {
+    await saveData({ key: 'value' });
+    
+    expect(chrome.storage.local.set).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'value' })
+    );
+  });
 });
 ```
 
-## Which Files Use Which Strategy
+## Web Components Mocking
 
-### Files Using Global Chrome Mock
+### Shadow DOM Mocking
 
-- `tests/popup/popup-error-handling.test.js`
-- `tests/background/background-status-handling.test.js`
+For testing Web Components with Shadow DOM:
 
-### Files Using Local Mocks
+```typescript
+describe('ToggleSwitch Component', () => {
+  let toggleSwitch: any;
+  let mockShadowRoot: any;
+  let mockInput: any;
+  
+  beforeEach(() => {
+    // Create mocks for shadow DOM elements
+    mockInput = {
+      type: 'checkbox',
+      checked: false,
+      addEventListener: vi.fn(),
+    };
+    
+    mockShadowRoot = {
+      querySelector: vi.fn(selector => {
+        if (selector === 'input') return mockInput;
+        return null;
+      }),
+    };
+    
+    toggleSwitch = {
+      shadowRoot: mockShadowRoot,
+      getAttribute: vi.fn(),
+      hasAttribute: vi.fn(),
+    };
+    
+    document.createElement = vi.fn().mockReturnValue(toggleSwitch);
+  });
+  
+  test('should initialize with default attributes', () => {
+    const component = document.createElement('toggle-switch');
+    expect(component.shadowRoot.querySelector('input').checked).toBe(false);
+  });
+});
+```
 
-- `tests/background/background-chrome-api.test.js`
-- `tests/background/background-websocket-persistence.test.js`
-- `tests/popup/popup.test.js`
+## DOM API Mocking
 
-## Why Some Files Don't Use the Global Mock
+### Document Methods
 
-There are several reasons why some test files don't use the global Chrome mock:
+```typescript
+describe('DOM Interaction', () => {
+  beforeEach(() => {
+    document.getElementById = vi.fn().mockImplementation(id => {
+      if (id === 'status-display') {
+        return {
+          textContent: '',
+          style: { display: 'none' },
+        };
+      }
+      return null;
+    });
+    
+    document.querySelector = vi.fn().mockImplementation(selector => {
+      if (selector === '.merge-button') {
+        return {
+          disabled: false,
+          style: {},
+        };
+      }
+      return null;
+    });
+  });
+  
+  test('should update status display', () => {
+    updateStatusDisplay('Error message');
+    
+    const statusElement = document.getElementById('status-display');
+    expect(statusElement.textContent).toBe('Error message');
+    expect(statusElement.style.display).toBe('block');
+  });
+});
+```
 
-1. **Custom Mock Behavior**: Some tests require custom mock behavior that would be difficult to achieve with the global mock. For example, `background-chrome-api.test.js` needs to mock complex interactions between different Chrome API methods.
+## Module Mocking
 
-2. **Test Isolation**: Some tests need to be isolated from changes to the global mock. Using a local mock ensures that changes to the global mock don't affect these tests.
+### Mocking Imported Modules
 
-3. **Historical Reasons**: Some tests were written before the global mock was established and have not been updated to use it.
+```typescript
+import { Logger } from '@src/modules/common/utils/Logger';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-## Future Improvements
+// Mock the Logger module
+vi.mock('@src/modules/common/utils/Logger', () => ({
+  Logger: {
+    log: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
-In the future, we could consider:
+describe('Error Handling', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  
+  test('should log errors', () => {
+    handleError(new Error('Test error'));
+    
+    expect(Logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Test error' }),
+      'ErrorHandler'
+    );
+  });
+});
+```
 
-1. **Migrating More Tests**: Gradually migrate more tests to use the global Chrome mock where appropriate
-2. **Enhancing the Global Mock**: Add more functionality to the global mock to support more test cases
-3. **Documenting Exceptions**: Clearly document cases where a local mock is preferred over the global mock
+### Mocking Dynamic Imports
+
+```typescript
+// Mock dynamic import
+vi.mock('@src/modules/common/utils/Logger', async () => {
+  return {
+    Logger: {
+      log: vi.fn(),
+      error: vi.fn(),
+    },
+  };
+});
+
+// Import the mocked module after mocking
+const { Logger } = await import('@src/modules/common/utils/Logger');
+```
+
+## Fetch API Mocking
+
+```typescript
+describe('API Calls', () => {
+  beforeEach(() => {
+    global.fetch = vi.fn().mockImplementation(() => 
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ data: 'mock data' }),
+        text: () => Promise.resolve('mock text'),
+      })
+    );
+  });
+  
+  test('should fetch data from API', async () => {
+    const data = await fetchData('https://api.example.com');
+    
+    expect(fetch).toHaveBeenCalledWith('https://api.example.com');
+    expect(data).toEqual({ data: 'mock data' });
+  });
+});
+```
+
+## WebSocket Mocking
+
+```typescript
+describe('WebSocket Connection', () => {
+  let mockWebSocket: any;
+  
+  beforeEach(() => {
+    mockWebSocket = {
+      send: vi.fn(),
+      close: vi.fn(),
+      addEventListener: vi.fn(),
+      readyState: WebSocket.OPEN,
+    };
+    
+    global.WebSocket = vi.fn().mockImplementation(() => mockWebSocket);
+  });
+  
+  test('should send message through WebSocket', () => {
+    const socket = new WebSocket('wss://example.com');
+    socket.send(JSON.stringify({ type: 'ping' }));
+    
+    expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify({ type: 'ping' }));
+  });
+});
+```
+
+## Timer Mocking
+
+```typescript
+describe('Timer Functions', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  
+  test('should execute callback after timeout', () => {
+    const callback = vi.fn();
+    setTimeout(callback, 1000);
+    
+    expect(callback).not.toHaveBeenCalled();
+    
+    vi.advanceTimersByTime(1000);
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+});
+```
 
 ## Best Practices
 
-When writing new tests:
-
-1. **Prefer Global Mock**: Use the global Chrome mock when possible
-2. **Document Exceptions**: If you need to use a local mock, document why
-3. **Be Consistent**: Within a single test file, use either the global mock or a local mock, but not both
-4. **Use Spies**: Always use spies to track calls to Chrome API methods, regardless of whether you're using the global or local mock
+1. **Reset mocks between tests**: Use `vi.clearAllMocks()` in `beforeEach` to reset mock state
+2. **Type your mocks**: Use TypeScript types for mocks to catch type errors
+3. **Mock at the appropriate level**: Mock at the boundary of your system, not internal implementation details
+4. **Use descriptive mock implementations**: Make mock behavior clear and related to the test case
+5. **Avoid complex mock logic**: Keep mock implementations simple and focused on the test case
+6. **Verify mock interactions**: Check that mocks were called with the expected arguments
+7. **Clean up after tests**: Reset global mocks in `afterEach` or `afterAll` hooks
