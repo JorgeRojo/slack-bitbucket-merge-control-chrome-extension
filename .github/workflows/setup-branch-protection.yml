@@ -1,5 +1,12 @@
 name: Setup Branch Protection Rules
 
+# IMPORTANT: This workflow requires repository admin permissions
+# The GitHub token must have admin access to configure branch protection rules
+# This typically requires:
+# 1. Repository admin role for the user triggering the workflow
+# 2. Organization settings allowing branch protection configuration
+# 3. Proper token permissions in repository settings
+
 on:
   workflow_dispatch:
     inputs:
@@ -15,8 +22,9 @@ on:
           - status
 
 permissions:
-  administration: write
   contents: read
+  # Note: Branch protection requires admin permissions which must be granted
+  # through repository settings or organization policies
 
 jobs:
   setup-branch-protection:
@@ -24,6 +32,35 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Check repository permissions
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              console.log('🔍 Checking repository permissions...');
+              
+              // Try to get repository information to check permissions
+              const repo = await github.rest.repos.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+              
+              console.log(`Repository: ${repo.data.full_name}`);
+              console.log(`Permissions - Admin: ${repo.data.permissions?.admin || 'unknown'}`);
+              console.log(`Permissions - Push: ${repo.data.permissions?.push || 'unknown'}`);
+              
+              if (!repo.data.permissions?.admin) {
+                console.log('⚠️ Warning: Admin permissions may be required for branch protection');
+                console.log('If this workflow fails, ensure you have repository admin access');
+              } else {
+                console.log('✅ Admin permissions detected');
+              }
+              
+            } catch (error) {
+              console.log('⚠️ Could not verify permissions:', error.message);
+              console.log('Proceeding with branch protection setup...');
+            }
 
       - name: Setup Master Branch Protection
         if: github.event.inputs.action == 'setup-all' || github.event.inputs.action == 'setup-master'
@@ -65,6 +102,20 @@ jobs:
               
             } catch (error) {
               console.error('❌ Failed to setup Master branch protection:', error.message);
+              
+              // Provide specific guidance based on error type
+              if (error.status === 403) {
+                console.error('🚫 Permission denied: This workflow requires repository admin permissions');
+                console.error('💡 Solutions:');
+                console.error('   1. Ensure you have admin access to this repository');
+                console.error('   2. Check organization branch protection policies');
+                console.error('   3. Verify GitHub token has necessary permissions');
+              } else if (error.status === 404) {
+                console.error('🔍 Branch not found: Ensure master branch exists');
+              } else {
+                console.error('🔧 Unexpected error occurred during branch protection setup');
+              }
+              
               core.setOutput('master_status', 'failed');
               core.setOutput('master_error', error.message);
             }
@@ -106,6 +157,20 @@ jobs:
               
             } catch (error) {
               console.error('❌ Failed to setup Develop branch protection:', error.message);
+              
+              // Provide specific guidance based on error type
+              if (error.status === 403) {
+                console.error('🚫 Permission denied: This workflow requires repository admin permissions');
+                console.error('💡 Solutions:');
+                console.error('   1. Ensure you have admin access to this repository');
+                console.error('   2. Check organization branch protection policies');
+                console.error('   3. Verify GitHub token has necessary permissions');
+              } else if (error.status === 404) {
+                console.error('🔍 Branch not found: Ensure develop branch exists');
+              } else {
+                console.error('🔧 Unexpected error occurred during branch protection setup');
+              }
+              
               core.setOutput('develop_status', 'failed');
               core.setOutput('develop_error', error.message);
             }
