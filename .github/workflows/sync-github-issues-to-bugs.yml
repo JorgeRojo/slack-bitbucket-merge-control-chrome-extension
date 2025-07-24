@@ -1,0 +1,86 @@
+name: Sync GitHub Issues to Bug Documentation
+
+on:
+  # Run when issues are opened, closed, reopened, or labeled/unlabeled
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled]
+
+  # Run on a schedule to catch any missed updates
+  schedule:
+    - cron: '0 0 * * *' # Run daily at midnight UTC
+
+  # Allow manual triggering
+  workflow_dispatch:
+
+# Define permissions needed for the GITHUB_TOKEN
+permissions:
+  contents: write # For repository operations
+  issues: read # For reading issues
+
+jobs:
+  sync-bugs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          # Use a personal access token to allow the workflow to commit changes
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - name: Sync GitHub issues to bug files
+        id: sync
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Define the full path to the script
+            const scriptPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'scripts', 'sync-github-issues-to-bugs.js');
+            console.log(`Loading script from: ${scriptPath}`);
+
+            // Import the external script using dynamic import with absolute path
+            const syncModule = await import(`file://${scriptPath}`);
+            const syncGitHubIssuesToBugs = syncModule.default;
+
+            // Execute the script with all required parameters
+            const result = await syncGitHubIssuesToBugs({ 
+              github, 
+              context, 
+              core, 
+              exec, 
+              fs, 
+              path
+            });
+
+            // Set outputs for use in later steps
+            core.setOutput('created_files', result.createdFiles.length);
+            core.setOutput('removed_files', result.removedFiles.length);
+
+            return result;
+
+      - name: Commit and push changes
+        run: |
+          # Check if there are any changes to commit
+          if [[ -n "$(git status --porcelain)" ]]; then
+            # Set up git user
+            git config user.name "GitHub Action"
+            git config user.email "action@github.com"
+            
+            # Add all changes, including deletions
+            git add -A documentation/bugs/
+            
+            # Commit and push changes
+            git commit -m "[AUTOMATED] Sync GitHub issues to bug documentation"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Create summary
+        run: |
+          echo "## Bug Sync Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Files created: ${{ steps.sync.outputs.created_files }}" >> $GITHUB_STEP_SUMMARY
+          echo "Files removed: ${{ steps.sync.outputs.removed_files }}" >> $GITHUB_STEP_SUMMARY
