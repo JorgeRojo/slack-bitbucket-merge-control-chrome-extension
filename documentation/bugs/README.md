@@ -4,9 +4,9 @@ This directory contains documentation for bugs that have been identified and fix
 
 ## Bug List
 
-| ID | Title | Component | Status | Severity | Date Reported | Date Fixed |
-|----|-------|-----------|--------|----------|--------------|------------|
-| [001](./001-toggle-switch-state-after-browser-restart.md) | Toggle Switch Incorrect State After Browser Restart | popup-toggle-feature-status.ts | Fixed | Medium | 2025-07-24 | 2025-07-24 |
+| ID                                                        | Title                                               | Component                      | Status | Severity | Date Reported | Date Fixed |
+| --------------------------------------------------------- | --------------------------------------------------- | ------------------------------ | ------ | -------- | ------------- | ---------- |
+| [001](./001-toggle-switch-state-after-browser-restart.md) | Toggle Switch Incorrect State After Browser Restart | popup-toggle-feature-status.ts | Fixed  | Medium   | 2025-07-24    | 2025-07-24 |
 
 ## How to Add a New Bug
 
@@ -20,36 +20,47 @@ This directory contains documentation for bugs that have been identified and fix
 # Bug XXX: Brief Title
 
 ## Component
+
 Which component/file contains the bug
 
 ## Date Reported
+
 YYYY-MM-DD
 
 ## Status
+
 [Open/Fixed/Won't Fix]
 
 ## Severity
+
 [Critical/High/Medium/Low]
 
 ## Reproduce
+
 Steps to reproduce the bug
 
 ## Current wrong behavior
+
 Description of the incorrect behavior
 
 ## Expected right behavior
+
 Description of what should happen
 
 ## Root Cause
+
 Analysis of what caused the bug
 
 ## Fix Summary
+
 How the bug was fixed (if applicable)
 
 ## Tests Added/Modified
+
 What tests were added or changed to prevent regression
 
 ## Related Files
+
 - List of files affected by the bug or the fix
 ```
 
