@@ -4,9 +4,8 @@ This directory contains documentation for bugs that have been identified in the 
 
 ## Bug List
 
-| ID | Title | Component | Severity | Date Reported |
-| -- | ----- | --------- | -------- | ------------- |
-
+| ID  | Title | Component | Severity | Date Reported |
+| --- | ----- | --------- | -------- | ------------- |
 
 ## How to Add a New Bug
 

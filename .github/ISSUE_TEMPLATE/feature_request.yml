@@ -1,53 +1,47 @@
 name: Feature Request
-description: Suggest a new feature or enhancement for the extension
+description: Suggest a new feature for the Slack-Bitbucket Merge Control extension
 title: '[Feature]: '
-labels: ['enhancement']
+labels: ['feature', 'needs-triage']
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for taking the time to suggest a new feature!
 
-        Please fill out this form to help us understand your request.
+        This form will help us track and prioritize your request.
 
-  - type: textarea
-    id: problem
+  - type: input
+    id: component
     attributes:
-      label: Problem Statement
-      description: What problem are you trying to solve? What's the use case?
-      placeholder: I'm always frustrated when...
+      label: Component
+      description: Which component or file would this feature affect?
+      placeholder: src/modules/popup/popup.ts
     validations:
       required: true
-
-  - type: textarea
-    id: solution
-    attributes:
-      label: Proposed Solution
-      description: Describe the solution you'd like to see implemented
-      placeholder: It would be great if the extension could...
-    validations:
-      required: true
-
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives Considered
-      description: Have you considered any alternative solutions or workarounds?
-      placeholder: I've tried to solve this by...
-    validations:
-      required: false
 
   - type: dropdown
     id: priority
     attributes:
       label: Priority
-      description: How important is this feature to you?
+      description: How important is this feature?
       options:
-        - Critical - Blocking my usage of the extension
-        - High - Would significantly improve my workflow
-        - Medium - Would be a nice addition
-        - Low - Just an idea for consideration
-      default: 2
+        - High - Core functionality, needed for next release
+        - Medium - Important but not critical, planned for upcoming releases
+        - Low - Nice to have, may be implemented in future releases
+      default: 1
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Detailed description of the feature
+      placeholder: |
+        Please describe the feature you'd like to see implemented.
+        - What problem does it solve?
+        - How should it work?
+        - What are the expected benefits?
     validations:
       required: true
 
@@ -55,6 +49,6 @@ body:
     id: context
     attributes:
       label: Additional Context
-      description: Any other information that might be helpful (screenshots, mockups, etc.)
+      description: Any other information that might be helpful (mockups, examples from other extensions, etc.)
     validations:
       required: false

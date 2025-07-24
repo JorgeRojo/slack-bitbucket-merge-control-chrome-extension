@@ -1,4 +1,4 @@
-name: Sync GitHub Issues to Bug Documentation
+name: Sync GitHub Issues to Documentation
 
 on:
   # Run when issues are opened, closed, reopened, or labeled/unlabeled
@@ -18,7 +18,7 @@ permissions:
   issues: read # For reading issues
 
 jobs:
-  sync-bugs:
+  sync-issues:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -27,7 +27,7 @@ jobs:
           # Use a personal access token to allow the workflow to commit changes
           token: ${{ secrets.PAT_TOKEN || github.token }}
 
-      - name: Sync GitHub issues to bug files
+      - name: Sync GitHub issues to documentation
         id: sync
         uses: actions/github-script@v6
         with:
@@ -37,15 +37,15 @@ jobs:
             const path = require('path');
 
             // Define the full path to the script
-            const scriptPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'scripts', 'sync-github-issues-to-bugs.js');
+            const scriptPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'scripts', 'sync-github-issues.js');
             console.log(`Loading script from: ${scriptPath}`);
 
             // Import the external script using dynamic import with absolute path
             const syncModule = await import(`file://${scriptPath}`);
-            const syncGitHubIssuesToBugs = syncModule.default;
+            const syncGitHubIssues = syncModule.default;
 
             // Execute the script with all required parameters
-            const result = await syncGitHubIssuesToBugs({ 
+            const result = await syncGitHubIssues({ 
               github, 
               context, 
               core, 
@@ -69,10 +69,10 @@ jobs:
             git config user.email "action@github.com"
             
             # Add all changes, including deletions
-            git add -A documentation/bugs/
+            git add -A documentation/
             
             # Commit and push changes
-            git commit -m "[AUTOMATED] Sync GitHub issues to bug documentation"
+            git commit -m "[AUTOMATED] Sync GitHub issues to documentation"
             git push
           else
             echo "No changes to commit"
@@ -80,7 +80,7 @@ jobs:
 
       - name: Create summary
         run: |
-          echo "## Bug Sync Results" >> $GITHUB_STEP_SUMMARY
+          echo "## Issue Sync Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Files created: ${{ steps.sync.outputs.created_files }}" >> $GITHUB_STEP_SUMMARY
           echo "Files removed: ${{ steps.sync.outputs.removed_files }}" >> $GITHUB_STEP_SUMMARY
