@@ -13,6 +13,7 @@ This workflow creates a bug documentation file when a new GitHub Issue with the 
 **Trigger**: When an issue is opened or labeled with "bug"
 
 **Actions**:
+
 - Extracts information from the issue (component, severity, steps to reproduce, etc.)
 - Creates a new bug documentation file in `documentation/bugs/` with the next available ID
 - Updates the bug index in `documentation/bugs/README.md`
@@ -25,6 +26,7 @@ This workflow creates a GitHub Issue when a new bug documentation file is added 
 **Trigger**: When a file matching `documentation/bugs/[0-9]*.md` is pushed to the master branch
 
 **Actions**:
+
 - Extracts information from the bug documentation file
 - Creates a new GitHub Issue with appropriate labels
 - Updates the bug documentation file with a link to the new issue
@@ -37,6 +39,7 @@ For these workflows to function properly, you need to:
 2. Add it as a repository secret named `PAT_TOKEN`
 
 To create a PAT and add it as a secret:
+
 1. Go to GitHub → Settings → Developer settings → Personal access tokens → Generate new token
 2. Select the `repo` scope
 3. Copy the generated token

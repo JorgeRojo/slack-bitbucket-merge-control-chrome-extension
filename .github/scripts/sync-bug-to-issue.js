@@ -35,7 +35,20 @@ export default async ({ github, context, core, exec, fs, path, file }) => {
   const component = componentMatch ? componentMatch[1] : 'Unknown';
   
   const severityMatch = content.match(/## Severity\s+(.+)/);
-  const severity = severityMatch ? severityMatch[1] : 'Medium';
+  let severity = 'medium';
+  if (severityMatch) {
+    // Extract just the severity level (Critical, High, Medium, Low)
+    const severityText = severityMatch[1].trim();
+    if (severityText.toLowerCase().startsWith('critical')) {
+      severity = 'critical';
+    } else if (severityText.toLowerCase().startsWith('high')) {
+      severity = 'high';
+    } else if (severityText.toLowerCase().startsWith('medium')) {
+      severity = 'medium';
+    } else if (severityText.toLowerCase().startsWith('low')) {
+      severity = 'low';
+    }
+  }
   
   const reproduceMatch = content.match(/## Reproduce\s+([\s\S]*?)(?=##|$)/);
   const reproduce = reproduceMatch ? reproduceMatch[1].trim() : '';
@@ -58,7 +71,7 @@ export default async ({ github, context, core, exec, fs, path, file }) => {
 ${component}
 
 ### Severity
-${severity}
+${severityMatch ? severityMatch[1] : 'Medium'}
 
 ### Steps to Reproduce
 ${reproduce}
@@ -73,28 +86,39 @@ ${additionalContext ? `### Additional Context\n${additionalContext}` : ''}`;
   
   let issue;
   try {
-    // Create the GitHub issue
+    // Create the GitHub issue with valid labels
     issue = await github.rest.issues.create({
       owner: context.repo.owner,
       repo: context.repo.repo,
       title: `Bug #${bugId}: ${title}`,
       body: body,
-      labels: ['bug', `severity:${severity.toLowerCase()}`]
+      labels: ['bug', `severity:${severity}`]
     });
     
     console.log(`Created issue #${issue.data.number} for bug #${bugId}`);
   } catch (error) {
     console.log(`Error creating issue for bug #${bugId}: ${error.message}`);
-    if (error.status === 403) {
-      console.log('This is likely due to permission issues. Add the following to your workflow file:');
-      console.log(`
-permissions:
-  contents: write  # For repository operations
-  issues: write    # For issue operations
-      `);
+    if (error.status === 422 && error.message.includes('Label')) {
+      console.log('This is likely due to invalid label names. Using only "bug" label.');
+      // Try again with just the bug label
+      try {
+        issue = await github.rest.issues.create({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          title: `Bug #${bugId}: ${title}`,
+          body: body,
+          labels: ['bug']
+        });
+        console.log(`Created issue #${issue.data.number} for bug #${bugId} with only "bug" label`);
+      } catch (retryError) {
+        console.log(`Failed to create issue even with just "bug" label: ${retryError.message}`);
+        core.setFailed(`Failed to create issue: ${retryError.message}`);
+        throw retryError;
+      }
+    } else {
+      core.setFailed(`Failed to create issue: ${error.message}`);
+      throw error;
     }
-    core.setFailed(`Failed to create issue: ${error.message}`);
-    throw error;
   }
   
   // Update the bug file to include the issue link
