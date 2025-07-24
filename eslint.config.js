@@ -1,10 +1,53 @@
-import globals from 'globals';
 import pluginJs from '@eslint/js';
+import typescriptParser from '@typescript-eslint/parser';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import pluginImport from 'eslint-plugin-import';
+import globals from 'globals';
 import pluginPrettier from 'eslint-plugin-prettier';
 import configPrettier from 'eslint-config-prettier';
-import pluginImport from 'eslint-plugin-import';
-import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import typescriptParser from '@typescript-eslint/parser';
+
+// Reglas compartidas para ordenar imports
+const importOrderRules = {
+  'import/order': [
+    'error',
+    {
+      groups: [
+        'builtin',  // Módulos integrados de Node.js como 'fs', 'path', etc.
+        'external', // Paquetes npm
+        'internal', // Imports con alias como '@src/'
+        'parent',   // Imports que comienzan con '..'
+        'sibling',  // Imports que comienzan con './'
+        'index',    // Imports del mismo directorio
+        'object',   // Imports de objetos
+        'type',     // Imports de tipos
+      ],
+      pathGroups: [
+        {
+          pattern: '@src/**',
+          group: 'internal',
+          position: 'before',
+        },
+        {
+          pattern: '@tests/**',
+          group: 'internal',
+          position: 'before',
+        },
+      ],
+      'newlines-between': 'always',
+      alphabetize: {
+        order: 'asc',
+        caseInsensitive: true,
+      },
+    },
+  ],
+  'sort-imports': [
+    'error',
+    {
+      ignoreDeclarationSort: true, // Ignoramos esto porque lo maneja import/order
+      ignoreMemberSort: false,     // Ordenar miembros en imports con llaves
+    },
+  ],
+};
 
 export default [
   {
@@ -40,6 +83,7 @@ export default [
     rules: {
       ...pluginJs.configs.recommended.rules,
       ...configPrettier.rules,
+      ...importOrderRules,
       'prettier/prettier': 'error',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
@@ -68,6 +112,7 @@ export default [
     rules: {
       ...pluginJs.configs.recommended.rules,
       ...configPrettier.rules,
+      ...importOrderRules,
       'prettier/prettier': 'error',
       // Desactivamos la regla nativa de ESLint para variables no utilizadas
       'no-unused-vars': 'off',
