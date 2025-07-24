@@ -31,93 +31,31 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             
+            // Import the external script
+            const syncBugToIssue = require('./.github/scripts/sync-bug-to-issue.js');
+            
             // Process each changed bug file
             const changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ');
+            const results = [];
+            
             for (const file of changedFiles) {
               // Only process new bug files
               if (!file.match(/documentation\/bugs\/\d{3}-.+\.md$/)) continue;
               
-              console.log(`Processing bug file: ${file}`);
-              
-              // Read the bug file content
-              const content = fs.readFileSync(file, 'utf8');
-              
-              // Check if this bug already has a GitHub issue linked
-              if (content.includes('GitHub Issue #')) {
-                console.log(`Bug in ${file} already has a GitHub issue linked. Skipping.`);
-                continue;
-              }
-              
-              // Extract bug details using regex
-              const titleMatch = content.match(/# Bug (\d{3}): (.+)/);
-              if (!titleMatch) continue;
-              
-              const bugId = titleMatch[1];
-              const title = titleMatch[2];
-              
-              const componentMatch = content.match(/## Component\s+`(.+)`/);
-              const component = componentMatch ? componentMatch[1] : 'Unknown';
-              
-              const severityMatch = content.match(/## Severity\s+(.+)/);
-              const severity = severityMatch ? severityMatch[1] : 'Medium';
-              
-              const reproduceMatch = content.match(/## Reproduce\s+([\s\S]*?)(?=##|$)/);
-              const reproduce = reproduceMatch ? reproduceMatch[1].trim() : '';
-              
-              const currentMatch = content.match(/## Current wrong behavior\s+([\s\S]*?)(?=##|$)/);
-              const current = currentMatch ? currentMatch[1].trim() : '';
-              
-              const expectedMatch = content.match(/## Expected right behavior\s+([\s\S]*?)(?=##|$)/);
-              const expected = expectedMatch ? expectedMatch[1].trim() : '';
-              
-              const contextMatch = content.match(/## Additional Context\s+([\s\S]*?)(?=##|$)/);
-              const context = contextMatch ? contextMatch[1].trim() : '';
-              
-              // Create issue body
-              const body = `This issue was automatically created from a bug report in the project's documentation.
-
-[View full bug report](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/${file})
-
-### Component
-${component}
-
-### Severity
-${severity}
-
-### Steps to Reproduce
-${reproduce}
-
-### Current Behavior
-${current}
-
-### Expected Behavior
-${expected}
-
-${context ? `### Additional Context\n${context}` : ''}`;
-              
-              // Create the GitHub issue
-              const issue = await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: `Bug #${bugId}: ${title}`,
-                body: body,
-                labels: ['bug', `severity:${severity.toLowerCase()}`]
+              // Execute the script with all required parameters
+              const result = await syncBugToIssue({ 
+                github, 
+                context, 
+                core, 
+                exec, 
+                fs, 
+                path,
+                file 
               });
               
-              console.log(`Created issue #${issue.data.number} for bug #${bugId}`);
-              
-              // Update the bug file to include the issue link
-              const updatedContent = content.replace(
-                `# Bug ${bugId}: ${title}`,
-                `# Bug ${bugId}: ${title}\n\n[GitHub Issue #${issue.data.number}](https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issue.data.number})`
-              );
-              
-              fs.writeFileSync(file, updatedContent);
-              
-              // Commit the updated bug file
-              await exec.exec('git', ['config', 'user.name', 'GitHub Action']);
-              await exec.exec('git', ['config', 'user.email', 'action@github.com']);
-              await exec.exec('git', ['add', file]);
-              await exec.exec('git', ['commit', '-m', `Link bug #${bugId} to GitHub issue #${issue.data.number}`]);
-              await exec.exec('git', ['push']);
+              if (result) {
+                results.push(result);
+              }
             }
+            
+            return results;
