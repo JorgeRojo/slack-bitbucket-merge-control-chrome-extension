@@ -67,23 +67,24 @@ jobs:
 
             return result;
 
-      - name: Check for changes
-        id: git-check
-        if: steps.cleanup.outputs.removed_count > 0 && steps.cleanup.outputs.dry_run == 'false'
+      - name: Debug - List files in bugs directory
         run: |
-          git diff --exit-code || echo "changes=true" >> $GITHUB_OUTPUT
+          echo "Files in bugs directory:"
+          ls -la documentation/bugs/
 
       - name: Commit and push changes
-        if: steps.git-check.outputs.changes == 'true'
+        if: steps.cleanup.outputs.removed_count > 0 && steps.cleanup.outputs.dry_run == 'false'
         run: |
           # Set up git user
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
 
+          # Add all changes, including deletions
+          git add -A documentation/bugs/
+          
           # Commit and push changes
-          git add documentation/bugs/
-          git commit -m "[AUTOMATED] Remove closed bug files and update bug index [skip-issue-creation]"
-          git push
+          git commit -m "[AUTOMATED] Remove closed bug files and update bug index [skip-issue-creation]" || echo "No changes to commit"
+          git push || echo "No changes to push"
 
       - name: Create summary
         run: |
