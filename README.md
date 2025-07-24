@@ -94,7 +94,7 @@ All project documentation is organized in the `documentation/` directory:
 - **[MOCKING_STRATEGIES.md](./documentation/MOCKING_STRATEGIES.md)** - Mocking patterns and strategies for tests
 - **[TYPESCRIPT_MIGRATION.md](./documentation/TYPESCRIPT_MIGRATION.md)** - TypeScript migration documentation
 - **[ERROR_HANDLING.md](./documentation/ERROR_HANDLING.md)** - Error handling system documentation
-- **[BUGS](./documentation/bugs/README.md)** - Index of known bugs and their fixes
+- **[ISSUES_TRACKING.md](./documentation/ISSUES_TRACKING.md)** - Index of open bugs and feature requests
 
 ## Project Structure
 

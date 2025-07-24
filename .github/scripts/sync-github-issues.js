@@ -2,7 +2,7 @@
  * Script to synchronize GitHub issues with documentation files
  * - Creates files for open issues with 'bug' or 'feature' label
  * - Removes files for closed issues or issues without the appropriate label
- * - Updates the common README.md with both bug and feature lists
+ * - Updates the common ISSUES_TRACKING.md with both bug and feature lists
  *
  * @param {object} github - The GitHub API client
  * @param {object} context - The GitHub Actions context
@@ -14,7 +14,7 @@
 export default async ({ github, context, _core, _exec, fs, path }) => {
   const bugsDir = 'documentation/bugs';
   const featuresDir = 'documentation/features';
-  const readmeFile = 'documentation/README.md';
+  const issuesTrackingFile = 'documentation/ISSUES_TRACKING.md';
 
   // Ensure directories exist
   [bugsDir, featuresDir].forEach(dir => {
@@ -66,7 +66,7 @@ export default async ({ github, context, _core, _exec, fs, path }) => {
   // Update the common README.md
   await updateCommonReadme({
     fs,
-    readmeFile,
+    issuesTrackingFile,
     bugEntries: bugResults.tableEntries,
     featureEntries: featureResults.tableEntries,
   });
@@ -313,15 +313,15 @@ ${additionalContext ? `## Additional Context\n${additionalContext}` : ''}
 }
 
 /**
- * Updates the common README.md file with both bug and feature lists
+ * Updates the common ISSUES_TRACKING.md file with both bug and feature lists
  *
  * @param {object} params - Parameters
  * @param {object} params.fs - The Node.js fs module
- * @param {string} params.readmeFile - Path to the README.md file
+ * @param {string} params.issuesTrackingFile - Path to the ISSUES_TRACKING.md file
  * @param {Array} params.bugEntries - Bug table entries
  * @param {Array} params.featureEntries - Feature table entries
  */
-async function updateCommonReadme({ fs, readmeFile, bugEntries, featureEntries }) {
+async function updateCommonReadme({ fs, issuesTrackingFile, bugEntries, featureEntries }) {
   // Sort entries by ID
   bugEntries.sort((a, b) => {
     const idA = parseInt(a.id, 10);
@@ -458,6 +458,6 @@ Any additional context or information
 - **Low**: Nice to have, may be implemented in future releases`;
 
   // Write the updated content back to the file
-  fs.writeFileSync(readmeFile, readmeContent);
-  console.log(`Updated common README at ${readmeFile}`);
+  fs.writeFileSync(issuesTrackingFile, readmeContent);
+  console.log(`Updated issues tracking file at ${issuesTrackingFile}`);
 }
