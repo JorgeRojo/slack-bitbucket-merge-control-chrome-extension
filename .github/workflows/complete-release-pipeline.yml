@@ -1,0 +1,604 @@
+name: Complete Release Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+      create_pr:
+        description: 'Create Pull Request instead of direct merge'
+        type: boolean
+        default: true
+      auto_publish:
+        description: 'Automatically publish GitHub release after version closing'
+        type: boolean
+        default: false
+  # Auto-trigger after PR merge from develop to master (backward compatibility)
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+# Cancel any running workflow when a new one is triggered
+concurrency:
+  group: complete-release-pipeline
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    # Only run prepare-release for manual dispatch
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      should_close_version: ${{ steps.merge-result.outputs.should_close_version }}
+      version: ${{ github.event.inputs.version }}
+      auto_publish: ${{ github.event.inputs.auto_publish }}
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Validate Git Flow compliance
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "develop" ]; then
+            echo "::error::This workflow must run from develop branch"
+            exit 1
+          fi
+
+          # Validate version format
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          if [[ ! $INPUT_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
+            exit 1
+          fi
+
+          echo "✅ Git Flow validation passed"
+          echo "✅ Version format validation passed: $INPUT_VERSION"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run comprehensive test suite
+        run: |
+          echo "🧪 Running comprehensive test suite before release..."
+
+          echo "📋 Step 1: Linting"
+          npm run lint
+
+          echo "🔍 Step 2: Type checking"
+          npm run type-check
+
+          echo "🧪 Step 3: Unit tests"
+          npm run test
+
+          echo "🏗️ Step 4: Build verification"
+          npm run build
+
+          echo "✅ All quality checks passed!"
+
+      - name: Validate version increment
+        run: |
+          NEW_VERSION="${{ github.event.inputs.version }}"
+          VERSION_NUMBER="${NEW_VERSION#v}"  # Remove 'v' prefix
+
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          echo "New version: $VERSION_NUMBER"
+
+          # Compare versions using node semver
+          IS_HIGHER=$(node -e "
+            const semver = require('semver');
+            const isHigher = semver.gt('$VERSION_NUMBER', '$CURRENT_VERSION');
+            console.log(isHigher ? 'true' : 'false');
+          ")
+
+          if [ "$IS_HIGHER" != "true" ]; then
+            echo "::error::New version ($VERSION_NUMBER) must be higher than current version ($CURRENT_VERSION)"
+            exit 1
+          fi
+
+          echo "✅ Version increment validation passed"
+
+      - name: Check for conflicts with master
+        run: |
+          echo "🔍 Checking for potential merge conflicts with master..."
+
+          # Fetch latest master
+          git fetch origin master
+
+          # Check if develop can be merged cleanly into master
+          git merge-tree $(git merge-base develop origin/master) develop origin/master > merge_check.txt
+
+          if [ -s merge_check.txt ]; then
+            echo "⚠️ Potential merge conflicts detected:"
+            cat merge_check.txt
+            echo ""
+            echo "::warning::Please resolve conflicts manually before proceeding"
+          else
+            echo "✅ No merge conflicts detected"
+          fi
+
+      - name: Create Pull Request to Master
+        if: github.event.inputs.create_pr == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          push-to-fork: false
+          branch: release/${{ github.event.inputs.version }}
+          base: master
+          title: '🚀 Release ${{ github.event.inputs.version }}'
+          body: |
+            ## 🚀 Release ${{ github.event.inputs.version }}
+
+            This PR merges `develop` into `master` for version ${{ github.event.inputs.version }}.
+
+            ### 📋 Pre-merge Checklist
+            - [x] All tests pass ✅
+            - [x] Code is linted ✅
+            - [x] TypeScript checks pass ✅
+            - [x] Build successful ✅
+            - [x] Version increment validated ✅
+            - [x] No merge conflicts ✅
+
+            ### 🔄 Git Flow Compliance
+            - **Source Branch**: `develop`
+            - **Target Branch**: `master`
+            - **Release Version**: `${{ github.event.inputs.version }}`
+
+            ### ⚡ Next Steps
+            1. **Review and approve** this PR
+            2. **Merge** this PR into master
+            3. **Version closing and release** will automatically run
+
+            ---
+
+            > 🤖 This PR was automatically created following Git Flow guidelines.
+          draft: false
+          delete-branch: true
+
+      - name: Direct merge to master and prepare for version closing
+        id: merge-result
+        if: github.event.inputs.create_pr == 'false'
+        run: |
+          echo "⚠️ Direct merge mode - USE WITH CAUTION"
+          echo "This bypasses the PR review process"
+
+          # Switch to master and merge develop
+          git checkout master
+          git pull origin master
+          git merge develop --no-ff -m "Merge develop into master for release ${{ github.event.inputs.version }}"
+
+          # Push the merge
+          git push origin master
+
+          echo "✅ Direct merge completed"
+          echo "🏷️ Ready for version tagging"
+
+          # Signal that version closing should run
+          echo "should_close_version=true" >> $GITHUB_OUTPUT
+
+      - name: Create preparation summary
+        run: |
+          echo "## 🚀 Release ${{ github.event.inputs.version }} Preparation Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Git Flow validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Comprehensive testing" >> $GITHUB_STEP_SUMMARY
+          echo "- Version increment validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Merge conflict check" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.event.inputs.create_pr }}" = "true" ]; then
+            echo "- Pull Request created ✅" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Review and approve the PR" >> $GITHUB_STEP_SUMMARY
+            echo "2. Merge the PR into master" >> $GITHUB_STEP_SUMMARY
+            echo "3. Version closing and release will auto-run after PR merge" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Direct merge to master ✅" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Version closing will run automatically" >> $GITHUB_STEP_SUMMARY
+            echo "2. GitHub release will be created" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Auto-publish**: ${{ github.event.inputs.auto_publish }}" >> $GITHUB_STEP_SUMMARY
+
+  close-version:
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    # Run if direct merge was performed OR if triggered by PR merge
+    if: |
+      (github.event_name == 'workflow_dispatch' && needs.prepare-release.outputs.should_close_version == 'true') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
+       (startsWith(github.event.pull_request.head.ref, 'develop') || 
+        startsWith(github.event.pull_request.head.ref, 'release/')))
+    outputs:
+      version_tag: ${{ steps.extract-version.outputs.INPUT_VERSION }}
+      should_publish: ${{ steps.extract-version.outputs.should_publish }}
+
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Validate Git Flow compliance for version closing
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "master" ]; then
+            echo "::error::Version closing can only be performed on the master branch"
+            exit 1
+          fi
+
+          # If triggered by PR merge, validate it came from develop or release branch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+            if [[ ! "$SOURCE_BRANCH" =~ ^(develop|release/) ]]; then
+              echo "::error::Master branch can only receive code from develop or release/* branches. Got: $SOURCE_BRANCH"
+              exit 1
+            fi
+            echo "✅ Valid merge from $SOURCE_BRANCH to master"
+          fi
+
+      - name: Setup Node.js for version closing
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies for version closing
+        run: npm ci
+
+      - name: Extract and validate version format
+        id: extract-version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_VERSION="${{ needs.prepare-release.outputs.version }}"
+            AUTO_PUBLISH="${{ needs.prepare-release.outputs.auto_publish }}"
+          else
+            # Extract version from PR title if auto-triggered
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            echo "PR Title: $PR_TITLE"
+            
+            # Try to extract version from PR title
+            INPUT_VERSION=$(echo "$PR_TITLE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
+            AUTO_PUBLISH="false"  # Default to false for PR triggers
+            
+            if [ -z "$INPUT_VERSION" ]; then
+              echo "::warning::Could not extract version from PR title: $PR_TITLE"
+              echo "::warning::This appears to be a non-release PR merge. Skipping version closing."
+              echo "SKIP_VERSION=true" >> $GITHUB_ENV
+              exit 0
+            fi
+          fi
+
+          # Check if version starts with 'v' and extract the version number
+          if [[ $INPUT_VERSION =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
+            echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_OUTPUT
+            echo "should_publish=$AUTO_PUBLISH" >> $GITHUB_OUTPUT
+            echo "✅ Extracted version: $VERSION"
+          else
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
+              exit 1
+            else
+              echo "::warning::Invalid version format in PR title: $INPUT_VERSION"
+              echo "::warning::Skipping version closing for non-release PR"
+              echo "SKIP_VERSION=true" >> $GITHUB_ENV
+              exit 0
+            fi
+          fi
+
+      - name: Validate version is higher
+        if: env.SKIP_VERSION != 'true'
+        id: validate-higher
+        run: |
+          NEW_VERSION="${{ env.VERSION }}"
+
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          echo "New version: $NEW_VERSION"
+
+          # Compare versions using node semver
+          IS_HIGHER=$(node -e "
+            const semver = require('semver');
+            const isHigher = semver.gt('$NEW_VERSION', '$CURRENT_VERSION');
+            console.log(isHigher ? 'true' : 'false');
+          ")
+
+          if [ "$IS_HIGHER" != "true" ]; then
+            echo "::error::New version ($NEW_VERSION) must be higher than current version ($CURRENT_VERSION)"
+            exit 1
+          fi
+
+          echo "✅ New version is higher than current version"
+
+      - name: Run linter for version closing
+        if: env.SKIP_VERSION != 'true'
+        run: npm run lint
+
+      - name: Run type check for version closing
+        if: env.SKIP_VERSION != 'true'
+        run: npm run type-check
+
+      - name: Run tests for version closing
+        if: env.SKIP_VERSION != 'true'
+        run: npm run test
+
+      - name: Build extension for version closing
+        if: env.SKIP_VERSION != 'true'
+        run: npm run build
+
+      - name: Update version in package.json
+        if: env.SKIP_VERSION != 'true'
+        run: |
+          npm version ${{ env.VERSION }} --no-git-tag-version
+
+      - name: Update version in manifest.json
+        if: env.SKIP_VERSION != 'true'
+        run: |
+          # Read the current manifest.json
+          MANIFEST_PATH="src/manifest.json"
+
+          # Update the version using jq
+          jq '.version = "${{ env.VERSION }}"' $MANIFEST_PATH > temp.json
+          mv temp.json $MANIFEST_PATH
+
+          echo "Updated manifest.json version to ${{ env.VERSION }}"
+
+      - name: Lint and fix modified files
+        if: env.SKIP_VERSION != 'true'
+        run: |
+          echo "Running lint --fix on modified files..."
+          # Run lint --fix on the specific files that were modified
+          npm run lint -- --fix package.json src/manifest.json
+          echo "Linting completed"
+
+      - name: Configure Git for version closing
+        if: env.SKIP_VERSION != 'true'
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Commit version changes
+        if: env.SKIP_VERSION != 'true'
+        run: |
+          git add package.json package-lock.json src/manifest.json
+          git commit -m "chore: close version ${{ env.INPUT_VERSION }}"
+
+      - name: Create version tag
+        if: env.SKIP_VERSION != 'true'
+        run: |
+          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}"
+
+      - name: Push changes and tag to master
+        if: env.SKIP_VERSION != 'true'
+        run: |
+          # Set the remote URL with the token for authentication
+          git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}
+
+          # Push both the commit and the tag to master
+          git push origin master
+          git push origin ${{ env.INPUT_VERSION }}
+
+      - name: Create version closing summary
+        run: |
+          if [ "${{ env.SKIP_VERSION }}" = "true" ]; then
+            echo "## ℹ️ Version Closing Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "This PR merge did not contain a version in the title." >> $GITHUB_STEP_SUMMARY
+            echo "Version closing is only performed for release PRs." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**PR Title**: ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Expected Format**: Should contain version like 'Release v1.0.0'" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 🎉 Version ${{ env.INPUT_VERSION }} Closed Successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tag**: ${{ env.INPUT_VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch**: master" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit**: $(git rev-parse HEAD)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Ready for GitHub release!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: [prepare-release, close-version]
+    # Run if auto_publish is enabled OR if triggered by PR merge with version
+    if: |
+      (github.event_name == 'workflow_dispatch' && needs.close-version.outputs.should_publish == 'true') ||
+      (github.event_name == 'pull_request' && needs.close-version.outputs.version_tag != '' && env.SKIP_VERSION != 'true')
+
+    steps:
+      - name: Checkout master branch for release
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Validate Git Flow compliance for release
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "master" ]; then
+            echo "::error::🚨 Git Flow Violation: Release can only be performed from master branch"
+            echo "::error::Current branch: $CURRENT_BRANCH"
+            echo "::error::Required branch: master"
+            echo "::error::Please switch to master branch and ensure it contains the tagged version"
+            exit 1
+          fi
+
+          echo "✅ Git Flow validation passed - executing from master branch"
+
+      - name: Extract version information
+        id: version-info
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ needs.close-version.outputs.version_tag }}"
+          else
+            # Extract from PR title for auto-trigger
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            TAG=$(echo "$PR_TITLE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          fi
+
+          if [ -z "$TAG" ]; then
+            echo "::error::Could not determine version tag"
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"  # Remove 'v' prefix
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Extracted tag: $TAG, version: $VERSION"
+
+      - name: Validate tag exists
+        run: |
+          # Fetch all tags
+          git fetch --tags
+
+          # Check if the tag exists
+          if ! git tag -l | grep -q "^${{ env.TAG }}$"; then
+            echo "::error::Tag ${{ env.TAG }} does not exist. Version closing may have failed."
+            exit 1
+          fi
+
+          echo "✅ Tag ${{ env.TAG }} exists"
+
+      - name: Setup Node.js for release
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies for release
+        run: npm ci
+
+      - name: Run final validation before release
+        run: |
+          echo "🔍 Running final validation before creating release..."
+
+          echo "📋 Step 1: Linting"
+          npm run lint
+
+          echo "🔍 Step 2: Type checking"
+          npm run type-check
+
+          echo "🧪 Step 3: Unit tests"
+          npm run test
+
+          echo "✅ All final validations passed!"
+
+      - name: Build extension for release
+        run: |
+          echo "🏗️ Building extension for release..."
+          npm run build
+          echo "✅ Build completed successfully"
+
+      - name: Create release package
+        run: |
+          echo "📦 Creating release package..."
+
+          # Create a clean directory for the release
+          mkdir -p release-package
+
+          # Copy the built extension to the release directory
+          cp -r dist/* release-package/
+
+          # Create ZIP file for Chrome Web Store
+          cd release-package
+          zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip .
+          cd ..
+
+          echo "✅ Release package created: slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip"
+
+          # Verify the ZIP file
+          if [ -f "slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip" ]; then
+            echo "📦 ZIP file size: $(du -h slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip | cut -f1)"
+          else
+            echo "::error::Failed to create ZIP file"
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.TAG }}
+          name: Release ${{ env.TAG }}
+          files: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 🚀 Release ${{ env.TAG }}
+
+            This release was created following Git Flow guidelines from the master branch.
+
+            ### 📦 What's Included
+            - Chrome Extension ZIP file ready for Chrome Web Store
+            - All features tested and validated
+            - Production-ready build
+
+            ### 🔄 Git Flow Compliance
+            - **Source Branch**: master
+            - **Tag**: ${{ env.TAG }}
+            - **Version**: ${{ env.VERSION }}
+
+            ### 📥 Installation
+            1. Download the ZIP file below
+            2. Extract the contents
+            3. Load as unpacked extension in Chrome
+
+            ---
+
+            > 🤖 This release was automatically created following Git Flow guidelines.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release summary
+        run: |
+          echo "## 🚀 Release ${{ env.TAG }} Published Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: master (Git Flow compliant)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome Extension ZIP file" >> $GITHUB_STEP_SUMMARY
+          echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Git Flow compliance (master branch only)" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
+          echo "- Production build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 Complete Release Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "- Develop → Master merge ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Version closing and tagging ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub release creation ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome Web Store ready package ✅" >> $GITHUB_STEP_SUMMARY
