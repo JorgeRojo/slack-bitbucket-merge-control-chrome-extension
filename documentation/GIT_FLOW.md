@@ -7,9 +7,10 @@ This document outlines the Git branching strategy and workflow used in this proj
 ### Main Branches
 
 #### `master` Branch
+
 - **Purpose**: Production-ready code
 - **Protection**: Highly protected branch
-- **Integration Rules**: 
+- **Integration Rules**:
   - Can **ONLY** receive code from:
     - `develop` branch (regular releases)
     - `hotfix/*` branches (emergency fixes)
@@ -17,6 +18,7 @@ This document outlines the Git branching strategy and workflow used in this proj
   - All integrations must be done via Pull Requests
 
 #### `develop` Branch
+
 - **Purpose**: Main development branch and code base
 - **Role**: Integration branch for all new features and improvements
 - **Source**: All new development work starts from this branch
@@ -25,6 +27,7 @@ This document outlines the Git branching strategy and workflow used in this proj
 ### Temporary Branches
 
 #### `hotfix/*` Branches
+
 - **Purpose**: Emergency fixes for production issues
 - **Lifecycle**: Temporary branches that **MUST BE DELETED** after merge
 - **Creation Rules**:
@@ -36,8 +39,9 @@ This document outlines the Git branching strategy and workflow used in this proj
   - Branch must be deleted immediately after successful merge
 
 #### Feature Branches
+
 - **Purpose**: Development of new features, bug fixes, and improvements
-- **Creation Rules**: 
+- **Creation Rules**:
   - **MUST** be created from `develop` branch
   - Naming convention: `feature/issue-description`, `bugfix/issue-description`, or `issue/ISSUE-NUMBER`
 - **Integration**: Merged back into `develop` via Pull Request
@@ -45,6 +49,7 @@ This document outlines the Git branching strategy and workflow used in this proj
 ## Workflow Diagrams
 
 ### Standard Development Flow
+
 ```
 develop ──┬─── feature/new-feature ───┐
           │                          │
@@ -54,6 +59,7 @@ develop ──┬─── feature/new-feature ───┐
 ```
 
 ### Hotfix Flow
+
 ```
 master ──┬─── hotfix/critical-fix ───┐
          │                          │
@@ -67,6 +73,7 @@ develop ← ┘ (cherry-pick)
 ### 1. Standard Feature Development
 
 #### Step 1: Create Feature Branch
+
 ```bash
 # Ensure you're on develop and it's up to date
 git checkout develop
@@ -77,6 +84,7 @@ git checkout -b feature/your-feature-name
 ```
 
 #### Step 2: Development and Commits
+
 ```bash
 # Make your changes
 git add .
@@ -87,6 +95,7 @@ git push origin feature/your-feature-name
 ```
 
 #### Step 3: Integration via Pull Request
+
 1. Create Pull Request from `feature/your-feature-name` → `develop`
 2. Code review and approval
 3. Merge into `develop`
@@ -95,6 +104,7 @@ git push origin feature/your-feature-name
 ### 2. Release Process
 
 #### Step 1: Prepare Release
+
 ```bash
 # Ensure develop is ready for release
 git checkout develop
@@ -107,6 +117,7 @@ npm run build
 ```
 
 #### Step 2: Merge to Master
+
 1. Create Pull Request from `develop` → `master`
 2. Code review and final approval
 3. Merge into `master`
@@ -115,6 +126,7 @@ npm run build
 ### 3. Hotfix Process
 
 #### Step 1: Create Hotfix Branch
+
 ```bash
 # Ensure you're on master and it's up to date
 git checkout master
@@ -125,6 +137,7 @@ git checkout -b hotfix/critical-issue-fix
 ```
 
 #### Step 2: Implement Fix
+
 ```bash
 # Make the necessary changes
 git add .
@@ -135,12 +148,14 @@ git push origin hotfix/critical-issue-fix
 ```
 
 #### Step 3: Merge to Master
+
 1. Create Pull Request from `hotfix/critical-issue-fix` → `master`
 2. Emergency review and approval
 3. Merge into `master`
 4. Deploy to production
 
 #### Step 4: Cherry-pick to Develop
+
 ```bash
 # Switch to develop branch
 git checkout develop
@@ -154,6 +169,7 @@ git push origin develop
 ```
 
 #### Step 5: Cleanup
+
 ```bash
 # Delete the hotfix branch locally
 git branch -d hotfix/critical-issue-fix
@@ -165,6 +181,7 @@ git push origin --delete hotfix/critical-issue-fix
 ## Branch Protection Rules
 
 ### Master Branch
+
 - Require pull request reviews before merging
 - Require status checks to pass before merging
 - Require branches to be up to date before merging
@@ -173,6 +190,7 @@ git push origin --delete hotfix/critical-issue-fix
 - Do not allow deletions
 
 ### Develop Branch
+
 - Require pull request reviews before merging
 - Require status checks to pass before merging
 - Allow force pushes (for maintainers only)
@@ -181,7 +199,7 @@ git push origin --delete hotfix/critical-issue-fix
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-```
+```git
 <type>[optional scope]: <description>
 
 [optional body]
@@ -190,6 +208,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 ```
 
 ### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `hotfix`: Critical production fix
@@ -200,6 +219,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 - `chore`: Maintenance tasks
 
 ### Examples
+
 ```bash
 feat: add user authentication system
 fix: resolve memory leak in background script
@@ -211,15 +231,19 @@ test: add unit tests for user service
 ## Pull Request Guidelines
 
 ### Title Format
+
 - Use descriptive titles that explain what the PR does
 - Include issue number if applicable: `feat: implement feature X (#123)`
 
 ### Description Template
+
 ```markdown
 ## Description
+
 Brief description of changes made.
 
 ## Type of Change
+
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
@@ -227,11 +251,13 @@ Brief description of changes made.
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Tests pass locally
 - [ ] New tests added (if applicable)
 - [ ] Manual testing completed
 
 ## Checklist
+
 - [ ] Code follows project style guidelines
 - [ ] Self-review completed
 - [ ] Code is properly commented
@@ -241,6 +267,7 @@ Brief description of changes made.
 ## Emergency Procedures
 
 ### Critical Production Issues
+
 1. **Immediate Response**: Create hotfix branch from `master`
 2. **Quick Fix**: Implement minimal fix to resolve the issue
 3. **Fast Track**: Use expedited review process
@@ -249,7 +276,9 @@ Brief description of changes made.
 6. **Cleanup**: Delete hotfix branch
 
 ### Rollback Procedures
+
 If a hotfix causes issues:
+
 1. Revert the merge commit on `master`
 2. Deploy the reverted version
 3. Create new hotfix with proper solution
@@ -258,6 +287,7 @@ If a hotfix causes issues:
 ## Best Practices
 
 ### Do's ✅
+
 - Always create feature branches from `develop`
 - Always create hotfix branches from `master`
 - Use descriptive branch names
@@ -268,6 +298,7 @@ If a hotfix causes issues:
 - Cherry-pick hotfixes to `develop`
 
 ### Don'ts ❌
+
 - Never commit directly to `master`
 - Never commit directly to `develop` (use PRs)
 - Never create feature branches from `master`
@@ -282,6 +313,7 @@ If a hotfix causes issues:
 ### Common Issues
 
 #### "Branch is behind master"
+
 ```bash
 # Update your branch with latest master
 git checkout your-branch
@@ -290,6 +322,7 @@ git push --force-with-lease origin your-branch
 ```
 
 #### "Merge conflicts"
+
 ```bash
 # Resolve conflicts manually, then:
 git add .
@@ -298,6 +331,7 @@ git push origin your-branch
 ```
 
 #### "Forgot to cherry-pick hotfix"
+
 ```bash
 # Find the hotfix commit hash
 git log --oneline master
@@ -311,6 +345,7 @@ git push origin develop
 ## Tools and Automation
 
 ### Recommended Git Aliases
+
 ```bash
 # Add to your ~/.gitconfig
 [alias]
@@ -328,6 +363,7 @@ git push origin develop
 ```
 
 ### GitHub CLI Commands
+
 ```bash
 # Create PR from current branch to develop
 gh pr create --base develop --title "feat: your feature" --body "Description"
@@ -339,6 +375,7 @@ gh pr create --base master --title "hotfix: critical fix" --body "Emergency fix"
 ## Conclusion
 
 This Git flow ensures:
+
 - **Stability**: Master branch always contains production-ready code
 - **Parallel Development**: Multiple features can be developed simultaneously
 - **Emergency Response**: Hotfixes can be deployed quickly without disrupting development
