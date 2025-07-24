@@ -1,0 +1,105 @@
+name: Cleanup Closed Bug Files
+
+on:
+  # Ejecutar manualmente desde la interfaz de GitHub
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: 'Dry run (no eliminar archivos, solo mostrar qué se eliminaría)'
+        required: false
+        default: 'true'
+        type: boolean
+  
+  # Ejecutar automáticamente cada semana (domingo a las 00:00 UTC)
+  schedule:
+    - cron: '0 0 * * 0'
+
+# Define los permisos necesarios para el GITHUB_TOKEN
+permissions:
+  contents: write  # Para hacer push de cambios
+
+jobs:
+  cleanup-bugs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          # Use a personal access token to allow the workflow to commit changes
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+      
+      - name: Cleanup closed bug files
+        id: cleanup
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Define the full path to the script
+            const scriptPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'scripts', 'cleanup-closed-bugs.js');
+            console.log(`Loading script from: ${scriptPath}`);
+            
+            // Import the external script using dynamic import with absolute path
+            const cleanupClosedBugsModule = await import(`file://${scriptPath}`);
+            const cleanupClosedBugs = cleanupClosedBugsModule.default;
+            
+            // Determine if this is a dry run
+            const dryRun = ${{ inputs.dryRun != false }};
+            console.log(`Dry run: ${dryRun}`);
+            
+            // Execute the script with all required parameters
+            const result = await cleanupClosedBugs({ 
+              github, 
+              context, 
+              core, 
+              exec, 
+              fs, 
+              path,
+              dryRun
+            });
+            
+            // Set output for use in later steps
+            core.setOutput('removed_count', result.removedFiles.length);
+            core.setOutput('dry_run', result.dryRun);
+            
+            return result;
+      
+      - name: Check for changes
+        id: git-check
+        if: steps.cleanup.outputs.removed_count > 0 && steps.cleanup.outputs.dry_run == 'false'
+        run: |
+          git diff --exit-code || echo "changes=true" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push changes
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          # Set up git user
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          
+          # Commit and push changes
+          git add documentation/bugs/
+          git commit -m "[AUTOMATED] Remove closed bug files and update bug index [skip-issue-creation]"
+          git push
+      
+      - name: Create summary
+        run: |
+          echo "## Bug Cleanup Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.cleanup.outputs.dry_run }}" == "true" ]]; then
+            echo "**DRY RUN** - No files were actually deleted" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "Files processed for removal: ${{ steps.cleanup.outputs.removed_count }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.cleanup.outputs.removed_count }}" == "0" ]]; then
+            echo "No bug files needed to be removed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "The following bug files were processed:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.cleanup.outputs.result }}" | jq -r '.removedFiles[] | "- " + .file + " (Status: " + .status + ")"' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi

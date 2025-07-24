@@ -4,17 +4,17 @@ This directory contains documentation for bugs that have been identified and fix
 
 ## Bug List
 
-| ID | Title | Component | Status | Severity | Date Reported | Date Fixed |
-| --- | ----- | --------- | ------ | -------- | ------------ | --------- |
-| [001](./001-toggle-switch-state-after-browser-restart.md) | Toggle Switch Incorrect State After Browser Restart | popup-toggle-feature-status.ts | Fixed | Medium - Functionality works but UI is misleading | 2025-07-24 |  |
-| [002](./002-test-bug-reporting-github-action-dont-take-this-bu.md) | test bug reporting github action - DON'T take this bug in consideration bug Something isn't working | test bug reporting github action - DON'T take this bug in consideration bug Something isn't working | Open | Medium | 2025-07-24 |  |
-| [003](./003-xxxxx-1.md) | XXXXX 1 | XXXXX 1 | Open | Medium | 2025-07-24 |  |
-| [004](./004-xxxxx-2.md) | XXXXX 2 | XXXXX 2 | Open | Medium | 2025-07-24 |  |
-| [005](./005-xxxxx-3.md) | XXXXX 3 | XXXXX 3 | Open | Medium | 2025-07-24 |  |
-| [006](./006-xxxx-4.md) | XXXX 4 | XXXX 4 | Open | Medium | 2025-07-24 |  |
-| [007](./007-xxxx-5.md) | XXXX 5 | XXXX 5 | Open | Medium | 2025-07-24 |  |
-| [008](./008-xxxx-6.md) | XXXX 6 | XXXX 6 | Open | Medium | 2025-07-24 |  |
-| [009](./009-xxxx-7.md) | XXXX 7 | XXXX 7 | Open | Medium | 2025-07-24 |  |
+| ID                                                                 | Title                                                                                               | Component                                                                                           | Status | Severity                                          | Date Reported | Date Fixed |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------- | ------------- | ---------- |
+| [001](./001-toggle-switch-state-after-browser-restart.md)          | Toggle Switch Incorrect State After Browser Restart                                                 | popup-toggle-feature-status.ts                                                                      | Fixed  | Medium - Functionality works but UI is misleading | 2025-07-24    |            |
+| [002](./002-test-bug-reporting-github-action-dont-take-this-bu.md) | test bug reporting github action - DON'T take this bug in consideration bug Something isn't working | test bug reporting github action - DON'T take this bug in consideration bug Something isn't working | Open   | Medium                                            | 2025-07-24    |            |
+| [003](./003-xxxxx-1.md)                                            | XXXXX 1                                                                                             | XXXXX 1                                                                                             | Open   | Medium                                            | 2025-07-24    |            |
+| [004](./004-xxxxx-2.md)                                            | XXXXX 2                                                                                             | XXXXX 2                                                                                             | Open   | Medium                                            | 2025-07-24    |            |
+| [005](./005-xxxxx-3.md)                                            | XXXXX 3                                                                                             | XXXXX 3                                                                                             | Open   | Medium                                            | 2025-07-24    |            |
+| [006](./006-xxxx-4.md)                                             | XXXX 4                                                                                              | XXXX 4                                                                                              | Open   | Medium                                            | 2025-07-24    |            |
+| [007](./007-xxxx-5.md)                                             | XXXX 5                                                                                              | XXXX 5                                                                                              | Open   | Medium                                            | 2025-07-24    |            |
+| [008](./008-xxxx-6.md)                                             | XXXX 6                                                                                              | XXXX 6                                                                                              | Open   | Medium                                            | 2025-07-24    |            |
+| [009](./009-xxxx-7.md)                                             | XXXX 7                                                                                              | XXXX 7                                                                                              | Open   | Medium                                            | 2025-07-24    |            |
 
 ## How to Add a New Bug
 
