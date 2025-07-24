@@ -1,0 +1,110 @@
+name: Close Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to close (e.g., v1.0.0)'
+        required: true
+
+jobs:
+  validate-and-close-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Verify master branch
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "master" ]; then
+            echo "::error::Version closing can only be performed on the master branch"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract and validate version format
+        id: extract-version
+        run: |
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          
+          # Check if version starts with 'v' and extract the version number
+          if [[ $INPUT_VERSION =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "Extracted version: $VERSION"
+          else
+            echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
+            exit 1
+          fi
+
+      - name: Validate version is higher
+        id: validate-higher
+        run: |
+          NEW_VERSION="${{ env.VERSION }}"
+          
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          echo "New version: $NEW_VERSION"
+          
+          # Compare versions using node semver
+          IS_HIGHER=$(node -e "
+            const semver = require('semver');
+            const isHigher = semver.gt('$NEW_VERSION', '$CURRENT_VERSION');
+            console.log(isHigher ? 'true' : 'false');
+          ")
+          
+          if [ "$IS_HIGHER" != "true" ]; then
+            echo "::error::New version ($NEW_VERSION) must be higher than current version ($CURRENT_VERSION)"
+            exit 1
+          fi
+          
+          echo "New version is higher than current version"
+
+      - name: Update version in package.json
+        run: |
+          npm version ${{ env.VERSION }} --no-git-tag-version
+
+      - name: Update version in manifest.json
+        run: |
+          # Read the current manifest.json
+          MANIFEST_PATH="src/manifest.json"
+          
+          # Update the version using jq
+          jq '.version = "${{ env.VERSION }}"' $MANIFEST_PATH > temp.json
+          mv temp.json $MANIFEST_PATH
+          
+          echo "Updated manifest.json version to ${{ env.VERSION }}"
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Commit version changes
+        run: |
+          git add package.json package-lock.json src/manifest.json
+          git commit -m "chore: close version ${{ github.event.inputs.version }}"
+
+      - name: Create version tag
+        run: |
+          git tag -a ${{ github.event.inputs.version }} -m "Version ${{ env.VERSION }}"
+
+      - name: Push changes and tag
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
+          tags: true

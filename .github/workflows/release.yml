@@ -1,0 +1,80 @@
+name: Build and Release Extension
+
+on:
+  # Trigger on tag push
+  push:
+    tags:
+      - 'v*.*.*'
+  
+  # Allow manual triggering for specific tags
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and release (e.g., v1.0.0)'
+        required: true
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine tag
+        id: determine-tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Use manually provided tag
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            # Use the tag that triggered the workflow
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "Using tag: $TAG"
+          
+          # Extract version without 'v' prefix
+          VERSION="${TAG#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION"
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run type-check
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Build extension
+        run: npm run build
+        
+      - name: Create ZIP archive
+        run: |
+          cd dist
+          zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip *
+          cd ..
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.TAG }}
+          name: Release ${{ env.TAG }}
+          files: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -95,6 +95,7 @@ All project documentation is organized in the `documentation/` directory:
 - **[TYPESCRIPT_MIGRATION.md](./documentation/TYPESCRIPT_MIGRATION.md)** - TypeScript migration documentation
 - **[ERROR_HANDLING.md](./documentation/ERROR_HANDLING.md)** - Error handling system documentation
 - **[ISSUES_TRACKING.md](./documentation/ISSUES_TRACKING.md)** - Index of open bugs and feature requests
+- **[VERSION_RELEASE_PROCESS.md](./documentation/VERSION_RELEASE_PROCESS.md)** - Version closing and release process
 
 ## Project Structure
 
