@@ -1,0 +1,73 @@
+name: Bug Report
+description: Report a bug in the Slack-Bitbucket Merge Control extension
+title: '[Bug]: '
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this bug!
+
+        This form will help us track and fix the issue efficiently.
+
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: Which component or file contains the bug?
+      placeholder: src/modules/popup/popup-toggle-feature-status.ts
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical - Application crashes, data loss, security vulnerability
+        - High - Major functionality broken, no workaround available
+        - Medium - Functionality works but with issues, workaround available
+        - Low - Minor issues, cosmetic problems, edge cases
+      default: 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Clear steps to reproduce the bug
+      placeholder: |
+        1. Switch off the toggleSwitch
+        2. Close the browser
+        3. Open the browser again
+        4. Open the extension popup
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current Behavior
+      description: What happens currently?
+      placeholder: The toggleSwitch is displayed as ON even though the feature is disabled
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: The toggleSwitch should be displayed as OFF
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful (browser version, screenshots, etc.)
+    validations:
+      required: false
