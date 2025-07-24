@@ -7,6 +7,7 @@ This directory contains documentation for bugs and features in the Slack-Bitbuck
 | ID | Title | Component | Severity | Date Reported |
 | -- | ----- | --------- | -------- | ------------- |
 | [001](./bugs/001-bug-001-toggle-switch-incorrect-state-after-browse.md) | Bug #001: Toggle Switch Incorrect State After Browser Restart | popup-toggle-feature-status.ts | Medium | 2025-07-24 |
+| [002](./bugs/002-xxxx-7.md) | XXXX 7 | XXXX 7 | Medium | 2025-07-24 |
 
 ## Open Feature List
 
