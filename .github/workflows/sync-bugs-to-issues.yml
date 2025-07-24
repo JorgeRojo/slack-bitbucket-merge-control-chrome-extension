@@ -22,8 +22,13 @@ jobs:
         with:
           files: documentation/bugs/[0-9]*.md
       
+      - name: Get commit message
+        id: commit-message
+        run: |
+          echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+      
       - name: Process new bug files
-        if: steps.changed-files.outputs.any_changed == 'true'
+        if: steps.changed-files.outputs.any_changed == 'true' && !contains(steps.commit-message.outputs.message, '[skip-issue-creation]')
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -46,6 +51,13 @@ jobs:
             for (const file of changedFiles) {
               // Only process new bug files
               if (!file.match(/documentation\/bugs\/\d{3}-.+\.md$/)) continue;
+              
+              // Read the file content to check if it already has a GitHub issue linked
+              const content = fs.readFileSync(file, 'utf8');
+              if (content.includes('GitHub Issue #')) {
+                console.log(`Bug in ${file} already has a GitHub issue linked. Skipping.`);
+                continue;
+              }
               
               // Execute the script with all required parameters
               const result = await syncBugToIssue({ 

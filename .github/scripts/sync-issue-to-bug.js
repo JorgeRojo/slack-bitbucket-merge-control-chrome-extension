@@ -134,7 +134,7 @@ ${additionalContext ? `## Additional Context\n${additionalContext}` : ''}
   
   // Pull changes from remote before pushing
   try {
-    // Configure Git to pull with rebase strategy
+    // Configure Git to pull with merge strategy
     await exec.exec('git', ['config', 'pull.rebase', 'false']);
     
     // Pull changes from remote
@@ -145,7 +145,10 @@ ${additionalContext ? `## Additional Context\n${additionalContext}` : ''}
     if (fs.existsSync(indexPath)) {
       await exec.exec('git', ['add', indexPath]);
     }
-    await exec.exec('git', ['commit', '-m', `Create bug file #${nextId} from GitHub issue #${issue.number}`]);
+    
+    // Use a special commit message that the other workflow can detect to avoid circular triggers
+    const commitMessage = `[AUTOMATED] Create bug file #${nextId} from GitHub issue #${issue.number} [skip-issue-creation]`;
+    await exec.exec('git', ['commit', '-m', commitMessage]);
     await exec.exec('git', ['push']);
     
     // Add a comment to the issue linking to the bug file

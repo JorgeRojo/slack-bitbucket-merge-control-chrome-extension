@@ -101,9 +101,9 @@ ${additionalContext ? `### Additional Context\n${additionalContext}` : ''}`;
     // Pull changes from remote
     await exec.exec('git', ['pull', 'origin', 'master']);
     
-    // Commit the updated bug file
+    // Commit the updated bug file with a special message
     await exec.exec('git', ['add', file]);
-    await exec.exec('git', ['commit', '-m', `Link bug #${bugId} to GitHub issue #${issue.data.number}`]);
+    await exec.exec('git', ['commit', '-m', `[AUTOMATED] Link bug #${bugId} to GitHub issue #${issue.data.number}`]);
     await exec.exec('git', ['push']);
   } catch (error) {
     core.setFailed(`Failed to push changes: ${error.message}`);
