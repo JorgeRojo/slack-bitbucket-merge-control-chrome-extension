@@ -27,7 +27,7 @@ GitHub Actions has a security restriction that prevents workflows from creating 
    - ✅ **repo** (Full control of private repositories)
      - This includes: repo:status, repo_deployment, public_repo, repo:invite, security_events
    - ✅ **workflow** (Update GitHub Action workflows) - if you want to modify workflows
-   
+
    **Note**: The `repo` scope is essential for creating Pull Requests.
 
 5. **Generate and Copy Token**:
@@ -60,16 +60,19 @@ GitHub Actions has a security restriction that prevents workflows from creating 
 If you prefer not to use a PAT, you have these alternatives:
 
 ### Option 1: Direct Merge Mode
+
 - Run the workflow with "Create Pull Request" = false
 - This bypasses PR creation and merges directly to master
 - ⚠️ **Use with caution** - skips code review process
 
 ### Option 2: Manual PR Creation
+
 - Let the workflow validation run
 - Create the PR manually from develop to master
 - Merge the PR to trigger the rest of the pipeline
 
 ### Option 3: GitHub App (Advanced)
+
 - Create a GitHub App with appropriate permissions
 - Use the app's token instead of PAT
 - More complex but better for organizations
@@ -77,6 +80,7 @@ If you prefer not to use a PAT, you have these alternatives:
 ## Security Considerations
 
 ### PAT Security Best Practices:
+
 - ✅ Use descriptive names for tokens
 - ✅ Set appropriate expiration dates
 - ✅ Use minimum required scopes
@@ -86,6 +90,7 @@ If you prefer not to use a PAT, you have these alternatives:
 - ❌ Don't share tokens
 
 ### Repository Secret Security:
+
 - ✅ Secrets are encrypted and only accessible to workflows
 - ✅ Secrets are not exposed in logs
 - ✅ Only repository collaborators with admin access can manage secrets
@@ -114,6 +119,7 @@ If you prefer not to use a PAT, you have these alternatives:
 ### Getting Help:
 
 If you continue having issues:
+
 1. Check the workflow logs for specific error messages
 2. Verify the token has correct permissions
 3. Ensure the secret is properly configured
@@ -122,6 +128,7 @@ If you continue having issues:
 ## Workflow Integration
 
 The workflow automatically:
+
 1. Tries to use `PAT_TOKEN` if available
 2. Falls back to `GITHUB_TOKEN` if PAT not found
 3. Provides clear error messages and solutions if PR creation fails
