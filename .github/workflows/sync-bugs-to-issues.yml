@@ -19,21 +19,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2  # To get the previous commit for comparison
-      
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          files: documentation/bugs/[0-9]*.md
+          fetch-depth: 0  # Clonar todo el historial para asegurar que changed-files funcione correctamente
       
       - name: Get commit message
         id: commit-message
         run: |
           echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
       
+      - name: Skip if automated commit
+        if: contains(steps.commit-message.outputs.message, '[skip-issue-creation]')
+        run: |
+          echo "Skipping issue creation for automated commit"
+          exit 0
+      
+      - name: Find changed bug files
+        id: find-files
+        run: |
+          # Find all bug files that don't have a GitHub issue link
+          files=$(find documentation/bugs -type f -name "[0-9]*.md" -exec grep -L "GitHub Issue #" {} \;)
+          if [ -n "$files" ]; then
+            echo "files=$files" >> $GITHUB_OUTPUT
+            echo "Found files without GitHub issue links: $files"
+          else
+            echo "No files found without GitHub issue links"
+          fi
+      
       - name: Process new bug files
-        if: steps.changed-files.outputs.any_changed == 'true' && !contains(steps.commit-message.outputs.message, '[skip-issue-creation]')
+        if: steps.find-files.outputs.files != ''
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -49,20 +61,14 @@ jobs:
             const syncBugToIssueModule = await import(`file://${scriptPath}`);
             const syncBugToIssue = syncBugToIssueModule.default;
             
-            // Process each changed bug file
-            const changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ');
+            // Process each bug file without a GitHub issue link
+            const files = '${{ steps.find-files.outputs.files }}'.split(' ');
             const results = [];
             
-            for (const file of changedFiles) {
-              // Only process new bug files
-              if (!file.match(/documentation\/bugs\/\d{3}-.+\.md$/)) continue;
+            for (const file of files) {
+              if (!file || file.trim() === '') continue;
               
-              // Read the file content to check if it already has a GitHub issue linked
-              const content = fs.readFileSync(file, 'utf8');
-              if (content.includes('GitHub Issue #')) {
-                console.log(`Bug in ${file} already has a GitHub issue linked. Skipping.`);
-                continue;
-              }
+              console.log(`Processing file: ${file}`);
               
               // Execute the script with all required parameters
               const result = await syncBugToIssue({ 

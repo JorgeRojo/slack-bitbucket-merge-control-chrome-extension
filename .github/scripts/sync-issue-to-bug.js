@@ -1,6 +1,6 @@
 /**
  * Script to create a bug documentation file from a GitHub issue
- * 
+ *
  * @param {object} github - The GitHub API client
  * @param {object} context - The GitHub Actions context
  * @param {object} core - The GitHub Actions core library
@@ -10,19 +10,19 @@
  */
 export default async ({ github, context, core, exec, fs, path }) => {
   const issue = context.payload.issue;
-  
+
   // Skip if this issue was created from a bug file (to avoid circular references)
   if (issue.body && issue.body.includes('This issue was automatically created from')) {
     console.log('Issue was created from a bug file, skipping to avoid circular reference');
     return;
   }
-  
+
   // Check if we already have a bug file for this issue
   const bugsDir = 'documentation/bugs';
   if (!fs.existsSync(bugsDir)) {
     fs.mkdirSync(bugsDir, { recursive: true });
   }
-  
+
   // Check if any existing bug file references this issue
   const bugFiles = fs.readdirSync(bugsDir).filter(f => f.match(/^\d{3}-.+\.md$/));
   for (const file of bugFiles) {
@@ -32,7 +32,7 @@ export default async ({ github, context, core, exec, fs, path }) => {
       return;
     }
   }
-  
+
   // Find the next available bug ID
   let maxId = 0;
   bugFiles.forEach(file => {
@@ -42,9 +42,9 @@ export default async ({ github, context, core, exec, fs, path }) => {
       if (id > maxId) maxId = id;
     }
   });
-  
+
   const nextId = String(maxId + 1).padStart(3, '0');
-  
+
   // Extract information from the issue body
   // These field IDs match those in your bug_report.yml template
   const extractField = (body, fieldId) => {
@@ -52,14 +52,14 @@ export default async ({ github, context, core, exec, fs, path }) => {
     const match = body.match(regex);
     return match ? match[1].trim() : '';
   };
-  
+
   const component = extractField(issue.body, 'Component');
   const severity = extractField(issue.body, 'Severity').split(' - ')[0]; // Get just the severity level
   const reproduceSteps = extractField(issue.body, 'Steps to Reproduce');
   const currentBehavior = extractField(issue.body, 'Current Behavior');
   const expectedBehavior = extractField(issue.body, 'Expected Behavior');
   const additionalContext = extractField(issue.body, 'Additional Context');
-  
+
   // Create a slug from the title
   const slug = issue.title
     .toLowerCase()
@@ -68,7 +68,7 @@ export default async ({ github, context, core, exec, fs, path }) => {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .substring(0, 50);
-  
+
   // Format the bug file content
   const bugContent = `# Bug ${nextId}: ${issue.title.replace(/^\[Bug\]:\s*/i, '')}
 
@@ -87,7 +87,11 @@ Open
 ${severity}
 
 ## Reproduce
-${reproduceSteps.split('\n').map(line => line.trim() ? `- ${line.trim()}` : '').filter(Boolean).join('\n')}
+${reproduceSteps
+  .split('\n')
+  .map(line => (line.trim() ? `- ${line.trim()}` : ''))
+  .filter(Boolean)
+  .join('\n')}
 
 ## Current wrong behavior
 ${currentBehavior}
@@ -109,71 +113,79 @@ None yet
 
 ${additionalContext ? `## Additional Context\n${additionalContext}` : ''}
 `;
-  
+
   // Write the bug file
   const bugFilePath = path.join(bugsDir, `${nextId}-${slug}.md`);
   fs.writeFileSync(bugFilePath, bugContent);
-  
+
   // Update the bug index file
   const indexPath = path.join(bugsDir, 'README.md');
   if (fs.existsSync(indexPath)) {
     let indexContent = fs.readFileSync(indexPath, 'utf8');
-    
+
     // Find the table in the index file
-    const tableMatch = indexContent.match(/\| ID \| Title \| Component \| Status \| Severity \| Date Reported \| Date Fixed \|\n\|[-\|]+\n([\s\S]*?)(?=\n\n## |$)/);
-    
+    const tableMatch = indexContent.match(
+      /\| ID \| Title \| Component \| Status \| Severity \| Date Reported \| Date Fixed \|\n\|[-\|]+\n([\s\S]*?)(?=\n\n## |$)/
+    );
+
     if (tableMatch) {
       const tableStart = indexContent.indexOf(tableMatch[0]);
-      
+
       // Add the new entry to the table
       const today = new Date().toISOString().split('T')[0];
       const newEntry = `| [${nextId}](./${nextId}-${slug}.md) | ${issue.title.replace(/^\[Bug\]:\s*/i, '')} | ${component} | Open | ${severity} | ${today} | |\n`;
-      
+
       // Insert the new entry after the header rows
-      const headerEnd = indexContent.indexOf('\n', indexContent.indexOf('|----|-------|', tableStart)) + 1;
-      indexContent = indexContent.substring(0, headerEnd) + newEntry + indexContent.substring(headerEnd);
-      
+      const headerEnd =
+        indexContent.indexOf('\n', indexContent.indexOf('|----|-------|', tableStart)) + 1;
+      indexContent =
+        indexContent.substring(0, headerEnd) + newEntry + indexContent.substring(headerEnd);
+
       fs.writeFileSync(indexPath, indexContent);
     }
   }
-  
+
   // Set up git user
   await exec.exec('git', ['config', 'user.name', 'GitHub Action']);
   await exec.exec('git', ['config', 'user.email', 'action@github.com']);
-  
+
   // Pull changes from remote before pushing
   try {
     // Configure Git to pull with merge strategy
     await exec.exec('git', ['config', 'pull.rebase', 'false']);
-    
+
     // Pull changes from remote
     await exec.exec('git', ['pull', 'origin', 'master']);
-    
+
     // Commit and push changes
     await exec.exec('git', ['add', bugFilePath]);
     if (fs.existsSync(indexPath)) {
       await exec.exec('git', ['add', indexPath]);
     }
-    
+
     // Use a special commit message that the other workflow can detect to avoid circular triggers
     const commitMessage = `[AUTOMATED] Create bug file #${nextId} from GitHub issue #${issue.number} [skip-issue-creation]`;
     await exec.exec('git', ['commit', '-m', commitMessage]);
     await exec.exec('git', ['push']);
-    
+
     // Try to add a comment to the issue linking to the bug file
     try {
       await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: issue.number,
-        body: `I've created a bug documentation file for this issue: [Bug #${nextId}](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/${bugFilePath})`
+        body: `I've created a bug documentation file for this issue: [Bug #${nextId}](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/${bugFilePath})`,
       });
       console.log(`Added comment to issue #${issue.number}`);
     } catch (commentError) {
       // If we can't add a comment, log the error but don't fail the workflow
-      console.log(`Warning: Could not add comment to issue #${issue.number}: ${commentError.message}`);
-      console.log('This is likely due to permission issues. The bug file was still created successfully.');
-      
+      console.log(
+        `Warning: Could not add comment to issue #${issue.number}: ${commentError.message}`
+      );
+      console.log(
+        'This is likely due to permission issues. The bug file was still created successfully.'
+      );
+
       // If this is a permissions error, suggest adding the necessary permissions
       if (commentError.status === 403) {
         console.log('To fix this, add the following to your workflow file:');
@@ -188,10 +200,10 @@ permissions:
     core.setFailed(`Failed to push changes: ${error.message}`);
     throw error;
   }
-  
+
   return {
     bugId: nextId,
     bugFilePath,
-    slug
+    slug,
   };
 };
