@@ -6,37 +6,52 @@ This directory contains GitHub Actions workflows that automate various tasks for
 
 These workflows implement and enforce the Git Flow branching strategy as defined in `documentation/GIT_FLOW.md`.
 
-### 1. `release-from-develop.yml` 🚀
+### 1. `complete-release-pipeline.yml` 🚀
 
-**Purpose**: Complete release process from develop to master with automatic version tagging
+**Purpose**: Complete end-to-end release process from develop to published GitHub release
 
 **Trigger**: Manual dispatch with version input, or auto-trigger after PR merge
 
 **Git Flow Compliance**:
-- Validates execution from develop branch
-- Runs comprehensive test suite
+
+- Validates execution from develop branch (prepare-release)
+- Validates execution from master branch (close-version, publish-release)
+- Runs comprehensive test suite at multiple stages
 - Creates Pull Request to master (recommended) or direct merge
-- Automatically handles version closing and tagging
-- Integrated workflow combining merge and version closing
+- Automatically handles version closing, tagging, and GitHub release publishing
+- Complete integrated pipeline combining all release steps
 
 **Features**:
-- **Two-job workflow**: `prepare-release` → `close-version`
+
+- **Three-job workflow**: `prepare-release` → `close-version` → `publish-release`
 - **Flexible execution**: PR mode (recommended) or direct merge
-- **Comprehensive validation**: Tests, linting, type checking, build verification
+- **Auto-publish option**: Automatically create GitHub release after version closing
+- **Comprehensive validation**: Tests, linting, type checking, build verification at each stage
 - **Automatic version management**: Updates package.json and manifest.json
 - **Git tagging**: Creates version tags automatically
+- **Release packaging**: Creates Chrome Web Store ready ZIP file
+- **GitHub release**: Publishes release with automatic release notes
 
 **Usage**:
+
 ```bash
-# Via GitHub UI: Actions → Release from Develop
+# Via GitHub UI: Actions → Complete Release Pipeline
 # Input: version (e.g., v1.0.0)
 # Option: Create PR (recommended) or direct merge
+# Option: Auto-publish GitHub release (optional)
 ```
 
-**Process Flow**:
+**Complete Process Flow**:
+
 ```
-Develop → Validation → Merge/PR → Version Closing → Tag Creation → Ready for Release
+Develop → Validation → Merge/PR → Version Closing → Tag Creation → GitHub Release → Ready for Chrome Web Store
 ```
+
+**Job Details**:
+
+- **prepare-release**: Validates, tests, and merges develop to master
+- **close-version**: Updates versions, creates tags, pushes to master
+- **publish-release**: Builds extension, creates ZIP, publishes GitHub release
 
 ### 2. `hotfix.yml` 🚨
 
@@ -76,35 +91,9 @@ Actions → Hotfix Workflow → cleanup
 Input: hotfix_name
 ```
 
-### 3. `release.yml` 📦
-
-**Purpose**: Create GitHub release from tagged version
-
-**Trigger**: Manual dispatch (master branch only)
-
-**Git Flow Compliance**:
-
-- **🔒 Branch Restriction**: Only executes from master branch
-- **Double Validation**: Workflow trigger + job-level branch check
-- Validates tag exists on master
-- Comprehensive release validation
-
-**Usage**:
-
-```bash
-# IMPORTANT: Must be on master branch
-git checkout master
-git pull origin master
-
-# Then: Actions → Build and Release Extension
-# Note: Workflow will fail if not executed from master branch
-```
-
-**⚠️ Important**: This workflow is restricted to master branch only to ensure releases are created from stable, tagged code following Git Flow guidelines.
-
 ## 📋 Documentation Workflows
 
-### 4. `sync-github-issues.yml` 📝
+### 3. `sync-github-issues.yml` 📝
 
 **Purpose**: Sync GitHub issues to documentation
 
@@ -119,7 +108,7 @@ git pull origin master
 - Commits changes to develop branch
 - Follows proper branching strategy
 
-### 5. `setup-branch-protection.yml` 🔒
+### 4. `setup-branch-protection.yml` 🔒
 
 **Purpose**: Configure branch protection rules
 
@@ -174,13 +163,13 @@ git pull origin master
 
 ```mermaid
 graph TD
-    A[Feature Development] --> B[release-from-develop.yml]
-    B --> C[release.yml]
+    A[Feature Development] --> B[complete-release-pipeline.yml]
+    B --> C[Published GitHub Release]
 
     D[Production Issue] --> E[hotfix.yml create]
     E --> F[hotfix.yml merge]
-    F --> G[release-from-develop.yml]
-    G --> H[release.yml]
+    F --> G[complete-release-pipeline.yml]
+    G --> H[Published GitHub Release]
     H --> I[hotfix.yml cherry-pick]
     I --> J[hotfix.yml cleanup]
 
@@ -194,16 +183,18 @@ graph TD
 
 1. **Development**: Work on feature branches from develop
 2. **Integration**: Merge features to develop via PR
-3. **Release Execution**: Run `release-from-develop.yml`
+3. **Complete Release**: Run `complete-release-pipeline.yml`
    - **Prepare Release**: Validation, testing, merge/PR creation
    - **Close Version**: Automatic version tagging and file updates
-4. **Publish**: Run `release.yml` to create GitHub release
+   - **Publish Release**: GitHub release creation and Chrome Web Store package
 
 ### Integrated Workflow Chain
 
 ```
-release-from-develop.yml (prepare-release → close-version) → release.yml
+complete-release-pipeline.yml (prepare-release → close-version → publish-release)
 ```
+
+**Single Command Release**: One workflow execution handles the entire release process from develop to published GitHub release.
 
 ### Hotfix Process
 
