@@ -67,10 +67,16 @@ jobs:
           else
             # Extract version from PR title if auto-triggered
             PR_TITLE="${{ github.event.pull_request.title }}"
-            INPUT_VERSION=$(echo "$PR_TITLE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            echo "PR Title: $PR_TITLE"
+            
+            # Try to extract version from PR title
+            INPUT_VERSION=$(echo "$PR_TITLE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
+            
             if [ -z "$INPUT_VERSION" ]; then
-              echo "::error::Could not extract version from PR title: $PR_TITLE"
-              exit 1
+              echo "::warning::Could not extract version from PR title: $PR_TITLE"
+              echo "::warning::This appears to be a non-release PR merge. Skipping version closing."
+              echo "SKIP_VERSION=true" >> $GITHUB_ENV
+              exit 0
             fi
           fi
 
@@ -81,11 +87,19 @@ jobs:
             echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
             echo "Extracted version: $VERSION"
           else
-            echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
-            exit 1
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
+              exit 1
+            else
+              echo "::warning::Invalid version format in PR title: $INPUT_VERSION"
+              echo "::warning::Skipping version closing for non-release PR"
+              echo "SKIP_VERSION=true" >> $GITHUB_ENV
+              exit 0
+            fi
           fi
 
       - name: Validate version is higher
+        if: env.SKIP_VERSION != 'true'
         id: validate-higher
         run: |
           NEW_VERSION="${{ env.VERSION }}"
@@ -110,22 +124,28 @@ jobs:
           echo "✅ New version is higher than current version"
 
       - name: Run linter
+        if: env.SKIP_VERSION != 'true'
         run: npm run lint
 
       - name: Run type check
+        if: env.SKIP_VERSION != 'true'
         run: npm run type-check
 
       - name: Run tests
+        if: env.SKIP_VERSION != 'true'
         run: npm run test
 
       - name: Build extension
+        if: env.SKIP_VERSION != 'true'
         run: npm run build
 
       - name: Update version in package.json
+        if: env.SKIP_VERSION != 'true'
         run: |
           npm version ${{ env.VERSION }} --no-git-tag-version
 
       - name: Update version in manifest.json
+        if: env.SKIP_VERSION != 'true'
         run: |
           # Read the current manifest.json
           MANIFEST_PATH="src/manifest.json"
@@ -137,6 +157,7 @@ jobs:
           echo "Updated manifest.json version to ${{ env.VERSION }}"
 
       - name: Lint and fix modified files
+        if: env.SKIP_VERSION != 'true'
         run: |
           echo "Running lint --fix on modified files..."
           # Run lint --fix on the specific files that were modified
@@ -144,20 +165,24 @@ jobs:
           echo "Linting completed"
 
       - name: Configure Git
+        if: env.SKIP_VERSION != 'true'
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
 
       - name: Commit version changes
+        if: env.SKIP_VERSION != 'true'
         run: |
           git add package.json package-lock.json src/manifest.json
           git commit -m "chore: close version ${{ env.INPUT_VERSION }}"
 
       - name: Create version tag
+        if: env.SKIP_VERSION != 'true'
         run: |
           git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}"
 
       - name: Push changes and tag to master
+        if: env.SKIP_VERSION != 'true'
         run: |
           # Set the remote URL with the token for authentication
           git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}
@@ -168,11 +193,21 @@ jobs:
 
       - name: Create summary
         run: |
-          echo "## Version ${{ env.INPUT_VERSION }} Closed Successfully! 🎉" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag**: ${{ env.INPUT_VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: master" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit**: $(git rev-parse HEAD)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Ready for release workflow!" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ env.SKIP_VERSION }}" = "true" ]; then
+            echo "## ℹ️ Version Closing Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "This PR merge did not contain a version in the title." >> $GITHUB_STEP_SUMMARY
+            echo "Version closing is only performed for release PRs." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**PR Title**: ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Expected Format**: Should contain version like 'Release v1.0.0'" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 🎉 Version ${{ env.INPUT_VERSION }} Closed Successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tag**: ${{ env.INPUT_VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch**: master" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit**: $(git rev-parse HEAD)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Ready for release workflow!" >> $GITHUB_STEP_SUMMARY
+          fi
