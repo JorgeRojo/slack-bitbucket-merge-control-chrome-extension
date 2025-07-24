@@ -77,6 +77,18 @@ jobs:
 
           echo "New version is higher than current version"
 
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run type check
+        run: npm run type-check
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Build extension
+        run: npm run build
+
       - name: Update version in package.json
         run: |
           npm version ${{ env.VERSION }} --no-git-tag-version
