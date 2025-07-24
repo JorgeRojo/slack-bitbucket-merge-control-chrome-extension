@@ -12,6 +12,11 @@ on:
   # Allow manual triggering
   workflow_dispatch:
 
+# Cancel any running workflow when a new one is triggered
+concurrency:
+  group: sync-github-issues
+  cancel-in-progress: true
+
 # Define permissions needed for the GITHUB_TOKEN
 permissions:
   contents: write # For repository operations
