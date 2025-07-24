@@ -137,6 +137,7 @@ jobs:
         id: create-pr
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             try {
               console.log('🚀 Creating Pull Request from develop to master...');
@@ -185,7 +186,29 @@ jobs:
             } catch (error) {
               console.error('❌ Failed to create Pull Request:', error.message);
               
-              if (error.status === 422) {
+              if (error.status === 403) {
+                if (error.message.includes('not permitted to create or approve pull requests')) {
+                  console.error('🔐 GitHub Actions token restriction detected');
+                  console.error('💡 Solutions:');
+                  console.error('   1. Create a Personal Access Token (PAT) with repo permissions');
+                  console.error('   2. Add it as a repository secret named PAT_TOKEN');
+                  console.error('   3. Or use direct merge mode instead of PR mode');
+                  console.error('');
+                  console.error('📋 Alternative: Run workflow with create_pr=false for direct merge');
+                  
+                  // Set output to indicate fallback needed
+                  core.setOutput('pr_creation_failed', 'true');
+                  core.setOutput('fallback_needed', 'true');
+                  
+                  // Don't throw error, let workflow continue with guidance
+                  return;
+                } else {
+                  console.error('💡 This might be because:');
+                  console.error('   - Insufficient repository permissions');
+                  console.error('   - Organization security policies');
+                  console.error('   - Branch protection rules prevent PR creation');
+                }
+              } else if (error.status === 422) {
                 console.error('💡 This might be because:');
                 console.error('   - A PR from develop to master already exists');
                 console.error('   - There are no differences between develop and master');
@@ -227,16 +250,37 @@ jobs:
           echo "- Merge conflict check" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ github.event.inputs.create_pr }}" = "true" ]; then
-            echo "- Pull Request created ✅" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
-            echo "- **PR Number**: #${{ steps.create-pr.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **PR URL**: ${{ steps.create-pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
-            echo "1. Review and approve the PR" >> $GITHUB_STEP_SUMMARY
-            echo "2. Merge the PR into master" >> $GITHUB_STEP_SUMMARY
-            echo "3. Version closing and release will auto-run after PR merge" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ steps.create-pr.outputs.pr_creation_failed }}" = "true" ]; then
+              echo "- Pull Request creation failed ⚠️" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 🔐 GitHub Actions Token Restriction" >> $GITHUB_STEP_SUMMARY
+              echo "GitHub Actions is not permitted to create Pull Requests with the default token." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 💡 Solutions" >> $GITHUB_STEP_SUMMARY
+              echo "1. **Personal Access Token (Recommended)**:" >> $GITHUB_STEP_SUMMARY
+              echo "   - Create a PAT with 'repo' permissions" >> $GITHUB_STEP_SUMMARY
+              echo "   - Add it as repository secret named 'PAT_TOKEN'" >> $GITHUB_STEP_SUMMARY
+              echo "   - Re-run this workflow" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "2. **Direct Merge Alternative**:" >> $GITHUB_STEP_SUMMARY
+              echo "   - Re-run workflow with 'Create PR' = false" >> $GITHUB_STEP_SUMMARY
+              echo "   - This will merge directly to master (use with caution)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "3. **Manual Process**:" >> $GITHUB_STEP_SUMMARY
+              echo "   - Create PR manually from develop to master" >> $GITHUB_STEP_SUMMARY
+              echo "   - Merge the PR to trigger version closing" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- Pull Request created ✅" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 📋 Pull Request Details" >> $GITHUB_STEP_SUMMARY
+              echo "- **PR Number**: #${{ steps.create-pr.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
+              echo "- **PR URL**: ${{ steps.create-pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+              echo "1. Review and approve the PR" >> $GITHUB_STEP_SUMMARY
+              echo "2. Merge the PR into master" >> $GITHUB_STEP_SUMMARY
+              echo "3. Version closing and release will auto-run after PR merge" >> $GITHUB_STEP_SUMMARY
+            fi
           else
             echo "- Direct merge to master ✅" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY

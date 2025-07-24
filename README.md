@@ -97,6 +97,7 @@ All project documentation is organized in the `documentation/` directory:
 - **[ERROR_HANDLING.md](./documentation/ERROR_HANDLING.md)** - Error handling system documentation
 - **[ISSUES_TRACKING.md](./documentation/ISSUES_TRACKING.md)** - Index of open bugs and feature requests
 - **[VERSION_RELEASE_PROCESS.md](./documentation/VERSION_RELEASE_PROCESS.md)** - Version closing and release process
+- **[GITHUB_PAT_SETUP.md](./documentation/GITHUB_PAT_SETUP.md)** - GitHub Personal Access Token setup for automated releases
 
 ## Project Structure
 
