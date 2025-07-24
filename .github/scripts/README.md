@@ -10,7 +10,9 @@ Creates a bug documentation file from a GitHub issue.
 
 **Usage**:
 ```javascript
-const syncIssueToDoc = require('./.github/scripts/sync-issue-to-bug.js');
+// Using dynamic import for ESM modules
+const syncIssueToDocModule = await import('./.github/scripts/sync-issue-to-bug.js');
+const syncIssueToDoc = syncIssueToDocModule.default;
 
 const result = await syncIssueToDoc({ 
   github,  // GitHub API client
@@ -37,7 +39,9 @@ Creates a GitHub issue from a bug documentation file.
 
 **Usage**:
 ```javascript
-const syncBugToIssue = require('./.github/scripts/sync-bug-to-issue.js');
+// Using dynamic import for ESM modules
+const syncBugToIssueModule = await import('./.github/scripts/sync-bug-to-issue.js');
+const syncBugToIssue = syncBugToIssueModule.default;
 
 const result = await syncBugToIssue({ 
   github,  // GitHub API client
@@ -67,11 +71,14 @@ To test these scripts locally:
 3. Create a test file:
 
 ```javascript
-const fs = require('fs');
-const path = require('path');
-const { getOctokit } = require('@actions/github');
-const core = require('@actions/core');
-const exec = require('@actions/exec');
+import fs from 'fs';
+import path from 'path';
+import { getOctokit } from '@actions/github';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+
+// Import the script
+import syncIssueToDoc from './sync-issue-to-bug.js';
 
 // Mock GitHub context
 const context = {
@@ -89,11 +96,12 @@ const context = {
 // Create GitHub client with your token
 const github = getOctokit(process.env.GITHUB_TOKEN);
 
-// Import and test the script
-const syncIssueToDoc = require('./sync-issue-to-bug.js');
+// Test the script
 syncIssueToDoc({ github, context, core, exec, fs, path })
   .then(result => console.log(result))
   .catch(error => console.error(error));
 ```
 
 4. Run with: `GITHUB_TOKEN=your-token node test-script.js`
+
+**Note**: Make sure to add `"type": "module"` to your package.json or use the `.mjs` extension for your test file when testing locally.

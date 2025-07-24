@@ -8,7 +8,7 @@
  * @param {object} fs - The Node.js fs module
  * @param {object} path - The Node.js path module
  */
-module.exports = async ({ github, context, core, exec, fs, path }) => {
+export default async ({ github, context, core, exec, fs, path }) => {
   const issue = context.payload.issue;
   
   // Skip if this issue was created from a bug file (to avoid circular references)

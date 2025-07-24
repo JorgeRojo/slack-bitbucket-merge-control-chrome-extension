@@ -9,7 +9,7 @@
  * @param {object} path - The Node.js path module
  * @param {string} file - The path to the bug documentation file
  */
-module.exports = async ({ github, context, core, exec, fs, path, file }) => {
+export default async ({ github, context, core, exec, fs, path, file }) => {
   console.log(`Processing bug file: ${file}`);
   
   // Read the bug file content
