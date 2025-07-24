@@ -5,7 +5,6 @@ import '@src/modules/common/components/toggle-switch/toggle-switch';
 
 vi.mock('@src/modules/common/utils/Logger');
 
-// Mock for chrome.runtime.getURL
 if (!global.chrome) {
   (global as any).chrome = {};
 }
@@ -16,14 +15,12 @@ if (!global.chrome.runtime) {
 
 global.chrome.runtime.getURL = vi.fn().mockReturnValue('mock-url');
 
-// Mock for fetch
 (global as any).fetch = vi.fn(() =>
   Promise.resolve({
     text: () => Promise.resolve('/* Mock CSS */'),
   })
 );
 
-// Function to wait for component rendering
 const waitForRender = async (): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, 50));
 };
@@ -37,7 +34,6 @@ describe('ToggleSwitch Component', () => {
   beforeEach(async () => {
     (fetch as Mock).mockClear();
 
-    // Create mocks for shadow DOM elements
     mockInput = {
       type: 'checkbox',
       checked: false,
@@ -54,7 +50,6 @@ describe('ToggleSwitch Component', () => {
       textContent: '',
     };
 
-    // Create a mock for shadowRoot
     mockShadowRoot = {
       innerHTML: '',
       querySelector: vi.fn(selector => {
@@ -68,7 +63,6 @@ describe('ToggleSwitch Component', () => {
       querySelectorAll: vi.fn(() => []),
     };
 
-    // Create a mock element with a shadowRoot
     toggleSwitch = {
       tagName: 'TOGGLE-SWITCH',
       shadowRoot: mockShadowRoot,
@@ -105,7 +99,6 @@ describe('ToggleSwitch Component', () => {
     // Mock for document.createElement
     document.createElement = vi.fn().mockReturnValue(toggleSwitch);
 
-    // Simulate element creation
     toggleSwitch = document.createElement('toggle-switch');
     document.body.appendChild(toggleSwitch);
 
@@ -127,7 +120,6 @@ describe('ToggleSwitch Component', () => {
   });
 
   test('should initialize with checked attribute', async () => {
-    // Configure the mock to indicate it has the checked attribute
     mockInput.checked = true;
     toggleSwitch.hasAttribute.mockImplementation(attr => (attr === 'checked' ? true : false));
 
@@ -136,7 +128,6 @@ describe('ToggleSwitch Component', () => {
   });
 
   test('should initialize with disabled attribute', async () => {
-    // Configure the mock to indicate it has the disabled attribute
     mockInput.disabled = true;
     toggleSwitch.hasAttribute.mockImplementation(attr => (attr === 'disabled' ? true : false));
 
