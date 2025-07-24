@@ -1,5 +1,7 @@
 # Bug 001: Toggle Switch Incorrect State After Browser Restart
 
+[GitHub Issue #11](https://github.com/JorgeRojo/slack-bitbucket-merge-control-chrome-extension/issues/11)
+
 ## Component
 
 `popup-toggle-feature-status.ts`
