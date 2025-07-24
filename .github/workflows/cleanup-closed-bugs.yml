@@ -81,7 +81,7 @@ jobs:
 
           # Add all changes, including deletions
           git add -A documentation/bugs/
-          
+
           # Commit and push changes
           git commit -m "[AUTOMATED] Remove closed bug files and update bug index [skip-issue-creation]" || echo "No changes to commit"
           git push || echo "No changes to push"
