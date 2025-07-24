@@ -104,6 +104,13 @@ jobs:
 
           echo "Updated manifest.json version to ${{ env.VERSION }}"
 
+      - name: Lint and fix modified files
+        run: |
+          echo "Running lint --fix on modified files..."
+          # Run lint --fix on the specific files that were modified
+          npm run lint -- --fix package.json src/manifest.json
+          echo "Linting completed"
+
       - name: Configure Git
         run: |
           git config user.name "GitHub Action"
