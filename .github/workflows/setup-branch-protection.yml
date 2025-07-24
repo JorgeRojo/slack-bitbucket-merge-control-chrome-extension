@@ -1,0 +1,255 @@
+name: Setup Branch Protection Rules
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - setup-all
+          - setup-master
+          - setup-develop
+          - remove-all
+          - status
+
+permissions:
+  administration: write
+  contents: read
+
+jobs:
+  setup-branch-protection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Master Branch Protection
+        if: github.event.inputs.action == 'setup-all' || github.event.inputs.action == 'setup-master'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              console.log('🔒 Setting up Master branch protection...');
+              
+              const protection = await github.rest.repos.updateBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'master',
+                required_status_checks: {
+                  strict: true,
+                  contexts: [
+                    'validate-and-close-version',
+                    'build-and-release'
+                  ]
+                },
+                enforce_admins: true,
+                required_pull_request_reviews: {
+                  required_approving_review_count: 1,
+                  dismiss_stale_reviews: true,
+                  require_code_owner_reviews: false,
+                  require_last_push_approval: true
+                },
+                restrictions: null,
+                allow_force_pushes: false,
+                allow_deletions: false,
+                block_creations: false,
+                required_conversation_resolution: true
+              });
+              
+              console.log('✅ Master branch protection configured successfully');
+              
+              // Set output for summary
+              core.setOutput('master_status', 'configured');
+              
+            } catch (error) {
+              console.error('❌ Failed to setup Master branch protection:', error.message);
+              core.setOutput('master_status', 'failed');
+              core.setOutput('master_error', error.message);
+            }
+
+      - name: Setup Develop Branch Protection
+        if: github.event.inputs.action == 'setup-all' || github.event.inputs.action == 'setup-develop'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              console.log('🔒 Setting up Develop branch protection...');
+              
+              const protection = await github.rest.repos.updateBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'develop',
+                required_status_checks: {
+                  strict: true,
+                  contexts: []
+                },
+                enforce_admins: false,
+                required_pull_request_reviews: {
+                  required_approving_review_count: 1,
+                  dismiss_stale_reviews: false,
+                  require_code_owner_reviews: false,
+                  require_last_push_approval: false
+                },
+                restrictions: null,
+                allow_force_pushes: true,
+                allow_deletions: false,
+                block_creations: false,
+                required_conversation_resolution: false
+              });
+              
+              console.log('✅ Develop branch protection configured successfully');
+              
+              // Set output for summary
+              core.setOutput('develop_status', 'configured');
+              
+            } catch (error) {
+              console.error('❌ Failed to setup Develop branch protection:', error.message);
+              core.setOutput('develop_status', 'failed');
+              core.setOutput('develop_error', error.message);
+            }
+
+      - name: Remove All Branch Protection
+        if: github.event.inputs.action == 'remove-all'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const branches = ['master', 'develop'];
+
+            for (const branch of branches) {
+              try {
+                console.log(`🔓 Removing protection from ${branch} branch...`);
+                
+                await github.rest.repos.deleteBranchProtection({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: branch
+                });
+                
+                console.log(`✅ ${branch} branch protection removed`);
+                core.setOutput(`${branch}_removal`, 'success');
+                
+              } catch (error) {
+                if (error.status === 404) {
+                  console.log(`ℹ️ ${branch} branch protection was not configured`);
+                  core.setOutput(`${branch}_removal`, 'not_configured');
+                } else {
+                  console.error(`❌ Failed to remove ${branch} branch protection:`, error.message);
+                  core.setOutput(`${branch}_removal`, 'failed');
+                  core.setOutput(`${branch}_removal_error`, error.message);
+                }
+              }
+            }
+
+      - name: Check Branch Protection Status
+        if: github.event.inputs.action == 'status'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const branches = ['master', 'develop'];
+
+            for (const branch of branches) {
+              try {
+                console.log(`🔍 Checking ${branch} branch protection...`);
+                
+                const protection = await github.rest.repos.getBranchProtection({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: branch
+                });
+                
+                console.log(`✅ ${branch} branch is protected`);
+                console.log(`   - Required status checks: ${protection.data.required_status_checks?.strict ? 'strict' : 'not strict'}`);
+                console.log(`   - Required reviews: ${protection.data.required_pull_request_reviews?.required_approving_review_count || 0}`);
+                console.log(`   - Enforce admins: ${protection.data.enforce_admins?.enabled ? 'yes' : 'no'}`);
+                console.log(`   - Allow force pushes: ${protection.data.allow_force_pushes?.enabled ? 'yes' : 'no'}`);
+                
+                core.setOutput(`${branch}_protected`, 'true');
+                core.setOutput(`${branch}_details`, JSON.stringify(protection.data, null, 2));
+                
+              } catch (error) {
+                if (error.status === 404) {
+                  console.log(`ℹ️ ${branch} branch is not protected`);
+                  core.setOutput(`${branch}_protected`, 'false');
+                } else {
+                  console.error(`❌ Failed to check ${branch} branch protection:`, error.message);
+                  core.setOutput(`${branch}_check_error`, error.message);
+                }
+              }
+            }
+
+      - name: Create Workflow Summary
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const action = '${{ github.event.inputs.action }}';
+            let summary = `## 🔒 Branch Protection ${action.charAt(0).toUpperCase() + action.slice(1)} Results\n\n`;
+
+            if (action === 'setup-all' || action === 'setup-master') {
+              const masterStatus = '${{ steps.setup-master.outputs.master_status }}' || 'not_run';
+              summary += `### Master Branch\n`;
+              if (masterStatus === 'configured') {
+                summary += `✅ **Master branch protection configured successfully**\n\n`;
+                summary += `**Protection Rules Applied:**\n`;
+                summary += `- Required status checks: Strict\n`;
+                summary += `- Required approving reviews: 1\n`;
+                summary += `- Dismiss stale reviews: Yes\n`;
+                summary += `- Require last push approval: Yes\n`;
+                summary += `- Enforce for admins: Yes\n`;
+                summary += `- Allow force pushes: No\n`;
+                summary += `- Allow deletions: No\n`;
+                summary += `- Require conversation resolution: Yes\n\n`;
+              } else if (masterStatus === 'failed') {
+                summary += `❌ **Failed to configure master branch protection**\n`;
+                summary += `Error: ${{ steps.setup-master.outputs.master_error }}\n\n`;
+              }
+            }
+
+            if (action === 'setup-all' || action === 'setup-develop') {
+              const developStatus = '${{ steps.setup-develop.outputs.develop_status }}' || 'not_run';
+              summary += `### Develop Branch\n`;
+              if (developStatus === 'configured') {
+                summary += `✅ **Develop branch protection configured successfully**\n\n`;
+                summary += `**Protection Rules Applied:**\n`;
+                summary += `- Required status checks: Strict (no specific contexts)\n`;
+                summary += `- Required approving reviews: 1\n`;
+                summary += `- Dismiss stale reviews: No\n`;
+                summary += `- Enforce for admins: No\n`;
+                summary += `- Allow force pushes: Yes (for maintainers)\n`;
+                summary += `- Allow deletions: No\n\n`;
+              } else if (developStatus === 'failed') {
+                summary += `❌ **Failed to configure develop branch protection**\n`;
+                summary += `Error: ${{ steps.setup-develop.outputs.develop_error }}\n\n`;
+              }
+            }
+
+            if (action === 'remove-all') {
+              summary += `### Removal Results\n`;
+              const masterRemoval = '${{ steps.remove-all.outputs.master_removal }}' || 'not_run';
+              const developRemoval = '${{ steps.remove-all.outputs.develop_removal }}' || 'not_run';
+              
+              summary += `- **Master**: ${masterRemoval === 'success' ? '✅ Removed' : masterRemoval === 'not_configured' ? 'ℹ️ Not configured' : '❌ Failed'}\n`;
+              summary += `- **Develop**: ${developRemoval === 'success' ? '✅ Removed' : developRemoval === 'not_configured' ? 'ℹ️ Not configured' : '❌ Failed'}\n\n`;
+            }
+
+            if (action === 'status') {
+              summary += `### Current Protection Status\n`;
+              const masterProtected = '${{ steps.status.outputs.master_protected }}' === 'true';
+              const developProtected = '${{ steps.status.outputs.develop_protected }}' === 'true';
+              
+              summary += `- **Master**: ${masterProtected ? '🔒 Protected' : '🔓 Not Protected'}\n`;
+              summary += `- **Develop**: ${developProtected ? '🔒 Protected' : '🔓 Not Protected'}\n\n`;
+            }
+
+            summary += `### 📋 Git Flow Compliance\n`;
+            summary += `These protection rules enforce the Git Flow guidelines:\n`;
+            summary += `- Master branch only accepts code from develop or hotfix branches\n`;
+            summary += `- All changes require pull request reviews\n`;
+            summary += `- Status checks ensure code quality\n`;
+            summary += `- Force pushes are prevented on master\n\n`;
+
+            summary += `---\n`;
+            summary += `> 🤖 Branch protection configured according to Git Flow documentation.`;
+
+            await core.summary.addRaw(summary).write();

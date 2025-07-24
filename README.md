@@ -100,7 +100,7 @@ All project documentation is organized in the `documentation/` directory:
 
 ## Project Structure
 
-```
+```schema
 src/
 ├── modules/
 │   ├── background/         # Background script and utilities

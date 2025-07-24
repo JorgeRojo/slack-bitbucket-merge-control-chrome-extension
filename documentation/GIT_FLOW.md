@@ -50,9 +50,9 @@ This document outlines the Git branching strategy and workflow used in this proj
 
 ### Standard Development Flow
 
-```
+```schema 
 develop ──┬─── feature/new-feature ───┐
-          │                          │
+          │                           │
           └─────────── ← ─────────────┘
           │
           └─── → master (via PR)
@@ -60,11 +60,11 @@ develop ──┬─── feature/new-feature ───┐
 
 ### Hotfix Flow
 
-```
-master ──┬─── hotfix/critical-fix ───┐
-         │                          │
-         └─────────── ← ─────────────┘
-         │
+```schema
+master ───┬─── hotfix/critical-fix ───┐
+          │                           │
+          └─────────── ← ─────────────┘
+          │
 develop ← ┘ (cherry-pick)
 ```
 
