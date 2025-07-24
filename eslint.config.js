@@ -1,10 +1,10 @@
 import pluginJs from '@eslint/js';
-import typescriptParser from '@typescript-eslint/parser';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import pluginImport from 'eslint-plugin-import';
-import globals from 'globals';
-import pluginPrettier from 'eslint-plugin-prettier';
+import typescriptParser from '@typescript-eslint/parser';
 import configPrettier from 'eslint-config-prettier';
+import pluginImport from 'eslint-plugin-import';
+import pluginPrettier from 'eslint-plugin-prettier';
+import globals from 'globals';
 
 // Reglas compartidas para ordenar imports
 const importOrderRules = {
@@ -12,14 +12,14 @@ const importOrderRules = {
     'error',
     {
       groups: [
-        'builtin',  // Módulos integrados de Node.js como 'fs', 'path', etc.
+        'builtin', // Módulos integrados de Node.js como 'fs', 'path', etc.
         'external', // Paquetes npm
         'internal', // Imports con alias como '@src/'
-        'parent',   // Imports que comienzan con '..'
-        'sibling',  // Imports que comienzan con './'
-        'index',    // Imports del mismo directorio
-        'object',   // Imports de objetos
-        'type',     // Imports de tipos
+        'parent', // Imports que comienzan con '..'
+        'sibling', // Imports que comienzan con './'
+        'index', // Imports del mismo directorio
+        'object', // Imports de objetos
+        'type', // Imports de tipos
       ],
       pathGroups: [
         {
@@ -44,7 +44,7 @@ const importOrderRules = {
     'error',
     {
       ignoreDeclarationSort: true, // Ignoramos esto porque lo maneja import/order
-      ignoreMemberSort: false,     // Ordenar miembros en imports con llaves
+      ignoreMemberSort: false, // Ordenar miembros en imports con llaves
     },
   ],
 };

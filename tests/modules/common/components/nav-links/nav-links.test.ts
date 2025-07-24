@@ -2,7 +2,7 @@ import { mockRuntime } from '@tests/setup';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import '@src/modules/common/components/nav-links/nav-links';
 
-// Mock para chrome.runtime.getURL
+// Mock for chrome.runtime.getURL
 if (!global.chrome) {
   (global as any).chrome = {};
 }
@@ -13,14 +13,14 @@ if (!global.chrome.runtime) {
 
 global.chrome.runtime.getURL = vi.fn().mockReturnValue('mock-url');
 
-// Mock para fetch
+// Mock for fetch
 (global as any).fetch = vi.fn(() =>
   Promise.resolve({
     text: () => Promise.resolve('/* Mock CSS */'),
   })
 );
 
-// Función para esperar a que el componente se renderice
+// Function to wait for component rendering
 const waitForRender = async (): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, 50));
 };
@@ -72,7 +72,7 @@ describe('NavLinks Component', () => {
       }),
     };
 
-    // Crear un mock para el shadowRoot
+    // Create a mock for shadowRoot
     mockShadowRoot = {
       innerHTML: '',
       querySelector: vi.fn(selector => {
@@ -85,7 +85,7 @@ describe('NavLinks Component', () => {
       querySelectorAll: vi.fn(() => []),
     };
 
-    // Crear un elemento mock con un shadowRoot
+    // Create a mock element with a shadowRoot
     navLinks = {
       tagName: 'NAV-LINKS',
       shadowRoot: mockShadowRoot,
@@ -102,7 +102,7 @@ describe('NavLinks Component', () => {
       attachShadow: vi.fn().mockReturnValue(mockShadowRoot),
       connectedCallback: vi.fn(),
       addEventListeners: vi.fn(() => {
-        // Simular la implementación de addEventListeners
+        // Simulate implementation of addEventListeners
         const optionsLink = mockShadowRoot.querySelector('#options-link');
         const helpLink = mockShadowRoot.querySelector('#help-link');
 
@@ -124,14 +124,14 @@ describe('NavLinks Component', () => {
       }),
     };
 
-    // Mock para document.createElement
+    // Mock for document.createElement
     document.createElement = vi.fn().mockReturnValue(navLinks);
 
-    // Simular la creación del elemento
+    // Simulate element creation
     navLinks = document.createElement('nav-links');
     document.body.appendChild(navLinks);
 
-    // Simular la inicialización del componente
+    // Simulate component initialization
     navLinks.addEventListeners();
 
     await waitForRender();

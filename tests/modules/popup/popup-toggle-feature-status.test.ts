@@ -1,5 +1,4 @@
 import { MESSAGE_ACTIONS } from '@src/modules/common/constants';
-import { Logger } from '@src/modules/common/utils/Logger';
 import { initializeToggleFeatureStatus } from '@src/modules/popup/popup-toggle-feature-status';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -10,8 +9,8 @@ vi.mock('@src/modules/common/utils/Logger', () => ({
   },
 }));
 
-// Import the mocked Logger
-import { Logger } from '@src/modules/common/utils/Logger';
+// Import the mocked Logger after mocking
+const { Logger } = await import('@src/modules/common/utils/Logger');
 
 describe('popup-toggle-feature-status', () => {
   // Mock for chrome API

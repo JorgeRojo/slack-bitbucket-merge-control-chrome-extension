@@ -1,8 +1,9 @@
-import { defineConfig, Plugin } from 'vite';
-import { resolve } from 'path';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
-import { build } from 'esbuild';
 import fs from 'fs/promises';
+import { resolve } from 'path';
+
+import { build } from 'esbuild';
+import { Plugin, defineConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 const entries = {
   background: resolve(__dirname, 'src/modules/background/background.ts'),
