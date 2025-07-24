@@ -136,18 +136,28 @@ git pull origin master
 
 **Purpose**: Configure branch protection rules
 
-**Actions**:
+**⚠️ Requirements**: 
+- **Repository admin permissions** required
+- User must have admin access to the repository
+- Organization policies must allow branch protection configuration
 
+**Actions**:
 - `setup-all`: Configure both master and develop
 - `setup-master`: Configure master branch only
 - `setup-develop`: Configure develop branch only
 - `remove-all`: Remove all protections
 - `status`: Check current protection status
 
+**Usage**:
+```bash
+# Ensure you have repository admin permissions first
+# Then: Actions → Setup Branch Protection Rules
+# Select desired action (setup-all recommended)
+```
+
 **Protection Rules**:
 
 **Master Branch**:
-
 - Required status checks (strict)
 - Required approving reviews: 1
 - Dismiss stale reviews: Yes
@@ -157,11 +167,15 @@ git pull origin master
 - Require conversation resolution: Yes
 
 **Develop Branch**:
-
 - Required status checks (strict)
 - Required approving reviews: 1
 - Allow force pushes: Yes (for maintainers)
 - Less restrictive than master
+
+**Troubleshooting**:
+- **403 Permission Denied**: Ensure you have repository admin access
+- **404 Branch Not Found**: Ensure target branches exist
+- **Organization Policies**: Check if organization allows branch protection
 
 ## 🔄 Workflow Dependencies
 
