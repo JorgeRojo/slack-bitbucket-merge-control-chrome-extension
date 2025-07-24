@@ -199,7 +199,7 @@ git push origin --delete hotfix/critical-issue-fix
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-```
+```git
 <type>[optional scope]: <description>
 
 [optional body]
