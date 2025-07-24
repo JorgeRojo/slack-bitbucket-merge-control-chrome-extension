@@ -6,55 +6,39 @@ This directory contains GitHub Actions workflows that automate various tasks for
 
 These workflows implement and enforce the Git Flow branching strategy as defined in `documentation/GIT_FLOW.md`.
 
-### 1. `merge-develop-to-master.yml` 🚀
+### 1. `release-from-develop.yml` 🚀
 
-**Purpose**: Controlled merge from develop to master for releases
+**Purpose**: Complete release process from develop to master with automatic version tagging
 
-**Trigger**: Manual dispatch with version input
+**Trigger**: Manual dispatch with version input, or auto-trigger after PR merge
 
 **Git Flow Compliance**:
-
 - Validates execution from develop branch
 - Runs comprehensive test suite
-- Creates Pull Request to master (recommended)
-- Supports direct merge (use with caution)
+- Creates Pull Request to master (recommended) or direct merge
+- Automatically handles version closing and tagging
+- Integrated workflow combining merge and version closing
+
+**Features**:
+- **Two-job workflow**: `prepare-release` → `close-version`
+- **Flexible execution**: PR mode (recommended) or direct merge
+- **Comprehensive validation**: Tests, linting, type checking, build verification
+- **Automatic version management**: Updates package.json and manifest.json
+- **Git tagging**: Creates version tags automatically
 
 **Usage**:
-
 ```bash
-# Via GitHub UI: Actions → Merge Develop to Master
+# Via GitHub UI: Actions → Release from Develop
 # Input: version (e.g., v1.0.0)
 # Option: Create PR (recommended) or direct merge
 ```
 
-### 2. `close-version.yml` 🏷️
-
-**Purpose**: Tag and close version after merge to master
-
-**Triggers**:
-- **Primary**: Called automatically by `merge-develop-to-master.yml`
-- Manual dispatch with version input
-- Auto-trigger after PR merge from develop/release to master
-
-**Git Flow Compliance**:
-- Only executes on master branch
-- Validates merge source (develop or release branches only)
-- Creates version tags on master
-- Updates package.json and manifest.json
-
-**Integration**:
-- **Preferred Flow**: `merge-develop-to-master.yml` → `close-version.yml` → `release.yml`
-- **Direct Merge**: Automatically triggered after direct merge to master
-- **Manual**: Can be triggered manually for specific cases
-
-**Usage**:
-```bash
-# Preferred: Use merge-develop-to-master.yml (calls this automatically)
-# Automatic: Runs after develop→master PR merge
-# Manual: Actions → Close Version (Input: version e.g., v1.0.0)
+**Process Flow**:
+```
+Develop → Validation → Merge/PR → Version Closing → Tag Creation → Ready for Release
 ```
 
-### 3. `hotfix.yml` 🚨
+### 2. `hotfix.yml` 🚨
 
 **Purpose**: Complete hotfix lifecycle management
 
@@ -92,7 +76,7 @@ Actions → Hotfix Workflow → cleanup
 Input: hotfix_name
 ```
 
-### 4. `release.yml` 📦
+### 3. `release.yml` 📦
 
 **Purpose**: Create GitHub release from tagged version
 
@@ -120,7 +104,7 @@ git pull origin master
 
 ## 📋 Documentation Workflows
 
-### 5. `sync-github-issues.yml` 📝
+### 4. `sync-github-issues.yml` 📝
 
 **Purpose**: Sync GitHub issues to documentation
 
@@ -135,7 +119,7 @@ git pull origin master
 - Commits changes to develop branch
 - Follows proper branching strategy
 
-### 6. `setup-branch-protection.yml` 🔒
+### 5. `setup-branch-protection.yml` 🔒
 
 **Purpose**: Configure branch protection rules
 
@@ -190,35 +174,35 @@ git pull origin master
 
 ```mermaid
 graph TD
-    A[Feature Development] --> B[merge-develop-to-master.yml]
-    B --> C[close-version.yml]
-    C --> D[release.yml]
+    A[Feature Development] --> B[release-from-develop.yml]
+    B --> C[release.yml]
 
-    E[Production Issue] --> F[hotfix.yml create]
-    F --> G[hotfix.yml merge]
-    G --> H[close-version.yml]
-    H --> I[release.yml]
-    I --> J[hotfix.yml cherry-pick]
-    J --> K[hotfix.yml cleanup]
+    D[Production Issue] --> E[hotfix.yml create]
+    E --> F[hotfix.yml merge]
+    F --> G[release-from-develop.yml]
+    G --> H[release.yml]
+    H --> I[hotfix.yml cherry-pick]
+    I --> J[hotfix.yml cleanup]
 
-    L[Issues/Documentation] --> M[sync-github-issues.yml]
-    M --> N[develop branch]
+    K[Issues/Documentation] --> L[sync-github-issues.yml]
+    L --> M[develop branch]
 ```
 
 ## 📋 Git Flow Process
 
 ### Standard Release Process
+
 1. **Development**: Work on feature branches from develop
 2. **Integration**: Merge features to develop via PR
-3. **Release Preparation**: Run `merge-develop-to-master.yml`
-   - **Direct Merge**: Automatically triggers `close-version.yml`
-   - **PR Mode**: Creates PR, then `close-version.yml` runs after PR merge
-4. **Version Tagging**: `close-version.yml` creates version tag automatically
-5. **Release**: Run `release.yml` to publish
+3. **Release Execution**: Run `release-from-develop.yml`
+   - **Prepare Release**: Validation, testing, merge/PR creation
+   - **Close Version**: Automatic version tagging and file updates
+4. **Publish**: Run `release.yml` to create GitHub release
 
 ### Integrated Workflow Chain
+
 ```
-merge-develop-to-master.yml → close-version.yml → release.yml
+release-from-develop.yml (prepare-release → close-version) → release.yml
 ```
 
 ### Hotfix Process
