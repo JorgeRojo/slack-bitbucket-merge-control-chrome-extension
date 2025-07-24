@@ -32,6 +32,15 @@ jobs:
           # Use a personal access token to allow the workflow to commit changes
           token: ${{ secrets.PAT_TOKEN || github.token }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Sync GitHub issues to documentation
         id: sync
         uses: actions/github-script@v6
@@ -64,6 +73,18 @@ jobs:
             core.setOutput('removed_files', result.removedFiles.length);
 
             return result;
+
+      - name: Lint and fix modified files
+        run: |
+          # Check if there are any changes in the documentation directory
+          if [[ -n "$(git status --porcelain documentation/)" ]]; then
+            echo "Running lint --fix on modified documentation files..."
+            # Run lint --fix on all files in documentation directory
+            npm run lint -- --fix documentation/
+            echo "Linting completed"
+          else
+            echo "No documentation files modified, skipping lint step"
+          fi
 
       - name: Commit and push changes
         run: |
