@@ -12,10 +12,21 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout master branch
         uses: actions/checkout@v3
         with:
+          ref: master
           fetch-depth: 0
+
+      - name: Validate Git Flow compliance
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "master" ]; then
+            echo "::error::Release can only be performed from master branch"
+            exit 1
+          fi
+
+          echo "✅ Git Flow validation passed - running from master branch"
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -39,7 +50,14 @@ jobs:
             exit 1
           fi
 
-          echo "Tag $TAG exists, proceeding with validation"
+          # Validate that the tag is on master branch
+          TAG_BRANCH=$(git branch --contains $TAG | grep -E '^\*?\s*master$' || true)
+          if [ -z "$TAG_BRANCH" ]; then
+            echo "::error::Tag $TAG is not on master branch. Following Git Flow, releases must be from master."
+            exit 1
+          fi
+
+          echo "✅ Tag $TAG exists and is on master branch"
 
           # Check if a release already exists for this version
           RELEASE_CHECK=$(curl -s -H "Authorization: token ${{ github.token }}" \
@@ -53,7 +71,7 @@ jobs:
             exit 1
           fi
 
-          echo "No existing release found for $TAG, proceeding with release creation"
+          echo "✅ No existing release found for $TAG, proceeding with release creation"
 
           echo "TAG=$TAG" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_ENV
@@ -65,26 +83,50 @@ jobs:
           ref: ${{ env.TAG }}
           fetch-depth: 0
 
+      - name: Validate tag checkout
+        run: |
+          CURRENT_TAG=$(git describe --exact-match --tags HEAD 2>/dev/null || echo "none")
+          if [ "$CURRENT_TAG" != "${{ env.TAG }}" ]; then
+            echo "::error::Failed to checkout tag ${{ env.TAG }}. Current: $CURRENT_TAG"
+            exit 1
+          fi
+
+          echo "✅ Successfully checked out tag ${{ env.TAG }}"
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linter
-        run: npm run lint
+      - name: Run release validation suite
+        run: |
+          echo "🧪 Running release validation suite..."
 
-      - name: Run type check
-        run: npm run type-check
+          echo "📋 Step 1: Linting"
+          npm run lint
 
-      - name: Run tests
-        run: npm run test
+          echo "🔍 Step 2: Type checking"
+          npm run type-check
 
-      - name: Build extension
-        run: npm run build
+          echo "🧪 Step 3: Full test suite"
+          npm run test
+
+          echo "🏗️ Step 4: Production build"
+          npm run build
+
+          echo "✅ Release validation passed!"
 
       - name: Create ZIP archive
         run: |
           cd dist
           zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip *
           cd ..
+
+          # Verify ZIP was created
+          if [ ! -f "slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip" ]; then
+            echo "::error::Failed to create ZIP archive"
+            exit 1
+          fi
+
+          echo "✅ ZIP archive created successfully"
 
       - name: Create GitHub Release
         id: create_release
@@ -96,5 +138,48 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ## 🚀 Release ${{ env.TAG }}
+
+            This release was created following Git Flow guidelines from the master branch.
+
+            ### 📦 What's Included
+            - Chrome Extension ZIP file ready for Chrome Web Store
+            - All features tested and validated
+            - Production-ready build
+
+            ### 🔄 Git Flow Compliance
+            - **Source Branch**: master
+            - **Tag**: ${{ env.TAG }}
+            - **Version**: ${{ env.VERSION }}
+
+            ### 📥 Installation
+            1. Download the ZIP file below
+            2. Extract the contents
+            3. Load as unpacked extension in Chrome
+
+            ---
+
+            > 🤖 This release was automatically created following Git Flow guidelines.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release summary
+        run: |
+          echo "## 🚀 Release ${{ env.TAG }} Published Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: master" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome Extension ZIP file" >> $GITHUB_STEP_SUMMARY
+          echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Git Flow compliance" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
+          echo "- Production build" >> $GITHUB_STEP_SUMMARY

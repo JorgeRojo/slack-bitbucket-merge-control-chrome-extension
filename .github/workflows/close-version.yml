@@ -6,6 +6,10 @@ on:
       version:
         description: 'Version to close (e.g., v1.0.0)'
         required: true
+  # Auto-trigger after PR merge from develop to master
+  pull_request:
+    types: [closed]
+    branches: [master]
 
 # Define permissions needed for the workflow
 permissions:
@@ -14,19 +18,36 @@ permissions:
 jobs:
   validate-and-close-version:
     runs-on: ubuntu-latest
+    # Only run if manually triggered OR if PR was merged from develop/release branch
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event.pull_request.merged == true && 
+       (startsWith(github.event.pull_request.head.ref, 'develop') || 
+        startsWith(github.event.pull_request.head.ref, 'release/')))
+
     steps:
-      - name: Checkout code
+      - name: Checkout master branch
         uses: actions/checkout@v3
         with:
           ref: master
           fetch-depth: 0
 
-      - name: Verify master branch
+      - name: Validate Git Flow compliance
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [ "$CURRENT_BRANCH" != "master" ]; then
             echo "::error::Version closing can only be performed on the master branch"
             exit 1
+          fi
+
+          # If triggered by PR merge, validate it came from develop or release branch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+            if [[ ! "$SOURCE_BRANCH" =~ ^(develop|release/) ]]; then
+              echo "::error::Master branch can only receive code from develop or release/* branches. Got: $SOURCE_BRANCH"
+              exit 1
+            fi
+            echo "✅ Valid merge from $SOURCE_BRANCH to master"
           fi
 
       - name: Setup Node.js
@@ -41,12 +62,23 @@ jobs:
       - name: Extract and validate version format
         id: extract-version
         run: |
-          INPUT_VERSION="${{ github.event.inputs.version }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_VERSION="${{ github.event.inputs.version }}"
+          else
+            # Extract version from PR title if auto-triggered
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            INPUT_VERSION=$(echo "$PR_TITLE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [ -z "$INPUT_VERSION" ]; then
+              echo "::error::Could not extract version from PR title: $PR_TITLE"
+              exit 1
+            fi
+          fi
 
           # Check if version starts with 'v' and extract the version number
           if [[ $INPUT_VERSION =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             VERSION="${BASH_REMATCH[1]}"
             echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
             echo "Extracted version: $VERSION"
           else
             echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
@@ -75,7 +107,7 @@ jobs:
             exit 1
           fi
 
-          echo "New version is higher than current version"
+          echo "✅ New version is higher than current version"
 
       - name: Run linter
         run: npm run lint
@@ -119,17 +151,28 @@ jobs:
       - name: Commit version changes
         run: |
           git add package.json package-lock.json src/manifest.json
-          git commit -m "chore: close version ${{ github.event.inputs.version }}"
+          git commit -m "chore: close version ${{ env.INPUT_VERSION }}"
 
       - name: Create version tag
         run: |
-          git tag -a ${{ github.event.inputs.version }} -m "Version ${{ env.VERSION }}"
+          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}"
 
-      - name: Push changes and tag
+      - name: Push changes and tag to master
         run: |
           # Set the remote URL with the token for authentication
           git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}
 
-          # Push both the commit and the tag
+          # Push both the commit and the tag to master
           git push origin master
-          git push origin ${{ github.event.inputs.version }}
+          git push origin ${{ env.INPUT_VERSION }}
+
+      - name: Create summary
+        run: |
+          echo "## Version ${{ env.INPUT_VERSION }} Closed Successfully! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: ${{ env.INPUT_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: master" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: $(git rev-parse HEAD)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Ready for release workflow!" >> $GITHUB_STEP_SUMMARY

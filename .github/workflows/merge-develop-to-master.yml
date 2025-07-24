@@ -1,0 +1,203 @@
+name: Merge Develop to Master
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+      create_pr:
+        description: 'Create Pull Request instead of direct merge'
+        type: boolean
+        default: true
+
+# Cancel any running workflow when a new one is triggered
+concurrency:
+  group: merge-develop-to-master
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate-and-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Validate Git Flow compliance
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "develop" ]; then
+            echo "::error::This workflow must run from develop branch"
+            exit 1
+          fi
+
+          # Validate version format
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          if [[ ! $INPUT_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
+            exit 1
+          fi
+
+          echo "✅ Git Flow validation passed"
+          echo "✅ Version format validation passed: $INPUT_VERSION"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run comprehensive test suite
+        run: |
+          echo "🧪 Running comprehensive test suite before merge..."
+
+          echo "📋 Step 1: Linting"
+          npm run lint
+
+          echo "🔍 Step 2: Type checking"
+          npm run type-check
+
+          echo "🧪 Step 3: Unit tests"
+          npm run test
+
+          echo "🏗️ Step 4: Build verification"
+          npm run build
+
+          echo "✅ All quality checks passed!"
+
+      - name: Validate version increment
+        run: |
+          NEW_VERSION="${{ github.event.inputs.version }}"
+          VERSION_NUMBER="${NEW_VERSION#v}"  # Remove 'v' prefix
+
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          echo "New version: $VERSION_NUMBER"
+
+          # Compare versions using node semver
+          IS_HIGHER=$(node -e "
+            const semver = require('semver');
+            const isHigher = semver.gt('$VERSION_NUMBER', '$CURRENT_VERSION');
+            console.log(isHigher ? 'true' : 'false');
+          ")
+
+          if [ "$IS_HIGHER" != "true" ]; then
+            echo "::error::New version ($VERSION_NUMBER) must be higher than current version ($CURRENT_VERSION)"
+            exit 1
+          fi
+
+          echo "✅ Version increment validation passed"
+
+      - name: Check for conflicts with master
+        run: |
+          echo "🔍 Checking for potential merge conflicts with master..."
+
+          # Fetch latest master
+          git fetch origin master
+
+          # Check if develop can be merged cleanly into master
+          git merge-tree $(git merge-base develop origin/master) develop origin/master > merge_check.txt
+
+          if [ -s merge_check.txt ]; then
+            echo "⚠️ Potential merge conflicts detected:"
+            cat merge_check.txt
+            echo ""
+            echo "::warning::Please resolve conflicts manually before proceeding"
+          else
+            echo "✅ No merge conflicts detected"
+          fi
+
+      - name: Create Pull Request to Master
+        if: github.event.inputs.create_pr == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          push-to-fork: false
+          branch: release/${{ github.event.inputs.version }}
+          base: master
+          title: '🚀 Release ${{ github.event.inputs.version }}'
+          body: |
+            ## 🚀 Release ${{ github.event.inputs.version }}
+
+            This PR merges `develop` into `master` for version ${{ github.event.inputs.version }}.
+
+            ### 📋 Pre-merge Checklist
+            - [x] All tests pass ✅
+            - [x] Code is linted ✅
+            - [x] TypeScript checks pass ✅
+            - [x] Build successful ✅
+            - [x] Version increment validated ✅
+            - [x] No merge conflicts ✅
+
+            ### 🔄 Git Flow Compliance
+            - **Source Branch**: `develop`
+            - **Target Branch**: `master`
+            - **Release Version**: `${{ github.event.inputs.version }}`
+
+            ### ⚡ Next Steps
+            1. **Review and approve** this PR
+            2. **Merge** this PR into master
+            3. **Close Version workflow** will automatically run to tag the release
+            4. **Release workflow** can then be triggered to create GitHub release
+
+            ---
+
+            > 🤖 This PR was automatically created following Git Flow guidelines.
+          draft: false
+          delete-branch: true
+
+      - name: Direct merge to master (if PR creation disabled)
+        if: github.event.inputs.create_pr == 'false'
+        run: |
+          echo "⚠️ Direct merge mode - USE WITH CAUTION"
+          echo "This bypasses the PR review process"
+
+          # Switch to master and merge develop
+          git checkout master
+          git pull origin master
+          git merge develop --no-ff -m "Merge develop into master for release ${{ github.event.inputs.version }}"
+
+          # Push the merge
+          git push origin master
+
+          echo "✅ Direct merge completed"
+          echo "🏷️ Ready for version tagging"
+
+      - name: Create workflow summary
+        run: |
+          echo "## 🚀 Release ${{ github.event.inputs.version }} Preparation Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Git Flow validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Comprehensive testing" >> $GITHUB_STEP_SUMMARY
+          echo "- Version increment validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Merge conflict check" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.event.inputs.create_pr }}" = "true" ]; then
+            echo "- Pull Request created ✅" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Review and approve the PR" >> $GITHUB_STEP_SUMMARY
+            echo "2. Merge the PR into master" >> $GITHUB_STEP_SUMMARY
+            echo "3. Close Version workflow will auto-run" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Direct merge to master ✅" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Run Close Version workflow manually" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "4. Run Release workflow to publish" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY

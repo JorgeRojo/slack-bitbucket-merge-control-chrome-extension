@@ -26,9 +26,10 @@ jobs:
   sync-issues:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout develop branch
         uses: actions/checkout@v3
         with:
+          ref: develop
           # Use a personal access token to allow the workflow to commit changes
           token: ${{ secrets.PAT_TOKEN || github.token }}
 
@@ -74,7 +75,28 @@ jobs:
 
             return result;
 
-      - name: Commit and push changes
+      - name: Lint and fix modified files
+        run: |
+          # Check if there are any changes in the documentation directory
+          if [[ -n "$(git status --porcelain documentation/)" ]]; then
+            echo "Documentation files were modified"
+            
+            # Check if there are any JS/TS files in documentation directory that need linting
+            JS_TS_FILES=$(find documentation/ -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" 2>/dev/null || true)
+            
+            if [[ -n "$JS_TS_FILES" ]]; then
+              echo "Running lint --fix on JavaScript/TypeScript files in documentation..."
+              echo "$JS_TS_FILES" | xargs npm run lint -- --fix
+              echo "Linting completed"
+            else
+              echo "No JavaScript/TypeScript files found in documentation directory"
+              echo "Skipping ESLint (documentation contains only Markdown files)"
+            fi
+          else
+            echo "No documentation files modified, skipping lint step"
+          fi
+
+      - name: Commit and push changes to develop
         run: |
           # Check if there are any changes to commit
           if [[ -n "$(git status --porcelain)" ]]; then
@@ -85,9 +107,13 @@ jobs:
             # Add all changes, including deletions
             git add -A documentation/
             
-            # Commit and push changes
-            git commit -m "[AUTOMATED] Sync GitHub issues to documentation"
-            git push
+            # Commit and push changes to develop branch
+            git commit -m "[AUTOMATED] Sync GitHub issues to documentation
+
+          Following Git Flow: Documentation changes go to develop branch first"
+            git push origin develop
+            
+            echo "✅ Changes pushed to develop branch following Git Flow"
           else
             echo "No changes to commit"
           fi

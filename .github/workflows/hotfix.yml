@@ -1,0 +1,341 @@
+name: Hotfix Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      hotfix_name:
+        description: 'Hotfix branch name (e.g., critical-security-fix)'
+        required: true
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - create
+          - merge
+          - cherry-pick
+          - cleanup
+      version:
+        description: 'Hotfix version (e.g., v1.0.1) - Required for merge action'
+        required: false
+
+# Cancel any running workflow when a new one is triggered
+concurrency:
+  group: hotfix-${{ github.event.inputs.hotfix_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  hotfix-create:
+    if: github.event.inputs.action == 'create'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Validate Git Flow compliance
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "master" ]; then
+            echo "::error::Hotfix branches can only be created from master branch"
+            exit 1
+          fi
+
+          # Validate hotfix name format
+          HOTFIX_NAME="${{ github.event.inputs.hotfix_name }}"
+          if [[ ! $HOTFIX_NAME =~ ^[a-z0-9-]+$ ]]; then
+            echo "::error::Invalid hotfix name format. Use lowercase letters, numbers, and hyphens only."
+            exit 1
+          fi
+
+          echo "✅ Git Flow validation passed"
+          echo "✅ Hotfix name format validation passed: $HOTFIX_NAME"
+
+      - name: Check if hotfix branch already exists
+        run: |
+          HOTFIX_BRANCH="hotfix/${{ github.event.inputs.hotfix_name }}"
+
+          # Check local branches
+          if git show-ref --verify --quiet refs/heads/$HOTFIX_BRANCH; then
+            echo "::error::Hotfix branch $HOTFIX_BRANCH already exists locally"
+            exit 1
+          fi
+
+          # Check remote branches
+          if git ls-remote --heads origin $HOTFIX_BRANCH | grep -q $HOTFIX_BRANCH; then
+            echo "::error::Hotfix branch $HOTFIX_BRANCH already exists on remote"
+            exit 1
+          fi
+
+          echo "✅ Hotfix branch name is available"
+
+      - name: Create hotfix branch
+        run: |
+          HOTFIX_BRANCH="hotfix/${{ github.event.inputs.hotfix_name }}"
+
+          echo "🔧 Creating hotfix branch: $HOTFIX_BRANCH"
+          git checkout -b $HOTFIX_BRANCH
+
+          echo "📤 Pushing hotfix branch to remote"
+          git push -u origin $HOTFIX_BRANCH
+
+          echo "✅ Hotfix branch created successfully"
+
+      - name: Create summary
+        run: |
+          echo "## 🚨 Hotfix Branch Created!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: \`hotfix/${{ github.event.inputs.hotfix_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Source**: \`master\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Switch to the hotfix branch locally" >> $GITHUB_STEP_SUMMARY
+          echo "2. Implement the critical fix" >> $GITHUB_STEP_SUMMARY
+          echo "3. Test thoroughly" >> $GITHUB_STEP_SUMMARY
+          echo "4. Push changes to the hotfix branch" >> $GITHUB_STEP_SUMMARY
+          echo "5. Run this workflow with 'merge' action" >> $GITHUB_STEP_SUMMARY
+
+  hotfix-merge:
+    if: github.event.inputs.action == 'merge'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate version input
+        run: |
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            echo "::error::Version is required for merge action"
+            exit 1
+          fi
+
+          VERSION="${{ github.event.inputs.version }}"
+          if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: $VERSION. Must follow format v1.0.0"
+            exit 1
+          fi
+
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v3
+        with:
+          ref: hotfix/${{ github.event.inputs.hotfix_name }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run emergency test suite
+        run: |
+          echo "🚨 Running emergency test suite for hotfix..."
+
+          echo "📋 Step 1: Critical linting"
+          npm run lint
+
+          echo "🔍 Step 2: Type checking"
+          npm run type-check
+
+          echo "🧪 Step 3: Full test suite"
+          npm run test
+
+          echo "🏗️ Step 4: Build verification"
+          npm run build
+
+          echo "✅ Emergency tests passed!"
+
+      - name: Create Pull Request to Master
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: hotfix/${{ github.event.inputs.hotfix_name }}
+          base: master
+          title: '🚨 HOTFIX: ${{ github.event.inputs.hotfix_name }} (${{ github.event.inputs.version }})'
+          body: |
+            ## 🚨 Emergency Hotfix
+
+            **Hotfix Branch**: \`hotfix/${{ github.event.inputs.hotfix_name }}\`
+            **Target Version**: \`${{ github.event.inputs.version }}\`
+
+            ### 🔥 Critical Issue
+            This hotfix addresses a critical production issue that requires immediate deployment.
+
+            ### ✅ Emergency Checklist
+            - [x] Critical tests pass ✅
+            - [x] Code is linted ✅
+            - [x] TypeScript checks pass ✅
+            - [x] Build successful ✅
+
+            ### ⚡ Deployment Process
+            1. **Review and approve** this PR immediately
+            2. **Merge** this PR into master
+            3. **Close Version workflow** will auto-run to tag the hotfix
+            4. **Deploy** the hotfix to production
+            5. **Run cherry-pick action** to sync changes to develop
+
+            ### ⚠️ Post-Deployment
+            **CRITICAL**: After deployment, run the hotfix workflow with 'cherry-pick' action to sync changes to develop branch.
+
+            ---
+
+            > 🚨 This is an emergency hotfix following Git Flow guidelines.
+          draft: false
+
+      - name: Create summary
+        run: |
+          echo "## 🚨 Hotfix Ready for Merge!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Hotfix**: \`${{ github.event.inputs.hotfix_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: \`${{ github.event.inputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- Emergency tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Pull Request created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review and approve PR" >> $GITHUB_STEP_SUMMARY
+          echo "2. Merge PR to master" >> $GITHUB_STEP_SUMMARY
+          echo "3. Deploy to production" >> $GITHUB_STEP_SUMMARY
+          echo "4. Run cherry-pick action" >> $GITHUB_STEP_SUMMARY
+
+  hotfix-cherry-pick:
+    if: github.event.inputs.action == 'cherry-pick'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Cherry-pick hotfix commits
+        run: |
+          echo "🍒 Cherry-picking hotfix commits to develop..."
+
+          # Fetch all branches
+          git fetch --all
+
+          # Find commits that are in master but not in develop (recent hotfix commits)
+          echo "🔍 Finding hotfix commits..."
+          HOTFIX_COMMITS=$(git log develop..origin/master --grep="hotfix/${{ github.event.inputs.hotfix_name }}" --pretty=format:"%H" --reverse)
+
+          if [ -z "$HOTFIX_COMMITS" ]; then
+            # If no commits found by grep, get the most recent commits in master that aren't in develop
+            echo "🔍 No commits found by grep, checking recent commits..."
+            HOTFIX_COMMITS=$(git log develop..origin/master --oneline -10 --pretty=format:"%H" --reverse)
+          fi
+
+          if [ -z "$HOTFIX_COMMITS" ]; then
+            echo "::warning::No hotfix commits found to cherry-pick"
+            exit 0
+          fi
+
+          echo "📋 Commits to cherry-pick:"
+          for commit in $HOTFIX_COMMITS; do
+            git log --oneline -1 $commit
+          done
+
+          # Cherry-pick each commit
+          for commit in $HOTFIX_COMMITS; do
+            echo "🍒 Cherry-picking commit: $commit"
+            if ! git cherry-pick $commit; then
+              echo "::error::Cherry-pick failed for commit $commit"
+              echo "Manual resolution required"
+              exit 1
+            fi
+          done
+
+          echo "✅ All commits cherry-picked successfully"
+
+      - name: Push changes to develop
+        run: |
+          echo "📤 Pushing cherry-picked changes to develop..."
+          git push origin develop
+          echo "✅ Changes pushed to develop"
+
+      - name: Create summary
+        run: |
+          echo "## 🍒 Cherry-pick Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Hotfix**: \`${{ github.event.inputs.hotfix_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Target**: \`develop\` branch" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- Hotfix commits cherry-picked to develop" >> $GITHUB_STEP_SUMMARY
+          echo "- Changes pushed to develop branch" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔄 Next Step" >> $GITHUB_STEP_SUMMARY
+          echo "Run cleanup action to delete hotfix branch" >> $GITHUB_STEP_SUMMARY
+
+  hotfix-cleanup:
+    if: github.event.inputs.action == 'cleanup'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Verify hotfix is merged
+        run: |
+          HOTFIX_BRANCH="hotfix/${{ github.event.inputs.hotfix_name }}"
+
+          # Check if hotfix branch exists
+          if ! git ls-remote --heads origin $HOTFIX_BRANCH | grep -q $HOTFIX_BRANCH; then
+            echo "::warning::Hotfix branch $HOTFIX_BRANCH does not exist on remote"
+            exit 0
+          fi
+
+          # Check if hotfix commits are in master
+          git fetch origin $HOTFIX_BRANCH
+          UNMERGED_COMMITS=$(git log master..origin/$HOTFIX_BRANCH --oneline)
+
+          if [ -n "$UNMERGED_COMMITS" ]; then
+            echo "::error::Hotfix branch has unmerged commits:"
+            echo "$UNMERGED_COMMITS"
+            echo "Please merge the hotfix first"
+            exit 1
+          fi
+
+          echo "✅ Hotfix is fully merged"
+
+      - name: Delete hotfix branch
+        run: |
+          HOTFIX_BRANCH="hotfix/${{ github.event.inputs.hotfix_name }}"
+
+          echo "🗑️ Deleting hotfix branch: $HOTFIX_BRANCH"
+
+          # Delete remote branch
+          git push origin --delete $HOTFIX_BRANCH
+
+          # Delete local branch if it exists
+          if git show-ref --verify --quiet refs/heads/$HOTFIX_BRANCH; then
+            git branch -D $HOTFIX_BRANCH
+          fi
+
+          echo "✅ Hotfix branch deleted successfully"
+
+      - name: Create summary
+        run: |
+          echo "## 🗑️ Hotfix Cleanup Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Hotfix**: \`${{ github.event.inputs.hotfix_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- Verified hotfix is merged" >> $GITHUB_STEP_SUMMARY
+          echo "- Deleted hotfix branch" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **Hotfix lifecycle complete!**" >> $GITHUB_STEP_SUMMARY

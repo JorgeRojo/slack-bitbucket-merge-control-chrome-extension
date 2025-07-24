@@ -1,49 +1,249 @@
 # GitHub Actions Workflows
 
-This directory contains GitHub Actions workflows that automate various tasks for the Slack-Bitbucket Merge Control Chrome Extension project.
+This directory contains GitHub Actions workflows that automate various tasks for the Slack-Bitbucket Merge Control Chrome Extension project, following Git Flow guidelines.
 
-## Bug Tracking Synchronization
+## 🔄 Git Flow Workflows
 
-These workflows synchronize bug reports between GitHub Issues and the project's bug documentation system.
+These workflows implement and enforce the Git Flow branching strategy as defined in `documentation/GIT_FLOW.md`.
 
-### 1. `sync-issues-to-bugs.yml`
+### 1. `merge-develop-to-master.yml` 🚀
 
-This workflow creates a bug documentation file when a new GitHub Issue with the "bug" label is created.
+**Purpose**: Controlled merge from develop to master for releases
 
-**Trigger**: When an issue is opened or labeled with "bug"
+**Trigger**: Manual dispatch with version input
+
+**Git Flow Compliance**:
+
+- Validates execution from develop branch
+- Runs comprehensive test suite
+- Creates Pull Request to master (recommended)
+- Supports direct merge (use with caution)
+
+**Usage**:
+
+```bash
+# Via GitHub UI: Actions → Merge Develop to Master
+# Input: version (e.g., v1.0.0)
+# Option: Create PR (recommended) or direct merge
+```
+
+### 2. `close-version.yml` 🏷️
+
+**Purpose**: Tag and close version after merge to master
+
+**Triggers**:
+
+- Manual dispatch with version input
+- Auto-trigger after PR merge from develop/release to master
+
+**Git Flow Compliance**:
+
+- Only executes on master branch
+- Validates merge source (develop or release branches only)
+- Creates version tags on master
+- Updates package.json and manifest.json
+
+**Usage**:
+
+```bash
+# Automatically runs after develop→master merge
+# Or manually: Actions → Close Version
+# Input: version (e.g., v1.0.0)
+```
+
+### 3. `hotfix.yml` 🚨
+
+**Purpose**: Complete hotfix lifecycle management
 
 **Actions**:
 
-- Extracts information from the issue (component, severity, steps to reproduce, etc.)
-- Creates a new bug documentation file in `documentation/bugs/` with the next available ID
-- Updates the bug index in `documentation/bugs/README.md`
-- Adds a comment to the issue with a link to the new bug documentation file
+- `create`: Create hotfix branch from master
+- `merge`: Create PR to merge hotfix to master
+- `cherry-pick`: Apply hotfix changes to develop
+- `cleanup`: Delete hotfix branch after completion
 
-### 2. `sync-bugs-to-issues.yml`
+**Git Flow Compliance**:
 
-This workflow creates a GitHub Issue when a new bug documentation file is added to the repository.
+- Hotfix branches created only from master
+- Emergency testing before merge
+- Automatic cherry-pick to develop
+- Proper branch cleanup
 
-**Trigger**: When a file matching `documentation/bugs/[0-9]*.md` is pushed to the master branch
+**Usage**:
+
+```bash
+# 1. Create hotfix
+Actions → Hotfix Workflow → create
+Input: hotfix_name (e.g., critical-security-fix)
+
+# 2. After implementing fix
+Actions → Hotfix Workflow → merge
+Input: hotfix_name, version (e.g., v1.0.1)
+
+# 3. After merge and deployment
+Actions → Hotfix Workflow → cherry-pick
+Input: hotfix_name
+
+# 4. Final cleanup
+Actions → Hotfix Workflow → cleanup
+Input: hotfix_name
+```
+
+### 4. `release.yml` 📦
+
+**Purpose**: Create GitHub release from tagged version
+
+**Trigger**: Manual dispatch
+
+**Git Flow Compliance**:
+
+- Only executes from master branch
+- Validates tag exists on master
+- Comprehensive release validation
+
+**Usage**:
+
+```bash
+# After version is tagged: Actions → Build and Release Extension
+```
+
+## 📋 Documentation Workflows
+
+### 5. `sync-github-issues.yml` 📝
+
+**Purpose**: Sync GitHub issues to documentation
+
+**Triggers**:
+
+- Issue events (opened, closed, labeled)
+- Daily schedule (midnight UTC)
+- Manual dispatch
+
+**Git Flow Compliance**:
+
+- Commits changes to develop branch
+- Follows proper branching strategy
+
+### 6. `setup-branch-protection.yml` 🔒
+
+**Purpose**: Configure branch protection rules
 
 **Actions**:
 
-- Extracts information from the bug documentation file
-- Creates a new GitHub Issue with appropriate labels
-- Updates the bug documentation file with a link to the new issue
+- `setup-all`: Configure both master and develop
+- `setup-master`: Configure master branch only
+- `setup-develop`: Configure develop branch only
+- `remove-all`: Remove all protections
+- `status`: Check current protection status
 
-## Setup Requirements
+**Protection Rules**:
 
-For these workflows to function properly, you need to:
+**Master Branch**:
 
-1. Create a Personal Access Token (PAT) with `repo` permissions
-2. Add it as a repository secret named `PAT_TOKEN`
+- Required status checks (strict)
+- Required approving reviews: 1
+- Dismiss stale reviews: Yes
+- Enforce for admins: Yes
+- Allow force pushes: No
+- Allow deletions: No
+- Require conversation resolution: Yes
 
-To create a PAT and add it as a secret:
+**Develop Branch**:
 
-1. Go to GitHub → Settings → Developer settings → Personal access tokens → Generate new token
-2. Select the `repo` scope
-3. Copy the generated token
-4. Go to your repository → Settings → Secrets → New repository secret
-5. Name: `PAT_TOKEN`
-6. Value: Paste the token you copied
-7. Click "Add secret"
+- Required status checks (strict)
+- Required approving reviews: 1
+- Allow force pushes: Yes (for maintainers)
+- Less restrictive than master
+
+## 🔄 Workflow Dependencies
+
+```mermaid
+graph TD
+    A[Feature Development] --> B[merge-develop-to-master.yml]
+    B --> C[close-version.yml]
+    C --> D[release.yml]
+
+    E[Production Issue] --> F[hotfix.yml create]
+    F --> G[hotfix.yml merge]
+    G --> H[close-version.yml]
+    H --> I[release.yml]
+    I --> J[hotfix.yml cherry-pick]
+    J --> K[hotfix.yml cleanup]
+
+    L[Issues/Documentation] --> M[sync-github-issues.yml]
+    M --> N[develop branch]
+```
+
+## 📋 Git Flow Process
+
+### Standard Release Process
+
+1. **Development**: Work on feature branches from develop
+2. **Integration**: Merge features to develop via PR
+3. **Release Preparation**: Run `merge-develop-to-master.yml`
+4. **Version Closing**: `close-version.yml` runs automatically
+5. **Release**: Run `release.yml` to publish
+
+### Hotfix Process
+
+1. **Create**: `hotfix.yml` with `create` action
+2. **Develop**: Implement fix on hotfix branch
+3. **Merge**: `hotfix.yml` with `merge` action
+4. **Deploy**: Deploy hotfix to production
+5. **Sync**: `hotfix.yml` with `cherry-pick` action
+6. **Cleanup**: `hotfix.yml` with `cleanup` action
+
+## 🛡️ Branch Protection
+
+Run `setup-branch-protection.yml` to configure:
+
+- Master branch: Highly protected, only accepts from develop/hotfix
+- Develop branch: Protected but allows maintainer force pushes
+- Enforces Git Flow rules automatically
+
+## 📚 Documentation
+
+For detailed Git Flow guidelines, see:
+
+- `documentation/GIT_FLOW.md` - Complete Git Flow documentation
+- `documentation/CONTRIBUTING.md` - Contribution guidelines
+- `documentation/VERSION_RELEASE_PROCESS.md` - Release process details
+
+## 🔧 Setup Requirements
+
+For workflows to function properly:
+
+1. **Personal Access Token (PAT)**:
+   - Create PAT with `repo` permissions
+   - Add as repository secret: `PAT_TOKEN`
+
+2. **Branch Protection** (recommended):
+   - Run `setup-branch-protection.yml` with `setup-all` action
+
+3. **Repository Settings**:
+   - Enable Actions in repository settings
+   - Allow GitHub Actions to create and approve pull requests
+
+## 🚨 Emergency Procedures
+
+### Critical Production Issue
+
+1. Run `hotfix.yml` → `create`
+2. Implement fix on hotfix branch
+3. Run `hotfix.yml` → `merge`
+4. Review and merge PR immediately
+5. Deploy to production
+6. Run `hotfix.yml` → `cherry-pick`
+7. Run `hotfix.yml` → `cleanup`
+
+### Rollback
+
+If hotfix causes issues:
+
+1. Revert merge commit on master
+2. Deploy reverted version
+3. Create new hotfix with proper solution
+
+---
+
+> 🤖 All workflows follow Git Flow guidelines and maintain code quality through automated testing and validation.
