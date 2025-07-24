@@ -21,3 +21,8 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# documentation
+documentation/bugs
+documentation/features
+documentation/ISSUES_TRACKING.md

@@ -274,10 +274,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       {}
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result1).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(mockStorage.local.set).toHaveBeenCalled();
@@ -287,10 +287,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       {}
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result2).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
   });
 
@@ -304,10 +304,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       {}
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(mockStorage.local.set).toHaveBeenCalled();
@@ -353,17 +353,17 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     mockStorage.local.set.mockClear();
 
-    const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
+    const mockSendResponse = vi.fn(); // Add a mock for sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
-      mockSendResponse // Pasamos el mock como tercer argumento
+      mockSendResponse // Pass the mock as third argument
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(global.fetch).toHaveBeenCalled();
@@ -378,10 +378,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result = messageHandler({ action: MESSAGE_ACTIONS.RECONNECT_SLACK }, {});
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
   });
 
@@ -393,10 +393,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const sender = { tab: { id: 123 } };
     const result = messageHandler({ action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED }, sender);
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
   });
 
@@ -437,10 +437,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     const result = messageHandler({ action: MESSAGE_ACTIONS.RECONNECT_SLACK }, {});
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(Logger.log).toBeDefined();
@@ -790,11 +790,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       json: () => Promise.resolve({ ok: false, error: 'invalid_auth' }),
     });
 
-    const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
+    const mockSendResponse = vi.fn(); // Add a mock for sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES },
       {},
-      mockSendResponse // Pasamos el mock como tercer argumento
+      mockSendResponse // Pass the mock as third argument
     );
 
     await result;
@@ -808,20 +808,20 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     mockAction.setIcon.mockClear();
 
-    const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
+    const mockSendResponse = vi.fn(); // Add a mock for sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES },
       {},
-      mockSendResponse // Pasamos el mock como tercer argumento
+      mockSendResponse // Pass the mock as third argument
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    // No esperamos que se llame a setIcon ya que el test puede no llegar a ese punto
+    // We do not expect setIcon to be called as the test may not reach that point
   });
 
   test('should handle missing configuration', async () => {
@@ -832,20 +832,20 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     mockAction.setIcon.mockClear();
 
-    const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
+    const mockSendResponse = vi.fn(); // Add a mock for sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES },
       {},
-      mockSendResponse // Pasamos el mock como tercer argumento
+      mockSendResponse // Pass the mock as third argument
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    // No esperamos que se llame a setIcon ya que el test puede no llegar a ese punto
+    // We do not expect setIcon to be called as the test may not reach that point
     mockStorage.sync.get = originalGet;
   });
 
@@ -862,7 +862,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     (global.fetch as Mock).mockClear();
 
-    // Forzamos una llamada a fetch
+    // Force a fetch call
     (global.fetch as Mock).mockImplementationOnce(() => {
       return Promise.resolve({
         ok: true,
@@ -875,13 +875,13 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       {}
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    // No esperamos que se llame a fetch ya que el test puede no llegar a ese punto
+    // We do not expect fetch to be called as the test may not reach that point
   });
 
   test('should handle new disallowed phrase "not merge anything"', async () => {
@@ -939,11 +939,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     mockStorage.local.set.mockClear();
 
-    // Configuramos el mock para capturar la llamada a set
+    // Configure the mock to capture the set call
     mockStorage.local.set.mockImplementation(data => {
-      // Verificamos que se está guardando la información correcta
+      // Verify that the correct information is being saved
       if (data.messages && Array.isArray(data.messages)) {
-        // Simulamos que la operación fue exitosa
+        // Simulate that the operation was successful
         return Promise.resolve();
       }
       return Promise.resolve();
@@ -954,15 +954,15 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       {}
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 50));
 
     expect(mockStorage.local.set).toHaveBeenCalled();
 
-    // No verificamos setCall ya que puede no estar definido debido a la naturaleza asíncrona
+    // We do not verify setCall as it may not be defined due to async nature
   });
 
   test('should handle Slack message text cleaning through message processing', async () => {
@@ -1005,11 +1005,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     mockStorage.local.set.mockClear();
 
-    // Configuramos el mock para capturar la llamada a set
+    // Configure the mock to capture the set call
     mockStorage.local.set.mockImplementation(data => {
-      // Verificamos que se está guardando la información correcta
+      // Verify that the correct information is being saved
       if (data.messages && Array.isArray(data.messages)) {
-        // Simulamos que la operación fue exitosa
+        // Simulate that the operation was successful
         return Promise.resolve();
       }
       return Promise.resolve();
@@ -1020,15 +1020,15 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       {}
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 50));
 
     expect(mockStorage.local.set).toHaveBeenCalled();
 
-    // No verificamos setCall ya que puede no estar definido debido a la naturaleza asíncrona
+    // We do not verify setCall as it may not be defined due to async nature
   });
 
   test('should handle storage operations correctly', async () => {
@@ -1036,11 +1036,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     mockStorage.local.set.mockClear();
 
-    const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
+    const mockSendResponse = vi.fn(); // Add a mock for sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
-      mockSendResponse // Pasamos el mock como tercer argumento
+      mockSendResponse // Pass the mock as third argument
     );
 
     await result;
@@ -1052,11 +1052,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     mockAction.setIcon.mockClear();
 
-    const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
+    const mockSendResponse = vi.fn(); // Add a mock for sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
-      mockSendResponse // Pasamos el mock como tercer argumento
+      mockSendResponse // Pass the mock as third argument
     );
 
     await result;
@@ -1075,10 +1075,10 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       { tab: { id: 123 } }
     );
 
-    // El manejador devuelve true, no una promesa
+    // Handler returns true, not a promise
     expect(result).toBe(true);
 
-    // Esperamos a que se completen las operaciones asíncronas
+    // Wait for async operations to complete
     await new Promise(resolve => setTimeout(resolve, 10));
   });
 

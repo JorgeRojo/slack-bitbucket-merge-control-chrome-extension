@@ -6,20 +6,20 @@ import pluginImport from 'eslint-plugin-import';
 import pluginPrettier from 'eslint-plugin-prettier';
 import globals from 'globals';
 
-// Reglas compartidas para ordenar imports
+// Shared rules for import ordering
 const importOrderRules = {
   'import/order': [
     'error',
     {
       groups: [
-        'builtin', // Módulos integrados de Node.js como 'fs', 'path', etc.
-        'external', // Paquetes npm
-        'internal', // Imports con alias como '@src/'
-        'parent', // Imports que comienzan con '..'
-        'sibling', // Imports que comienzan con './'
-        'index', // Imports del mismo directorio
-        'object', // Imports de objetos
-        'type', // Imports de tipos
+        'builtin', // Built-in Node.js modules like 'fs', 'path', etc.
+        'external', // npm packages
+        'internal', // Imports with aliases like '@src/'
+        'parent', // Imports that start with '..'
+        'sibling', // Imports that start with './'
+        'index', // Imports from the same directory
+        'object', // Object imports
+        'type', // Type imports
       ],
       pathGroups: [
         {
@@ -43,8 +43,8 @@ const importOrderRules = {
   'sort-imports': [
     'error',
     {
-      ignoreDeclarationSort: true, // Ignoramos esto porque lo maneja import/order
-      ignoreMemberSort: false, // Ordenar miembros en imports con llaves
+      ignoreDeclarationSort: true, // We ignore this because it's handled by import/order
+      ignoreMemberSort: false, // Sort members in imports with braces
     },
   ],
 };
@@ -64,7 +64,7 @@ export default [
       '*.temp',
     ],
   },
-  // Configuración para archivos JavaScript
+  // Configuration for JavaScript files
   {
     files: ['**/*.js', '**/*.cjs', '**/*.mjs'],
     languageOptions: {
@@ -88,7 +88,7 @@ export default [
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
-  // Configuración para archivos TypeScript
+  // Configuration for TypeScript files
   {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
@@ -114,9 +114,9 @@ export default [
       ...configPrettier.rules,
       ...importOrderRules,
       'prettier/prettier': 'error',
-      // Desactivamos la regla nativa de ESLint para variables no utilizadas
+      // Disable the native ESLint rule for unused variables
       'no-unused-vars': 'off',
-      // Activamos la regla de TypeScript para variables y parámetros no utilizados
+      // Enable the TypeScript rule for unused variables and parameters
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -130,7 +130,7 @@ export default [
       ],
     },
   },
-  // Configuración específica para archivos de prueba
+  // Specific configuration for test files
   {
     files: ['**/*.test.ts', '**/*.test.js', '**/tests/**/*.ts', '**/tests/**/*.js'],
     languageOptions: {

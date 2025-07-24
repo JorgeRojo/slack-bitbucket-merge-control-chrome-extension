@@ -40,7 +40,7 @@ describe('NavLinks Component', () => {
     mockRuntime.getURL = vi.fn((path: string) => `chrome-extension://extension-id${path}`);
     window.open = vi.fn();
 
-    // Crear mocks para los elementos del shadow DOM
+    // Create mocks for shadow DOM elements
     mockOptionsLink = {
       textContent: 'Options',
       addEventListener: vi.fn((event, handler) => {
@@ -153,7 +153,7 @@ describe('NavLinks Component', () => {
   });
 
   test('should apply custom id and class attributes', async () => {
-    // Actualizar los atributos del contenedor
+    // Update container attributes
     const container = mockShadowRoot.querySelector('div');
     container.id = 'custom-id';
     container.className = 'custom-class';
@@ -172,7 +172,7 @@ describe('NavLinks Component', () => {
   test('should open options page via URL when mockRuntime.openOptionsPage is not available', async () => {
     mockRuntime.openOptionsPage = undefined as any;
 
-    // Necesitamos reinicializar los event listeners
+    // We need to reinitialize the event listeners
     navLinks.addEventListeners();
 
     const optionsLink = mockShadowRoot.querySelector('#options-link');
@@ -191,10 +191,10 @@ describe('NavLinks Component', () => {
   });
 
   test('should handle missing links gracefully', async () => {
-    // Modificar el mock para simular que no se encuentran los enlaces
+    // Modify the mock to simulate that links are not found
     mockShadowRoot.querySelector.mockImplementation(() => null);
 
-    // Verificar que no se lance ninguna excepción
+    // Verify that no exception is thrown
     expect(() => {
       navLinks.addEventListeners();
     }).not.toThrow();

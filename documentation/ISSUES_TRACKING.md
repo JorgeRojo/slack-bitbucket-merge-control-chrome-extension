@@ -4,15 +4,16 @@ This directory contains documentation for bugs and features in the Slack-Bitbuck
 
 ## Open Bug List
 
-| ID | Title | Component | Severity | Date Reported |
-| -- | ----- | --------- | -------- | ------------- |
+| ID  | Title | Component | Severity | Date Reported |
+| --- | ----- | --------- | -------- | ------------- |
+
 <!-- No bugs yet -->
 
 ## Open Feature List
 
-| ID | Title | Component | Priority | Date Requested |
-| -- | ----- | --------- | -------- | -------------- |
-| [001](./features/001-clean-and-translate-code-comments.md) | Clean and translate code comments | * | Medium | 2025-07-24 |
+| ID                                                         | Title                             | Component | Priority | Date Requested |
+| ---------------------------------------------------------- | --------------------------------- | --------- | -------- | -------------- |
+| [001](./features/001-clean-and-translate-code-comments.md) | Clean and translate code comments | \*        | Medium   | 2025-07-24     |
 
 ## How to Add a New Issue
 
@@ -87,12 +88,14 @@ Any additional context or information
 ## Severity/Priority Levels
 
 ### Severity (for bugs)
+
 - **Critical**: Application crashes, data loss, security vulnerability
 - **High**: Major functionality broken, no workaround available
 - **Medium**: Functionality works but with issues, workaround available
 - **Low**: Minor issues, cosmetic problems, edge cases
 
 ### Priority (for features)
+
 - **High**: Core functionality, needed for next release
 - **Medium**: Important but not critical, planned for upcoming releases
 - **Low**: Nice to have, may be implemented in future releases

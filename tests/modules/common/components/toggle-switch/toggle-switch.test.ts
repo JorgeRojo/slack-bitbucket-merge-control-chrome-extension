@@ -155,14 +155,14 @@ describe('ToggleSwitch Component', () => {
     const changeEvent = new Event('change');
     Object.defineProperty(changeEvent, 'target', { value: { checked: true } });
 
-    // Simular el evento change directamente
+    // Simulate the change event directly
     if (input.changeHandler) {
       input.changeHandler(changeEvent);
 
-      // Verificar que se llamó a setAttribute
+      // Verify that setAttribute was called
       expect(toggleSwitch.setAttribute).toHaveBeenCalledWith('checked', '');
     } else {
-      // Si no hay changeHandler, marcamos el test como pasado manualmente
+      // If there is no changeHandler, we mark the test as passed manually
       expect(true).toBe(true);
     }
   });
@@ -172,32 +172,32 @@ describe('ToggleSwitch Component', () => {
     const changeEvent = new Event('change');
     Object.defineProperty(changeEvent, 'target', { value: { checked: true } });
 
-    // Crear un CustomEvent para simular el evento toggle
+    // Create a CustomEvent to simulate the toggle event
     const toggleEvent = new CustomEvent('toggle', {
       bubbles: true,
       composed: true,
       detail: { checked: true },
     });
 
-    // Simular el evento change directamente
+    // Simulate the change event directly
     if (input.changeHandler) {
       input.changeHandler(changeEvent);
 
-      // Simular manualmente la llamada a dispatchEvent
+      // Manually simulate the dispatchEvent call
       toggleSwitch.dispatchEvent(toggleEvent);
 
-      // Verificar que se llamó a dispatchEvent
+      // Verify that dispatchEvent was called
       expect(toggleSwitch.dispatchEvent).toHaveBeenCalled();
       expect(toggleSwitch.dispatchEvent.mock.calls[0][0].type).toBe('toggle');
       expect(toggleSwitch.dispatchEvent.mock.calls[0][0].detail.checked).toBe(true);
     } else {
-      // Si no hay changeHandler, marcamos el test como pasado manualmente
+      // If there is no changeHandler, we mark the test as passed manually
       expect(true).toBe(true);
     }
   });
 
   test('should update when checked attribute changes', async () => {
-    // Simular el cambio de atributo
+    // Simulate the attribute change
     toggleSwitch.attributeChangedCallback('checked', null, '');
 
     const input = mockShadowRoot.querySelector('input');
@@ -205,7 +205,7 @@ describe('ToggleSwitch Component', () => {
   });
 
   test('should update when disabled attribute changes', async () => {
-    // Simular el cambio de atributo
+    // Simulate the attribute change
     toggleSwitch.attributeChangedCallback('disabled', null, '');
 
     const input = mockShadowRoot.querySelector('input');
@@ -215,7 +215,7 @@ describe('ToggleSwitch Component', () => {
   test('should update when label attribute changes', async () => {
     const newLabel = 'New Label';
 
-    // Simular el cambio de atributo
+    // Simulate the attribute change
     toggleSwitch.attributeChangedCallback('label', null, newLabel);
 
     const label = mockShadowRoot.querySelector('.switch-label');
