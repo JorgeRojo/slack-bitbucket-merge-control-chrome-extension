@@ -7,6 +7,11 @@ on:
     paths:
       - 'documentation/bugs/[0-9]*.md'
 
+# Define los permisos necesarios para el GITHUB_TOKEN
+permissions:
+  contents: write  # Para hacer push de cambios
+  issues: write    # Para crear issues
+
 jobs:
   sync-bugs:
     runs-on: ubuntu-latest

@@ -4,6 +4,11 @@ on:
   issues:
     types: [opened, labeled]
 
+# Define los permisos necesarios para el GITHUB_TOKEN
+permissions:
+  contents: write  # Para hacer push de cambios
+  issues: write    # Para comentar en issues
+
 jobs:
   sync-to-bug-files:
     runs-on: ubuntu-latest

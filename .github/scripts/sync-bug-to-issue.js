@@ -71,16 +71,31 @@ ${expected}
 
 ${additionalContext ? `### Additional Context\n${additionalContext}` : ''}`;
   
-  // Create the GitHub issue
-  const issue = await github.rest.issues.create({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    title: `Bug #${bugId}: ${title}`,
-    body: body,
-    labels: ['bug', `severity:${severity.toLowerCase()}`]
-  });
-  
-  console.log(`Created issue #${issue.data.number} for bug #${bugId}`);
+  let issue;
+  try {
+    // Create the GitHub issue
+    issue = await github.rest.issues.create({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      title: `Bug #${bugId}: ${title}`,
+      body: body,
+      labels: ['bug', `severity:${severity.toLowerCase()}`]
+    });
+    
+    console.log(`Created issue #${issue.data.number} for bug #${bugId}`);
+  } catch (error) {
+    console.log(`Error creating issue for bug #${bugId}: ${error.message}`);
+    if (error.status === 403) {
+      console.log('This is likely due to permission issues. Add the following to your workflow file:');
+      console.log(`
+permissions:
+  contents: write  # For repository operations
+  issues: write    # For issue operations
+      `);
+    }
+    core.setFailed(`Failed to create issue: ${error.message}`);
+    throw error;
+  }
   
   // Update the bug file to include the issue link
   const updatedContent = content.replace(
@@ -106,6 +121,8 @@ ${additionalContext ? `### Additional Context\n${additionalContext}` : ''}`;
     await exec.exec('git', ['commit', '-m', `[AUTOMATED] Link bug #${bugId} to GitHub issue #${issue.data.number}`]);
     await exec.exec('git', ['push']);
   } catch (error) {
+    console.log(`Warning: Could not push changes: ${error.message}`);
+    console.log('The issue was still created successfully, but the bug file was not updated with the issue link.');
     core.setFailed(`Failed to push changes: ${error.message}`);
     throw error;
   }

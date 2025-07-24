@@ -151,13 +151,30 @@ ${additionalContext ? `## Additional Context\n${additionalContext}` : ''}
     await exec.exec('git', ['commit', '-m', commitMessage]);
     await exec.exec('git', ['push']);
     
-    // Add a comment to the issue linking to the bug file
-    await github.rest.issues.createComment({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issue_number: issue.number,
-      body: `I've created a bug documentation file for this issue: [Bug #${nextId}](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/${bugFilePath})`
-    });
+    // Try to add a comment to the issue linking to the bug file
+    try {
+      await github.rest.issues.createComment({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: issue.number,
+        body: `I've created a bug documentation file for this issue: [Bug #${nextId}](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/${bugFilePath})`
+      });
+      console.log(`Added comment to issue #${issue.number}`);
+    } catch (commentError) {
+      // If we can't add a comment, log the error but don't fail the workflow
+      console.log(`Warning: Could not add comment to issue #${issue.number}: ${commentError.message}`);
+      console.log('This is likely due to permission issues. The bug file was still created successfully.');
+      
+      // If this is a permissions error, suggest adding the necessary permissions
+      if (commentError.status === 403) {
+        console.log('To fix this, add the following to your workflow file:');
+        console.log(`
+permissions:
+  contents: write  # For repository operations
+  issues: write    # For issue operations
+        `);
+      }
+    }
   } catch (error) {
     core.setFailed(`Failed to push changes: ${error.message}`);
     throw error;
