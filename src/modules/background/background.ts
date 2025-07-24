@@ -1,4 +1,14 @@
 import {
+  cleanSlackMessageText,
+  determineMergeStatus,
+  getPhrasesFromStorage,
+  handleSlackApiError,
+  processAndStoreMessage,
+  updateAppStatus,
+  updateExtensionIcon,
+  updateIconBasedOnCurrentMessages,
+} from '@src/modules/background/utils/background-utils';
+import {
   APP_STATUS,
   CONTENT_SCRIPT_ID,
   DEFAULT_ALLOWED_PHRASES,
@@ -28,17 +38,6 @@ import {
 } from '@src/modules/common/types/slack';
 import { Logger } from '@src/modules/common/utils/Logger';
 import { toErrorType } from '@src/modules/common/utils/type-helpers';
-
-import {
-  cleanSlackMessageText,
-  determineMergeStatus,
-  getPhrasesFromStorage,
-  handleSlackApiError,
-  processAndStoreMessage,
-  updateAppStatus,
-  updateExtensionIcon,
-  updateIconBasedOnCurrentMessages,
-} from './utils/background-utils';
 
 let bitbucketTabId: number | null = null;
 let rtmWebSocket: WebSocket | null = null;

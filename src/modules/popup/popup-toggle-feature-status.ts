@@ -17,7 +17,12 @@ export async function initializeToggleFeatureStatus(
   if (!toggleSwitch || !countdownDisplay) return;
 
   const { featureEnabled = true } = await chrome.storage.local.get('featureEnabled');
-  toggleSwitch.setAttribute('checked', featureEnabled ? 'true' : 'false');
+
+  if (featureEnabled) {
+    toggleSwitch.setAttribute('checked', 'checked');
+  } else {
+    toggleSwitch.removeAttribute('checked');
+  }
 
   countdownDisplay.style.display = 'none';
 
