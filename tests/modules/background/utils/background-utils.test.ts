@@ -381,6 +381,7 @@ describe('Background Utils', () => {
         text: 'New message',
         ts: '1234567890',
         user: 'U123',
+        type: 'message',
       };
       await processAndStoreMessage(message);
       expect(mockChrome.storage.local.set).toHaveBeenCalledWith(
@@ -408,6 +409,7 @@ describe('Background Utils', () => {
         text: 'New text for existing message',
         ts: '1234567890',
         user: 'U123',
+        type: 'message',
       };
       await processAndStoreMessage(message);
       const setCalls = mockChrome.storage.local.set.mock.calls.filter(
@@ -433,14 +435,15 @@ describe('Background Utils', () => {
         text: 'New message',
         ts: '1234567891',
         user: 'U123',
+        type: 'message',
       };
       await processAndStoreMessage(newMessage);
       const setCall = mockChrome.storage.local.set.mock.calls.find(
         call => call[0].messages !== undefined
       );
       expect(setCall).toBeDefined();
-      expect(setCall[0].messages[0].ts).toBe('1234567891');
-      expect(setCall[0].messages[1].ts).toBe('1234567890');
+      expect(setCall![0].messages[0].ts).toBe('1234567891');
+      expect(setCall![0].messages[1].ts).toBe('1234567890');
     });
 
     test('should limit the number of messages', async () => {
@@ -460,14 +463,15 @@ describe('Background Utils', () => {
         text: 'New message',
         ts: '9999999999',
         user: 'U123',
+        type: 'message',
       };
       await processAndStoreMessage(newMessage);
       const setCall = mockChrome.storage.local.set.mock.calls.find(
         call => call[0].messages !== undefined
       );
       expect(setCall).toBeDefined();
-      expect(setCall[0].messages.length).toBe(50);
-      expect(setCall[0].messages[0].ts).toBe('9999999999');
+      expect(setCall![0].messages.length).toBe(50);
+      expect(setCall![0].messages[0].ts).toBe('9999999999');
     });
 
     test('should handle invalid messages', async () => {

@@ -27,8 +27,8 @@ describe('ErrorHandler', () => {
       (call: any[]) => call[0] === '[Test]' && call[1] === originalError
     );
     expect(errorCall).toBeDefined();
-    expect(errorCall[1]).toBe(originalError);
-    expect(errorCall[1].stack).toBe(originalStack);
+    expect(errorCall![1]).toBe(originalError);
+    expect(errorCall![1].stack).toBe(originalStack);
   });
 
   test('should work with string errors', () => {
@@ -80,8 +80,8 @@ describe('ErrorHandler', () => {
   });
 
   test('should handle null and undefined errors gracefully', () => {
-    ErrorHandler.handle(null, { component: 'Test' });
-    ErrorHandler.handle(undefined, { component: 'Test' });
+    ErrorHandler.handle(null as any, { component: 'Test' });
+    ErrorHandler.handle(undefined as any, { component: 'Test' });
     expect(console.error).toHaveBeenCalledWith('[Test]', null);
     expect(console.error).toHaveBeenCalledWith('[Test]', undefined);
   });
@@ -93,8 +93,8 @@ describe('ErrorHandler', () => {
     const errorCall = (console.error as Mock).mock.calls.find(
       (call: any[]) => call[0] === '[General]' && call[1] === originalError
     );
-    expect(errorCall[1]).toBe(originalError);
-    expect((errorCall[1] as any).customProperty).toBe('custom value');
+    expect(errorCall![1]).toBe(originalError);
+    expect((errorCall![1] as any).customProperty).toBe('custom value');
     expect(result.error).toBe(originalError);
   });
 

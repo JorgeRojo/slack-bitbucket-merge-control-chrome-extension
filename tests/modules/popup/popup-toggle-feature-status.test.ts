@@ -207,7 +207,7 @@ describe('popup-toggle-feature-status', () => {
 
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
 
-    const messageListener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const messageListener = (chrome.runtime.onMessage.addListener as any).mock.calls[0][0];
     messageListener({
       action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
       payload: { timeLeft: 65000 }, // 1 minute and 5 seconds
@@ -348,7 +348,7 @@ describe('popup-toggle-feature-status', () => {
 
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
 
-    const messageListener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const messageListener = (chrome.runtime.onMessage.addListener as any).mock.calls[0][0];
 
     messageListener({
       action: MESSAGE_ACTIONS.UPDATE_COUNTDOWN_DISPLAY,
@@ -381,7 +381,7 @@ describe('popup-toggle-feature-status', () => {
 
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
 
-    const messageListener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const messageListener = (chrome.runtime.onMessage.addListener as any).mock.calls[0][0];
     messageListener({
       action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED,
     });
@@ -405,7 +405,7 @@ describe('popup-toggle-feature-status', () => {
 
     await initializeToggleFeatureStatus(mockToggleSwitch as any);
 
-    const messageListener = chrome.runtime.onMessage.addListener.mock.calls[0][0];
+    const messageListener = (chrome.runtime.onMessage.addListener as any).mock.calls[0][0];
 
     const testCases = [
       { timeLeft: 1000, expected: '0:01' },

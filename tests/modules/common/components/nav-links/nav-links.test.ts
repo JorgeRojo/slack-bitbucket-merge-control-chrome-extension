@@ -37,7 +37,7 @@ describe('NavLinks Component', () => {
     originalWindowOpen = window.open;
 
     mockRuntime.openOptionsPage = vi.fn();
-    mockRuntime.getURL = vi.fn(path => `chrome-extension://extension-id${path}`);
+    mockRuntime.getURL = vi.fn((path: string) => `chrome-extension://extension-id${path}`);
     window.open = vi.fn();
 
     // Crear mocks para los elementos del shadow DOM
@@ -103,16 +103,16 @@ describe('NavLinks Component', () => {
         if (optionsLink) {
           optionsLink.addEventListener('click', () => {
             if (mockRuntime.openOptionsPage) {
-              mockRuntime.openOptionsPage();
+              (mockRuntime.openOptionsPage as () => void)();
             } else {
-              window.open(mockRuntime.getURL('/options.html'));
+              window.open((mockRuntime.getURL as (path: string) => string)('/options.html'));
             }
           });
         }
 
         if (helpLink) {
           helpLink.addEventListener('click', () => {
-            window.open(mockRuntime.getURL('/help.html'));
+            window.open((mockRuntime.getURL as (path: string) => string)('/help.html'));
           });
         }
       }),

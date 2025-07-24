@@ -121,7 +121,9 @@ describe('ToggleSwitch Component', () => {
 
   test('should initialize with checked attribute', async () => {
     mockInput.checked = true;
-    toggleSwitch.hasAttribute.mockImplementation(attr => (attr === 'checked' ? true : false));
+    toggleSwitch.hasAttribute.mockImplementation((attr: string) =>
+      attr === 'checked' ? true : false
+    );
 
     const input = mockShadowRoot.querySelector('input');
     expect(input.checked).toBe(true);
@@ -129,7 +131,9 @@ describe('ToggleSwitch Component', () => {
 
   test('should initialize with disabled attribute', async () => {
     mockInput.disabled = true;
-    toggleSwitch.hasAttribute.mockImplementation(attr => (attr === 'disabled' ? true : false));
+    toggleSwitch.hasAttribute.mockImplementation((attr: string) =>
+      attr === 'disabled' ? true : false
+    );
 
     const input = mockShadowRoot.querySelector('input');
     expect(input.disabled).toBe(true);
@@ -138,7 +142,9 @@ describe('ToggleSwitch Component', () => {
   test('should initialize with label attribute', async () => {
     const testLabel = 'Test Label';
     mockLabel.textContent = testLabel;
-    toggleSwitch.getAttribute.mockImplementation(attr => (attr === 'label' ? testLabel : null));
+    toggleSwitch.getAttribute.mockImplementation((attr: string) =>
+      attr === 'label' ? testLabel : null
+    );
 
     const label = mockShadowRoot.querySelector('.switch-label');
     expect(label.textContent).toBe(testLabel);

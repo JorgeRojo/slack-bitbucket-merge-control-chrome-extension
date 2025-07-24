@@ -521,7 +521,7 @@ describe('popup.js', () => {
 
       const clickHandler = mockOpenOptionsButton.addEventListener.mock.calls.find(
         call => call[0] === 'click'
-      )[1];
+      )![1];
       clickHandler();
 
       expect(mockRuntime.openOptionsPage).toHaveBeenCalled();
@@ -535,7 +535,7 @@ describe('popup.js', () => {
 
       const clickHandler = mockOpenOptionsButton.addEventListener.mock.calls.find(
         call => call[0] === 'click'
-      )[1];
+      )![1];
       clickHandler();
 
       expect(window.open).toHaveBeenCalledWith('options.html');

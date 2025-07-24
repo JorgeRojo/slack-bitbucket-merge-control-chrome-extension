@@ -200,7 +200,7 @@ describe('Options Page', () => {
 
     expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 3000);
 
-    const setTimeoutCallback = (setTimeout as Mock).mock.calls[0][0];
+    const setTimeoutCallback = (setTimeout as unknown as Mock).mock.calls[0][0];
     setTimeoutCallback();
 
     expect(mockElements.status.textContent).toBe('');

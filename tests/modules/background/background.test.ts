@@ -119,7 +119,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     mockPermissions.contains.mockResolvedValue(true);
 
-    mockScripting.registerContentScripts.mockResolvedValue();
+    mockScripting.registerContentScripts.mockResolvedValue([]);
 
     (global.fetch as Mock).mockImplementation((url: string) => {
       if (url.includes('conversations.list')) {
@@ -433,7 +433,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     (Logger.error as Mock).mockClear();
 
-    (global.WebSocket as Mock).mockClear();
+    (global.WebSocket as unknown as Mock).mockClear();
 
     const result = messageHandler({ action: MESSAGE_ACTIONS.RECONNECT_SLACK }, {});
 
@@ -465,7 +465,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     };
 
     // Mock WebSocket constructor
-    (global.WebSocket as Mock).mockImplementation(() => mockWs);
+    (global.WebSocket as unknown as Mock).mockImplementation(() => mockWs);
 
     // Trigger WebSocket connection
     const mockSendResponse = vi.fn();
@@ -863,7 +863,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     (global.fetch as Mock).mockClear();
 
     // Forzamos una llamada a fetch
-    global.fetch.mockImplementationOnce(() => {
+    (global.fetch as Mock).mockImplementationOnce(() => {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ ok: true, messages: [] }),
@@ -1312,7 +1312,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should handle fetch new messages with channel change', async () => {
     // Mock fetch for new channel
-    global.fetch.mockImplementationOnce((url: string) => {
+    (global.fetch as Mock).mockImplementationOnce((url: string) => {
       if (url.includes('conversations.list')) {
         return Promise.resolve({
           ok: true,
@@ -1348,7 +1348,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     expect(mockSendResponse).toHaveBeenCalledWith({ success: true });
 
     // Test with channel not found
-    global.fetch.mockImplementationOnce((url: string) => {
+    (global.fetch as Mock).mockImplementationOnce((url: string) => {
       if (url.includes('conversations.list')) {
         return Promise.resolve({
           ok: true,
@@ -1380,7 +1380,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     // Test with API error
-    global.fetch.mockImplementationOnce(() => {
+    (global.fetch as Mock).mockImplementationOnce(() => {
       return Promise.resolve({
         ok: false,
         json: () =>
@@ -1406,7 +1406,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     // Test with channel change error notification
-    global.fetch.mockImplementationOnce(() => {
+    (global.fetch as Mock).mockImplementationOnce(() => {
       return Promise.reject(new Error('Network error'));
     });
 
