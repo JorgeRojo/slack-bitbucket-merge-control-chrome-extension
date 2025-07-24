@@ -1,9 +1,9 @@
-import { Logger } from '@src/modules/common/utils/logger';
+import { Logger } from '@src/modules/common/utils/Logger';
 import { Mock, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import '@src/modules/common/components/toggle-switch/toggle-switch';
 
-vi.mock('@src/modules/common/utils/logger');
+vi.mock('@src/modules/common/utils/Logger');
 
 // Mock for chrome.runtime.getURL
 if (!global.chrome) {

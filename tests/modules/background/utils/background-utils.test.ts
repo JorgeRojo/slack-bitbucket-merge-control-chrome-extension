@@ -29,22 +29,12 @@ const mockChrome = {
 };
 global.chrome = mockChrome as any;
 
-vi.mock('../../src/utils/logger', () => ({
+vi.mock('@src/modules/common/utils/Logger', () => ({
   Logger: {
     log: vi.fn(),
     error: vi.fn(),
   },
 }));
-vi.mock('../../src/constants', async () => {
-  const actual = await vi.importActual('../../src/constants');
-  return {
-    ...actual,
-    DEFAULT_ALLOWED_PHRASES: ['allow', 'proceed', 'merge'],
-    DEFAULT_DISALLOWED_PHRASES: ['block', 'stop', 'do not merge'],
-    DEFAULT_EXCEPTION_PHRASES: ['exception', 'override'],
-    MAX_MESSAGES: 50,
-  };
-});
 
 describe('Background Utils', () => {
   beforeEach(() => {

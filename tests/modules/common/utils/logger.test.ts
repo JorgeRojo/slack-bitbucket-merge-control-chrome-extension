@@ -1,4 +1,4 @@
-import { Logger } from '@src/modules/common/utils/logger';
+import { Logger } from '@src/modules/common/utils/Logger';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 describe('Logger', () => {

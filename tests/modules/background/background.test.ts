@@ -49,7 +49,7 @@ process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-vi.mock('@src/modules/common/utils/logger');
+vi.mock('@src/modules/common/utils/Logger');
 
 describe('Background Script - Enhanced Coverage Tests', () => {
   let backgroundModule: typeof import('@src/modules/background/background');
@@ -108,6 +108,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
           const value = safeDefaultStorage[key as keyof typeof safeDefaultStorage];
           result[key] = value !== undefined ? value : key === 'messages' ? [] : undefined;
         });
+
         return Promise.resolve(result);
       }
 
@@ -115,7 +116,9 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     mockTabs.query.mockResolvedValue([]);
+
     mockPermissions.contains.mockResolvedValue(true);
+
     mockScripting.registerContentScripts.mockResolvedValue();
 
     (global.fetch as Mock).mockImplementation((url: string) => {
@@ -201,16 +204,23 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should initialize and register all event listeners', () => {
     if (process.env.NODE_ENV === 'test') {
       expect(mockRuntime.onInstalled.addListener).not.toHaveBeenCalled();
+
       expect(mockRuntime.onStartup.addListener).not.toHaveBeenCalled();
     } else {
       expect(mockRuntime.onMessage.addListener).toHaveBeenCalled();
+
       expect(mockRuntime.onInstalled.addListener).toHaveBeenCalled();
+
       expect(mockRuntime.onStartup.addListener).toHaveBeenCalled();
+
       expect(mockAlarms.onAlarm.addListener).toHaveBeenCalled();
+
       expect(mockStorage.onChanged.addListener).toHaveBeenCalled();
     }
     expect(mockRuntime.onMessage.addListener).toHaveBeenCalled();
+
     expect(mockAlarms.onAlarm.addListener).toHaveBeenCalled();
+
     expect(mockStorage.onChanged.addListener).toHaveBeenCalled();
   });
 
@@ -232,66 +242,89 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should handle getDefaultPhrases message', async () => {
     expect(messageHandler).toBeDefined();
+
     const mockSendResponse = vi.fn();
+
     const result = await messageHandler(
       { action: MESSAGE_ACTIONS.GET_DEFAULT_PHRASES },
       {},
       mockSendResponse
     );
+
     await new Promise(resolve => setTimeout(resolve, 10));
+
     expect(mockSendResponse).toHaveBeenCalledWith({
       defaultAllowedPhrases: expect.any(Array),
       defaultDisallowedPhrases: expect.any(Array),
       defaultExceptionPhrases: expect.any(Array),
     });
+
     expect(result).toBe(true);
   });
 
   test('should handle featureToggleChanged message', async () => {
     expect(messageHandler).toBeDefined();
+
     mockStorage.local.set.mockClear();
+
     mockStorage.local.remove.mockClear();
+
     const result1 = messageHandler(
       { action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED, payload: { enabled: false } },
       {}
     );
+
     // El manejador devuelve true, no una promesa
     expect(result1).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
+
     expect(mockStorage.local.set).toHaveBeenCalled();
+
     const result2 = messageHandler(
       { action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED, payload: { enabled: true } },
       {}
     );
+
     // El manejador devuelve true, no una promesa
     expect(result2).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   test('should handle countdownCompleted message', async () => {
     expect(messageHandler).toBeDefined();
+
     mockStorage.local.set.mockClear();
+
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED, payload: { enabled: true } },
       {}
     );
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
+
     expect(mockStorage.local.set).toHaveBeenCalled();
+
     const calls = mockStorage.local.set.mock.calls;
     const hasFeatureEnabledCall = calls.some(
       call =>
         Object.prototype.hasOwnProperty.call(call[0], 'featureEnabled') &&
         !Object.prototype.hasOwnProperty.call(call[0], 'lastKnownMergeState')
     );
+
     const hasMergeStateCall = calls.some(call =>
       Object.prototype.hasOwnProperty.call(call[0], 'lastKnownMergeState')
     );
+
     expect(hasFeatureEnabledCall).toBe(true);
+
     expect(hasMergeStateCall).toBe(true);
   });
 
@@ -315,76 +348,109 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should handle fetchNewMessages message', async () => {
     expect(messageHandler).toBeDefined();
+
     (global.fetch as Mock).mockClear();
+
     mockStorage.local.set.mockClear();
+
     const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
       mockSendResponse // Pasamos el mock como tercer argumento
     );
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
+
     expect(global.fetch).toHaveBeenCalled();
+
     expect(mockStorage.local.set).toHaveBeenCalled();
   });
 
   test('should handle reconnectSlack message', async () => {
     expect(messageHandler).toBeDefined();
+
     (global.fetch as Mock).mockClear();
+
     const result = messageHandler({ action: MESSAGE_ACTIONS.RECONNECT_SLACK }, {});
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   test('should handle bitbucketTabLoaded message', async () => {
     expect(messageHandler).toBeDefined();
+
     mockTabs.sendMessage.mockClear();
+
     const sender = { tab: { id: 123 } };
     const result = messageHandler({ action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED }, sender);
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   test('should handle alarm events', async () => {
     expect(alarmHandler).toBeDefined();
+
     await expect(async () => await alarmHandler({ name: 'websocketCheck' })).not.toThrow();
+
     await expect(async () => await alarmHandler({ name: 'featureReactivation' })).not.toThrow();
+
     expect(mockStorage.local.set).toHaveBeenCalled();
   });
 
   test('should use Logger instead of console.log/error', async () => {
     expect(messageHandler).toBeDefined();
+
     (Logger.error as Mock).mockClear();
+
     (Logger.log as Mock).mockClear();
+
     expect(Logger.error).toBeDefined();
+
     expect(Logger.log).toBeDefined();
+
     expect(typeof Logger.error).toBe('function');
+
     expect(typeof Logger.log).toBe('function');
   });
 
   test('should handle WebSocket connection setup', async () => {
     expect(messageHandler).toBeDefined();
+
     (Logger.log as Mock).mockClear();
+
     (Logger.error as Mock).mockClear();
+
     (global.WebSocket as Mock).mockClear();
+
     const result = messageHandler({ action: MESSAGE_ACTIONS.RECONNECT_SLACK }, {});
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
+
     expect(Logger.log).toBeDefined();
   });
 
   test('should handle WebSocket lifecycle events', async () => {
     expect(messageHandler).toBeDefined();
+
     (Logger.log as Mock).mockClear();
+
     (Logger.error as Mock).mockClear();
 
     // Create a mock WebSocket instance
@@ -403,6 +469,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Trigger WebSocket connection
     const mockSendResponse = vi.fn();
+
     messageHandler({ action: MESSAGE_ACTIONS.RECONNECT_SLACK }, {}, mockSendResponse);
 
     // Wait for async operations
@@ -410,6 +477,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Simulate WebSocket open event
     if (mockWs.onopen) mockWs.onopen({});
+
     await new Promise(resolve => setTimeout(resolve, 50));
 
     // Verify storage was updated
@@ -442,16 +510,21 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       });
     }
     await new Promise(resolve => setTimeout(resolve, 50));
+
     expect(mockWs.close).toHaveBeenCalled();
 
     // Simulate WebSocket error event
     if (mockWs.onerror) mockWs.onerror(new Error('WebSocket error'));
+
     await new Promise(resolve => setTimeout(resolve, 50));
+
     expect(Logger.error).toHaveBeenCalled();
 
     // Simulate WebSocket close event
     if (mockWs.onclose) mockWs.onclose({});
+
     await new Promise(resolve => setTimeout(resolve, 50));
+
     expect(Logger.log).toHaveBeenCalledWith('WebSocket connection closed');
   });
 
@@ -476,6 +549,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Trigger fetch new messages
     const mockSendResponse = vi.fn();
+
     messageHandler(
       {
         action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
@@ -534,6 +608,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Trigger fetch new messages
     const mockSendResponse = vi.fn();
+
     messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
@@ -561,6 +636,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Trigger WebSocket connection
     const mockSendResponse = vi.fn();
+
     messageHandler({ action: MESSAGE_ACTIONS.RECONNECT_SLACK }, {}, mockSendResponse);
 
     // Wait for async operations
@@ -623,6 +699,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Trigger fetch new messages
     const mockSendResponse = vi.fn();
+
     messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
@@ -689,6 +766,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Trigger fetch new messages
     const mockSendResponse = vi.fn();
+
     messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
@@ -704,65 +782,84 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should handle error scenarios', async () => {
     expect(messageHandler).toBeDefined();
+
     (Logger.error as Mock).mockClear();
+
     (global.fetch as Mock).mockResolvedValueOnce({
       ok: false,
       json: () => Promise.resolve({ ok: false, error: 'invalid_auth' }),
     });
+
     const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES },
       {},
       mockSendResponse // Pasamos el mock como tercer argumento
     );
+
     await result;
     expect(Logger.error).toBeDefined();
+
     expect(typeof Logger.error).toBe('function');
   });
 
   test('should handle missing configuration', async () => {
     expect(messageHandler).toBeDefined();
+
     mockAction.setIcon.mockClear();
+
     const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES },
       {},
       mockSendResponse // Pasamos el mock como tercer argumento
     );
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
+
     // No esperamos que se llame a setIcon ya que el test puede no llegar a ese punto
   });
 
   test('should handle missing configuration', async () => {
     expect(messageHandler).toBeDefined();
+
     const originalGet = mockStorage.sync.get;
     mockStorage.sync.get.mockResolvedValueOnce({});
+
     mockAction.setIcon.mockClear();
+
     const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES },
       {},
       mockSendResponse // Pasamos el mock como tercer argumento
     );
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
+
     // No esperamos que se llame a setIcon ya que el test puede no llegar a ese punto
     mockStorage.sync.get = originalGet;
   });
 
   test('should handle unknown message action', () => {
     expect(messageHandler).toBeDefined();
+
     const result = messageHandler({ action: 'unknownAction' }, {}, vi.fn());
+
     expect(result).toBe(false);
   });
 
   test('should process Slack API responses correctly', async () => {
     expect(messageHandler).toBeDefined();
+
     (global.fetch as Mock).mockClear();
 
     // Forzamos una llamada a fetch
@@ -777,15 +874,19 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {}
     );
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 50));
+
     // No esperamos que se llame a fetch ya que el test puede no llegar a ese punto
   });
 
   test('should handle new disallowed phrase "not merge anything"', async () => {
     expect(messageHandler).toBeDefined();
+
     (global.fetch as Mock).mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
@@ -796,18 +897,22 @@ describe('Background Script - Enhanced Coverage Tests', () => {
           }),
       })
     );
+
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {}
     );
+
     await result;
     expect(global.fetch).toHaveBeenCalled();
   });
 
   test('should handle text normalization through message processing', async () => {
     expect(messageHandler).toBeDefined();
+
     (global.fetch as Mock).mockImplementationOnce((url: string) => {
       const isConversationsHistory = url.includes('conversations.history');
+
       return isConversationsHistory
         ? Promise.resolve({
             ok: true,
@@ -831,6 +936,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
               }),
           });
     });
+
     mockStorage.local.set.mockClear();
 
     // Configuramos el mock para capturar la llamada a set
@@ -847,18 +953,24 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {}
     );
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 50));
+
     expect(mockStorage.local.set).toHaveBeenCalled();
+
     // No verificamos setCall ya que puede no estar definido debido a la naturaleza asíncrona
   });
 
   test('should handle Slack message text cleaning through message processing', async () => {
     expect(messageHandler).toBeDefined();
+
     (global.fetch as Mock).mockImplementationOnce((url: string) => {
       const isConversationsHistory = url.includes('conversations.history');
+
       return isConversationsHistory
         ? Promise.resolve({
             ok: true,
@@ -890,6 +1002,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
               }),
           });
     });
+
     mockStorage.local.set.mockClear();
 
     // Configuramos el mock para capturar la llamada a set
@@ -906,50 +1019,65 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {}
     );
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 50));
+
     expect(mockStorage.local.set).toHaveBeenCalled();
+
     // No verificamos setCall ya que puede no estar definido debido a la naturaleza asíncrona
   });
 
   test('should handle storage operations correctly', async () => {
     expect(messageHandler).toBeDefined();
+
     mockStorage.local.set.mockClear();
+
     const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
       mockSendResponse // Pasamos el mock como tercer argumento
     );
+
     await result;
     expect(mockStorage.local.set).toHaveBeenCalled();
   });
 
   test('should update extension icon based on merge status', async () => {
     expect(messageHandler).toBeDefined();
+
     mockAction.setIcon.mockClear();
+
     const mockSendResponse = vi.fn(); // Añadimos un mock para sendResponse
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
       mockSendResponse // Pasamos el mock como tercer argumento
     );
+
     await result;
     expect(mockAction.setIcon).toHaveBeenCalled();
   });
 
   test('should handle Bitbucket tab communication', async () => {
     expect(messageHandler).toBeDefined();
+
     mockTabs.sendMessage.mockClear();
+
     mockTabs.query.mockResolvedValueOnce([{ id: 123, url: 'https://example.com' }]);
+
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED },
       { tab: { id: 123 } }
     );
+
     // El manejador devuelve true, no una promesa
     expect(result).toBe(true);
+
     // Esperamos a que se completen las operaciones asíncronas
     await new Promise(resolve => setTimeout(resolve, 10));
   });
@@ -964,16 +1092,23 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
   test('should have all required Chrome APIs available', () => {
     expect(global.chrome.storage).toBeDefined();
+
     expect(global.chrome.runtime).toBeDefined();
+
     expect(global.chrome.alarms).toBeDefined();
+
     expect(global.chrome.tabs).toBeDefined();
+
     expect(global.chrome.action).toBeDefined();
+
     expect(global.chrome.scripting).toBeDefined();
+
     expect(global.chrome.permissions).toBeDefined();
   });
 
   test('should determine merge status correctly through message processing', async () => {
     expect(messageHandler).toBeDefined();
+
     const testScenarios = [
       {
         messages: [{ text: 'do not merge', ts: '1234567890' }],
@@ -994,6 +1129,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     for (const scenario of testScenarios) {
       (global.fetch as Mock).mockImplementationOnce((url: string) => {
         const isConversationsHistory = url.includes('conversations.history');
+
         return isConversationsHistory
           ? Promise.resolve({
               ok: true,
@@ -1012,14 +1148,19 @@ describe('Background Script - Enhanced Coverage Tests', () => {
                 }),
             });
       });
+
       mockStorage.local.set.mockClear();
+
       mockAction.setIcon.mockClear();
+
       const result = messageHandler(
         { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
         {}
       );
+
       await result;
       expect(mockAction.setIcon).toHaveBeenCalled();
+
       expect(mockStorage.local.set).toHaveBeenCalled();
     }
   });
@@ -1054,6 +1195,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Test with script registration error
     mockScripting.getRegisteredContentScripts.mockResolvedValueOnce([]);
+
     mockScripting.registerContentScripts.mockRejectedValueOnce(new Error('Registration failed'));
 
     // Trigger storage change handler again
@@ -1086,6 +1228,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Register the tab
     const mockSendResponse = vi.fn();
+
     messageHandler({ action: MESSAGE_ACTIONS.BITBUCKET_TAB_LOADED }, sender, mockSendResponse);
 
     // Wait for async operations
@@ -1188,6 +1331,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Request messages for new channel
     const mockSendResponse = vi.fn();
+
     messageHandler(
       {
         action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
@@ -1222,6 +1366,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     const mockSendResponse2 = vi.fn();
+
     messageHandler(
       {
         action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
@@ -1247,6 +1392,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     const mockSendResponse3 = vi.fn();
+
     messageHandler(
       {
         action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
@@ -1265,6 +1411,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     const mockSendResponse4 = vi.fn();
+
     messageHandler(
       {
         action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES,
@@ -1291,25 +1438,37 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should handle registerBitbucketContentScript with no URL', async () => {
     const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
     expect(storageChangeHandler).toBeDefined();
+
     mockScripting.getRegisteredContentScripts.mockResolvedValueOnce([]);
+
     mockScripting.unregisterContentScripts.mockClear();
+
     mockScripting.registerContentScripts.mockClear();
+
     mockStorage.sync.get.mockResolvedValueOnce({ bitbucketUrl: undefined });
+
     const changes = { bitbucketUrl: { newValue: undefined } };
     await storageChangeHandler(changes, 'sync');
+
     expect(mockScripting.getRegisteredContentScripts).toHaveBeenCalled();
+
     expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
+
     expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
   });
 
   test('should handle content script registration errors gracefully', async () => {
     const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
     expect(storageChangeHandler).toBeDefined();
+
     mockScripting.unregisterContentScripts.mockRejectedValueOnce(new Error('Unregister failed'));
+
     mockScripting.registerContentScripts.mockRejectedValueOnce(new Error('Register failed'));
+
     mockStorage.sync.get.mockResolvedValueOnce({
       bitbucketUrl: 'https://example.com',
     });
+
     const changes = {
       bitbucketUrl: { newValue: 'https://example.com/new' },
     };
@@ -1319,43 +1478,58 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should ignore storage changes for non-sync namespaces', async () => {
     const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
     expect(storageChangeHandler).toBeDefined();
+
     mockScripting.unregisterContentScripts.mockClear();
+
     mockScripting.registerContentScripts.mockClear();
+
     const changes = {
       bitbucketUrl: { newValue: 'https://example.com/new' },
     };
     await storageChangeHandler(changes, 'local');
+
     expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
+
     expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
   });
 
   test('should ignore storage changes for non-bitbucketUrl keys', async () => {
     const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
     expect(storageChangeHandler).toBeDefined();
+
     mockScripting.unregisterContentScripts.mockClear();
+
     mockScripting.registerContentScripts.mockClear();
+
     const changes = { slackToken: { newValue: 'new-token' } };
     await storageChangeHandler(changes, 'sync');
+
     expect(mockScripting.unregisterContentScripts).not.toHaveBeenCalled();
+
     expect(mockScripting.registerContentScripts).not.toHaveBeenCalled();
   });
 
   test('should handle unknown message action', () => {
     expect(messageHandler).toBeDefined();
+
     const result = messageHandler({ action: 'unknownAction' }, {}, vi.fn());
+
     expect(result).toBe(false);
   });
 
   test('should handle "Receiving end does not exist" errors silently in runtime.sendMessage', async () => {
     (Logger.error as Mock).mockClear();
+
     mockRuntime.sendMessage.mockRejectedValue(
       new Error('Could not establish connection. Receiving end does not exist.')
     );
+
     const result = messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
       vi.fn()
     );
+
     await result;
     expect(Logger.error).toBeDefined();
   });
@@ -1366,12 +1540,15 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const originalClearInterval = global.clearInterval;
 
     global.setInterval = vi.fn().mockReturnValue(123);
+
     global.clearInterval = vi.fn();
 
     try {
       // Toggle feature off
       mockStorage.local.set.mockClear();
+
       const mockSendResponse1 = vi.fn();
+
       messageHandler(
         { action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED, payload: { enabled: false } },
         {},
@@ -1383,6 +1560,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Verify storage was updated
       expect(mockStorage.local.set).toHaveBeenCalledWith({ featureEnabled: false });
+
       expect(mockSendResponse1).toHaveBeenCalledWith({ success: true });
 
       // Mock active countdown
@@ -1393,6 +1571,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Get countdown status
       const mockSendResponse2 = vi.fn();
+
       messageHandler({ action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS }, {}, mockSendResponse2);
 
       // Wait for async operations
@@ -1400,8 +1579,11 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Toggle feature back on
       mockStorage.local.set.mockClear();
+
       mockStorage.local.remove.mockClear();
+
       const mockSendResponse3 = vi.fn();
+
       messageHandler(
         { action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED, payload: { enabled: true } },
         {},
@@ -1413,12 +1595,16 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Verify storage was updated and countdown was cleared
       expect(mockStorage.local.set).toHaveBeenCalledWith({ featureEnabled: true });
+
       expect(mockStorage.local.remove).toHaveBeenCalledWith('reactivationTime');
+
       expect(mockSendResponse3).toHaveBeenCalledWith({ success: true });
 
       // Complete countdown
       mockStorage.local.set.mockClear();
+
       const mockSendResponse4 = vi.fn();
+
       messageHandler(
         { action: MESSAGE_ACTIONS.COUNTDOWN_COMPLETED, payload: { enabled: true } },
         {},
@@ -1430,12 +1616,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Verify storage was updated
       expect(mockStorage.local.set).toHaveBeenCalledWith({ featureEnabled: true });
+
       expect(mockSendResponse4).toHaveBeenCalledWith({ success: true });
 
       // Test with error in storage
       mockStorage.local.set.mockRejectedValueOnce(new Error('Storage error'));
 
       const mockSendResponse5 = vi.fn();
+
       messageHandler(
         { action: MESSAGE_ACTIONS.FEATURE_TOGGLE_CHANGED, payload: { enabled: true } },
         {},
@@ -1465,6 +1653,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     const mockSendResponse = vi.fn();
+
     messageHandler({ action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS }, {}, mockSendResponse);
 
     // Wait for async operations
@@ -1485,6 +1674,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     });
 
     const mockSendResponse2 = vi.fn();
+
     messageHandler({ action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS }, {}, mockSendResponse2);
 
     // Wait for async operations
@@ -1501,6 +1691,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     mockStorage.local.get.mockRejectedValueOnce(new Error('Storage error'));
 
     const mockSendResponse3 = vi.fn();
+
     messageHandler({ action: MESSAGE_ACTIONS.GET_COUNTDOWN_STATUS }, {}, mockSendResponse3);
 
     // Wait for async operations
@@ -1512,6 +1703,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       timeLeft: 0,
       reactivationTime: null,
     });
+
     expect(Logger.error).toHaveBeenCalled();
   });
 
@@ -1528,6 +1720,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const originalClearInterval = global.clearInterval;
 
     global.setInterval = vi.fn().mockReturnValue(123);
+
     global.clearInterval = vi.fn();
 
     try {
@@ -1587,6 +1780,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
       // Re-import to test past reactivation time
       vi.resetModules();
+
       await import('@src/modules/background/background');
 
       // Verify feature was reactivated
@@ -1606,20 +1800,25 @@ describe('Background Script - Enhanced Coverage Tests', () => {
       disallowedPhrases: 'block1,block2',
       exceptionPhrases: 'exception1,exception2',
     });
+
     await messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {}
     );
+
     mockStorage.sync.get.mockResolvedValueOnce({});
+
     await messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {}
     );
+
     mockStorage.sync.get.mockResolvedValueOnce({
       allowedPhrases: '',
       disallowedPhrases: '',
       exceptionPhrases: '',
     });
+
     await messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {}
@@ -1630,12 +1829,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     // Mock fetch to throw a specific error with custom properties
     (global.fetch as Mock).mockImplementationOnce(() => {
       const error = new Error('Custom error');
+
       (error as any).code = 'CUSTOM_ERROR';
       throw error;
     });
 
     // Trigger fetch new messages with a sendResponse callback
     const mockSendResponse = vi.fn();
+
     messageHandler({ action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES }, {}, mockSendResponse);
 
     // Wait for async operations
@@ -1726,6 +1927,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Trigger fetch new messages
     const mockSendResponse = vi.fn();
+
     messageHandler({ action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES }, {}, mockSendResponse);
 
     // Wait for async operations
@@ -1749,7 +1951,9 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   test('should resolve channel ID correctly (enhanced)', async () => {
     // Clear previous calls
     mockStorage.local.get.mockClear();
+
     mockStorage.local.set.mockClear();
+
     (global.fetch as Mock).mockClear();
 
     // Mock storage.sync.get for slackToken
@@ -1791,6 +1995,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
 
     // Trigger fetch new messages with same channel name
     const mockSendResponse1 = vi.fn();
+
     await messageHandler(
       { action: MESSAGE_ACTIONS.FETCH_NEW_MESSAGES, payload: { channelName: 'test-channel' } },
       {},
@@ -1804,21 +2009,28 @@ describe('Background Script - Enhanced Coverage Tests', () => {
     const conversationsListCalls = (global.fetch as Mock).mock.calls.filter((call: any) =>
       call[0].includes('conversations.list')
     );
+
     expect(conversationsListCalls.length).toBe(0);
   });
 
   test('should initialize extension correctly on install and startup (enhanced)', async () => {
     if (!installedHandler) {
       expect(installedHandler).toBeUndefined();
+
       return;
     }
     mockStorage.sync.get.mockClear();
+
     mockStorage.sync.set.mockClear();
+
     mockStorage.sync.get.mockImplementationOnce((_key: any, callback: any) => {
       callback({});
+
       return Promise.resolve({});
     });
+
     await installedHandler({ reason: 'install' });
+
     expect(mockStorage.sync.set).toHaveBeenCalledWith(
       expect.objectContaining({
         mergeButtonSelector: expect.any(String),
@@ -1829,18 +2041,24 @@ describe('Background Script - Enhanced Coverage Tests', () => {
   describe('Chrome Event Listeners Coverage', () => {
     test('should handle chrome.alarms.onAlarm listener', async () => {
       await import('@src/modules/background/background');
+
       const mockCheckWebSocket = vi.fn();
+
       vi.doMock('@src/modules/background/background', () => ({
         checkWebSocketConnection: mockCheckWebSocket,
       }));
+
       const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
       if (alarmHandler) {
         await alarmHandler({ name: 'websocket-check' });
+
         expect(alarmHandler).toBeDefined();
       }
     });
+
     test('should handle chrome.storage.onChanged listener for bitbucketUrl', async () => {
       await import('@src/modules/background/background');
+
       const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
       if (storageChangeHandler) {
         const changes = {
@@ -1850,21 +2068,27 @@ describe('Background Script - Enhanced Coverage Tests', () => {
           },
         };
         await storageChangeHandler(changes, 'sync');
+
         expect(storageChangeHandler).toBeDefined();
       }
     });
+
     test('should handle chrome.runtime.onInstalled listener in production', async () => {
       const originalProcess = global.process;
       global.process = { env: {} } as any;
       try {
         vi.resetModules();
+
         await import('@src/modules/background/background');
+
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
         if (installedHandler) {
           mockStorage.sync.get.mockImplementationOnce((_key: any, callback: any) => {
             callback({});
           });
+
           await installedHandler({ reason: 'install' });
+
           expect(mockStorage.sync.set).toHaveBeenCalledWith(
             expect.objectContaining({
               mergeButtonSelector: expect.any(String),
@@ -1875,43 +2099,56 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         global.process = originalProcess;
       }
     });
+
     test('should handle chrome.runtime.onStartup listener in production', async () => {
       const originalProcess = global.process;
       global.process = { env: {} } as any;
       try {
         vi.resetModules();
+
         await import('@src/modules/background/background');
+
         const startupHandler = mockRuntime.onStartup.addListener.mock.calls[0]?.[0];
         if (startupHandler) {
           await startupHandler();
+
           expect(startupHandler).toBeDefined();
         }
       } finally {
         global.process = originalProcess;
       }
     });
+
     test('should skip production listeners in test environment', async () => {
       const originalProcess = global.process;
       global.process = { env: { NODE_ENV: 'test' } } as any;
       try {
         vi.resetModules();
+
         await import('@src/modules/background/background');
+
         expect(global.process.env.NODE_ENV).toBe('test');
       } finally {
         global.process = originalProcess;
       }
     });
+
     test('should handle alarm with correct name', async () => {
       await import('@src/modules/background/background');
+
       const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
       if (alarmHandler) {
         await alarmHandler({ name: 'websocket-check' });
+
         await alarmHandler({ name: 'other-alarm' });
+
         expect(alarmHandler).toBeDefined();
       }
     });
+
     test('should handle storage changes for non-bitbucketUrl keys', async () => {
       await import('@src/modules/background/background');
+
       const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
       if (storageChangeHandler) {
         const changes = {
@@ -1921,11 +2158,14 @@ describe('Background Script - Enhanced Coverage Tests', () => {
           },
         };
         await storageChangeHandler(changes, 'sync');
+
         expect(storageChangeHandler).toBeDefined();
       }
     });
+
     test('should handle storage changes in local namespace', async () => {
       await import('@src/modules/background/background');
+
       const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
       if (storageChangeHandler) {
         const changes = {
@@ -1935,22 +2175,29 @@ describe('Background Script - Enhanced Coverage Tests', () => {
           },
         };
         await storageChangeHandler(changes, 'local');
+
         expect(storageChangeHandler).toBeDefined();
       }
     });
+
     test('should handle onInstalled with existing mergeButtonSelector', async () => {
       const originalProcess = global.process;
       global.process = { env: {} } as any;
       try {
         vi.resetModules();
+
         await import('@src/modules/background/background');
+
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
         if (installedHandler) {
           mockStorage.sync.get.mockImplementationOnce((_key: any, callback: any) => {
             callback({ mergeButtonSelector: 'existing-selector' });
           });
+
           mockStorage.sync.set.mockClear();
+
           await installedHandler({ reason: 'install' });
+
           expect(mockStorage.sync.set).not.toHaveBeenCalledWith(
             expect.objectContaining({
               mergeButtonSelector: expect.any(String),
@@ -1961,16 +2208,22 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         global.process = originalProcess;
       }
     });
+
     test('should execute all onInstalled callback functions', async () => {
       const originalProcess = global.process;
       global.process = { env: {} } as any;
       try {
         const mockConnectToSlackSocketMode = vi.fn();
+
         const mockRegisterBitbucketContentScript = vi.fn();
+
         const mockCheckScheduledReactivation = vi.fn();
+
         const mockSetupWebSocketCheckAlarm = vi.fn();
+
         vi.doMock('@src/modules/background/background', async () => {
           const actual = await vi.importActual('@src/modules/background/background');
+
           return {
             ...actual,
             connectToSlackSocketMode: mockConnectToSlackSocketMode,
@@ -1979,14 +2232,19 @@ describe('Background Script - Enhanced Coverage Tests', () => {
             setupWebSocketCheckAlarm: mockSetupWebSocketCheckAlarm,
           };
         });
+
         vi.resetModules();
+
         await import('@src/modules/background/background');
+
         const installedHandler = mockRuntime.onInstalled.addListener.mock.calls[0]?.[0];
         if (installedHandler) {
           mockStorage.sync.get.mockImplementationOnce((_key: any, callback: any) => {
             callback({});
           });
+
           await installedHandler({ reason: 'install' });
+
           expect(installedHandler).toBeDefined();
         }
       } finally {
@@ -1994,31 +2252,40 @@ describe('Background Script - Enhanced Coverage Tests', () => {
         vi.clearAllMocks();
       }
     });
+
     test('should execute all onStartup callback functions', async () => {
       const originalProcess = global.process;
       global.process = { env: {} } as any;
       try {
         vi.resetModules();
+
         await import('@src/modules/background/background');
+
         const startupHandler = mockRuntime.onStartup.addListener.mock.calls[0]?.[0];
         if (startupHandler) {
           await startupHandler();
+
           expect(startupHandler).toBeDefined();
         }
       } finally {
         global.process = originalProcess;
       }
     });
+
     test('should handle checkWebSocketConnection in alarm listener', async () => {
       await import('@src/modules/background/background');
+
       const alarmHandler = mockAlarms.onAlarm.addListener.mock.calls[0]?.[0];
       if (alarmHandler) {
         await alarmHandler({ name: 'websocket-check' });
+
         expect(alarmHandler).toBeDefined();
       }
     });
+
     test('should handle registerBitbucketContentScript in storage change listener', async () => {
       await import('@src/modules/background/background');
+
       const storageChangeHandler = mockStorage.onChanged.addListener.mock.calls[0]?.[0];
       if (storageChangeHandler) {
         const changes = {
@@ -2028,6 +2295,7 @@ describe('Background Script - Enhanced Coverage Tests', () => {
           },
         };
         await storageChangeHandler(changes, 'sync');
+
         expect(storageChangeHandler).toBeDefined();
       }
     });
