@@ -6,8 +6,6 @@ This directory contains documentation for bugs that have been identified in the 
 
 | ID | Title | Component | Severity | Date Reported |
 | -- | ----- | --------- | -------- | ------------- |
-| [004](./004-xxxxx-2.md) | XXXXX 2 | XXXXX 2 | Medium | 2025-07-24 |
-| [006](./006-xxxx-4.md) | XXXX 4 | XXXX 4 | Medium | 2025-07-24 |
 | [009](./009-xxxx-7.md) | XXXX 7 | XXXX 7 | Medium | 2025-07-24 |
 
 ## How to Add a New Bug
