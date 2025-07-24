@@ -4,14 +4,14 @@ This document explains how to use the GitHub Actions workflows to close a versio
 
 ## Overview
 
-The release process is split into two separate workflows:
+The release process is split into two separate workflows that must be executed manually:
 
 1. **Close Version**: Updates version numbers in relevant files, commits these changes, and creates a git tag
 2. **Build and Release**: Builds the extension from the tagged version and creates a GitHub release with the packaged extension
 
-**Important**: Version closing and releases can only be performed on the `master` branch to ensure stability and consistency in the release process.
+**Important**: Both version closing and releases can only be performed on the `master` branch to ensure stability and consistency in the release process.
 
-## Closing a Version
+## Step 1: Closing a Version
 
 To close a version:
 
@@ -24,7 +24,6 @@ To close a version:
 5. Click the green "Run workflow" button to start the process
 
 The workflow will:
-
 - Validate that the version format is correct (must be vMAJOR.MINOR.PATCH)
 - Extract the semantic version (MAJOR.MINOR.PATCH) from the input
 - Verify that the new version is higher than the current version
@@ -33,17 +32,24 @@ The workflow will:
 - Create a git tag with the version
 - Push the changes and tag to the repository
 
-## Creating a Release
+## Step 2: Creating a Release
 
-After closing a version, the release workflow will automatically:
+After successfully closing a version, you can create a release:
 
-1. Detect the new tag
-2. Check out the code at that tag
-3. Install dependencies
-4. Run tests
-5. Build the extension
-6. Package the extension as a ZIP file
-7. Create a GitHub release with the packaged extension attached
+1. Go to the "Actions" tab in the GitHub repository
+2. Select the "Build and Release Extension" workflow from the left sidebar
+3. Click the "Run workflow" button
+4. Click the green "Run workflow" button to start the process (no inputs required)
+
+The workflow will:
+- Read the current version from package.json
+- Validate that the corresponding git tag exists (created by the Close Version workflow)
+- Check that no release already exists for this version
+- Check out the code at the specific version tag
+- Install dependencies and run tests
+- Build the extension
+- Package the extension as a ZIP file
+- Create a GitHub release with the packaged extension attached
 
 ## Version Numbering
 
@@ -57,9 +63,15 @@ The project follows semantic versioning (MAJOR.MINOR.PATCH):
 
 If you encounter issues with the workflows:
 
-1. Check the workflow run logs for detailed error messages
-2. Ensure you have the necessary permissions to push to the repository
-3. Verify that the version format is correct (vMAJOR.MINOR.PATCH)
-4. Make sure the new version is higher than the current version
+### Close Version Workflow
+- Check that the version format is correct (vMAJOR.MINOR.PATCH)
+- Make sure the new version is higher than the current version
+- Ensure you have the necessary permissions to push to the repository
+
+### Build and Release Workflow
+- Verify that you have run the "Close Version" workflow first
+- Check that the git tag exists for the current package.json version
+- Ensure no release already exists for the current version
+- Check the workflow run logs for detailed error messages
 
 For additional help, please create an issue in the GitHub repository.

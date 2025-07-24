@@ -1,17 +1,8 @@
 name: Build and Release Extension
 
 on:
-  # Trigger on tag push
-  push:
-    tags:
-      - 'v*.*.*'
-
-  # Allow manual triggering for specific tags
+  # Only allow manual triggering
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to build and release (e.g., v1.0.0)'
-        required: true
 
 # Define permissions needed for the workflow
 permissions:
@@ -21,29 +12,9 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Determine tag
-        id: determine-tag
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            # Use manually provided tag
-            TAG="${{ github.event.inputs.tag }}"
-          else
-            # Use the tag that triggered the workflow
-            TAG="${GITHUB_REF#refs/tags/}"
-          fi
-
-          echo "TAG=$TAG" >> $GITHUB_ENV
-          echo "Using tag: $TAG"
-
-          # Extract version without 'v' prefix
-          VERSION="${TAG#v}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "Extracted version: $VERSION"
-
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.TAG }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -51,6 +22,48 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+
+      - name: Determine version and validate release
+        id: determine-version
+        run: |
+          # Get version from package.json
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
+          
+          echo "Found version in package.json: $VERSION"
+          echo "Corresponding tag: $TAG"
+          
+          # Check if the tag exists
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $TAG does not exist. Please run 'Close Version' workflow first to create the version tag."
+            exit 1
+          fi
+          
+          echo "Tag $TAG exists, proceeding with validation"
+          
+          # Check if a release already exists for this version
+          RELEASE_CHECK=$(curl -s -H "Authorization: token ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG")
+          
+          RELEASE_EXISTS=$(echo "$RELEASE_CHECK" | jq -r '.tag_name // empty')
+          
+          if [ "$RELEASE_EXISTS" = "$TAG" ]; then
+            echo "::error::A release already exists for version $VERSION (tag $TAG)"
+            echo "Release URL: $(echo "$RELEASE_CHECK" | jq -r '.html_url')"
+            exit 1
+          fi
+          
+          echo "No existing release found for $TAG, proceeding with release creation"
+          
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Final tag: $TAG, version: $VERSION"
+
+      - name: Checkout specific tag
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
 
       - name: Install dependencies
         run: npm ci
