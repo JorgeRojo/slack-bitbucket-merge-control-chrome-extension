@@ -24,8 +24,12 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             
-            // Import the external script using dynamic import
-            const syncIssueToDocModule = await import('./.github/scripts/sync-issue-to-bug.js');
+            // Define the full path to the script
+            const scriptPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'scripts', 'sync-issue-to-bug.js');
+            console.log(`Loading script from: ${scriptPath}`);
+            
+            // Import the external script using dynamic import with absolute path
+            const syncIssueToDocModule = await import(`file://${scriptPath}`);
             const syncIssueToDoc = syncIssueToDocModule.default;
             
             // Execute the script with all required parameters

@@ -31,8 +31,12 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             
-            // Import the external script using dynamic import
-            const syncBugToIssueModule = await import('./.github/scripts/sync-bug-to-issue.js');
+            // Define the full path to the script
+            const scriptPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'scripts', 'sync-bug-to-issue.js');
+            console.log(`Loading script from: ${scriptPath}`);
+            
+            // Import the external script using dynamic import with absolute path
+            const syncBugToIssueModule = await import(`file://${scriptPath}`);
             const syncBugToIssue = syncBugToIssueModule.default;
             
             // Process each changed bug file
