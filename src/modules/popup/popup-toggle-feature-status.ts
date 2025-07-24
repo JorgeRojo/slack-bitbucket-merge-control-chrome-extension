@@ -1,7 +1,7 @@
-import type ToggleSwitch from '../common/components/toggle-switch/toggle-switch';
-import { ERROR_MESSAGES, MESSAGE_ACTIONS } from '../common/constants';
-import { Logger } from '../common/utils/Logger';
-import { toErrorType } from '../common/utils/type-helpers';
+import type ToggleSwitch from '@src/modules/common/components/toggle-switch/toggle-switch';
+import { ERROR_MESSAGES, MESSAGE_ACTIONS } from '@src/modules/common/constants';
+import { Logger } from '@src/modules/common/utils/Logger';
+import { toErrorType } from '@src/modules/common/utils/type-helpers';
 
 interface CountdownResponse {
   isCountdownActive: boolean;

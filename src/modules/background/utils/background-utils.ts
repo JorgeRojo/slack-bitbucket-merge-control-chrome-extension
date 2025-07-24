@@ -6,9 +6,9 @@ import {
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
   MAX_MESSAGES,
-} from '../../common/constants';
-import { ProcessedMessage } from '../../common/types/app';
-import { SlackMessage } from '../../common/types/slack';
+} from '@src/modules/common/constants';
+import { ProcessedMessage } from '@src/modules/common/types/app';
+import { SlackMessage } from '@src/modules/common/types/slack';
 
 function normalizeText(text: string | undefined): string {
   if (!text) return '';

@@ -6,9 +6,9 @@ import {
   DEFAULT_MERGE_BUTTON_SELECTOR,
   DEFAULT_CHANNEL_NAME,
   MESSAGE_ACTIONS,
-} from '../common/constants';
-import { literals } from '../common/literals';
-import { ChromeStorageItems } from '../common/types/chrome';
+} from '@src/modules/common/constants';
+import { literals } from '@src/modules/common/literals';
+import { ChromeStorageItems } from '@src/modules/common/types/chrome';
 
 function formatMultilineInput(text: string): string {
   return text

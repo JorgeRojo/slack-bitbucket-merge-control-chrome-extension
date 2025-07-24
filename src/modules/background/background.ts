@@ -18,9 +18,9 @@ import {
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
-} from '../common/constants';
-import { Logger } from '../common/utils/Logger';
-import { toErrorType } from '../common/utils/type-helpers';
+} from '@src/modules/common/constants';
+import { Logger } from '@src/modules/common/utils/Logger';
+import { toErrorType } from '@src/modules/common/utils/type-helpers';
 import {
   cleanSlackMessageText,
   determineMergeStatus,
@@ -31,9 +31,13 @@ import {
   getPhrasesFromStorage,
   processAndStoreMessage,
 } from './utils/background-utils';
-import { ProcessedMessage } from '../common/types/app';
-import { SlackMessage, SlackChannel, SlackConversationsListResponse } from '../common/types/slack';
-import { ChromeRuntimeMessage } from '../common/types/chrome';
+import { ProcessedMessage } from '@src/modules/common/types/app';
+import {
+  SlackMessage,
+  SlackChannel,
+  SlackConversationsListResponse,
+} from '@src/modules/common/types/slack';
+import { ChromeRuntimeMessage } from '@src/modules/common/types/chrome';
 
 let bitbucketTabId: number | null = null;
 let rtmWebSocket: WebSocket | null = null;

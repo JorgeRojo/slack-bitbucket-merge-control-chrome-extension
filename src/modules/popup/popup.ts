@@ -1,10 +1,10 @@
-import { Logger } from '../common/utils/Logger';
-import { SLACK_BASE_URL, MERGE_STATUS, APP_STATUS } from '../common/constants';
-import { literals } from '../common/literals';
+import { Logger } from '@src/modules/common/utils/Logger';
+import { SLACK_BASE_URL, MERGE_STATUS, APP_STATUS } from '@src/modules/common/constants';
+import { literals } from '@src/modules/common/literals';
 import { initializeToggleFeatureStatus } from './popup-toggle-feature-status';
-import { ProcessedMessage } from '../common/types/app';
-import { toErrorType } from '../common/utils/type-helpers';
-import type ToggleSwitch from '../common/components/toggle-switch/toggle-switch';
+import { ProcessedMessage } from '@src/modules/common/types/app';
+import { toErrorType } from '@src/modules/common/utils/type-helpers';
+import type ToggleSwitch from '@src/modules/common/components/toggle-switch/toggle-switch';
 
 interface UIElements {
   statusIcon: HTMLElement | null;
