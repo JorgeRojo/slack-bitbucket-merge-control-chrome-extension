@@ -6,7 +6,6 @@ This directory contains documentation for bugs that have been identified and fix
 
 | ID | Title | Component | Status | Severity | Date Reported | Date Fixed |
 | --- | ----- | --------- | ------ | -------- | ------------ | --------- |
-| [001](./001-toggle-switch-state-after-browser-restart.md) | Toggle Switch Incorrect State After Browser Restart | popup-toggle-feature-status.ts | Fixed | Medium - Functionality works but UI is misleading | 2025-07-24 |  |
 | [002](./002-test-bug-reporting-github-action-dont-take-this-bu.md) | test bug reporting github action - DON'T take this bug in consideration bug Something isn't working | test bug reporting github action - DON'T take this bug in consideration bug Something isn't working | Open | Medium | 2025-07-24 |  |
 | [003](./003-xxxxx-1.md) | XXXXX 1 | XXXXX 1 | Open | Medium | 2025-07-24 |  |
 | [004](./004-xxxxx-2.md) | XXXXX 2 | XXXXX 2 | Open | Medium | 2025-07-24 |  |
