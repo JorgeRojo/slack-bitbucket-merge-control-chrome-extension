@@ -1,4 +1,4 @@
-import { ERROR_MESSAGES } from '@src/modules/common/constants.js';
+import { ERROR_MESSAGES } from '@src/modules/common/constants';
 
 interface ErrorHandlerOptions {
   component?: string;

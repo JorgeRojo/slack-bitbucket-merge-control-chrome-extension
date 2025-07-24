@@ -114,7 +114,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
   import { debounce } from 'lodash';
 
   // 3. Internal modules
-  import { constants } from '@src/modules/common/constants.js';
+  import { constants } from '@src/modules/common/constants';
   ```
 
 ### Comments
