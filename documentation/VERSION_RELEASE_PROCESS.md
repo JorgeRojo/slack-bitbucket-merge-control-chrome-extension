@@ -24,6 +24,7 @@ To close a version:
 5. Click the green "Run workflow" button to start the process
 
 The workflow will:
+
 - Validate that the version format is correct (must be vMAJOR.MINOR.PATCH)
 - Extract the semantic version (MAJOR.MINOR.PATCH) from the input
 - Verify that the new version is higher than the current version
@@ -42,6 +43,7 @@ After successfully closing a version, you can create a release:
 4. Click the green "Run workflow" button to start the process (no inputs required)
 
 The workflow will:
+
 - Read the current version from package.json
 - Validate that the corresponding git tag exists (created by the Close Version workflow)
 - Check that no release already exists for this version
@@ -64,11 +66,13 @@ The project follows semantic versioning (MAJOR.MINOR.PATCH):
 If you encounter issues with the workflows:
 
 ### Close Version Workflow
+
 - Check that the version format is correct (vMAJOR.MINOR.PATCH)
 - Make sure the new version is higher than the current version
 - Ensure you have the necessary permissions to push to the repository
 
 ### Build and Release Workflow
+
 - Verify that you have run the "Close Version" workflow first
 - Check that the git tag exists for the current package.json version
 - Ensure no release already exists for the current version
