@@ -74,18 +74,6 @@ jobs:
 
             return result;
 
-      - name: Lint and fix modified files
-        run: |
-          # Check if there are any changes in the documentation directory
-          if [[ -n "$(git status --porcelain documentation/)" ]]; then
-            echo "Running lint --fix on modified documentation files..."
-            # Run lint --fix on all files in documentation directory
-            npm run lint -- --fix documentation/
-            echo "Linting completed"
-          else
-            echo "No documentation files modified, skipping lint step"
-          fi
-
       - name: Commit and push changes
         run: |
           # Check if there are any changes to commit
