@@ -3,22 +3,28 @@
 [GitHub Issue #13](https://github.com/JorgeRojo/slack-bitbucket-merge-control-chrome-extension/issues/13)
 
 ## Component
+
 `.github/workflows/close-version.yml`
 `.github/workflows/release.yml`
 
 ## Date Requested
+
 2025-07-24
 
 ## Date Implemented
+
 2025-07-24
 
 ## Priority
+
 Medium
 
 ## Status
+
 ✅ Implemented
 
 ## Description
+
 - Create a release builder for the entire Chrome extension
 - Investigate the release flow and closing version... determine the git flow and extension versioning
 - Investigate how to build the assets for the standard Chrome extensions, ready to publish
@@ -27,6 +33,7 @@ Medium
 - The assets of the extension will be in ./dist directory
 
 ## Implementation Details
+
 The implementation consists of two separate GitHub Actions workflows:
 
 1. **Close Version** (`.github/workflows/close-version.yml`):
@@ -46,4 +53,5 @@ The implementation consists of two separate GitHub Actions workflows:
 Documentation for the release process is available in `./documentation/VERSION_RELEASE_PROCESS.md`.
 
 ## Additional Context
+
 _No response_

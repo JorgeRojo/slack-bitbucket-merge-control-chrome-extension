@@ -5,13 +5,17 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  
+
   # Allow manual triggering for specific tags
   workflow_dispatch:
     inputs:
       tag:
         description: 'Tag to build and release (e.g., v1.0.0)'
         required: true
+
+# Define permissions needed for the workflow
+permissions:
+  contents: write # Needed for creating releases
 
 jobs:
   build-and-release:
@@ -27,10 +31,10 @@ jobs:
             # Use the tag that triggered the workflow
             TAG="${GITHUB_REF#refs/tags/}"
           fi
-          
+
           echo "TAG=$TAG" >> $GITHUB_ENV
           echo "Using tag: $TAG"
-          
+
           # Extract version without 'v' prefix
           VERSION="${TAG#v}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
@@ -59,7 +63,7 @@ jobs:
 
       - name: Build extension
         run: npm run build
-        
+
       - name: Create ZIP archive
         run: |
           cd dist

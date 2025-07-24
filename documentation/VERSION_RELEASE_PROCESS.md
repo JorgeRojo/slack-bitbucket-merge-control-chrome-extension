@@ -24,6 +24,7 @@ To close a version:
 5. Click the green "Run workflow" button to start the process
 
 The workflow will:
+
 - Validate that the version format is correct (must be vMAJOR.MINOR.PATCH)
 - Extract the semantic version (MAJOR.MINOR.PATCH) from the input
 - Verify that the new version is higher than the current version

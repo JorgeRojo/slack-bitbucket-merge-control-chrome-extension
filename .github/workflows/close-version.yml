@@ -7,6 +7,10 @@ on:
         description: 'Version to close (e.g., v1.0.0)'
         required: true
 
+# Define permissions needed for the workflow
+permissions:
+  contents: write # Needed for pushing commits and tags
+
 jobs:
   validate-and-close-version:
     runs-on: ubuntu-latest
@@ -38,7 +42,7 @@ jobs:
         id: extract-version
         run: |
           INPUT_VERSION="${{ github.event.inputs.version }}"
-          
+
           # Check if version starts with 'v' and extract the version number
           if [[ $INPUT_VERSION =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             VERSION="${BASH_REMATCH[1]}"
@@ -53,24 +57,24 @@ jobs:
         id: validate-higher
         run: |
           NEW_VERSION="${{ env.VERSION }}"
-          
+
           # Get current version from package.json
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "Current version: $CURRENT_VERSION"
           echo "New version: $NEW_VERSION"
-          
+
           # Compare versions using node semver
           IS_HIGHER=$(node -e "
             const semver = require('semver');
             const isHigher = semver.gt('$NEW_VERSION', '$CURRENT_VERSION');
             console.log(isHigher ? 'true' : 'false');
           ")
-          
+
           if [ "$IS_HIGHER" != "true" ]; then
             echo "::error::New version ($NEW_VERSION) must be higher than current version ($CURRENT_VERSION)"
             exit 1
           fi
-          
+
           echo "New version is higher than current version"
 
       - name: Update version in package.json
@@ -81,11 +85,11 @@ jobs:
         run: |
           # Read the current manifest.json
           MANIFEST_PATH="src/manifest.json"
-          
+
           # Update the version using jq
           jq '.version = "${{ env.VERSION }}"' $MANIFEST_PATH > temp.json
           mv temp.json $MANIFEST_PATH
-          
+
           echo "Updated manifest.json version to ${{ env.VERSION }}"
 
       - name: Configure Git
@@ -103,8 +107,10 @@ jobs:
           git tag -a ${{ github.event.inputs.version }} -m "Version ${{ env.VERSION }}"
 
       - name: Push changes and tag
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: master
-          tags: true
+        run: |
+          # Set the remote URL with the token for authentication
+          git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}
+
+          # Push both the commit and the tag
+          git push origin master
+          git push origin ${{ github.event.inputs.version }}
