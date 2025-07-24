@@ -93,19 +93,27 @@ Input: hotfix_name
 
 **Purpose**: Create GitHub release from tagged version
 
-**Trigger**: Manual dispatch
+**Trigger**: Manual dispatch (master branch only)
 
 **Git Flow Compliance**:
 
-- Only executes from master branch
+- **🔒 Branch Restriction**: Only executes from master branch
+- **Double Validation**: Workflow trigger + job-level branch check
 - Validates tag exists on master
 - Comprehensive release validation
 
 **Usage**:
 
 ```bash
-# After version is tagged: Actions → Build and Release Extension
+# IMPORTANT: Must be on master branch
+git checkout master
+git pull origin master
+
+# Then: Actions → Build and Release Extension
+# Note: Workflow will fail if not executed from master branch
 ```
+
+**⚠️ Important**: This workflow is restricted to master branch only to ensure releases are created from stable, tagged code following Git Flow guidelines.
 
 ## 📋 Documentation Workflows
 

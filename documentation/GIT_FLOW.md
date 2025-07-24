@@ -50,7 +50,7 @@ This document outlines the Git branching strategy and workflow used in this proj
 
 ### Standard Development Flow
 
-```schema 
+```schema
 develop ──┬─── feature/new-feature ───┐
           │                           │
           └─────────── ← ─────────────┘

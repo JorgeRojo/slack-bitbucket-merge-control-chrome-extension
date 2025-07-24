@@ -1,8 +1,9 @@
 name: Build and Release Extension
 
 on:
-  # Only allow manual triggering
+  # Only allow manual triggering from master branch
   workflow_dispatch:
+    branches: [master]
 
 # Define permissions needed for the workflow
 permissions:
@@ -11,6 +12,8 @@ permissions:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    # Additional safety check - only run on master branch
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout master branch
         uses: actions/checkout@v3
@@ -22,11 +25,14 @@ jobs:
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [ "$CURRENT_BRANCH" != "master" ]; then
-            echo "::error::Release can only be performed from master branch"
+            echo "::error::🚨 Git Flow Violation: Release can only be performed from master branch"
+            echo "::error::Current branch: $CURRENT_BRANCH"
+            echo "::error::Required branch: master"
+            echo "::error::Please switch to master branch and ensure it contains the tagged version"
             exit 1
           fi
 
-          echo "✅ Git Flow validation passed - running from master branch"
+          echo "✅ Git Flow validation passed - executing from master branch"
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -171,7 +177,7 @@ jobs:
           echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: master" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: master (Git Flow compliant)" >> $GITHUB_STEP_SUMMARY
           echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
@@ -179,7 +185,11 @@ jobs:
           echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
-          echo "- Git Flow compliance" >> $GITHUB_STEP_SUMMARY
+          echo "- Git Flow compliance (master branch only)" >> $GITHUB_STEP_SUMMARY
           echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
           echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
           echo "- Production build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔒 Git Flow Restrictions" >> $GITHUB_STEP_SUMMARY
+          echo "- This workflow can only be executed from master branch" >> $GITHUB_STEP_SUMMARY
+          echo "- Ensures releases are created from stable, tagged code" >> $GITHUB_STEP_SUMMARY
