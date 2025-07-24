@@ -59,8 +59,8 @@ body:
     id: expected
     attributes:
       label: Expected Behavior
-      description: What should happen instead?
-      placeholder: The toggleSwitch should be displayed as OFF
+      description: What should happen instead? Describe the correct behavior you expected to see.
+      placeholder: The toggleSwitch should be displayed as OFF when the feature is disabled and the countdown is visible
     validations:
       required: true
 
