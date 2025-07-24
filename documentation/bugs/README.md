@@ -4,22 +4,17 @@ This directory contains documentation for bugs that have been identified in the 
 
 ## Bug List
 
-| ID                                                                 | Title                                                                                               | Component                                                                                           | Severity | Date Reported |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------- | ------------- |
-| [002](./002-test-bug-reporting-github-action-dont-take-this-bu.md) | test bug reporting github action - DON'T take this bug in consideration bug Something isn't working | test bug reporting github action - DON'T take this bug in consideration bug Something isn't working | Medium   | 2025-07-24    |
-| [003](./003-xxxxx-1.md)                                            | XXXXX 1                                                                                             | XXXXX 1                                                                                             | Medium   | 2025-07-24    |
-| [004](./004-xxxxx-2.md)                                            | XXXXX 2                                                                                             | XXXXX 2                                                                                             | Medium   | 2025-07-24    |
-| [005](./005-xxxxx-3.md)                                            | XXXXX 3                                                                                             | XXXXX 3                                                                                             | Medium   | 2025-07-24    |
-| [006](./006-xxxx-4.md)                                             | XXXX 4                                                                                              | XXXX 4                                                                                              | Medium   | 2025-07-24    |
-| [007](./007-xxxx-5.md)                                             | XXXX 5                                                                                              | XXXX 5                                                                                              | Medium   | 2025-07-24    |
-| [008](./008-xxxx-6.md)                                             | XXXX 6                                                                                              | XXXX 6                                                                                              | Medium   | 2025-07-24    |
-| [009](./009-xxxx-7.md)                                             | XXXX 7                                                                                              | XXXX 7                                                                                              | Medium   | 2025-07-24    |
+| ID | Title | Component | Severity | Date Reported |
+| -- | ----- | --------- | -------- | ------------- |
+| [004](./004-xxxxx-2.md) | XXXXX 2 | XXXXX 2 | Medium | 2025-07-24 |
+| [006](./006-xxxx-4.md) | XXXX 4 | XXXX 4 | Medium | 2025-07-24 |
+| [009](./009-xxxx-7.md) | XXXX 7 | XXXX 7 | Medium | 2025-07-24 |
 
 ## How to Add a New Bug
 
-1. Create a new file in this directory with the format: `XXX-brief-description.md` where XXX is the next available bug number
-2. Use the template below for the bug documentation
-3. Add an entry to the table above
+1. Create a GitHub issue with the 'bug' label
+2. Fill out the bug report template
+3. The bug file will be automatically created
 
 ## Bug Template
 
