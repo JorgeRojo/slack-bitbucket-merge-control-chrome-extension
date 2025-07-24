@@ -1,43 +1,44 @@
 import {
-  SLACK_CONVERSATIONS_LIST_URL,
-  SLACK_CONVERSATIONS_HISTORY_URL,
-  SLACK_AUTH_TEST_URL,
-  SLACK_CONNECTIONS_OPEN_URL,
-  DEFAULT_MERGE_BUTTON_SELECTOR,
-  FEATURE_REACTIVATION_TIMEOUT,
-  RECONNECTION_DELAY_MS,
-  WEBSOCKET_CHECK_INTERVAL,
-  WEBSOCKET_CHECK_ALARM,
-  WEBSOCKET_MAX_AGE,
-  ERROR_MESSAGES,
   APP_STATUS,
-  MERGE_STATUS,
-  MESSAGE_ACTIONS,
   CONTENT_SCRIPT_ID,
-  MAX_MESSAGES,
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
+  DEFAULT_MERGE_BUTTON_SELECTOR,
+  ERROR_MESSAGES,
+  FEATURE_REACTIVATION_TIMEOUT,
+  MAX_MESSAGES,
+  MERGE_STATUS,
+  MESSAGE_ACTIONS,
+  RECONNECTION_DELAY_MS,
+  SLACK_AUTH_TEST_URL,
+  SLACK_CONNECTIONS_OPEN_URL,
+  SLACK_CONVERSATIONS_HISTORY_URL,
+  SLACK_CONVERSATIONS_LIST_URL,
+  WEBSOCKET_CHECK_ALARM,
+  WEBSOCKET_CHECK_INTERVAL,
+  WEBSOCKET_MAX_AGE,
 } from '@src/modules/common/constants';
+import { ProcessedMessage } from '@src/modules/common/types/app';
+import { ChromeRuntimeMessage } from '@src/modules/common/types/chrome';
+import {
+  SlackChannel,
+  SlackConversationsListResponse,
+  SlackMessage,
+} from '@src/modules/common/types/slack';
 import { Logger } from '@src/modules/common/utils/Logger';
 import { toErrorType } from '@src/modules/common/utils/type-helpers';
+
 import {
   cleanSlackMessageText,
   determineMergeStatus,
-  updateExtensionIcon,
-  handleSlackApiError,
-  updateAppStatus,
-  updateIconBasedOnCurrentMessages,
   getPhrasesFromStorage,
+  handleSlackApiError,
   processAndStoreMessage,
+  updateAppStatus,
+  updateExtensionIcon,
+  updateIconBasedOnCurrentMessages,
 } from './utils/background-utils';
-import { ProcessedMessage } from '@src/modules/common/types/app';
-import {
-  SlackMessage,
-  SlackChannel,
-  SlackConversationsListResponse,
-} from '@src/modules/common/types/slack';
-import { ChromeRuntimeMessage } from '@src/modules/common/types/chrome';
 
 let bitbucketTabId: number | null = null;
 let rtmWebSocket: WebSocket | null = null;

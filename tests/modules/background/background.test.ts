@@ -1,15 +1,15 @@
-import { vi, describe, test, expect, beforeAll, afterAll, Mock } from 'vitest';
-import {
-  mockStorage,
-  mockRuntime,
-  mockAlarms,
-  mockTabs,
-  mockAction,
-  mockScripting,
-  mockPermissions,
-} from '@tests/setup';
-import { Logger } from '@src/modules/common/utils/Logger';
 import { MESSAGE_ACTIONS } from '@src/modules/common/constants';
+import { Logger } from '@src/modules/common/utils/Logger';
+import {
+  mockAction,
+  mockAlarms,
+  mockPermissions,
+  mockRuntime,
+  mockScripting,
+  mockStorage,
+  mockTabs,
+} from '@tests/setup';
+import { Mock, afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 vi.mock('@src/modules/common/utils/Logger');
 

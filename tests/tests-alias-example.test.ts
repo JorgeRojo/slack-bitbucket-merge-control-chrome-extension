@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
 import { mockRuntime } from '@tests/setup';
+import { describe, expect, test } from 'vitest';
 
 describe('Tests Alias Example', () => {
   test('should be able to import from @tests', () => {

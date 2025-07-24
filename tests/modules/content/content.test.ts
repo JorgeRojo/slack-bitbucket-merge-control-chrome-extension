@@ -1,8 +1,10 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { Mock } from 'vitest';
-import { mockStorage, mockRuntime } from '@tests/setup';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import { mockRuntime, mockStorage } from '@tests/setup';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Mock } from 'vitest';
 vi.mock('@src/modules/common/utils/logger');
 describe('Content Script Structure', () => {
   test('should have proper encapsulation pattern', () => {

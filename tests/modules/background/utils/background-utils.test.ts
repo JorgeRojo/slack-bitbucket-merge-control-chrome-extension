@@ -1,17 +1,18 @@
-import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import {
   cleanSlackMessageText,
   determineMergeStatus,
-  updateExtensionIcon,
-  handleSlackApiError,
-  updateAppStatus,
-  updateIconBasedOnCurrentMessages,
   getPhrasesFromStorage,
+  handleSlackApiError,
   processAndStoreMessage,
-} from '@src/modules/background/utils/background-utils';
-import { MERGE_STATUS, APP_STATUS, ERROR_MESSAGES } from '@src/modules/common/constants';
+  updateAppStatus,
+  updateExtensionIcon,
+  updateIconBasedOnCurrentMessages,
+} from '@src/modules/background/utils/background-utils.ts';
+import { APP_STATUS, ERROR_MESSAGES, MERGE_STATUS } from '@src/modules/common/constants';
 import { ProcessedMessage } from '@src/modules/common/types/app';
 import { SlackMessage } from '@src/modules/common/types/slack';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 const mockChrome = {
   action: {
     setIcon: vi.fn(),
@@ -27,6 +28,7 @@ const mockChrome = {
   },
 };
 global.chrome = mockChrome as any;
+
 vi.mock('../../src/utils/logger', () => ({
   Logger: {
     log: vi.fn(),
@@ -43,6 +45,7 @@ vi.mock('../../src/constants', async () => {
     MAX_MESSAGES: 50,
   };
 });
+
 describe('Background Utils', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -50,9 +53,11 @@ describe('Background Utils', () => {
     mockChrome.storage.sync.get.mockResolvedValue({});
     mockChrome.storage.local.set.mockResolvedValue({});
   });
+
   afterEach(() => {
     vi.resetAllMocks();
   });
+
   describe('cleanSlackMessageText', () => {
     test('should clean Slack message text by removing formatting, mentions, etc.', () => {
       expect(cleanSlackMessageText('<@U123456> Hello <#C123456|channel>')).toBe(
@@ -65,6 +70,7 @@ describe('Background Utils', () => {
       expect(cleanSlackMessageText(undefined)).toBe('');
     });
   });
+
   describe('determineMergeStatus', () => {
     test('should determine merge status based on message content and configured phrases', () => {
       const messages: ProcessedMessage[] = [
@@ -119,6 +125,7 @@ describe('Background Utils', () => {
       expect(emptyResult.message).toBeNull();
     });
   });
+
   describe('updateExtensionIcon', () => {
     test('should update the extension icon based on the current status', () => {
       updateExtensionIcon(MERGE_STATUS.LOADING);
@@ -165,6 +172,7 @@ describe('Background Utils', () => {
       });
     });
   });
+
   describe('handleSlackApiError', () => {
     test('should handle channel not found error', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ lastKnownMergeState: {} });
@@ -180,6 +188,7 @@ describe('Background Utils', () => {
         })
       );
     });
+
     test('should handle not in channel error', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ lastKnownMergeState: {} });
       await expect(
@@ -187,6 +196,7 @@ describe('Background Utils', () => {
       ).resolves.not.toThrow();
       expect(mockChrome.storage.local.set).toHaveBeenCalled();
     });
+
     test('should handle invalid auth error', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ lastKnownMergeState: {} });
       await handleSlackApiError(new Error(ERROR_MESSAGES.INVALID_AUTH));
@@ -198,12 +208,14 @@ describe('Background Utils', () => {
         })
       );
     });
+
     test('should handle token revoked error', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ lastKnownMergeState: {} });
       await expect(
         handleSlackApiError(new Error(ERROR_MESSAGES.TOKEN_REVOKED))
       ).resolves.not.toThrow();
     });
+
     test('should handle unknown error', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ lastKnownMergeState: {} });
       await handleSlackApiError(new Error('Some unknown error'));
@@ -215,11 +227,13 @@ describe('Background Utils', () => {
         })
       );
     });
+
     test('should handle non-Error objects', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ lastKnownMergeState: {} });
       await expect(handleSlackApiError('String error')).resolves.not.toThrow();
     });
   });
+
   describe('updateAppStatus', () => {
     test('should update app status and icon', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ lastKnownMergeState: {} });
@@ -254,6 +268,7 @@ describe('Background Utils', () => {
       );
     });
   });
+
   describe('updateIconBasedOnCurrentMessages', () => {
     test('should update icon based on current messages', async () => {
       mockChrome.storage.local.get.mockImplementation(key => {
@@ -281,6 +296,7 @@ describe('Background Utils', () => {
         })
       );
     });
+
     test('should handle empty messages', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ messages: [] });
       await updateIconBasedOnCurrentMessages();
@@ -294,6 +310,7 @@ describe('Background Utils', () => {
       );
     });
   });
+
   describe('getPhrasesFromStorage', () => {
     test('should get phrases from storage', async () => {
       mockChrome.storage.sync.get.mockResolvedValue({
@@ -306,6 +323,7 @@ describe('Background Utils', () => {
       expect(phrases.currentDisallowedPhrases).toEqual(['block1', 'block2']);
       expect(phrases.currentExceptionPhrases).toEqual(['exception1', 'exception2']);
     });
+
     test('should use default phrases when not in storage', async () => {
       mockChrome.storage.sync.get.mockResolvedValue({});
       const phrases = await getPhrasesFromStorage();
@@ -330,6 +348,7 @@ describe('Background Utils', () => {
         'do not merge in',
       ]);
     });
+
     test('should handle empty strings in storage', async () => {
       mockChrome.storage.sync.get.mockResolvedValue({
         allowedPhrases: '',
@@ -359,6 +378,7 @@ describe('Background Utils', () => {
       ]);
     });
   });
+
   describe('processAndStoreMessage', () => {
     test('should process and store a new message', async () => {
       mockChrome.storage.local.get.mockResolvedValue({ messages: [] });
@@ -385,6 +405,7 @@ describe('Background Utils', () => {
         })
       );
     });
+
     test('should not add duplicate messages', async () => {
       const existingMessage = {
         text: 'Existing message',
@@ -404,6 +425,7 @@ describe('Background Utils', () => {
       );
       expect(setCalls).toHaveLength(0);
     });
+
     test('should sort messages by timestamp', async () => {
       const oldMessage = {
         text: 'Old message',
@@ -430,6 +452,7 @@ describe('Background Utils', () => {
       expect(setCall[0].messages[0].ts).toBe('1234567891');
       expect(setCall[0].messages[1].ts).toBe('1234567890');
     });
+
     test('should limit the number of messages', async () => {
       const messages = Array.from({ length: 60 }, (_, i) => ({
         text: `Message ${i}`,
@@ -456,6 +479,7 @@ describe('Background Utils', () => {
       expect(setCall[0].messages.length).toBe(50);
       expect(setCall[0].messages[0].ts).toBe('9999999999');
     });
+
     test('should handle invalid messages', async () => {
       const invalidMessage1: any = { user: 'U123' };
       const invalidMessage2: any = { ts: '1234567890' };

@@ -1,15 +1,15 @@
-import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { mockStorage, mockRuntime } from '@tests/setup';
 import {
   DEFAULT_ALLOWED_PHRASES,
+  DEFAULT_BITBUCKET_URL,
+  DEFAULT_CHANNEL_NAME,
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
-  DEFAULT_BITBUCKET_URL,
   DEFAULT_MERGE_BUTTON_SELECTOR,
-  DEFAULT_CHANNEL_NAME,
   MESSAGE_ACTIONS,
 } from '@src/modules/common/constants';
 import { literals } from '@src/modules/common/literals';
+import { mockRuntime, mockStorage } from '@tests/setup';
+import { Mock, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 vi.mock('@src/modules/common/utils/logger');
 describe('Options Page', () => {
   interface MockElements {

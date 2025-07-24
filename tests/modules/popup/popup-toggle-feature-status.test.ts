@@ -1,6 +1,7 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { initializeToggleFeatureStatus } from '@src/modules/popup/popup-toggle-feature-status';
 import { MESSAGE_ACTIONS } from '@src/modules/common/constants';
+import { Logger } from '@src/modules/common/utils/Logger';
+import { initializeToggleFeatureStatus } from '@src/modules/popup/popup-toggle-feature-status';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Mock Logger
 vi.mock('@src/modules/common/utils/Logger', () => ({

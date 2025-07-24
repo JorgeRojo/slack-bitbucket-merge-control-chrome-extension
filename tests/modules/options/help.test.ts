@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../src/modules/common/components/nav-links', () => ({}));
 describe('Help Page', () => {
   let mockConsoleLog: ReturnType<typeof vi.spyOn>;

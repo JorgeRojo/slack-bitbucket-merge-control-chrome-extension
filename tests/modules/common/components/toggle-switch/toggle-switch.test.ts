@@ -1,6 +1,7 @@
-import { describe, test, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
-import '@src/modules/common/components/toggle-switch/toggle-switch';
 import { Logger } from '@src/modules/common/utils/logger';
+import { Mock, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import '@src/modules/common/components/toggle-switch/toggle-switch';
 
 vi.mock('@src/modules/common/utils/logger');
 

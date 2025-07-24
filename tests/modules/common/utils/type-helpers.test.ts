@@ -1,11 +1,11 @@
-import { describe, test, expect } from 'vitest';
 import {
+  isError,
+  isString,
   toErrorType,
   toString,
   toStringOrUndefined,
-  isString,
-  isError,
 } from '@src/modules/common/utils/type-helpers';
+import { describe, expect, test } from 'vitest';
 describe('Type Helpers', () => {
   describe('toErrorType', () => {
     test('should return Error instance as-is', () => {

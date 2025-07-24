@@ -1,4 +1,4 @@
-import { MERGE_STATUS, APP_STATUS } from '../constants';
+import { APP_STATUS, MERGE_STATUS } from '@src/modules/common/constants';
 
 export interface ProcessedMessage {
   text: string;

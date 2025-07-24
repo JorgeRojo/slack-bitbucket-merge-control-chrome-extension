@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
 import { ErrorHandler } from '@src/modules/common/utils/errorHandler';
+import { Mock, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 describe('ErrorHandler', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});

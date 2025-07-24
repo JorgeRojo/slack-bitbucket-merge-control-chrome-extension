@@ -90,8 +90,8 @@ Logger.error(error, component, context);
 ### 1. Silence Console Errors (Connection Issues)
 
 ```javascript
-import { Logger } from './utils/logger.js';
-import { CONSOLE_ERROR_MESSAGES } from './constants.js';
+import { Logger } from '@src/modules/common/utils/logger.js';
+import { CONSOLE_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 
 try {
   await chrome.runtime.sendMessage({ action: 'someAction' });
@@ -109,7 +109,7 @@ try {
 ### 2. Display User-Friendly Error Messages
 
 ```javascript
-import { USER_ERROR_MESSAGES } from './constants.js';
+import { USER_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 
 function displayError(errorType) {
   const errorMessage = USER_ERROR_MESSAGES[errorType];
@@ -123,8 +123,8 @@ displayError('CHANNEL_NOT_FOUND'); // Shows: "Channel not found or bot is not in
 ### 3. Silence Multiple Console Error Types
 
 ```javascript
-import { Logger } from './utils/logger.js';
-import { CONSOLE_ERROR_MESSAGES } from './constants.js';
+import { Logger } from '@src/modules/common/utils/logger.js';
+import { CONSOLE_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 
 try {
   await chrome.tabs.sendMessage(tabId, message);
@@ -143,7 +143,7 @@ try {
 ### 4. Conditional Handling Based on Silencing
 
 ```javascript
-import { CONSOLE_ERROR_MESSAGES } from './constants.js';
+import { CONSOLE_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 
 try {
   await chrome.tabs.sendMessage(bitbucketTabId, message);
@@ -166,7 +166,7 @@ try {
 ### 5. Mixed Usage - Console and User Messages
 
 ```javascript
-import { CONSOLE_ERROR_MESSAGES, USER_ERROR_MESSAGES } from './constants.js';
+import { CONSOLE_ERROR_MESSAGES, USER_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 
 try {
   await fetchSlackData();
@@ -190,7 +190,7 @@ try {
 When popup is not open, messages fail with connection errors:
 
 ```javascript
-import { CONSOLE_ERROR_MESSAGES } from './constants.js';
+import { CONSOLE_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 
 try {
   await chrome.runtime.sendMessage({
@@ -212,7 +212,7 @@ try {
 When a tab is closed or not available:
 
 ```javascript
-import { CONSOLE_ERROR_MESSAGES } from './constants.js';
+import { CONSOLE_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 
 try {
   await chrome.tabs.sendMessage(tabId, message);
@@ -234,7 +234,7 @@ try {
 ### Popup - User Interface Error Display
 
 ```javascript
-import { USER_ERROR_MESSAGES } from './constants.js';
+import { USER_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 
 function updateUI(appStatus) {
   const statusElement = document.getElementById('status');
@@ -287,7 +287,7 @@ export const USER_ERROR_MESSAGES = {
 2. Use in UI components:
 
 ```javascript
-import { USER_ERROR_MESSAGES } from './constants.js';
+import { USER_ERROR_MESSAGES } from '@src/modules/common/constants.js';
 errorElement.textContent = USER_ERROR_MESSAGES.NEW_USER_ERROR;
 ```
 

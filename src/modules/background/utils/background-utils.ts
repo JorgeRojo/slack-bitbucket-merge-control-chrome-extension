@@ -1,11 +1,11 @@
 import {
-  MERGE_STATUS,
   APP_STATUS,
-  ERROR_MESSAGES,
   DEFAULT_ALLOWED_PHRASES,
   DEFAULT_DISALLOWED_PHRASES,
   DEFAULT_EXCEPTION_PHRASES,
+  ERROR_MESSAGES,
   MAX_MESSAGES,
+  MERGE_STATUS,
 } from '@src/modules/common/constants';
 import { ProcessedMessage } from '@src/modules/common/types/app';
 import { SlackMessage } from '@src/modules/common/types/slack';

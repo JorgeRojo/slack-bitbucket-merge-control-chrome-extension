@@ -1,8 +1,8 @@
-import { describe, test, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
-import { mockStorage, mockRuntime } from '@tests/setup';
+import { APP_STATUS, MERGE_STATUS } from '@src/modules/common/constants';
 import { Logger } from '@src/modules/common/utils/logger';
-import { MERGE_STATUS, APP_STATUS } from '@src/modules/common/constants';
 import { initializeToggleFeatureStatus } from '@src/modules/popup/popup-toggle-feature-status.ts';
+import { mockRuntime, mockStorage } from '@tests/setup';
+import { Mock, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 vi.mock('@src/modules/common/utils/logger');
 vi.mock('@src/modules/popup/popup-toggle-feature-status');
 interface MockElement {

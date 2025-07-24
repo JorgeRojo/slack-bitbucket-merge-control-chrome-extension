@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mockRuntime } from '@tests/setup';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import '@src/modules/common/components/nav-links/nav-links';
 
 // Mock para chrome.runtime.getURL
