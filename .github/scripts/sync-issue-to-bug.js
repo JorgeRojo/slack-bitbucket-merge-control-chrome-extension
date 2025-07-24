@@ -17,15 +17,24 @@ export default async ({ github, context, core, exec, fs, path }) => {
     return;
   }
   
-  // Find the next available bug ID
+  // Check if we already have a bug file for this issue
   const bugsDir = 'documentation/bugs';
   if (!fs.existsSync(bugsDir)) {
     fs.mkdirSync(bugsDir, { recursive: true });
   }
   
+  // Check if any existing bug file references this issue
   const bugFiles = fs.readdirSync(bugsDir).filter(f => f.match(/^\d{3}-.+\.md$/));
-  let maxId = 0;
+  for (const file of bugFiles) {
+    const content = fs.readFileSync(path.join(bugsDir, file), 'utf8');
+    if (content.includes(`[GitHub Issue #${issue.number}]`)) {
+      console.log(`Bug file already exists for issue #${issue.number}: ${file}`);
+      return;
+    }
+  }
   
+  // Find the next available bug ID
+  let maxId = 0;
   bugFiles.forEach(file => {
     const idMatch = file.match(/^(\d{3})/);
     if (idMatch) {

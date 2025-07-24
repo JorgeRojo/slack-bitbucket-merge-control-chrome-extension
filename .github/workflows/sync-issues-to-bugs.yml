@@ -2,7 +2,7 @@ name: Sync GitHub Issues to Bug Documentation
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]  # Solo se activa cuando se añade una etiqueta, no cuando se crea el issue
 
 # Define los permisos necesarios para el GITHUB_TOKEN
 permissions:
@@ -12,8 +12,8 @@ permissions:
 jobs:
   sync-to-bug-files:
     runs-on: ubuntu-latest
-    # Only run for issues with the 'bug' label
-    if: contains(github.event.issue.labels.*.name, 'bug')
+    # Solo ejecutar para issues con la etiqueta "bug" que se acaban de etiquetar
+    if: contains(github.event.issue.labels.*.name, 'bug') && github.event.action == 'labeled' && github.event.label.name == 'bug'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
