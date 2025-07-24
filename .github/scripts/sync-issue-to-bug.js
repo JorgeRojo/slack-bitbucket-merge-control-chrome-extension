@@ -132,21 +132,33 @@ ${additionalContext ? `## Additional Context\n${additionalContext}` : ''}
   await exec.exec('git', ['config', 'user.name', 'GitHub Action']);
   await exec.exec('git', ['config', 'user.email', 'action@github.com']);
   
-  // Commit and push changes
-  await exec.exec('git', ['add', bugFilePath]);
-  if (fs.existsSync(indexPath)) {
-    await exec.exec('git', ['add', indexPath]);
+  // Pull changes from remote before pushing
+  try {
+    // Configure Git to pull with rebase strategy
+    await exec.exec('git', ['config', 'pull.rebase', 'false']);
+    
+    // Pull changes from remote
+    await exec.exec('git', ['pull', 'origin', 'master']);
+    
+    // Commit and push changes
+    await exec.exec('git', ['add', bugFilePath]);
+    if (fs.existsSync(indexPath)) {
+      await exec.exec('git', ['add', indexPath]);
+    }
+    await exec.exec('git', ['commit', '-m', `Create bug file #${nextId} from GitHub issue #${issue.number}`]);
+    await exec.exec('git', ['push']);
+    
+    // Add a comment to the issue linking to the bug file
+    await github.rest.issues.createComment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: issue.number,
+      body: `I've created a bug documentation file for this issue: [Bug #${nextId}](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/${bugFilePath})`
+    });
+  } catch (error) {
+    core.setFailed(`Failed to push changes: ${error.message}`);
+    throw error;
   }
-  await exec.exec('git', ['commit', '-m', `Create bug file #${nextId} from GitHub issue #${issue.number}`]);
-  await exec.exec('git', ['push']);
-  
-  // Add a comment to the issue linking to the bug file
-  await github.rest.issues.createComment({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    issue_number: issue.number,
-    body: `I've created a bug documentation file for this issue: [Bug #${nextId}](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/${bugFilePath})`
-  });
   
   return {
     bugId: nextId,

@@ -90,12 +90,25 @@ ${additionalContext ? `### Additional Context\n${additionalContext}` : ''}`;
   
   fs.writeFileSync(file, updatedContent);
   
-  // Commit the updated bug file
-  await exec.exec('git', ['config', 'user.name', 'GitHub Action']);
-  await exec.exec('git', ['config', 'user.email', 'action@github.com']);
-  await exec.exec('git', ['add', file]);
-  await exec.exec('git', ['commit', '-m', `Link bug #${bugId} to GitHub issue #${issue.data.number}`]);
-  await exec.exec('git', ['push']);
+  try {
+    // Set up git user
+    await exec.exec('git', ['config', 'user.name', 'GitHub Action']);
+    await exec.exec('git', ['config', 'user.email', 'action@github.com']);
+    
+    // Configure Git to pull with merge strategy
+    await exec.exec('git', ['config', 'pull.rebase', 'false']);
+    
+    // Pull changes from remote
+    await exec.exec('git', ['pull', 'origin', 'master']);
+    
+    // Commit the updated bug file
+    await exec.exec('git', ['add', file]);
+    await exec.exec('git', ['commit', '-m', `Link bug #${bugId} to GitHub issue #${issue.data.number}`]);
+    await exec.exec('git', ['push']);
+  } catch (error) {
+    core.setFailed(`Failed to push changes: ${error.message}`);
+    throw error;
+  }
   
   return {
     bugId,
