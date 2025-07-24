@@ -12,7 +12,7 @@ This directory contains documentation for bugs and features in the Slack-Bitbuck
 
 | ID | Title | Component | Priority | Date Requested |
 | -- | ----- | --------- | -------- | -------------- |
-<!-- No features yet -->
+| [001](./features/001-create-a-github-action-to-create-a-release.md) | Create a github action to create a release | .github/workflows/release.yml | Medium | 2025-07-24 |
 
 ## How to Add a New Issue
 
