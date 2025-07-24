@@ -430,16 +430,29 @@ jobs:
     # Run if auto_publish is enabled OR if triggered by PR merge with version
     if: |
       (github.event_name == 'workflow_dispatch' && needs.close-version.outputs.should_publish == 'true') ||
-      (github.event_name == 'pull_request' && needs.close-version.outputs.version_tag != '' && env.SKIP_VERSION != 'true')
-
+      (github.event_name == 'pull_request' && needs.close-version.outputs.version_tag != '')
+    
     steps:
+      - name: Check if version closing was skipped
+        id: check-skip
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ -z "${{ needs.close-version.outputs.version_tag }}" ]; then
+            echo "Version closing was skipped - no version tag available"
+            echo "SKIP_PUBLISH=true" >> $GITHUB_ENV
+            exit 0
+          else
+            echo "SKIP_PUBLISH=false" >> $GITHUB_ENV
+          fi
+
       - name: Checkout master branch for release
+        if: env.SKIP_PUBLISH != 'true'
         uses: actions/checkout@v3
         with:
           ref: master
           fetch-depth: 0
 
       - name: Validate Git Flow compliance for release
+        if: env.SKIP_PUBLISH != 'true'
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [ "$CURRENT_BRANCH" != "master" ]; then
@@ -453,6 +466,7 @@ jobs:
           echo "✅ Git Flow validation passed - executing from master branch"
 
       - name: Extract version information
+        if: env.SKIP_PUBLISH != 'true'
         id: version-info
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -474,6 +488,7 @@ jobs:
           echo "Extracted tag: $TAG, version: $VERSION"
 
       - name: Validate tag exists
+        if: env.SKIP_PUBLISH != 'true'
         run: |
           # Fetch all tags
           git fetch --tags
@@ -487,15 +502,18 @@ jobs:
           echo "✅ Tag ${{ env.TAG }} exists"
 
       - name: Setup Node.js for release
+        if: env.SKIP_PUBLISH != 'true'
         uses: actions/setup-node@v3
         with:
           node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies for release
+        if: env.SKIP_PUBLISH != 'true'
         run: npm ci
 
       - name: Run final validation before release
+        if: env.SKIP_PUBLISH != 'true'
         run: |
           echo "🔍 Running final validation before creating release..."
 
@@ -511,12 +529,14 @@ jobs:
           echo "✅ All final validations passed!"
 
       - name: Build extension for release
+        if: env.SKIP_PUBLISH != 'true'
         run: |
           echo "🏗️ Building extension for release..."
           npm run build
           echo "✅ Build completed successfully"
 
       - name: Create release package
+        if: env.SKIP_PUBLISH != 'true'
         run: |
           echo "📦 Creating release package..."
 
@@ -542,6 +562,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
+        if: env.SKIP_PUBLISH != 'true'
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
@@ -579,26 +600,35 @@ jobs:
 
       - name: Create release summary
         run: |
-          echo "## 🚀 Release ${{ env.TAG }} Published Successfully!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: master (Git Flow compliant)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Chrome Extension ZIP file" >> $GITHUB_STEP_SUMMARY
-          echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
-          echo "- Git Flow compliance (master branch only)" >> $GITHUB_STEP_SUMMARY
-          echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
-          echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
-          echo "- Production build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎉 Complete Release Pipeline" >> $GITHUB_STEP_SUMMARY
-          echo "- Develop → Master merge ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- Version closing and tagging ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- GitHub release creation ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- Chrome Web Store ready package ✅" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ env.SKIP_PUBLISH }}" = "true" ]; then
+            echo "## ℹ️ Release Publishing Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Release publishing was skipped because version closing did not produce a valid version tag." >> $GITHUB_STEP_SUMMARY
+            echo "This typically happens when a PR merge does not contain a version in the title." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Expected Format**: PR title should contain version like 'Release v1.0.0'" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 🚀 Release ${{ env.TAG }} Published Successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch**: master (Git Flow compliant)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+            echo "- Chrome Extension ZIP file" >> $GITHUB_STEP_SUMMARY
+            echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
+            echo "- Git Flow compliance (master branch only)" >> $GITHUB_STEP_SUMMARY
+            echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
+            echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
+            echo "- Production build" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🎉 Complete Release Pipeline" >> $GITHUB_STEP_SUMMARY
+            echo "- Develop → Master merge ✅" >> $GITHUB_STEP_SUMMARY
+            echo "- Version closing and tagging ✅" >> $GITHUB_STEP_SUMMARY
+            echo "- GitHub release creation ✅" >> $GITHUB_STEP_SUMMARY
+            echo "- Chrome Web Store ready package ✅" >> $GITHUB_STEP_SUMMARY
+          fi
