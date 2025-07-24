@@ -32,23 +32,26 @@ These workflows implement and enforce the Git Flow branching strategy as defined
 **Purpose**: Tag and close version after merge to master
 
 **Triggers**:
-
+- **Primary**: Called automatically by `merge-develop-to-master.yml`
 - Manual dispatch with version input
 - Auto-trigger after PR merge from develop/release to master
 
 **Git Flow Compliance**:
-
 - Only executes on master branch
 - Validates merge source (develop or release branches only)
 - Creates version tags on master
 - Updates package.json and manifest.json
 
-**Usage**:
+**Integration**:
+- **Preferred Flow**: `merge-develop-to-master.yml` → `close-version.yml` → `release.yml`
+- **Direct Merge**: Automatically triggered after direct merge to master
+- **Manual**: Can be triggered manually for specific cases
 
+**Usage**:
 ```bash
-# Automatically runs after develop→master merge
-# Or manually: Actions → Close Version
-# Input: version (e.g., v1.0.0)
+# Preferred: Use merge-develop-to-master.yml (calls this automatically)
+# Automatic: Runs after develop→master PR merge
+# Manual: Actions → Close Version (Input: version e.g., v1.0.0)
 ```
 
 ### 3. `hotfix.yml` 🚨
@@ -136,12 +139,14 @@ git pull origin master
 
 **Purpose**: Configure branch protection rules
 
-**⚠️ Requirements**: 
+**⚠️ Requirements**:
+
 - **Repository admin permissions** required
 - User must have admin access to the repository
 - Organization policies must allow branch protection configuration
 
 **Actions**:
+
 - `setup-all`: Configure both master and develop
 - `setup-master`: Configure master branch only
 - `setup-develop`: Configure develop branch only
@@ -149,6 +154,7 @@ git pull origin master
 - `status`: Check current protection status
 
 **Usage**:
+
 ```bash
 # Ensure you have repository admin permissions first
 # Then: Actions → Setup Branch Protection Rules
@@ -158,6 +164,7 @@ git pull origin master
 **Protection Rules**:
 
 **Master Branch**:
+
 - Required status checks (strict)
 - Required approving reviews: 1
 - Dismiss stale reviews: Yes
@@ -167,12 +174,14 @@ git pull origin master
 - Require conversation resolution: Yes
 
 **Develop Branch**:
+
 - Required status checks (strict)
 - Required approving reviews: 1
 - Allow force pushes: Yes (for maintainers)
 - Less restrictive than master
 
 **Troubleshooting**:
+
 - **403 Permission Denied**: Ensure you have repository admin access
 - **404 Branch Not Found**: Ensure target branches exist
 - **Organization Policies**: Check if organization allows branch protection
@@ -199,12 +208,18 @@ graph TD
 ## 📋 Git Flow Process
 
 ### Standard Release Process
-
 1. **Development**: Work on feature branches from develop
 2. **Integration**: Merge features to develop via PR
 3. **Release Preparation**: Run `merge-develop-to-master.yml`
-4. **Version Closing**: `close-version.yml` runs automatically
+   - **Direct Merge**: Automatically triggers `close-version.yml`
+   - **PR Mode**: Creates PR, then `close-version.yml` runs after PR merge
+4. **Version Tagging**: `close-version.yml` creates version tag automatically
 5. **Release**: Run `release.yml` to publish
+
+### Integrated Workflow Chain
+```
+merge-develop-to-master.yml → close-version.yml → release.yml
+```
 
 ### Hotfix Process
 

@@ -19,6 +19,7 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
+  actions: write # Needed to trigger other workflows
 
 jobs:
   validate-and-merge:
@@ -174,6 +175,32 @@ jobs:
           echo "✅ Direct merge completed"
           echo "🏷️ Ready for version tagging"
 
+      - name: Trigger Close Version workflow (if direct merge)
+        if: github.event.inputs.create_pr == 'false'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('🚀 Triggering Close Version workflow...');
+            
+            try {
+              const response = await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'close-version.yml',
+                ref: 'master',
+                inputs: {
+                  version: '${{ github.event.inputs.version }}'
+                }
+              });
+              
+              console.log('✅ Close Version workflow triggered successfully');
+              console.log('Workflow will run automatically to tag the release');
+              
+            } catch (error) {
+              console.error('❌ Failed to trigger Close Version workflow:', error.message);
+              console.error('Please run Close Version workflow manually with version: ${{ github.event.inputs.version }}');
+            }
+
       - name: Create workflow summary
         run: |
           echo "## 🚀 Release ${{ github.event.inputs.version }} Preparation Complete!" >> $GITHUB_STEP_SUMMARY
@@ -190,14 +217,16 @@ jobs:
             echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
             echo "1. Review and approve the PR" >> $GITHUB_STEP_SUMMARY
             echo "2. Merge the PR into master" >> $GITHUB_STEP_SUMMARY
-            echo "3. Close Version workflow will auto-run" >> $GITHUB_STEP_SUMMARY
+            echo "3. Close Version workflow will auto-run after PR merge" >> $GITHUB_STEP_SUMMARY
           else
             echo "- Direct merge to master ✅" >> $GITHUB_STEP_SUMMARY
+            echo "- Close Version workflow triggered ✅" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
-            echo "1. Run Close Version workflow manually" >> $GITHUB_STEP_SUMMARY
+            echo "1. Wait for Close Version workflow to complete" >> $GITHUB_STEP_SUMMARY
+            echo "2. Verify version tag was created" >> $GITHUB_STEP_SUMMARY
           fi
 
-          echo "4. Run Release workflow to publish" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run Release workflow to publish" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY

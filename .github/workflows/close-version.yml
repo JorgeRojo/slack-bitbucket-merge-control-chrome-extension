@@ -6,7 +6,8 @@ on:
       version:
         description: 'Version to close (e.g., v1.0.0)'
         required: true
-  # Auto-trigger after PR merge from develop to master
+  # Auto-trigger after PR merge from develop to master (backward compatibility)
+  # Primary usage: Called from merge-develop-to-master.yml workflow
   pull_request:
     types: [closed]
     branches: [master]
