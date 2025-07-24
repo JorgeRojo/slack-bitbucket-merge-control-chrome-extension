@@ -30,7 +30,7 @@ beforeEach(() => {
 2. **Mock implementations for specific test cases**:
 
 ```typescript
-chrome.storage.local.get.mockImplementation((keys) => {
+chrome.storage.local.get.mockImplementation(keys => {
   if (Array.isArray(keys) && keys.includes('appStatus')) {
     return Promise.resolve({
       appStatus: 'config_error',
@@ -61,7 +61,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 describe('App Status Error Handling', () => {
   beforeEach(() => {
     // Reset mocks before each test
-    vi.spyOn(chrome.storage.local, 'get').mockImplementation((keys) => {
+    vi.spyOn(chrome.storage.local, 'get').mockImplementation(keys => {
       if (Array.isArray(keys) && keys.includes('messages')) {
         return Promise.resolve({
           messages: [],

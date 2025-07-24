@@ -138,6 +138,7 @@ import { Logger } from '@src/modules/common/utils/Logger';
    - Edit `.ts` files in the `src/` directory
 
 2. **Build the extension:**
+
    ```bash
    npm run build
    ```

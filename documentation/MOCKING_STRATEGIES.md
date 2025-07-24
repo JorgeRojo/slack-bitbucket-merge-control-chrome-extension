@@ -50,19 +50,19 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 describe('Chrome API Interaction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Configure mock behavior
-    chrome.storage.local.get.mockImplementation((keys) => {
+    chrome.storage.local.get.mockImplementation(keys => {
       if (keys === 'featureEnabled') {
         return Promise.resolve({ featureEnabled: true });
       }
       return Promise.resolve({});
     });
   });
-  
+
   test('should store data in local storage', async () => {
     await saveData({ key: 'value' });
-    
+
     expect(chrome.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'value' })
     );
@@ -81,7 +81,7 @@ describe('ToggleSwitch Component', () => {
   let toggleSwitch: any;
   let mockShadowRoot: any;
   let mockInput: any;
-  
+
   beforeEach(() => {
     // Create mocks for shadow DOM elements
     mockInput = {
@@ -89,23 +89,23 @@ describe('ToggleSwitch Component', () => {
       checked: false,
       addEventListener: vi.fn(),
     };
-    
+
     mockShadowRoot = {
       querySelector: vi.fn(selector => {
         if (selector === 'input') return mockInput;
         return null;
       }),
     };
-    
+
     toggleSwitch = {
       shadowRoot: mockShadowRoot,
       getAttribute: vi.fn(),
       hasAttribute: vi.fn(),
     };
-    
+
     document.createElement = vi.fn().mockReturnValue(toggleSwitch);
   });
-  
+
   test('should initialize with default attributes', () => {
     const component = document.createElement('toggle-switch');
     expect(component.shadowRoot.querySelector('input').checked).toBe(false);
@@ -129,7 +129,7 @@ describe('DOM Interaction', () => {
       }
       return null;
     });
-    
+
     document.querySelector = vi.fn().mockImplementation(selector => {
       if (selector === '.merge-button') {
         return {
@@ -140,10 +140,10 @@ describe('DOM Interaction', () => {
       return null;
     });
   });
-  
+
   test('should update status display', () => {
     updateStatusDisplay('Error message');
-    
+
     const statusElement = document.getElementById('status-display');
     expect(statusElement.textContent).toBe('Error message');
     expect(statusElement.style.display).toBe('block');
@@ -171,10 +171,10 @@ describe('Error Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  
+
   test('should log errors', () => {
     handleError(new Error('Test error'));
-    
+
     expect(Logger.error).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Test error' }),
       'ErrorHandler'
@@ -205,7 +205,7 @@ const { Logger } = await import('@src/modules/common/utils/Logger');
 ```typescript
 describe('API Calls', () => {
   beforeEach(() => {
-    global.fetch = vi.fn().mockImplementation(() => 
+    global.fetch = vi.fn().mockImplementation(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ data: 'mock data' }),
@@ -213,10 +213,10 @@ describe('API Calls', () => {
       })
     );
   });
-  
+
   test('should fetch data from API', async () => {
     const data = await fetchData('https://api.example.com');
-    
+
     expect(fetch).toHaveBeenCalledWith('https://api.example.com');
     expect(data).toEqual({ data: 'mock data' });
   });
@@ -228,7 +228,7 @@ describe('API Calls', () => {
 ```typescript
 describe('WebSocket Connection', () => {
   let mockWebSocket: any;
-  
+
   beforeEach(() => {
     mockWebSocket = {
       send: vi.fn(),
@@ -236,14 +236,14 @@ describe('WebSocket Connection', () => {
       addEventListener: vi.fn(),
       readyState: WebSocket.OPEN,
     };
-    
+
     global.WebSocket = vi.fn().mockImplementation(() => mockWebSocket);
   });
-  
+
   test('should send message through WebSocket', () => {
     const socket = new WebSocket('wss://example.com');
     socket.send(JSON.stringify({ type: 'ping' }));
-    
+
     expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify({ type: 'ping' }));
   });
 });
@@ -256,17 +256,17 @@ describe('Timer Functions', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
-  
+
   afterEach(() => {
     vi.useRealTimers();
   });
-  
+
   test('should execute callback after timeout', () => {
     const callback = vi.fn();
     setTimeout(callback, 1000);
-    
+
     expect(callback).not.toHaveBeenCalled();
-    
+
     vi.advanceTimersByTime(1000);
     expect(callback).toHaveBeenCalledTimes(1);
   });
