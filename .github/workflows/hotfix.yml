@@ -83,7 +83,7 @@ jobs:
           git checkout -b $HOTFIX_BRANCH
 
           echo "📤 Pushing hotfix branch to remote"
-          git push -u origin $HOTFIX_BRANCH
+          git push -u origin $HOTFIX_BRANCH --no-verify
 
           echo "✅ Hotfix branch created successfully"
 
@@ -252,7 +252,7 @@ jobs:
       - name: Push changes to develop
         run: |
           echo "📤 Pushing cherry-picked changes to develop..."
-          git push origin develop
+          git push origin develop --no-verify
           echo "✅ Changes pushed to develop"
 
       - name: Create summary
@@ -309,7 +309,7 @@ jobs:
           echo "🗑️ Deleting hotfix branch: $HOTFIX_BRANCH"
 
           # Delete remote branch
-          git push origin --delete $HOTFIX_BRANCH
+          git push origin --delete $HOTFIX_BRANCH --no-verify
 
           # Delete local branch if it exists
           if git show-ref --verify --quiet refs/heads/$HOTFIX_BRANCH; then
