@@ -274,7 +274,7 @@ jobs:
 
           echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
-      <<: *release_steps
+      - <<: *release_steps
 
   publish-release-pending-version:
     needs: [detect-pending-release]
@@ -288,4 +288,4 @@ jobs:
 
           echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
-      <<: *release_steps
+      - <<: *release_steps
