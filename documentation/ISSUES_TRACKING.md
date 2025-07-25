@@ -5,33 +5,14 @@ This document describes the issue tracking system for the Slack-Bitbucket Merge 
 ## Open Bug List
 
 | ID | Title | Component | Severity | Date Reported |
-| -- | ----- | --------- | -------- | ------------- |
-<!-- No bugs yet -->
+| -- | -- | -- | -- | -- |
+| [001](./bugs/001-test-bug-action.md) | test bug action | test bug action | Medium | 2025-07-25 |
 
 ## Open Feature List
 
 | ID | Title | Component | Priority | Date Requested |
-| -- | ----- | --------- | -------- | -------------- |
-<!-- No features yet -->
-
-## Automated Issue Tracking
-
-The project uses GitHub Actions to automatically synchronize GitHub Issues with documentation files. This ensures that all issues are properly documented and tracked.
-
-### Synchronization Process
-
-1. When a GitHub issue is created or updated with the 'bug' or 'feature' label, a GitHub Action workflow runs
-2. The workflow creates or updates a corresponding documentation file in this directory
-3. The issue index above is automatically updated to reflect all current issues
-
-### GitHub Actions Workflow
-
-The synchronization is handled by the `sync-github-issues.yml` workflow, which uses custom JavaScript scripts:
-
-- **`sync-issue-to-bug.js`**: Creates a bug documentation file from a GitHub issue
-- **`sync-bug-to-issue.js`**: Creates a GitHub issue from a bug documentation file
-
-This bidirectional synchronization ensures that issues can be created either through GitHub Issues or by adding documentation files directly.
+| -- | -- | -- | -- | -- |
+| [001](./features/001-test-feature-action.md) | test feature action | test feature action | Medium | 2025-07-25 |
 
 ## How to Add a New Issue
 
