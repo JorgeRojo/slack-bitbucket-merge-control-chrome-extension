@@ -98,7 +98,7 @@ jobs:
         run: |
           # Verify we're on develop branch
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          [["$CURRENT_BRANCH" == "develop" ]] || 
+          [[ "$CURRENT_BRANCH" == "develop" ]] || 
           { echo "::error::This workflow must run from develop branch"; exit 1; }
 
       - uses: ./.github/actions/run-quality-checks
