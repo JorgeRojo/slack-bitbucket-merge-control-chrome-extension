@@ -1,0 +1,10 @@
+name: 'Run Quality Checks'
+description: 'Runs linting, type checking, tests, and build verification.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Run comprehensive test suite
+      run: |
+        npm run lint && npm run type-check && npm run test && npm run build || 
+        { echo "::error::Quality checks failed"; exit 1; }
+      shell: bash
