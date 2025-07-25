@@ -218,19 +218,18 @@ jobs:
           cd release-package
           zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip .
 
-      - name: Get version
+      - name: Create tag
         run: |
+          # Get version
           INPUT_VERSION="${{ github.event.inputs.version }}" 
           VERSION=${INPUT_VERSION#v}
 
           echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
 
-      - name: Create tag
-        run: |
           # Create version tag 
-          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}" -q
-          git push origin ${{ env.INPUT_VERSION }} --no-verify
+          git tag -a ${INPUT_VERSION} -m "Version ${VERSION}" -q
+          git push origin ${INPUT_VERSION} --no-verify
 
       - name: Create GitHub Release
         id: create_release
