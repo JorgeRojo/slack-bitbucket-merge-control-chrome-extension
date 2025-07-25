@@ -1,0 +1,268 @@
+name: Prepare, Close and Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0) - Leave empty to detect pending version'
+        required: false
+      auto_publish:
+        description: 'Automatically publish GitHub release after version closing'
+        type: boolean
+        default: false
+
+# Cancel any running workflow when a new one is triggered
+concurrency:
+  group: release-pipeline
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  detect-pending-release:
+    runs-on: ubuntu-latest
+    outputs:
+      pending_release: ${{ steps.check-pending.outputs.pending_release }}
+      pending_version: ${{ steps.check-pending.outputs.pending_version }}
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v3
+        with:
+          ref: master
+
+      - name: Check for pending release
+        id: check-pending
+        run: |
+          # Get current version and check if tag exists
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          git fetch --tags -q
+          git tag -l | grep -q "^v${CURRENT_VERSION}$" && 
+          echo "pending_release=false" >> $GITHUB_OUTPUT || 
+          { echo "pending_release=true" >> $GITHUB_OUTPUT; 
+            echo "pending_version=v${CURRENT_VERSION}" >> $GITHUB_OUTPUT; }
+
+      - name: Explain auto_publish setting
+        run: |
+          if [ "${{ github.event.inputs.auto_publish }}" == "true" ]; then
+            echo "::notice::AUTO PUBLISH ENABLED: Will create and publish GitHub release"
+          else
+            echo "::notice::AUTO PUBLISH DISABLED: Will NOT create GitHub release"
+          fi
+
+  validate-and-close-version:
+    needs: detect-pending-release
+    # Only run if NO pending release detected
+    if: needs.detect-pending-release.outputs.pending_release == 'false'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ github.event.inputs.version }}
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Validate Git Flow compliance
+        run: |
+          # Verify we're on develop branch
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          [[ "$CURRENT_BRANCH" == "develop" ]] || 
+          { echo "::error::This workflow must run from develop branch"; exit 1; }
+
+          # Validate version format
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          [[ $INPUT_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || 
+          { echo "::error::Invalid version format: $INPUT_VERSION"; exit 1; }
+
+          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate version increment
+        run: |
+          # Compare versions using node semver
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          IS_HIGHER=$(node -e "
+            const semver = require('semver');
+            console.log(semver.gt('${{ env.VERSION }}', '$CURRENT_VERSION') ? 'true' : 'false');
+          ")
+
+          [[ "$IS_HIGHER" == "true" ]] || 
+          { echo "::error::New version must be higher than current version"; exit 1; }
+
+      - name: Run comprehensive test suite
+        run: |
+          # Run all quality checks
+          npm run lint && npm run type-check && npm run test && npm run build || 
+          { echo "::error::Quality checks failed"; exit 1; }
+
+      - name: Check for conflicts with master
+        run: |
+          # Check for potential merge conflicts
+          git fetch origin master -q
+          git merge-tree $(git merge-base develop origin/master) develop origin/master > merge_check.txt
+
+          if [ -s merge_check.txt ]; then
+            echo "::warning::Potential merge conflicts detected"
+            cat merge_check.txt
+          fi
+
+      - name: Update versions
+        run: |
+          # Update version in package.json and manifest.json
+          npm version ${{ env.VERSION }} --no-git-tag-version -q
+          jq '.version = "${{ env.VERSION }}"' src/manifest.json > temp.json && mv temp.json src/manifest.json
+
+      - name: Configure Git
+        run: |
+          # Set up git user for commits
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Commit version changes
+        run: |
+          # Commit version changes to develop
+          git add package.json package-lock.json src/manifest.json
+          git commit -m "chore: update version to ${{ env.INPUT_VERSION }}" -q -n
+          git push origin develop --no-verify
+
+      - name: Create validation summary
+        run: |
+          # Generate workflow summary
+          echo "## ✅ Version ${{ env.INPUT_VERSION }} validated" >> $GITHUB_STEP_SUMMARY
+          echo "- All tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Version increment validated" >> $GITHUB_STEP_SUMMARY
+          echo "- Version updated in develop branch" >> $GITHUB_STEP_SUMMARY
+
+  prepare-release:
+    needs: [detect-pending-release, validate-and-close-version]
+    # Only run if NO pending release detected
+    if: needs.detect-pending-release.outputs.pending_release == 'false'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ needs.validate-and-close-version.outputs.version }}
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          # Set up git user for commits
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Direct merge to master
+        run: |
+          # Merge develop into master
+          git checkout master
+          git pull origin master -q
+          git merge develop --no-ff -m "Merge develop into master for release ${{ needs.validate-and-close-version.outputs.version }}"
+          git push origin master --no-verify
+
+      - name: Create merge summary
+        run: |
+          # Generate workflow summary
+          echo "## ✅ Merged to master" >> $GITHUB_STEP_SUMMARY
+          echo "- Develop branch merged to master" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ needs.validate-and-close-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+
+  publish-release:
+    needs: [detect-pending-release, prepare-release]
+    # Only run if auto_publish is true
+    if: github.event.inputs.auto_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Git
+        run: |
+          # Set up git user for commits
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Create release package
+        run: |
+          # Create ZIP package for Chrome Web Store
+          mkdir -p release-package
+          cp -r dist/* release-package/
+          cd release-package
+          zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip .
+
+      - name: Get version
+        run: |
+          INPUT_VERSION="${{ github.event.inputs.version }}" 
+          VERSION="${INPUT_VERSION#v}"
+
+          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
+
+      - name: Create tag
+        run: |
+          # Create version tag 
+          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}" -q
+          git push origin ${{ env.INPUT_VERSION }} --no-verify
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.INPUT_VERSION }}
+          name: Release ${{ env.INPUT_VERSION }}
+          files: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 🚀 Release ${{ env.INPUT_VERSION }}
+
+            This release was created following Git Flow guidelines from the master branch.
+
+            ### 📦 What's Included
+            - Chrome Extension ZIP file ready for Chrome Web Store
+            - All features tested and validated
+            - Production-ready build
+
+            ### 🔄 Git Flow Compliance
+            - **Source Branch**: master
+            - **Tag**: ${{ env.INPUT_VERSION }}
+            - **Version**: ${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release summary
+        run: |
+          # Generate workflow summary
+          echo "## 🚀 Release ${{ env.INPUT_VERSION }} Published!" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
+          echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
