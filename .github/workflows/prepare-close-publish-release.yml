@@ -182,8 +182,8 @@ jobs:
 
   publish-release:
     needs: [detect-pending-release, prepare-release]
-    # Only run if auto_publish is true
-    if: github.event.inputs.auto_publish == 'true'
+    # Only run if auto_publish is true AND a pending release was detected
+    if: github.event.inputs.auto_publish == 'true' && needs.detect-pending-release.outputs.pending_release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout master branch
@@ -212,6 +212,16 @@ jobs:
           # Set up git user for commits
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
+
+      - name: Create tag
+        run: |
+          # Create version tag 
+
+          echo "INPUT_VERSION=${{ env.INPUT_VERSION }}" 
+          echo "VERSION=${{ env.INPUT_VERSION }}"
+
+          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}" -q
+          git push origin ${{ env.INPUT_VERSION }} --no-verify
 
       - name: Build extension
         run: npm run build
