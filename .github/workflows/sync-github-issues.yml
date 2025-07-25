@@ -100,7 +100,7 @@ jobs:
             git add -A documentation/
             
             # Commit and push changes to develop branch
-            git commit -m "[AUTOMATED] Sync GitHub issues to documentation" -q -n
+            git commit -m '[AUTOMATED] Sync GitHub issues to documentation' -q -n
 
           Following Git Flow: Documentation changes go to develop branch first"
             git push origin develop --no-verify
