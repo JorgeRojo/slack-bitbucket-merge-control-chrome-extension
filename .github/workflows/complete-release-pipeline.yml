@@ -289,7 +289,7 @@ jobs:
           # For PR mode, version closing should NOT run immediately
           # It will run when the PR is merged (via pull_request trigger)
           echo "should_close_version=false" >> $GITHUB_OUTPUT
-          
+
           if [ "${{ steps.create-pr.outputs.pr_creation_failed }}" = "true" ] || [ "${{ steps.create-pr.outputs.pr_already_exists }}" = "true" ]; then
             echo "PR creation had issues, but workflow provides guidance"
           else
@@ -369,13 +369,13 @@ jobs:
 
   close-version:
     runs-on: ubuntu-latest
-    needs: prepare-release
-    # Run if direct merge was performed OR if triggered by PR merge
+    # Run for direct merge OR for any workflow_dispatch (even if PR mode for manual trigger)
     if: |
-      (github.event_name == 'workflow_dispatch' && needs.prepare-release.outputs.should_close_version == 'true') ||
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && 
-       (startsWith(github.event.pull_request.head.ref, 'develop') || 
-        startsWith(github.event.pull_request.head.ref, 'release/')))
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'pull_request' && 
+       github.event.pull_request.merged == true && 
+       github.event.pull_request.head.ref == 'develop' &&
+       github.event.pull_request.base.ref == 'master')
     outputs:
       version_tag: ${{ steps.extract-version.outputs.INPUT_VERSION }}
       should_publish: ${{ steps.extract-version.outputs.should_publish }}
@@ -418,8 +418,9 @@ jobs:
         id: extract-version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            INPUT_VERSION="${{ needs.prepare-release.outputs.version }}"
-            AUTO_PUBLISH="${{ needs.prepare-release.outputs.auto_publish }}"
+            # For manual dispatch, get version from inputs (prepare-release may not have run)
+            INPUT_VERSION="${{ github.event.inputs.version }}"
+            AUTO_PUBLISH="${{ github.event.inputs.auto_publish }}"
           else
             # Extract version from PR title if auto-triggered
             PR_TITLE="${{ github.event.pull_request.title }}"
@@ -573,10 +574,10 @@ jobs:
 
   publish-release:
     runs-on: ubuntu-latest
-    needs: [prepare-release, close-version]
+    needs: close-version
     # Run if auto_publish is enabled OR if triggered by PR merge with version
     if: |
-      (github.event_name == 'workflow_dispatch' && needs.close-version.outputs.should_publish == 'true') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.auto_publish == 'true') ||
       (github.event_name == 'pull_request' && needs.close-version.outputs.version_tag != '')
 
     steps:
