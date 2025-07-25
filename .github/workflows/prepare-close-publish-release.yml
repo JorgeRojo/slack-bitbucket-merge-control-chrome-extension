@@ -48,7 +48,7 @@ jobs:
 
           echo "::notice::pending_release=${{ steps.check-pending.outputs.pending_release }}"  
           echo "::notice::pending_version=${{ steps.check-pending.outputs.pending_version }}" 
-          if [ "${{ github.event.inputs.auto_publish }}" == "true" ]; then
+          if ["${{ github.event.inputs.auto_publish }}" == "true" ]; then
             echo "::notice::AUTO PUBLISH ENABLED: Will create and publish GitHub release"
           else
             echo "::notice::AUTO PUBLISH DISABLED: Will NOT create GitHub release"
@@ -60,7 +60,7 @@ jobs:
     if: needs.detect-pending-release.outputs.pending_release == 'false'
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ github.event.inputs.version }}
+1      version: ${{ github.event.inputs.version }}
     steps:
       - name: Checkout develop branch
         uses: actions/checkout@v3
@@ -72,7 +72,7 @@ jobs:
         run: |
           # Verify we're on develop branch
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          [[ "$CURRENT_BRANCH" == "develop" ]] || 
+          [["$CURRENT_BRANCH" == "develop" ]] || 
           { echo "::error::This workflow must run from develop branch"; exit 1; }
 
           # Validate version format
@@ -83,14 +83,7 @@ jobs:
           echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+      - uses: ./.github/actions/setup-node-and-deps
 
       - name: Validate version increment
         run: |
@@ -101,14 +94,10 @@ jobs:
             console.log(semver.gt('${{ env.VERSION }}', '$CURRENT_VERSION') ? 'true' : 'false');\
           ")
 
-          [[ "$IS_HIGHER" == "true" ]] || 
+          [["$IS_HIGHER" == "true" ]] || 
           { echo "::error::New version must be higher than current version"; exit 1; }
 
-      - name: Run comprehensive test suite
-        run: |
-          # Run all quality checks
-          npm run lint && npm run type-check && npm run test && npm run build || 
-          { echo "::error::Quality checks failed"; exit 1; }
+      - uses: ./.github/actions/run-quality-checks
 
       - name: Check for conflicts with master
         run: |
@@ -127,11 +116,7 @@ jobs:
           npm version ${{ env.VERSION }} --no-git-tag-version -q
           jq '.version = "${{ env.VERSION }}"' src/manifest.json > temp.json && mv temp.json src/manifest.json
 
-      - name: Configure Git
-        run: |
-          # Set up git user for commits
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
+      - uses: ./.github/actions/configure-git
 
       - name: Commit version changes
         run: |
@@ -162,11 +147,7 @@ jobs:
           ref: develop
           fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          # Set up git user for commits
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
+      - uses: ./.github/actions/configure-git
 
       - name: Direct merge to master
         run: |
@@ -193,49 +174,22 @@ jobs:
           INPUT_VERSION="${{ github.event.inputs.version }}" 
           VERSION="${INPUT_VERSION#v}"
 
-          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
-          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
+          echo "INPUT_VERSION=$INPUT_ENV" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_INPUT_VERSION#v}" >> $GITHUB_ENV
       - name: Checkout master branch
         uses: actions/checkout@v3
         with:
           ref: master
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: ./.github/actions/setup-node-and-deps
+
+      - uses: ./.github/actions/configure-git
+
+      - uses: ./.github/actions/publish-extension-assets
         with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Configure Git
-        run: |
-          # Set up git user for commits
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-
-      - name: Create tag
-        run: |
-          # Create version tag 
-
-          echo "INPUT_VERSION=${{ env.INPUT_VERSION }}" 
-          echo "VERSION=${{ env.INPUT_VERSION }}"
-
-          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}"
-          git push origin ${{ env.INPUT_VERSION }} --no-verify
-
-      - name: Build extension
-        run: npm run build
-
-      - name: Create release package
-        run: |
-          # Create ZIP package for Chrome Web Store
-          mkdir -p release-package
-          cp -r dist/* release-package/
-          cd release-package
-          zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip .
+          input_version: ${{ env.INPUT_VERSION }}
+          version: ${{ env.VERSION }}
 
       - name: Create GitHub Release
         id: create_release
@@ -282,49 +236,22 @@ jobs:
           INPUT_VERSION="${{ needs.detect-pending-release.outputs.pending_version }}" 
           VERSION="${INPUT_VERSION#v}"
 
-          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
-          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
+          echo "INPUT_VERSION=$INPUT_ENV" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_INPUT_VERSION#v}" >> $GITHUB_ENV
       - name: Checkout master branch
         uses: actions/checkout@v3
         with:
           ref: master
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: ./.github/actions/setup-node-and-deps
+
+      - uses: ./.github/actions/configure-git
+
+      - uses: ./.github/actions/publish-extension-assets
         with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Configure Git
-        run: |
-          # Set up git user for commits
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-
-      - name: Create tag
-        run: |
-          # Create version tag 
-
-          echo "INPUT_VERSION=${{ env.INPUT_VERSION }}" 
-          echo "VERSION=${{ env.INPUT_VERSION }}"
-
-          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}"
-          git push origin ${{ env.INPUT_VERSION }} --no-verify
-
-      - name: Build extension
-        run: npm run build
-
-      - name: Create release package
-        run: |
-          # Create ZIP package for Chrome Web Store
-          mkdir -p release-package
-          cp -r dist/* release-package/
-          cd release-package
-          zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip .
+          input_version: ${{ env.INPUT_VERSION }}
+          version: ${{ env.VERSION }}
 
       - name: Create GitHub Release
         id: create_release

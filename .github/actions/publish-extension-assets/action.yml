@@ -1,0 +1,31 @@
+name: 'Publish Extension Assets'
+description: 'Creates a Git tag, builds the extension, and creates a release package.'
+inputs:
+  input_version:
+    description: 'The full version string (e.g., v1.0.0)'
+    required: true
+  version:
+    description: 'The version number (e.g., 1.0.0)'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Create tag
+      run: |
+        # Create version tag 
+        git tag -a ${{ inputs.input_version }} -m "Version ${{ inputs.version }}"
+        git push origin ${{ inputs.input_version }} --no-verify
+      shell: bash
+
+    - name: Build extension
+      run: npm run build
+      shell: bash
+
+    - name: Create release package
+      run: |
+        # Create ZIP package for Chrome Web Store
+        mkdir -p release-package
+        cp -r dist/* release-package/
+        cd release-package
+        zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ inputs.version }}.zip .
+      shell: bash
