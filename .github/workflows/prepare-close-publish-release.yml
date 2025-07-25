@@ -82,6 +82,7 @@ jobs:
 
           # Compare versions using node semver
           CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Compare versions -> VERSION: ${{ env.VERSION }} - CURRENT_VERSION: ${CURRENT_VERSION}"
           IS_HIGHER=$(node -e "\
             const semver = require('semver');\
             console.log(semver.gt('${{ env.VERSION }}', '$CURRENT_VERSION') ? 'true' : 'false');\
