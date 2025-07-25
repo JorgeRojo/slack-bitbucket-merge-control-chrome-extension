@@ -195,8 +195,8 @@ jobs:
       - name: Create tag
         run: |
           # Create version tag 
-          git tag -a ${{ github.event.inputs.version }} -m "Version ${{ github.event.inputs.version#v }}" -q
-          git push origin ${{ github.event.inputs.version }} --no-verify
+          git tag -a "${{ github.event.inputs.version }}"  -m "Version ${{ github.event.inputs.version }}" -q
+          git push origin "${{ github.event.inputs.version }}" --no-verify
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
