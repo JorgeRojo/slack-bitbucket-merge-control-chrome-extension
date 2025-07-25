@@ -45,6 +45,9 @@ jobs:
 
       - name: Explain auto_publish setting
         run: |
+
+          echo "::notice::pending_release=${{ steps.check-pending.outputs.pending_release }}"  
+          echo "::notice::pending_version=${{ steps.check-pending.outputs.pending_version }}" 
           if [ "${{ github.event.inputs.auto_publish }}" == "true" ]; then
             echo "::notice::AUTO PUBLISH ENABLED: Will create and publish GitHub release"
           else
