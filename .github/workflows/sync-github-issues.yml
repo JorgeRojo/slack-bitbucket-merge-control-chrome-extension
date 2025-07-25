@@ -89,12 +89,13 @@ jobs:
             echo "No documentation files modified, skipping lint step"
           fi
 
+      - uses: ./.github/actions/configure-git
+
       - name: Commit and push changes to develop
         run: |
           # Check if there are any changes to commit
           if [[ -n "$(git status --porcelain)" ]]; then
-            uses: ./.github/actions/configure-git
-            
+                        
             # Add all changes, including deletions
             git add -A documentation/
             
