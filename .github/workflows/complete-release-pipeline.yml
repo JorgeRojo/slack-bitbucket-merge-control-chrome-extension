@@ -49,12 +49,14 @@ jobs:
           if [ "$CURRENT_BRANCH" != "develop" ]; then
             echo "::error::This workflow must run from develop branch"
             exit 1
+          fi
 
           # Validate version format
           INPUT_VERSION="${{ github.event.inputs.version }}"
           if [[ ! $INPUT_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
             exit 1
+          fi
 
           echo "✅ Git Flow validation passed"
           echo "✅ Version format validation passed: $INPUT_VERSION"
@@ -106,6 +108,7 @@ jobs:
           if [ "$IS_HIGHER" != "true" ]; then
             echo "::error::New version ($VERSION_NUMBER) must be higher than current version ($CURRENT_VERSION)"
             exit 1
+          fi
 
           echo "✅ Version increment validation passed"
 
@@ -126,6 +129,7 @@ jobs:
             echo "::warning::Please resolve conflicts manually before proceeding"
           else
             echo "✅ No merge conflicts detected"
+          fi
 
       - name: Create Pull Request to Master
         if: github.event.inputs.create_pr == 'true'
@@ -379,7 +383,7 @@ jobs:
             echo "::error::Required branch: master"
             exit 1
           fi
-          
+
           echo "✅ Git Flow validation passed - executing from master branch"
 
       - name: Setup Node.js for version closing
@@ -410,14 +414,9 @@ jobs:
             echo "should_publish=$AUTO_PUBLISH" >> $GITHUB_OUTPUT
             echo "✅ Extracted version: $VERSION"
           else
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-              echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
-              exit 1
-            else
-              echo "::warning::Invalid version format in PR title: $INPUT_VERSION"
-              echo "::warning::Skipping version closing for non-release PR"
-              echo "SKIP_VERSION=true" >> $GITHUB_ENV
-              exit 0
+            echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
+            exit 1
+          fi
 
       - name: Validate version is higher
         if: env.SKIP_VERSION != 'true'
@@ -440,6 +439,7 @@ jobs:
           if [ "$IS_HIGHER" != "true" ]; then
             echo "::error::New version ($NEW_VERSION) must be higher than current version ($CURRENT_VERSION)"
             exit 1
+          fi
 
           echo "✅ New version is higher than current version"
 
@@ -530,6 +530,7 @@ jobs:
             echo "- **Commit**: $(git rev-parse HEAD)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ Ready for GitHub release!" >> $GITHUB_STEP_SUMMARY
+          fi
 
   publish-release:
     runs-on: ubuntu-latest
@@ -545,7 +546,6 @@ jobs:
           fetch-depth: 0
 
       - name: Validate Git Flow compliance for release
-
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [ "$CURRENT_BRANCH" != "master" ]; then
@@ -554,6 +554,7 @@ jobs:
             echo "::error::Required branch: master"
             echo "::error::Please switch to master branch and ensure it contains the tagged version"
             exit 1
+          fi
 
           echo "✅ Git Flow validation passed - executing from master branch"
 
@@ -567,6 +568,7 @@ jobs:
           if [ -z "$TAG" ]; then
             echo "::error::Could not determine version tag from close-version job"
             exit 1
+          fi
 
           VERSION="${TAG#v}"  # Remove 'v' prefix
           echo "TAG=$TAG" >> $GITHUB_ENV
@@ -644,6 +646,7 @@ jobs:
           else
             echo "::error::Failed to create ZIP file"
             exit 1
+          fi
 
       - name: Create GitHub Release
 
