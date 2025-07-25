@@ -91,7 +91,7 @@ jobs:
 
           echo "Compare versions -> VERSION: ${VERSION} - CURRENT_VERSION: ${CURRENT_VERSION} - IS_HIGHER: ${IS_HIGHER}"
 
-          [["$IS_HIGHER" == "true" ]] || 
+          [[ "$IS_HIGHER" == "true" ]] || 
           { echo "::error::New version must be higher than current version"; exit 1; }
 
       - name: Validate Git Flow compliance
