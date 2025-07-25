@@ -6,13 +6,13 @@ This document describes the issue tracking system for the Slack-Bitbucket Merge 
 
 | ID | Title | Component | Severity | Date Reported |
 | -- | -- | -- | -- | -- |
-| [001](./bugs/001-test-bug-action.md) | test bug action | test bug action | Medium | 2025-07-25 |
+<!-- No bugs yet -->
 
 ## Open Feature List
 
 | ID | Title | Component | Priority | Date Requested |
 | -- | -- | -- | -- | -- |
-| [001](./features/001-test-feature-action.md) | test feature action | test feature action | Medium | 2025-07-25 |
+<!-- No features yet -->
 
 ## How to Add a New Issue
 
