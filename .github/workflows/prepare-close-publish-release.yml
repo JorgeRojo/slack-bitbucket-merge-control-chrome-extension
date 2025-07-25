@@ -72,6 +72,14 @@ jobs:
 
       - name: Validate version increment
         run: |
+          # Validate version format
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          [[ $INPUT_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || 
+          { echo "::error::Invalid version format: $INPUT_VERSION"; exit 1; }
+
+          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
+
           # Compare versions using node semver
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           IS_HIGHER=$(node -e "\
@@ -84,14 +92,6 @@ jobs:
 
       - name: Validate Git Flow compliance
         run: |
-          # Validate version format
-          INPUT_VERSION="${{ github.event.inputs.version }}"
-          [[ $INPUT_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || 
-          { echo "::error::Invalid version format: $INPUT_VERSION"; exit 1; }
-
-          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
-          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
-
           # Verify we're on develop branch
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           [["$CURRENT_BRANCH" == "develop" ]] || 
