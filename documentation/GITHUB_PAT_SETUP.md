@@ -135,9 +135,3 @@ The workflow automatically:
 4. Offers alternative approaches in the workflow summary
 
 This ensures the workflow remains functional even without PAT setup, while providing the best experience when properly configured.
-
----
-
-*Last updated: July 2025 - Enhanced with improved error handling and multiple solution paths*
-
->>>>>>> 4d4ce8635b247d1f051a930e1117d264124e4ed4
