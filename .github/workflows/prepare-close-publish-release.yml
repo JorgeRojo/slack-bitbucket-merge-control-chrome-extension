@@ -179,7 +179,7 @@ jobs:
           VERSION="${INPUT_VERSION#v}"
 
           echo "INPUT_VERSION=$INPUT_ENV" >> $GITHUB_ENV
-          echo "VERSION=${INPUT_INPUT_VERSION#v}" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
       - name: Checkout master branch
         uses: actions/checkout@v3
         with:
@@ -241,7 +241,7 @@ jobs:
           VERSION="${INPUT_VERSION#v}"
 
           echo "INPUT_VERSION=$INPUT_ENV" >> $GITHUB_ENV
-          echo "VERSION=${INPUT_INPUT_VERSION#v}" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
       - name: Checkout master branch
         uses: actions/checkout@v3
         with:
