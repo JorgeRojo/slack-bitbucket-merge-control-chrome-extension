@@ -34,9 +34,12 @@ jobs:
     # Only run prepare-release for manual dispatch
     if: github.event_name == 'workflow_dispatch'
     outputs:
-      should_close_version: ${{ steps.merge-result.outputs.should_close_version }}
+      should_close_version: ${{ steps.merge-result.outputs.should_close_version || steps.pr-result.outputs.should_close_version }}
       version: ${{ github.event.inputs.version }}
       auto_publish: ${{ github.event.inputs.auto_publish }}
+      pr_created: ${{ steps.create-pr.outputs.pr_number != '' }}
+      pr_already_exists: ${{ steps.create-pr.outputs.pr_already_exists }}
+      pr_creation_failed: ${{ steps.create-pr.outputs.pr_creation_failed }}
     steps:
       - name: Checkout develop branch
         uses: actions/checkout@v3
@@ -278,6 +281,20 @@ jobs:
 
           # Signal that version closing should run
           echo "should_close_version=true" >> $GITHUB_OUTPUT
+
+      - name: Handle PR creation result
+        id: pr-result
+        if: github.event.inputs.create_pr == 'true'
+        run: |
+          # For PR mode, version closing should NOT run immediately
+          # It will run when the PR is merged (via pull_request trigger)
+          echo "should_close_version=false" >> $GITHUB_OUTPUT
+          
+          if [ "${{ steps.create-pr.outputs.pr_creation_failed }}" = "true" ] || [ "${{ steps.create-pr.outputs.pr_already_exists }}" = "true" ]; then
+            echo "PR creation had issues, but workflow provides guidance"
+          else
+            echo "PR created successfully, waiting for merge to trigger version closing"
+          fi
 
       - name: Create preparation summary
         run: |
