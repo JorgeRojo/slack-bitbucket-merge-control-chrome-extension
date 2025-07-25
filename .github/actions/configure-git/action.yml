@@ -1,0 +1,10 @@
+name: 'Configure Git User'
+description: 'Configures the Git user name and email for commits.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure Git
+      run: |
+        git config user.name "GitHub Action"
+        git config user.email "action@github.com"
+      shell: bash

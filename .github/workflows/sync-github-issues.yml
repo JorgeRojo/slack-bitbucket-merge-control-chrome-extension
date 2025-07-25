@@ -33,14 +33,7 @@ jobs:
           # Use a personal access token to allow the workflow to commit changes
           token: ${{ secrets.PAT_TOKEN || github.token }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+      - uses: ./.github/actions/setup-node-and-deps
 
       - name: Sync GitHub issues to documentation
         id: sync
@@ -100,9 +93,7 @@ jobs:
         run: |
           # Check if there are any changes to commit
           if [[ -n "$(git status --porcelain)" ]]; then
-            # Set up git user
-            git config user.name "GitHub Action"
-            git config user.email "action@github.com"
+            uses: ./.github/actions/configure-git
             
             # Add all changes, including deletions
             git add -A documentation/
