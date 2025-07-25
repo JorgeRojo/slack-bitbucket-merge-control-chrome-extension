@@ -14,10 +14,6 @@ on:
         description: 'Automatically publish GitHub release after version closing'
         type: boolean
         default: false
-  # Auto-trigger after PR merge from develop to master (backward compatibility)
-  pull_request:
-    types: [closed]
-    branches: [master]
 
 # Cancel any running workflow when a new one is triggered
 concurrency:
@@ -53,14 +49,12 @@ jobs:
           if [ "$CURRENT_BRANCH" != "develop" ]; then
             echo "::error::This workflow must run from develop branch"
             exit 1
-          fi
 
           # Validate version format
           INPUT_VERSION="${{ github.event.inputs.version }}"
           if [[ ! $INPUT_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Invalid version format: $INPUT_VERSION. Must follow format v1.0.0 (vMAJOR.MINOR.PATCH)"
             exit 1
-          fi
 
           echo "✅ Git Flow validation passed"
           echo "✅ Version format validation passed: $INPUT_VERSION"
@@ -112,7 +106,6 @@ jobs:
           if [ "$IS_HIGHER" != "true" ]; then
             echo "::error::New version ($VERSION_NUMBER) must be higher than current version ($CURRENT_VERSION)"
             exit 1
-          fi
 
           echo "✅ Version increment validation passed"
 
@@ -133,7 +126,6 @@ jobs:
             echo "::warning::Please resolve conflicts manually before proceeding"
           else
             echo "✅ No merge conflicts detected"
-          fi
 
       - name: Create Pull Request to Master
         if: github.event.inputs.create_pr == 'true'
@@ -294,7 +286,6 @@ jobs:
             echo "PR creation had issues, but workflow provides guidance"
           else
             echo "PR created successfully, waiting for merge to trigger version closing"
-          fi
 
       - name: Create preparation summary
         run: |
@@ -336,7 +327,6 @@ jobs:
                 echo "- **PR Title**: ${{ steps.create-pr.outputs.existing_pr_title }}" >> $GITHUB_STEP_SUMMARY
               else
                 echo "- A PR from develop to master already exists" >> $GITHUB_STEP_SUMMARY
-              fi
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
               echo "1. **Review the existing PR** and update if needed" >> $GITHUB_STEP_SUMMARY
@@ -354,14 +344,12 @@ jobs:
               echo "1. Review and approve the PR" >> $GITHUB_STEP_SUMMARY
               echo "2. Merge the PR into master" >> $GITHUB_STEP_SUMMARY
               echo "3. Version closing and release will auto-run after PR merge" >> $GITHUB_STEP_SUMMARY
-            fi
           else
             echo "- Direct merge to master ✅" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
             echo "1. Version closing will run automatically" >> $GITHUB_STEP_SUMMARY
             echo "2. GitHub release will be created" >> $GITHUB_STEP_SUMMARY
-          fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
@@ -369,13 +357,8 @@ jobs:
 
   close-version:
     runs-on: ubuntu-latest
-    # Run for direct merge OR for any workflow_dispatch (even if PR mode for manual trigger)
-    if: |
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event_name == 'pull_request' && 
-       github.event.pull_request.merged == true && 
-       github.event.pull_request.head.ref == 'develop' &&
-       github.event.pull_request.base.ref == 'master')
+    # Only run for manual workflow dispatch
+    if: github.event_name == 'workflow_dispatch'
     outputs:
       version_tag: ${{ steps.extract-version.outputs.INPUT_VERSION }}
       should_publish: ${{ steps.extract-version.outputs.should_publish }}
@@ -392,18 +375,12 @@ jobs:
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [ "$CURRENT_BRANCH" != "master" ]; then
             echo "::error::Version closing can only be performed on the master branch"
+            echo "::error::Current branch: $CURRENT_BRANCH"
+            echo "::error::Required branch: master"
             exit 1
           fi
-
-          # If triggered by PR merge, validate it came from develop or release branch
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
-            if [[ ! "$SOURCE_BRANCH" =~ ^(develop|release/) ]]; then
-              echo "::error::Master branch can only receive code from develop or release/* branches. Got: $SOURCE_BRANCH"
-              exit 1
-            fi
-            echo "✅ Valid merge from $SOURCE_BRANCH to master"
-          fi
+          
+          echo "✅ Git Flow validation passed - executing from master branch"
 
       - name: Setup Node.js for version closing
         uses: actions/setup-node@v3
@@ -417,26 +394,12 @@ jobs:
       - name: Extract and validate version format
         id: extract-version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            # For manual dispatch, get version from inputs (prepare-release may not have run)
-            INPUT_VERSION="${{ github.event.inputs.version }}"
-            AUTO_PUBLISH="${{ github.event.inputs.auto_publish }}"
-          else
-            # Extract version from PR title if auto-triggered
-            PR_TITLE="${{ github.event.pull_request.title }}"
-            echo "PR Title: $PR_TITLE"
-            
-            # Try to extract version from PR title
-            INPUT_VERSION=$(echo "$PR_TITLE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
-            AUTO_PUBLISH="false"  # Default to false for PR triggers
-            
-            if [ -z "$INPUT_VERSION" ]; then
-              echo "::warning::Could not extract version from PR title: $PR_TITLE"
-              echo "::warning::This appears to be a non-release PR merge. Skipping version closing."
-              echo "SKIP_VERSION=true" >> $GITHUB_ENV
-              exit 0
-            fi
-          fi
+          # Extract version from workflow inputs (manual dispatch only)
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          AUTO_PUBLISH="${{ github.event.inputs.auto_publish }}"
+
+          echo "Input version: $INPUT_VERSION"
+          echo "Auto publish: $AUTO_PUBLISH"
 
           # Check if version starts with 'v' and extract the version number
           if [[ $INPUT_VERSION =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
@@ -455,8 +418,6 @@ jobs:
               echo "::warning::Skipping version closing for non-release PR"
               echo "SKIP_VERSION=true" >> $GITHUB_ENV
               exit 0
-            fi
-          fi
 
       - name: Validate version is higher
         if: env.SKIP_VERSION != 'true'
@@ -479,7 +440,6 @@ jobs:
           if [ "$IS_HIGHER" != "true" ]; then
             echo "::error::New version ($NEW_VERSION) must be higher than current version ($CURRENT_VERSION)"
             exit 1
-          fi
 
           echo "✅ New version is higher than current version"
 
@@ -570,37 +530,22 @@ jobs:
             echo "- **Commit**: $(git rev-parse HEAD)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ Ready for GitHub release!" >> $GITHUB_STEP_SUMMARY
-          fi
 
   publish-release:
     runs-on: ubuntu-latest
     needs: close-version
-    # Run if auto_publish is enabled OR if triggered by PR merge with version
-    if: |
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.auto_publish == 'true') ||
-      (github.event_name == 'pull_request' && needs.close-version.outputs.version_tag != '')
+    # Only run if auto_publish is enabled in manual workflow dispatch
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.auto_publish == 'true'
 
     steps:
-      - name: Check if version closing was skipped
-        id: check-skip
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ -z "${{ needs.close-version.outputs.version_tag }}" ]; then
-            echo "Version closing was skipped - no version tag available"
-            echo "SKIP_PUBLISH=true" >> $GITHUB_ENV
-            exit 0
-          else
-            echo "SKIP_PUBLISH=false" >> $GITHUB_ENV
-          fi
-
       - name: Checkout master branch for release
-        if: env.SKIP_PUBLISH != 'true'
         uses: actions/checkout@v3
         with:
           ref: master
           fetch-depth: 0
 
       - name: Validate Git Flow compliance for release
-        if: env.SKIP_PUBLISH != 'true'
+
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [ "$CURRENT_BRANCH" != "master" ]; then
@@ -609,26 +554,19 @@ jobs:
             echo "::error::Required branch: master"
             echo "::error::Please switch to master branch and ensure it contains the tagged version"
             exit 1
-          fi
 
           echo "✅ Git Flow validation passed - executing from master branch"
 
       - name: Extract version information
-        if: env.SKIP_PUBLISH != 'true'
+
         id: version-info
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ needs.close-version.outputs.version_tag }}"
-          else
-            # Extract from PR title for auto-trigger
-            PR_TITLE="${{ github.event.pull_request.title }}"
-            TAG=$(echo "$PR_TITLE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-          fi
+          # Extract version from close-version job output (workflow_dispatch only)
+          TAG="${{ needs.close-version.outputs.version_tag }}"
 
           if [ -z "$TAG" ]; then
-            echo "::error::Could not determine version tag"
+            echo "::error::Could not determine version tag from close-version job"
             exit 1
-          fi
 
           VERSION="${TAG#v}"  # Remove 'v' prefix
           echo "TAG=$TAG" >> $GITHUB_ENV
@@ -636,7 +574,7 @@ jobs:
           echo "Extracted tag: $TAG, version: $VERSION"
 
       - name: Validate tag exists
-        if: env.SKIP_PUBLISH != 'true'
+
         run: |
           # Fetch all tags
           git fetch --tags
@@ -645,23 +583,22 @@ jobs:
           if ! git tag -l | grep -q "^${{ env.TAG }}$"; then
             echo "::error::Tag ${{ env.TAG }} does not exist. Version closing may have failed."
             exit 1
-          fi
 
           echo "✅ Tag ${{ env.TAG }} exists"
 
       - name: Setup Node.js for release
-        if: env.SKIP_PUBLISH != 'true'
+
         uses: actions/setup-node@v3
         with:
           node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies for release
-        if: env.SKIP_PUBLISH != 'true'
+
         run: npm ci
 
       - name: Run final validation before release
-        if: env.SKIP_PUBLISH != 'true'
+
         run: |
           echo "🔍 Running final validation before creating release..."
 
@@ -677,14 +614,14 @@ jobs:
           echo "✅ All final validations passed!"
 
       - name: Build extension for release
-        if: env.SKIP_PUBLISH != 'true'
+
         run: |
           echo "🏗️ Building extension for release..."
           npm run build
           echo "✅ Build completed successfully"
 
       - name: Create release package
-        if: env.SKIP_PUBLISH != 'true'
+
         run: |
           echo "📦 Creating release package..."
 
@@ -707,10 +644,9 @@ jobs:
           else
             echo "::error::Failed to create ZIP file"
             exit 1
-          fi
 
       - name: Create GitHub Release
-        if: env.SKIP_PUBLISH != 'true'
+
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
@@ -748,35 +684,26 @@ jobs:
 
       - name: Create release summary
         run: |
-          if [ "${{ env.SKIP_PUBLISH }}" = "true" ]; then
-            echo "## ℹ️ Release Publishing Skipped" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Release publishing was skipped because version closing did not produce a valid version tag." >> $GITHUB_STEP_SUMMARY
-            echo "This typically happens when a PR merge does not contain a version in the title." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Expected Format**: PR title should contain version like 'Release v1.0.0'" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "## 🚀 Release ${{ env.TAG }} Published Successfully!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Branch**: master (Git Flow compliant)" >> $GITHUB_STEP_SUMMARY
-            echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
-            echo "- Chrome Extension ZIP file" >> $GITHUB_STEP_SUMMARY
-            echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
-            echo "- Git Flow compliance (master branch only)" >> $GITHUB_STEP_SUMMARY
-            echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
-            echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
-            echo "- Production build" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🎉 Complete Release Pipeline" >> $GITHUB_STEP_SUMMARY
-            echo "- Develop → Master merge ✅" >> $GITHUB_STEP_SUMMARY
-            echo "- Version closing and tagging ✅" >> $GITHUB_STEP_SUMMARY
-            echo "- GitHub release creation ✅" >> $GITHUB_STEP_SUMMARY
-            echo "- Chrome Web Store ready package ✅" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "## 🚀 Release ${{ env.TAG }} Published Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: master (Git Flow compliant)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome Extension ZIP file" >> $GITHUB_STEP_SUMMARY
+          echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Git Flow compliance (master branch only)" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
+          echo "- Production build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 Complete Release Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "- Develop → Master merge ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Version closing and tagging ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub release creation ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome Web Store ready package ✅" >> $GITHUB_STEP_SUMMARY
