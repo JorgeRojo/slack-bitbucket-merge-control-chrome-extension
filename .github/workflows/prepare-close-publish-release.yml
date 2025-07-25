@@ -68,6 +68,20 @@ jobs:
           ref: develop
           fetch-depth: 0
 
+      - uses: ./.github/actions/setup-node-and-deps
+
+      - name: Validate version increment
+        run: |
+          # Compare versions using node semver
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          IS_HIGHER=$(node -e "\
+            const semver = require('semver');\
+            console.log(semver.gt('${{ env.VERSION }}', '$CURRENT_VERSION') ? 'true' : 'false');\
+          ")
+
+          [["$IS_HIGHER" == "true" ]] || 
+          { echo "::error::New version must be higher than current version"; exit 1; }
+
       - name: Validate Git Flow compliance
         run: |
           # Validate version format
@@ -82,20 +96,6 @@ jobs:
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           [["$CURRENT_BRANCH" == "develop" ]] || 
           { echo "::error::This workflow must run from develop branch"; exit 1; }
-
-      - uses: ./.github/actions/setup-node-and-deps
-
-      - name: Validate version increment
-        run: |
-          # Compare versions using node semver
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          IS_HIGHER=$(node -e "\
-            const semver = require('semver');\
-            console.log(semver.gt('${{ env.VERSION }}', '$CURRENT_VERSION') ? 'true' : 'false');\
-          ")
-
-          [["$IS_HIGHER" == "true" ]] || 
-          { echo "::error::New version must be higher than current version"; exit 1; }
 
       - uses: ./.github/actions/run-quality-checks
 
