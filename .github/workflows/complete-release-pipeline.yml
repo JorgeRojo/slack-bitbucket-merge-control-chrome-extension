@@ -209,10 +209,50 @@ jobs:
                   console.error('   - Branch protection rules prevent PR creation');
                 }
               } else if (error.status === 422) {
-                console.error('💡 This might be because:');
-                console.error('   - A PR from develop to master already exists');
-                console.error('   - There are no differences between develop and master');
-                console.error('   - Branch protection rules prevent PR creation');
+                if (error.message.includes('A pull request already exists')) {
+                  console.error('📋 A Pull Request from develop to master already exists');
+                  console.error('💡 Next steps:');
+                  console.error('   1. Check existing PR and review it');
+                  console.error('   2. Update PR title/description if needed');
+                  console.error('   3. Merge the existing PR to continue the release process');
+                  console.error('   4. Or close existing PR and re-run this workflow');
+                  console.error('');
+                  
+                  // Try to find the existing PR
+                  try {
+                    const { data: existingPRs } = await github.rest.pulls.list({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      head: `${context.repo.owner}:develop`,
+                      base: 'master',
+                      state: 'open'
+                    });
+                    
+                    if (existingPRs.length > 0) {
+                      const existingPR = existingPRs[0];
+                      console.error(`🔗 Existing PR: #${existingPR.number} - ${existingPR.title}`);
+                      console.error(`📋 PR URL: ${existingPR.html_url}`);
+                      
+                      // Set outputs for existing PR
+                      core.setOutput('existing_pr_number', existingPR.number);
+                      core.setOutput('existing_pr_url', existingPR.html_url);
+                      core.setOutput('existing_pr_title', existingPR.title);
+                    }
+                  } catch (listError) {
+                    console.error('Could not fetch existing PR details:', listError.message);
+                  }
+                  
+                  // Set output to indicate existing PR
+                  core.setOutput('pr_already_exists', 'true');
+                  
+                  // Don't throw error, let workflow continue with guidance
+                  return;
+                } else {
+                  console.error('💡 This might be because:');
+                  console.error('   - There are no differences between develop and master');
+                  console.error('   - Branch protection rules prevent PR creation');
+                  console.error('   - Invalid branch names or repository access');
+                }
               }
               
               throw error;
@@ -269,6 +309,23 @@ jobs:
               echo "3. **Manual Process**:" >> $GITHUB_STEP_SUMMARY
               echo "   - Create PR manually from develop to master" >> $GITHUB_STEP_SUMMARY
               echo "   - Merge the PR to trigger version closing" >> $GITHUB_STEP_SUMMARY
+            elif [ "${{ steps.create-pr.outputs.pr_already_exists }}" = "true" ]; then
+              echo "- Pull Request already exists ℹ️" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 📋 Existing Pull Request Found" >> $GITHUB_STEP_SUMMARY
+              if [ -n "${{ steps.create-pr.outputs.existing_pr_number }}" ]; then
+                echo "- **PR Number**: #${{ steps.create-pr.outputs.existing_pr_number }}" >> $GITHUB_STEP_SUMMARY
+                echo "- **PR URL**: ${{ steps.create-pr.outputs.existing_pr_url }}" >> $GITHUB_STEP_SUMMARY
+                echo "- **PR Title**: ${{ steps.create-pr.outputs.existing_pr_title }}" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "- A PR from develop to master already exists" >> $GITHUB_STEP_SUMMARY
+              fi
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+              echo "1. **Review the existing PR** and update if needed" >> $GITHUB_STEP_SUMMARY
+              echo "2. **Merge the existing PR** to continue the release process" >> $GITHUB_STEP_SUMMARY
+              echo "3. **Or close existing PR** and re-run this workflow" >> $GITHUB_STEP_SUMMARY
+              echo "4. **Version closing will auto-run** after PR merge" >> $GITHUB_STEP_SUMMARY
             else
               echo "- Pull Request created ✅" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
