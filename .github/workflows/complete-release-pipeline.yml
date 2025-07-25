@@ -129,6 +129,7 @@ jobs:
             echo "::warning::Please resolve conflicts manually before proceeding"
           else
             echo "✅ No merge conflicts detected"
+          fi
 
       - name: Create Pull Request to Master
         if: github.event.inputs.create_pr == 'true'
@@ -529,6 +530,7 @@ jobs:
             echo "- **Commit**: $(git rev-parse HEAD)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "✅ Ready for GitHub release!" >> $GITHUB_STEP_SUMMARY
+          fi
 
   publish-release:
     runs-on: ubuntu-latest
@@ -644,6 +646,7 @@ jobs:
           else
             echo "::error::Failed to create ZIP file"
             exit 1
+          fi
 
       - name: Create GitHub Release
 
