@@ -21,6 +21,85 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Define reusable steps for release jobs
+  .release_steps: &release_steps
+    - name: Checkout master branch
+      uses: actions/checkout@v3
+      with:
+        ref: master
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Configure Git
+      run: |
+        # Set up git user for commits
+        git config user.name "GitHub Action"
+        git config user.email "action@github.com"
+
+    - name: Create tag
+      run: |
+        # Create version tag 
+
+        echo "INPUT_VERSION=${{ env.INPUT_VERSION }}" 
+        echo "VERSION=${{ env.INPUT_VERSION }}"
+
+        git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}" -q
+        git push origin ${{ env.INPUT_VERSION }} --no-verify
+
+    - name: Build extension
+      run: npm run build
+
+    - name: Create release package
+      run: |
+        # Create ZIP package for Chrome Web Store
+        mkdir -p release-package
+        cp -r dist/* release-package/
+        cd release-package
+        zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip .
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ env.INPUT_VERSION }}
+        name: Release ${{ env.INPUT_VERSION }}
+        files: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        body: |
+          ## 🚀 Release ${{ env.INPUT_VERSION }}
+
+          This release was created following Git Flow guidelines from the master branch.
+
+          ### 📦 What's Included
+          - Chrome Extension ZIP file ready for Chrome Web Store
+          - All features tested and validated
+          - Production-ready build
+
+          ### 🔄 Git Flow Compliance
+          - **Source Branch**: master
+          - **Tag**: ${{ env.INPUT_VERSION }}
+          - **Version**: ${{ env.VERSION }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create release summary
+      run: |
+        # Generate workflow summary
+        echo "## 🚀 Release ${{ env.INPUT_VERSION }} Published!" >> $GITHUB_STEP_SUMMARY
+        echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
+        echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
+        echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+
   detect-pending-release:
     runs-on: ubuntu-latest
     outputs:
@@ -45,6 +124,9 @@ jobs:
 
       - name: Explain auto_publish setting
         run: |
+
+          echo "::notice::pending_release=${{ steps.check-pending.outputs.pending_release }}"  
+          echo "::notice::pending_version=${{ steps.check-pending.outputs.pending_version }}" 
           if [ "${{ github.event.inputs.auto_publish }}" == "true" ]; then
             echo "::notice::AUTO PUBLISH ENABLED: Will create and publish GitHub release"
           else
@@ -77,7 +159,7 @@ jobs:
           [[ $INPUT_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || 
           { echo "::error::Invalid version format: $INPUT_VERSION"; exit 1; }
 
-          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
+          echo "INPUT_VERSION=$INPUT_ENV" >> $GITHUB_ENV
           echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
 
       - name: Setup Node.js
@@ -93,9 +175,9 @@ jobs:
         run: |
           # Compare versions using node semver
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          IS_HIGHER=$(node -e "
-            const semver = require('semver');
-            console.log(semver.gt('${{ env.VERSION }}', '$CURRENT_VERSION') ? 'true' : 'false');
+          IS_HIGHER=$(node -e "\
+            const semver = require('semver');\
+            console.log(semver.gt('${{ env.VERSION }}', '$CURRENT_VERSION') ? 'true' : 'false');\
           ")
 
           [[ "$IS_HIGHER" == "true" ]] || 
@@ -180,81 +262,30 @@ jobs:
           echo "- Develop branch merged to master" >> $GITHUB_STEP_SUMMARY
           echo "- Version: ${{ needs.validate-and-close-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
 
-  publish-release:
-    needs: [detect-pending-release, prepare-release]
-    # Only run if auto_publish is true
-    if: github.event.inputs.auto_publish == 'true'
+  publish-release-new-version:
+    needs: [prepare-release]
+    if: needs.detect-pending-release.outputs.pending_release == 'false' && github.event.inputs.auto_publish == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout master branch
-        uses: actions/checkout@v3
-        with:
-          ref: master
-          fetch-depth: 0
-
-      - name: Create tag
+      - name: Get version from input
         run: |
-          # Create version tag 
-          git tag -a "${{ github.event.inputs.version }}"  -m "Version ${{ github.event.inputs.version }}" -q
-          git push origin "${{ github.event.inputs.version }}" --no-verify
+          INPUT_VERSION="${{ github.event.inputs.version }}" 
+          VERSION="${INPUT_VERSION#v}"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
+          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
+      <<: *release_steps
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Configure Git
+  publish-release-pending-version:
+    needs: [detect-pending-release]
+    if: needs.detect-pending-release.outputs.pending_release == 'true' && github.event.inputs.auto_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version from pending release
         run: |
-          # Set up git user for commits
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
+          INPUT_VERSION="${{ needs.detect-pending-release.outputs.pending_version }}" 
+          VERSION="${INPUT_VERSION#v}"
 
-      - name: Build extension
-        run: npm run build
-
-      - name: Create release package
-        run: |
-          # Create ZIP package for Chrome Web Store
-          mkdir -p release-package
-          cp -r dist/* release-package/
-          cd release-package
-          zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip .
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ env.INPUT_VERSION }}
-          name: Release ${{ env.INPUT_VERSION }}
-          files: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          body: |
-            ## 🚀 Release ${{ env.INPUT_VERSION }}
-
-            This release was created following Git Flow guidelines from the master branch.
-
-            ### 📦 What's Included
-            - Chrome Extension ZIP file ready for Chrome Web Store
-            - All features tested and validated
-            - Production-ready build
-
-            ### 🔄 Git Flow Compliance
-            - **Source Branch**: master
-            - **Tag**: ${{ env.INPUT_VERSION }}
-            - **Version**: ${{ env.VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create release summary
-        run: |
-          # Generate workflow summary
-          echo "## 🚀 Release ${{ env.INPUT_VERSION }} Published!" >> $GITHUB_STEP_SUMMARY
-          echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
-          echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
-          echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
+          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
+      <<: *release_steps

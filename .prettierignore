@@ -26,3 +26,4 @@ Thumbs.db
 documentation/bugs
 documentation/features
 documentation/ISSUES_TRACKING.md
+.github/workflows/prepare-close-publish-release.yml
