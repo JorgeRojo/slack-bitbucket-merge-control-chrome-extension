@@ -220,16 +220,9 @@ jobs:
 
       - name: Create tag
         run: |
-          # Get version
-          INPUT_VERSION="${{ github.event.inputs.version }}" 
-          VERSION=${INPUT_VERSION#v}
-
-          echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
-          echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
-
           # Create version tag 
-          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}" -q
-          git push origin ${{ env.INPUT_VERSION }} --no-verify
+          git tag -a ${{ github.event.inputs.version }} -m "Version ${{ github.event.inputs.version#v }}" -q
+          git push origin ${{ github.event.inputs.version }} --no-verify
 
       - name: Create GitHub Release
         id: create_release
