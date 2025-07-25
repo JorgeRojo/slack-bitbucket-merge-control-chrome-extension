@@ -13,6 +13,7 @@ runs:
     - name: Create tag
       run: |
         # Create version tag 
+        echo "TAG: ${{ inputs.input_version }} - Version ${{ inputs.version }}"
         git tag -a ${{ inputs.input_version }} -m "Version ${{ inputs.version }}"
         git push origin ${{ inputs.input_version }} --no-verify
       shell: bash
