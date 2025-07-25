@@ -60,7 +60,7 @@ jobs:
     if: needs.detect-pending-release.outputs.pending_release == 'false'
     runs-on: ubuntu-latest
     outputs:
-1      version: ${{ github.event.inputs.version }}
+      version: ${{ github.event.inputs.version }}
     steps:
       - name: Checkout develop branch
         uses: actions/checkout@v3
