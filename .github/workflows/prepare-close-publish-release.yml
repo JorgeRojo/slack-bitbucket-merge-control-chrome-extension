@@ -192,6 +192,12 @@ jobs:
           ref: master
           fetch-depth: 0
 
+      - name: Create tag
+        run: |
+          # Create version tag 
+          git tag -a ${{ github.event.inputs.version }} -m "Version ${{ github.event.inputs.version#v }}" -q
+          git push origin ${{ github.event.inputs.version }} --no-verify
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -217,12 +223,6 @@ jobs:
           cp -r dist/* release-package/
           cd release-package
           zip -r ../slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip .
-
-      - name: Create tag
-        run: |
-          # Create version tag 
-          git tag -a ${{ github.event.inputs.version }} -m "Version ${{ github.event.inputs.version#v }}" -q
-          git push origin ${{ github.event.inputs.version }} --no-verify
 
       - name: Create GitHub Release
         id: create_release
