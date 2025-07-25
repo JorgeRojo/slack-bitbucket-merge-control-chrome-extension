@@ -228,8 +228,8 @@ jobs:
           echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
 
           # Create version tag 
-          git tag -a ${INPUT_VERSION} -m "Version ${VERSION}" -q
-          git push origin ${INPUT_VERSION} --no-verify
+          git tag -a ${{ env.INPUT_VERSION }} -m "Version ${{ env.VERSION }}" -q
+          git push origin ${{ env.INPUT_VERSION }} --no-verify
 
       - name: Create GitHub Release
         id: create_release
