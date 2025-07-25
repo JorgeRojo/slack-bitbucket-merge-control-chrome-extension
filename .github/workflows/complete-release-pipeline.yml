@@ -375,15 +375,12 @@ jobs:
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [ "$CURRENT_BRANCH" != "master" ]; then
             echo "::error::Version closing can only be performed on the master branch"
+            echo "::error::Current branch: $CURRENT_BRANCH"
+            echo "::error::Required branch: master"
             exit 1
-
-          # If triggered by PR merge, validate it came from develop or release branch
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
-            if [[ ! "$SOURCE_BRANCH" =~ ^(develop|release/) ]]; then
-              echo "::error::Master branch can only receive code from develop or release/* branches. Got: $SOURCE_BRANCH"
-              exit 1
-            echo "✅ Valid merge from $SOURCE_BRANCH to master"
+          fi
+          
+          echo "✅ Git Flow validation passed - executing from master branch"
 
       - name: Setup Node.js for version closing
         uses: actions/setup-node@v3
@@ -400,7 +397,7 @@ jobs:
           # Extract version from workflow inputs (manual dispatch only)
           INPUT_VERSION="${{ github.event.inputs.version }}"
           AUTO_PUBLISH="${{ github.event.inputs.auto_publish }}"
-          
+
           echo "Input version: $INPUT_VERSION"
           echo "Auto publish: $AUTO_PUBLISH"
 
@@ -548,7 +545,7 @@ jobs:
           fetch-depth: 0
 
       - name: Validate Git Flow compliance for release
-        
+
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [ "$CURRENT_BRANCH" != "master" ]; then
@@ -561,12 +558,12 @@ jobs:
           echo "✅ Git Flow validation passed - executing from master branch"
 
       - name: Extract version information
-        
+
         id: version-info
         run: |
           # Extract version from close-version job output (workflow_dispatch only)
           TAG="${{ needs.close-version.outputs.version_tag }}"
-          
+
           if [ -z "$TAG" ]; then
             echo "::error::Could not determine version tag from close-version job"
             exit 1
@@ -577,7 +574,7 @@ jobs:
           echo "Extracted tag: $TAG, version: $VERSION"
 
       - name: Validate tag exists
-        
+
         run: |
           # Fetch all tags
           git fetch --tags
@@ -590,18 +587,18 @@ jobs:
           echo "✅ Tag ${{ env.TAG }} exists"
 
       - name: Setup Node.js for release
-        
+
         uses: actions/setup-node@v3
         with:
           node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies for release
-        
+
         run: npm ci
 
       - name: Run final validation before release
-        
+
         run: |
           echo "🔍 Running final validation before creating release..."
 
@@ -617,14 +614,14 @@ jobs:
           echo "✅ All final validations passed!"
 
       - name: Build extension for release
-        
+
         run: |
           echo "🏗️ Building extension for release..."
           npm run build
           echo "✅ Build completed successfully"
 
       - name: Create release package
-        
+
         run: |
           echo "📦 Creating release package..."
 
@@ -649,7 +646,7 @@ jobs:
             exit 1
 
       - name: Create GitHub Release
-        
+
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
@@ -687,26 +684,26 @@ jobs:
 
       - name: Create release summary
         run: |
-            echo "## 🚀 Release ${{ env.TAG }} Published Successfully!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Branch**: master (Git Flow compliant)" >> $GITHUB_STEP_SUMMARY
-            echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
-            echo "- Chrome Extension ZIP file" >> $GITHUB_STEP_SUMMARY
-            echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
-            echo "- Git Flow compliance (master branch only)" >> $GITHUB_STEP_SUMMARY
-            echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
-            echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
-            echo "- Production build" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🎉 Complete Release Pipeline" >> $GITHUB_STEP_SUMMARY
-            echo "- Develop → Master merge ✅" >> $GITHUB_STEP_SUMMARY
-            echo "- Version closing and tagging ✅" >> $GITHUB_STEP_SUMMARY
-            echo "- GitHub release creation ✅" >> $GITHUB_STEP_SUMMARY
-            echo "- Chrome Web Store ready package ✅" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Release ${{ env.TAG }} Published Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Release Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: ${{ env.TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: master (Git Flow compliant)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release URL**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome Extension ZIP file" >> $GITHUB_STEP_SUMMARY
+          echo "- Automatic release notes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Validations Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Git Flow compliance (master branch only)" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag validation" >> $GITHUB_STEP_SUMMARY
+          echo "- Full test suite" >> $GITHUB_STEP_SUMMARY
+          echo "- Production build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 Complete Release Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "- Develop → Master merge ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Version closing and tagging ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub release creation ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Chrome Web Store ready package ✅" >> $GITHUB_STEP_SUMMARY
