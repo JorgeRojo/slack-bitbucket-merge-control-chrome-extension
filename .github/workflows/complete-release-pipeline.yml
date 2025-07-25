@@ -379,7 +379,7 @@ jobs:
             echo "::error::Required branch: master"
             exit 1
           fi
-          
+
           echo "✅ Git Flow validation passed - executing from master branch"
 
       - name: Setup Node.js for version closing
