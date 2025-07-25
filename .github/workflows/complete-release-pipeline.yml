@@ -576,7 +576,6 @@ jobs:
           echo "Extracted tag: $TAG, version: $VERSION"
 
       - name: Validate tag exists
-
         run: |
           # Fetch all tags
           git fetch --tags
@@ -585,6 +584,7 @@ jobs:
           if ! git tag -l | grep -q "^${{ env.TAG }}$"; then
             echo "::error::Tag ${{ env.TAG }} does not exist. Version closing may have failed."
             exit 1
+          fi
 
           echo "✅ Tag ${{ env.TAG }} exists"
 
