@@ -104,7 +104,6 @@ Thank you for your interest in contributing to this project! This document outli
 - Update README.md if you change functionality
 - Document complex functions and components
 - Keep inline documentation up to date with code changes
-- Follow the error handling guidelines in [ERROR_HANDLING.md](./ERROR_HANDLING.md)
 
 ## Pull Request Process
 

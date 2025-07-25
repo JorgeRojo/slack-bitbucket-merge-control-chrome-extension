@@ -1,0 +1,57 @@
+name: Release Guardian
+
+on:
+  create:
+    tags:
+      - 'v*'
+  release:
+    types: [created, published]
+
+jobs:
+  validate-release-process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Validate release process
+        run: |
+          # Get event information
+          ACTOR="${{ github.actor }}"
+          EVENT_NAME="${{ github.event_name }}"
+          TAG_NAME="${{ github.ref_name }}"
+          
+          # For tag creation events
+          if [[ "$EVENT_NAME" == "create" ]]; then
+            TAG_COMMIT=$(git rev-list -n 1 $TAG_NAME)
+            COMMIT_MSG=$(git log -1 --pretty=format:%s $TAG_COMMIT)
+            
+            # Validate tag creation
+            if [[ "$COMMIT_MSG" != *"chore: close version"* && "$ACTOR" != "github-actions[bot]" ]]; then
+              echo "::error::⛔ UNAUTHORIZED TAG CREATION: Tags must be created using the automated workflow"
+              echo "## ⛔ UNAUTHORIZED TAG CREATION" >> $GITHUB_STEP_SUMMARY
+              echo "Please use the 'Prepare, Close and Publish Release' workflow." >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+          fi
+          
+          # For release creation events
+          if [[ "$EVENT_NAME" == "release" ]]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+            TAG_COMMIT=$(git rev-list -n 1 $TAG_NAME)
+            COMMIT_MSG=$(git log -1 --pretty=format:%s $TAG_COMMIT)
+            
+            # Validate release creation
+            if [[ "$COMMIT_MSG" != *"chore: close version"* && "$ACTOR" != "github-actions[bot]" ]]; then
+              echo "::error::⛔ UNAUTHORIZED RELEASE CREATION: Releases must be created using the automated workflow"
+              echo "## ⛔ UNAUTHORIZED RELEASE CREATION" >> $GITHUB_STEP_SUMMARY
+              echo "Please use the 'Prepare, Close and Publish Release' workflow." >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+          fi
+          
+          # Success case
+          echo "✅ Release validation passed"
+          echo "## ✅ Release Validation Passed" >> $GITHUB_STEP_SUMMARY

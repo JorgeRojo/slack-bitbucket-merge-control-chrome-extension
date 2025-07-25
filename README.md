@@ -15,9 +15,85 @@ This is a Chrome extension designed to read messages from specified Slack channe
 - **Web Components:** Custom elements for UI components.
 - **Comprehensive Testing:** High test coverage with Vitest.
 
-## Code Quality
+## Installation
 
-This project uses [Prettier](https://prettier.io/) for code formatting and [ESLint](https://eslint.org/) for static code analysis.
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/JorgeRojo/slack-bitbucket-merge-control-chrome-extension.git
+   cd slack-bitbucket-merge-control-chrome-extension
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+3. **Build the extension:**
+
+   ```bash
+   npm run build
+   ```
+
+4. **Load in Chrome:**
+   - Open Chrome and navigate to `chrome://extensions`.
+   - Enable **Developer mode** (toggle switch in the top right).
+   - Click on **Load unpacked**.
+   - Select the `dist` directory within the project folder.
+
+## Usage
+
+For detailed configuration instructions and usage information, please refer to the built-in help page in the extension:
+
+1. After installing the extension, right-click on the extension icon in your Chrome toolbar
+2. Select **Options** from the menu
+3. Click on the **View Configuration & Usage Help** link at the top of the page
+
+The help page provides comprehensive instructions for:
+
+- Setting up your Slack App
+- Configuring the Chrome Extension
+- Using the extension with Bitbucket
+- Understanding the different merge control statuses
+
+## Development
+
+### Key Technologies
+
+- **TypeScript** - For type safety and better development experience
+- **Web Components** - For encapsulated, reusable UI components
+- **Vite** - For modern, fast bundling
+- **Vitest** - For comprehensive testing
+- **ESLint & Prettier** - For code quality and consistency
+- **Chrome Extension APIs** - For browser integration
+- **Slack API** - For real-time message monitoring
+
+### Project Structure
+
+```schema
+src/
+├── modules/
+│   ├── background/         # Background script and utilities
+│   ├── common/             # Shared code
+│   │   ├── components/     # Web components
+│   │   ├── images/         # Extension icons
+│   │   ├── styles/         # CSS files
+│   │   ├── types/          # TypeScript type definitions
+│   │   └── utils/          # Utility functions
+│   ├── content/            # Content script for Bitbucket pages
+│   ├── options/            # Options and help pages
+│   └── popup/              # Popup interface
+└── manifest.json           # Extension manifest
+```
+
+### Development Guidelines
+
+This project follows specific coding standards and development practices:
+
+- See [CONTRIBUTING.md](./documentation/CONTRIBUTING.md) for contribution guidelines and development workflow
+- See [CODE_STYLE.md](./documentation/CODE_STYLE.md) for detailed coding style rules and best practices
+- See [RELEASE_PROCESS.md](./documentation/RELEASE_PROCESS.md) for release workflow and Git Flow guidelines
 
 ### Available Scripts
 
@@ -76,100 +152,14 @@ This project uses [Prettier](https://prettier.io/) for code formatting and [ESLi
   npm run prepare
   ```
 
-## Development Guidelines
-
-This project follows specific coding standards and development practices:
-
-- See [CONTRIBUTING.md](./documentation/CONTRIBUTING.md) for contribution guidelines and development workflow
-- See [CODE_STYLE.md](./documentation/CODE_STYLE.md) for detailed coding style rules and best practices
-
 ## Documentation
 
 All project documentation is organized in the `documentation/` directory:
 
-- **[BUILD.md](./documentation/BUILD.md)** - Build process and development setup instructions
-- **[CODE_STYLE.md](./documentation/CODE_STYLE.md)** - Detailed coding style rules and best practices
 - **[CONTRIBUTING.md](./documentation/CONTRIBUTING.md)** - Contribution guidelines and development workflow
-- **[ERROR_HANDLING.md](./documentation/ERROR_HANDLING.md)** - Error handling system documentation
-- **[GIT_FLOW.md](./documentation/GIT_FLOW.md)** - Git branching strategy and workflow guidelines
-- **[GITHUB_PAT_SETUP.md](./documentation/GITHUB_PAT_SETUP.md)** - GitHub Personal Access Token setup for automated releases
-- **[MOCKING_STRATEGIES.md](./documentation/MOCKING_STRATEGIES.md)** - Mocking patterns and strategies for tests
-- **[TESTING_GUIDELINES.md](./documentation/TESTING_GUIDELINES.md)** - Testing strategies and guidelines
-- **[TYPESCRIPT_MIGRATION.md](./documentation/TYPESCRIPT_MIGRATION.md)** - TypeScript migration documentation
-- **[VERSION_RELEASE_PROCESS.md](./documentation/VERSION_RELEASE_PROCESS.md)** - Version closing and release process
-
+- **[CODE_STYLE.md](./documentation/CODE_STYLE.md)** - Detailed coding style rules and best practices
+- **[RELEASE_PROCESS.md](./documentation/RELEASE_PROCESS.md)** - Complete release process and Git Flow documentation
+- **[TESTING_GUIDELINES.md](./documentation/TESTING_GUIDELINES.md)** - Testing strategies and guidelines including mocking patterns
 - **[ISSUES_TRACKING.md](./documentation/ISSUES_TRACKING.md)** - Index of open bugs and feature requests
 
-## Project Structure
-
-```schema
-src/
-├── modules/
-│   ├── background/         # Background script and utilities
-│   ├── common/             # Shared code
-│   │   ├── components/     # Web components
-│   │   ├── images/         # Extension icons
-│   │   ├── styles/         # CSS files
-│   │   ├── types/          # TypeScript type definitions
-│   │   └── utils/          # Utility functions
-│   ├── content/            # Content script for Bitbucket pages
-│   ├── options/            # Options and help pages
-│   └── popup/              # Popup interface
-└── manifest.json           # Extension manifest
-```
-
-## Installation
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/JorgeRojo/slack-bitbucket-merge-control-chrome-extension.git
-   cd slack-bitbucket-merge-control-chrome-extension
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   npm install
-   ```
-
-3. **Build the extension:**
-
-   ```bash
-   npm run build
-   ```
-
-4. **Load in Chrome:**
-   - Open Chrome and navigate to `chrome://extensions`.
-   - Enable **Developer mode** (toggle switch in the top right).
-   - Click on **Load unpacked**.
-   - Select the `dist` directory within the project folder.
-
-## Configuration & Usage
-
-For detailed configuration instructions and usage information, please refer to the built-in help page in the extension:
-
-1. After installing the extension, right-click on the extension icon in your Chrome toolbar
-2. Select **Options** from the menu
-3. Click on the **View Configuration & Usage Help** link at the top of the page
-
-The help page provides comprehensive instructions for:
-
-- Setting up your Slack App
-- Configuring the Chrome Extension
-- Using the extension with Bitbucket
-- Understanding the different merge control statuses
-
-## Key Technologies
-
-- **TypeScript** - For type safety and better development experience
-- **Web Components** - For encapsulated, reusable UI components
-- **Vite** - For modern, fast bundling
-- **Vitest** - For comprehensive testing
-- **ESLint & Prettier** - For code quality and consistency
-- **Chrome Extension APIs** - For browser integration
-- **Slack API** - For real-time message monitoring
-
 ---
-
-_Documentation and UI improvements assisted by [Amazon Q](https://aws.amazon.com/q/)._

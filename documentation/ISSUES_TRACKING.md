@@ -1,6 +1,6 @@
-# Issue Tracking Index
+# Issue Tracking System
 
-This directory contains documentation for bugs and features in the Slack-Bitbucket Merge Control Chrome Extension.
+This document describes the issue tracking system for the Slack-Bitbucket Merge Control Chrome Extension, including both the manual process and the automated synchronization between GitHub Issues and documentation.
 
 ## Open Bug List
 
@@ -14,11 +14,37 @@ This directory contains documentation for bugs and features in the Slack-Bitbuck
 | -- | ----- | --------- | -------- | -------------- |
 <!-- No features yet -->
 
+## Automated Issue Tracking
+
+The project uses GitHub Actions to automatically synchronize GitHub Issues with documentation files. This ensures that all issues are properly documented and tracked.
+
+### Synchronization Process
+
+1. When a GitHub issue is created or updated with the 'bug' or 'feature' label, a GitHub Action workflow runs
+2. The workflow creates or updates a corresponding documentation file in this directory
+3. The issue index above is automatically updated to reflect all current issues
+
+### GitHub Actions Workflow
+
+The synchronization is handled by the `sync-github-issues.yml` workflow, which uses custom JavaScript scripts:
+
+- **`sync-issue-to-bug.js`**: Creates a bug documentation file from a GitHub issue
+- **`sync-bug-to-issue.js`**: Creates a GitHub issue from a bug documentation file
+
+This bidirectional synchronization ensures that issues can be created either through GitHub Issues or by adding documentation files directly.
+
 ## How to Add a New Issue
+
+### Method 1: Through GitHub Issues (Recommended)
 
 1. Create a GitHub issue with the appropriate label ('bug' or 'feature')
 2. Fill out the issue template
 3. The documentation file will be automatically created
+
+### Method 2: Through Documentation Files
+
+1. Create a new markdown file following the templates below
+2. Run the GitHub Action workflow manually to create the corresponding GitHub issue
 
 ## Bug Template
 
@@ -87,12 +113,14 @@ Any additional context or information
 ## Severity/Priority Levels
 
 ### Severity (for bugs)
+
 - **Critical**: Application crashes, data loss, security vulnerability
 - **High**: Major functionality broken, no workaround available
 - **Medium**: Functionality works but with issues, workaround available
 - **Low**: Minor issues, cosmetic problems, edge cases
 
 ### Priority (for features)
+
 - **High**: Core functionality, needed for next release
 - **Medium**: Important but not critical, planned for upcoming releases
 - **Low**: Nice to have, may be implemented in future releases
