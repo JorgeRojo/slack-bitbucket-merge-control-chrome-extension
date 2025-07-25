@@ -221,7 +221,7 @@ jobs:
       - name: Get version
         run: |
           INPUT_VERSION="${{ github.event.inputs.version }}" 
-          VERSION="${INPUT_VERSION#v}"
+          VERSION=${INPUT_VERSION#v}
 
           echo "INPUT_VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           echo "VERSION=${INPUT_VERSION#v}" >> $GITHUB_ENV
