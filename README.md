@@ -91,12 +91,13 @@ All project documentation is organized in the `documentation/` directory:
 - **[CODE_STYLE.md](./documentation/CODE_STYLE.md)** - Detailed coding style rules and best practices
 - **[CONTRIBUTING.md](./documentation/CONTRIBUTING.md)** - Contribution guidelines and development workflow
 - **[ERROR_HANDLING.md](./documentation/ERROR_HANDLING.md)** - Error handling system documentation
-- **[GIT_FLOW.md](./documentation/GIT_FLOW.md)** - Git branching strategy and workflow guidelines
-- **[GITHUB_PAT_SETUP.md](./documentation/GITHUB_PAT_SETUP.md)** - GitHub Personal Access Token setup for automated releases
 - **[MOCKING_STRATEGIES.md](./documentation/MOCKING_STRATEGIES.md)** - Mocking patterns and strategies for tests
 - **[TESTING_GUIDELINES.md](./documentation/TESTING_GUIDELINES.md)** - Testing strategies and guidelines
 - **[TYPESCRIPT_MIGRATION.md](./documentation/TYPESCRIPT_MIGRATION.md)** - TypeScript migration documentation
 - **[VERSION_RELEASE_PROCESS.md](./documentation/VERSION_RELEASE_PROCESS.md)** - Version closing and release process
+
+- **[GIT_FLOW.md](./documentation/GIT_FLOW.md)** - Git branching strategy and workflow guidelines
+- **[GITHUB_PAT_SETUP.md](./documentation/GITHUB_PAT_SETUP.md)** - GitHub Personal Access Token setup for automated releases
 
 - **[ISSUES_TRACKING.md](./documentation/ISSUES_TRACKING.md)** - Index of open bugs and feature requests
 
