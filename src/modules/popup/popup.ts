@@ -14,6 +14,8 @@ interface UIElements {
   openOptionsButton: HTMLElement | null;
   slackChannelLink: HTMLAnchorElement | null;
   matchingMessageDiv: HTMLElement | null;
+  canvasContentDiv: HTMLElement | null;
+  decisionSourceDiv: HTMLElement | null;
   featureToggle?: ToggleSwitch | null;
   optionsLinkContainer: HTMLElement | null;
 }
@@ -22,12 +24,16 @@ interface UpdateUIParams extends UIElements {
   state: MERGE_STATUS;
   message?: string | null;
   matchingMessage?: ProcessedMessage | null;
+  canvasContent?: string | null;
+  source?: string | null;
 }
 
 interface LastKnownMergeState {
   mergeStatus: MERGE_STATUS;
   lastSlackMessage?: ProcessedMessage;
   appStatus?: APP_STATUS;
+  canvasContent?: string | null;
+  source?: string | null;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -37,6 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     openOptionsButton: document.getElementById('open-options'),
     slackChannelLink: document.getElementById('slack-channel-link') as HTMLAnchorElement,
     matchingMessageDiv: document.getElementById('matching-message'),
+    canvasContentDiv: document.getElementById('canvas-content'),
+    decisionSourceDiv: document.getElementById('decision-source'),
     featureToggle: document.getElementById('feature-toggle') as ToggleSwitch,
     optionsLinkContainer: document.getElementById('options-link-container'),
   };
@@ -47,6 +55,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    canvasContentDiv,
+    decisionSourceDiv,
     featureToggle,
     optionsLinkContainer,
   } = uiElements;
@@ -57,6 +67,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    canvasContentDiv,
+    decisionSourceDiv,
     optionsLinkContainer,
   });
 
@@ -66,6 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    canvasContentDiv,
+    decisionSourceDiv,
     optionsLinkContainer,
   });
 
@@ -80,10 +94,14 @@ function updateUI({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  canvasContentDiv,
+  decisionSourceDiv,
   optionsLinkContainer,
   state,
   message,
   matchingMessage = null,
+  canvasContent = null,
+  source = null,
 }: UpdateUIParams): void {
   if (statusIcon) {
     statusIcon.className = state;
@@ -105,20 +123,52 @@ function updateUI({
     matchingMessageDiv.style.display = 'none';
   }
 
+  if (canvasContentDiv) {
+    canvasContentDiv.style.display = 'none';
+  }
+
+  if (decisionSourceDiv) {
+    decisionSourceDiv.style.display = 'none';
+  }
+
   updateContentByState({
     statusIcon,
     statusText,
     openOptionsButton,
     slackChannelLink,
     optionsLinkContainer,
+    canvasContentDiv,
+    decisionSourceDiv,
     state,
     message,
   });
 
   if (matchingMessage && matchingMessageDiv) {
-    matchingMessageDiv.textContent = matchingMessage.text;
+    matchingMessageDiv.textContent = `Message: ${matchingMessage.text}`;
     matchingMessageDiv.style.display = 'block';
   }
+
+  if (canvasContent && canvasContentDiv) {
+    canvasContentDiv.textContent = `Canvas: ${canvasContent}`;
+    canvasContentDiv.style.display = 'block';
+  }
+
+  if (source && decisionSourceDiv) {
+    decisionSourceDiv.textContent = `Source: ${source}`;
+    decisionSourceDiv.style.display = 'block';
+  }
+}
+
+interface UpdateContentByStateParams {
+  statusIcon: HTMLElement | null;
+  statusText: HTMLElement | null;
+  openOptionsButton: HTMLElement | null;
+  slackChannelLink: HTMLAnchorElement | null;
+  optionsLinkContainer: HTMLElement | null;
+  canvasContentDiv: HTMLElement | null;
+  decisionSourceDiv: HTMLElement | null;
+  state: MERGE_STATUS;
+  message?: string | null;
 }
 
 function updateContentByState({
@@ -129,7 +179,7 @@ function updateContentByState({
   optionsLinkContainer,
   state,
   message,
-}: Omit<UpdateUIParams, 'matchingMessageDiv' | 'matchingMessage'>): void {
+}: UpdateContentByStateParams): void {
   if (!statusIcon || !statusText) return;
 
   switch (state) {
@@ -181,6 +231,8 @@ async function loadAndDisplayData({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  canvasContentDiv,
+  decisionSourceDiv,
   optionsLinkContainer,
 }: Omit<UIElements, 'featureToggle'>): Promise<void> {
   try {
@@ -197,6 +249,8 @@ async function loadAndDisplayData({
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
+        canvasContentDiv,
+        decisionSourceDiv,
         optionsLinkContainer,
       });
       return;
@@ -210,6 +264,8 @@ async function loadAndDisplayData({
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
+      canvasContentDiv,
+      decisionSourceDiv,
       optionsLinkContainer,
     });
   } catch (error) {
@@ -228,6 +284,8 @@ async function loadAndDisplayData({
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
+      canvasContentDiv,
+      decisionSourceDiv,
       optionsLinkContainer,
     });
   }
@@ -239,6 +297,8 @@ function showConfigNeededUI({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  canvasContentDiv,
+  decisionSourceDiv,
   optionsLinkContainer,
 }: Omit<UIElements, 'featureToggle'>): void {
   const errorDetailsDiv = document.createElement('div');
@@ -289,6 +349,8 @@ function showConfigNeededUI({
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
+      canvasContentDiv,
+      decisionSourceDiv,
       optionsLinkContainer,
       state: MERGE_STATUS.CONFIG_NEEDED,
       message: literals.popup.errorDetails.textConfigNeeded,
@@ -312,6 +374,8 @@ async function showMergeStatus({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  canvasContentDiv,
+  decisionSourceDiv,
   optionsLinkContainer,
 }: Omit<UIElements, 'featureToggle'>): Promise<void> {
   const { lastKnownMergeState } = (await chrome.storage.local.get('lastKnownMergeState')) as {
@@ -325,12 +389,20 @@ async function showMergeStatus({
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
+      canvasContentDiv,
+      decisionSourceDiv,
       optionsLinkContainer,
     });
     return;
   }
 
-  const { mergeStatus: status, lastSlackMessage, appStatus } = lastKnownMergeState;
+  const {
+    mergeStatus: status,
+    lastSlackMessage,
+    appStatus,
+    canvasContent,
+    source,
+  } = lastKnownMergeState;
 
   if (appStatus === APP_STATUS.CHANNEL_NOT_FOUND) {
     updateUI({
@@ -339,6 +411,8 @@ async function showMergeStatus({
       openOptionsButton,
       slackChannelLink,
       matchingMessageDiv,
+      canvasContentDiv,
+      decisionSourceDiv,
       optionsLinkContainer,
       state: MERGE_STATUS.DISALLOWED,
       message: literals.popup.errorDetails.channelNotFound,
@@ -373,10 +447,14 @@ async function showMergeStatus({
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    canvasContentDiv,
+    decisionSourceDiv,
     optionsLinkContainer,
     state,
     message,
     matchingMessage: lastSlackMessage,
+    canvasContent: canvasContent,
+    source: source,
   });
 }
 
@@ -386,6 +464,8 @@ function showLoadingUI({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  canvasContentDiv,
+  decisionSourceDiv,
   optionsLinkContainer,
 }: Omit<UIElements, 'featureToggle'>): void {
   updateUI({
@@ -394,6 +474,8 @@ function showLoadingUI({
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    canvasContentDiv,
+    decisionSourceDiv,
     optionsLinkContainer,
     state: MERGE_STATUS.LOADING,
   });
@@ -409,6 +491,8 @@ function showErrorUI({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  canvasContentDiv,
+  decisionSourceDiv,
   optionsLinkContainer,
 }: Omit<UIElements, 'featureToggle'>): void {
   updateUI({
@@ -417,6 +501,8 @@ function showErrorUI({
     openOptionsButton,
     slackChannelLink,
     matchingMessageDiv,
+    canvasContentDiv,
+    decisionSourceDiv,
     optionsLinkContainer,
     state: MERGE_STATUS.DISALLOWED,
     message: literals.popup.errorDetails.processingMessages,
@@ -429,6 +515,8 @@ function setupEventListeners({
   openOptionsButton,
   slackChannelLink,
   matchingMessageDiv,
+  canvasContentDiv,
+  decisionSourceDiv,
   optionsLinkContainer,
 }: Omit<UIElements, 'featureToggle'>): void {
   if (!openOptionsButton) return;
@@ -442,13 +530,18 @@ function setupEventListeners({
   });
 
   chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local' && (changes.lastKnownMergeState || changes.lastMatchingMessage)) {
+    if (
+      namespace === 'local' &&
+      (changes.lastKnownMergeState || changes.lastMatchingMessage || changes.canvasContent)
+    ) {
       loadAndDisplayData({
         statusIcon,
         statusText,
         openOptionsButton,
         slackChannelLink,
         matchingMessageDiv,
+        canvasContentDiv,
+        decisionSourceDiv,
         optionsLinkContainer,
       });
     }

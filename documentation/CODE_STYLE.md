@@ -54,6 +54,7 @@ This document provides detailed coding style guidelines for the Slack-Bitbucket 
 ### Best Practices
 
 - **Avoid `any` type**: Use `unknown` or specific types instead
+- **Avoid casting**: As possible as you can
 - **Use utility types**: Leverage `Partial<T>`, `Pick<T, K>`, `Omit<T, K>` when appropriate
 - **Use generics**: For reusable functions and interfaces
 - **Document complex types**: Add JSDoc comments for interfaces and types
