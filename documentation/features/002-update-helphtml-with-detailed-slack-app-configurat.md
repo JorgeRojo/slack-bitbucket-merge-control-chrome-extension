@@ -32,7 +32,7 @@ Leaving the documentation as is would continue to cause user friction. Creating 
 ## Additional Context
 new content proposal:
 ----------
-
+```markdoun
 Below is the proposed new content for `help.html`, formatted in Markdown. This can be adapted into the final HTML file.
 
 ---
