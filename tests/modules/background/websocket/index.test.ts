@@ -67,7 +67,10 @@ describe('WebSocket Module', () => {
       send: vi.fn(),
       close: vi.fn(),
     };
-    global.WebSocket = vi.fn().mockImplementation(() => mockWebSocket);
+
+    // Mock WebSocket constructor without modifying static properties
+    const MockWebSocketConstructor = vi.fn(() => mockWebSocket);
+    global.WebSocket = MockWebSocketConstructor as any;
 
     // Mock chrome API
     global.chrome = {

@@ -11,8 +11,15 @@ import {
   processAndStoreMessage,
 } from '@src/modules/background/slack/messages';
 import { MAX_MESSAGES, SLACK_CONVERSATIONS_HISTORY_URL } from '@src/modules/common/constants';
+import { ProcessedMessage } from '@src/modules/common/types/app';
 import { SlackMessage } from '@src/modules/common/types/slack';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+// Define interface for chrome storage mock
+interface ChromeStorageMock {
+  messages?: ProcessedMessage[];
+  [key: string]: any;
+}
 
 // Mock dependencies
 vi.mock('@src/modules/background/app-state', () => ({
@@ -124,7 +131,7 @@ describe('Slack Messages Module', () => {
       const message = { ts: '123456789', text: 'Test message', user: 'U123' };
       chrome.storage.local.get = vi.fn().mockResolvedValue({
         messages: [{ ts: '123456789', text: 'Test message', user: 'U123', matchType: null }],
-      });
+      } as ChromeStorageMock);
 
       await processAndStoreMessage(message);
 
@@ -135,7 +142,7 @@ describe('Slack Messages Module', () => {
       const message = { ts: '123456789', text: 'Test message', user: 'U123' };
       chrome.storage.local.get = vi.fn().mockResolvedValue({
         messages: [],
-      });
+      } as ChromeStorageMock);
 
       await processAndStoreMessage(message);
 
@@ -161,7 +168,7 @@ describe('Slack Messages Module', () => {
 
       chrome.storage.local.get = vi.fn().mockResolvedValue({
         messages: existingMessages,
-      });
+      } as ChromeStorageMock);
 
       await processAndStoreMessage(message);
 
@@ -170,8 +177,8 @@ describe('Slack Messages Module', () => {
         messages: expect.arrayContaining([expect.objectContaining({ ts: '999999999' })]),
       });
 
-      const setCall = vi.mocked(chrome.storage.local.set).mock.calls[0][0];
-      expect(setCall.messages.length).toBe(MAX_MESSAGES);
+      const setCall = vi.mocked(chrome.storage.local.set).mock.calls[0][0] as ChromeStorageMock;
+      expect(setCall.messages!.length).toBe(MAX_MESSAGES);
     });
 
     test('should sort messages by timestamp in descending order', async () => {
@@ -182,14 +189,14 @@ describe('Slack Messages Module', () => {
           { ts: '3', text: 'Newest message', user: 'U123', matchType: null },
           { ts: '1', text: 'Oldest message', user: 'U123', matchType: null },
         ],
-      });
+      } as ChromeStorageMock);
 
       await processAndStoreMessage(message);
 
-      const setCall = vi.mocked(chrome.storage.local.set).mock.calls[0][0];
-      expect(setCall.messages[0].ts).toBe('3'); // Newest first
-      expect(setCall.messages[1].ts).toBe('2');
-      expect(setCall.messages[2].ts).toBe('1');
+      const setCall = vi.mocked(chrome.storage.local.set).mock.calls[0][0] as ChromeStorageMock;
+      expect(setCall.messages![0].ts).toBe('3'); // Newest first
+      expect(setCall.messages![1].ts).toBe('2');
+      expect(setCall.messages![2].ts).toBe('1');
     });
   });
 
