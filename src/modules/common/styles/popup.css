@@ -79,7 +79,8 @@ h1 {
   font-weight: var(--ft-font-weight-bold);
 }
 
-#matching-message {
+#matching-message,
+#canvas-content {
   display: none;
   font-size: 14px;
   color: var(--ft-color-text);
@@ -94,7 +95,16 @@ h1 {
   text-align: left;
 }
 
-#matching-message::before {
+#decision-source {
+  font-size: 10px;
+  left: 8px;
+  bottom: 0px;
+  color: var(--ft-color-grey-2);
+  position: absolute;
+}
+
+#matching-message::before,
+#canvas-content::before {
   content: 'Matching message';
   position: absolute;
   display: block;

@@ -1,16 +1,18 @@
 const SLACK_API_BASE_URL = 'https://slack.com/api';
 
+export const SLACK_CONVERSATIONS_INFO_URL = `${SLACK_API_BASE_URL}/conversations.info`;
 export const SLACK_CONVERSATIONS_LIST_URL = `${SLACK_API_BASE_URL}/conversations.list`;
 export const SLACK_CONVERSATIONS_HISTORY_URL = `${SLACK_API_BASE_URL}/conversations.history`;
 
 export const SLACK_USERS_LIST_URL = `${SLACK_API_BASE_URL}/users.list`;
+export const SLACK_CANVAS_GET_DOCUMENT_URL = `${SLACK_API_BASE_URL}/files.info`;
 
 export const SLACK_AUTH_TEST_URL = `${SLACK_API_BASE_URL}/auth.test`;
 export const SLACK_CONNECTIONS_OPEN_URL = `${SLACK_API_BASE_URL}/apps.connections.open`;
 
 export const CONTENT_SCRIPT_ID = 'slack-bitbucket-extension-content-script';
 
-export const MAX_MESSAGES = 50;
+export const MAX_MESSAGES = 20;
 
 export const DEFAULT_ALLOWED_PHRASES: string[] = [
   'allowed to merge',
