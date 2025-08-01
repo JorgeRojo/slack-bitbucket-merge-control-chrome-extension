@@ -25,7 +25,7 @@ describe('Bitbucket Integration', () => {
   const mockChannelName = 'test-channel';
   const mockTabId = 123;
   const mockMessages = [
-    { text: 'test message', ts: '123456789', user: 'U123', channel: 'C123', matchType: null },
+    { text: 'test message', ts: '123456789', user: 'U123', matchType: null },
   ] as ProcessedMessage[];
   const mockLastKnownMergeState = {
     mergeStatus: MERGE_STATUS.UNKNOWN,
@@ -84,15 +84,17 @@ describe('Bitbucket Integration', () => {
     await updateContentScriptMergeState(mockChannelName, mockTabId);
 
     // Verify storage was updated
-    expect(chrome.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({
-      lastKnownMergeState: expect.objectContaining({
-        isMergeDisabled: false,
-        mergeStatus: MERGE_STATUS.ALLOWED,
-        channelName: mockChannelName,
-        featureEnabled: true,
-        source: 'message',
-      }),
-    }));
+    expect(chrome.storage.local.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lastKnownMergeState: expect.objectContaining({
+          isMergeDisabled: false,
+          mergeStatus: MERGE_STATUS.ALLOWED,
+          channelName: mockChannelName,
+          featureEnabled: true,
+          source: 'message',
+        }),
+      })
+    );
 
     // Verify runtime message was sent
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
