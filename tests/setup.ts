@@ -104,6 +104,29 @@ class MockWebSocket {
 
 (global as any).fetch = vi.fn();
 
+export const mockFetchError = new Error('--mocked-fetch-error--');
+export const mockFetchResponses = <T extends { mustReject?: boolean; response?: { ok: boolean } }>(
+  dataResponses: T[]
+) => {
+  const mockFetch = vi.mocked(fetch);
+  dataResponses.forEach(data => {
+    if (data.mustReject) {
+      mockFetch.mockRejectedValueOnce(mockFetchError);
+    } else {
+      mockFetch.mockResolvedValueOnce(
+        Object.assign(new Response(), {
+          json: () => Promise.resolve(data.response),
+        })
+      );
+    }
+  });
+  mockFetch.mockResolvedValue(
+    Object.assign(new Response(), {
+      json: () => Promise.resolve({ ok: true }),
+    })
+  );
+};
+
 // Mock for the global document object
 (global as any).document = {
   getElementById: vi.fn(),

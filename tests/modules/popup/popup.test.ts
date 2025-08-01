@@ -375,7 +375,7 @@ describe('popup.js', () => {
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.ALLOWED);
 
-      expect(mockMatchingMessageDiv.textContent).toBe('Merge approved');
+      expect(mockMatchingMessageDiv.textContent).toBe('Message: Merge approved');
 
       expect(mockMatchingMessageDiv.style.display).toBe('block');
     });
@@ -393,7 +393,7 @@ describe('popup.js', () => {
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.DISALLOWED);
 
-      expect(mockMatchingMessageDiv.textContent).toBe('Do not merge');
+      expect(mockMatchingMessageDiv.textContent).toBe('Message: Do not merge');
 
       expect(mockMatchingMessageDiv.style.display).toBe('block');
     });
@@ -413,7 +413,7 @@ describe('popup.js', () => {
 
       expect(mockSlackChannelLink.style.display).toBe('block');
 
-      expect(mockMatchingMessageDiv.textContent).toBe('Merge with caution');
+      expect(mockMatchingMessageDiv.textContent).toBe('Message: Merge with caution');
     });
 
     test('should handle unknown merge status', async () => {

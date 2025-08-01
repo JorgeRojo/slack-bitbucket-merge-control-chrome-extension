@@ -25,7 +25,6 @@ export interface SlackUser {
 }
 
 export interface SlackMessage {
-  type: string;
   user: string;
   text: string;
   ts: string;

@@ -12,7 +12,7 @@ This document describes the issue tracking system for the Slack-Bitbucket Merge 
 
 | ID | Title | Component | Priority | Date Requested |
 | -- | -- | -- | -- | -- |
-<!-- No features yet -->
+| [001](./features/001-enhance-merge-control-with-canvas-as-source-of-tru.md) | Enhance Merge Control with Canvas as Source of Truth and an Enriched Popup UI | src/modules/background/background.ts | High | 2025-07-30 |
 
 ## How to Add a New Issue
 
