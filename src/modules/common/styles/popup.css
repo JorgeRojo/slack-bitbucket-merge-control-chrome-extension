@@ -7,6 +7,11 @@ body {
   position: relative;
 }
 
+body * {
+  -webkit-app-region: no-drag;
+  user-select: none;
+}
+
 h1 {
   font-size: 18px;
   text-align: center;
