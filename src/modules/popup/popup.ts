@@ -37,6 +37,10 @@ interface LastKnownMergeState {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+  });
+
   const uiElements: UIElements = {
     statusIcon: document.getElementById('status-icon'),
     statusText: document.getElementById('status-text'),
