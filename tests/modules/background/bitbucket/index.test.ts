@@ -19,6 +19,9 @@ vi.mock('@src/modules/common/utils/Logger', () => ({
   Logger: {
     error: vi.fn(),
   },
+  default: {
+    error: vi.fn(),
+  },
 }));
 
 describe('Bitbucket Integration', () => {
@@ -43,7 +46,6 @@ describe('Bitbucket Integration', () => {
             messages: mockMessages,
             featureEnabled: true,
             lastKnownMergeState: mockLastKnownMergeState,
-            canvasContent: null,
           }),
           set: vi.fn().mockResolvedValue(undefined),
         },
@@ -67,8 +69,6 @@ describe('Bitbucket Integration', () => {
     (determineMergeStatus as any).mockReturnValue({
       status: MERGE_STATUS.ALLOWED,
       message: mockMessages[0],
-      source: 'message',
-      canvasContent: null,
     });
   });
 
@@ -89,9 +89,9 @@ describe('Bitbucket Integration', () => {
         lastKnownMergeState: expect.objectContaining({
           isMergeDisabled: false,
           mergeStatus: MERGE_STATUS.ALLOWED,
+          lastSlackMessage: mockMessages[0],
           channelName: mockChannelName,
           featureEnabled: true,
-          source: 'message',
         }),
       })
     );
@@ -105,6 +105,7 @@ describe('Bitbucket Integration', () => {
     expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(mockTabId, {
       action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
       payload: expect.objectContaining({
+        lastSlackMessage: mockMessages[0],
         channelName: mockChannelName,
         isMergeDisabled: false,
         mergeStatus: MERGE_STATUS.ALLOWED,
@@ -117,8 +118,6 @@ describe('Bitbucket Integration', () => {
     (determineMergeStatus as any).mockReturnValue({
       status: MERGE_STATUS.DISALLOWED,
       message: mockMessages[0],
-      source: 'message',
-      canvasContent: null,
     });
 
     await updateContentScriptMergeState(mockChannelName, mockTabId);
@@ -150,7 +149,6 @@ describe('Bitbucket Integration', () => {
         mergeStatus: MERGE_STATUS.UNKNOWN,
         appStatus: APP_STATUS.TOKEN_ERROR,
       },
-      canvasContent: null,
     });
 
     await updateContentScriptMergeState(mockChannelName, mockTabId);
@@ -170,14 +168,11 @@ describe('Bitbucket Integration', () => {
       messages: mockMessages,
       featureEnabled: false,
       lastKnownMergeState: mockLastKnownMergeState,
-      canvasContent: null,
     });
 
     (determineMergeStatus as any).mockReturnValue({
       status: MERGE_STATUS.DISALLOWED,
       message: mockMessages[0],
-      source: 'message',
-      canvasContent: null,
     });
 
     await updateContentScriptMergeState(mockChannelName, mockTabId);
@@ -189,34 +184,6 @@ describe('Bitbucket Integration', () => {
         isMergeDisabled: false,
         mergeStatus: MERGE_STATUS.ALLOWED,
         featureEnabled: false,
-      }),
-    });
-  });
-
-  test('should handle canvas content', async () => {
-    const mockCanvasContent = 'Canvas content';
-
-    global.chrome.storage.local.get = vi.fn().mockResolvedValue({
-      messages: mockMessages,
-      featureEnabled: true,
-      lastKnownMergeState: mockLastKnownMergeState,
-      canvasContent: mockCanvasContent,
-    });
-
-    (determineMergeStatus as any).mockReturnValue({
-      status: MERGE_STATUS.ALLOWED,
-      message: mockMessages[0],
-      source: 'canvas',
-      canvasContent: mockCanvasContent,
-    });
-
-    await updateContentScriptMergeState(mockChannelName, mockTabId);
-
-    // Verify storage was updated with canvas content and source
-    expect(chrome.storage.local.set).toHaveBeenCalledWith({
-      lastKnownMergeState: expect.objectContaining({
-        source: 'canvas',
-        canvasContent: mockCanvasContent,
       }),
     });
   });

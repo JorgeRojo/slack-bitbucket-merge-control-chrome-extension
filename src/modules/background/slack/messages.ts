@@ -17,8 +17,6 @@ export function cleanSlackMessageText(text: string | undefined): string {
   const NEWLINES_AND_TABS_REGEX = /[\n\r\t]+/g;
   const USER_MENTION_REGEX = /<@[^>]+>/g;
   const CHANNEL_MENTION_REGEX = /<#[^>]+>/g;
-  // This regex now specifically targets Slack's special links like <http://example.com|link text>
-  // and extracts only the 'link text' part, or removes the entire tag if no link text.
   const SLACK_LINK_REGEX = /<([^|>]+)\|([^>]+)>/g; // Matches <URL|text> and captures URL and text
   const REMAINING_BRACKETS_REGEX = /<[^>]+>/g; // Catches any other <...> patterns
   const MULTIPLE_WHITESPACE_REGEX = /\s+/g;
@@ -40,12 +38,15 @@ export async function processAndStoreMessage(message: SlackMessage): Promise<voi
     return;
   }
 
-  const messageTs = message.ts;
+  const messageTs = String(Math.floor(Number(message.ts) * 1000));
 
   let messages = (await chrome.storage.local.get('messages')).messages || [];
-  const existMessage = messages.some((m: ProcessedMessage) => m.ts === messageTs);
 
-  if (existMessage) {
+  // Check for duplicate messages before adding
+  const isDuplicate = messages.some(
+    (existingMsg: ProcessedMessage) => existingMsg.ts === messageTs
+  );
+  if (isDuplicate) {
     return;
   }
 
@@ -88,16 +89,16 @@ export async function determineAndFetchCanvasContent(
   slackToken: string,
   canvasFileId: string | undefined,
   channelInfoResponse: any
-): Promise<string | null> {
+): Promise<{ content: string; ts: string } | null> {
   let determinedCanvasId: string | null = null;
 
   if (canvasFileId) {
     determinedCanvasId = canvasFileId;
   } else if (
     channelInfoResponse.ok &&
-    channelInfoResponse.channel?.properties?.meeting_notes?.file_id
+    channelInfoResponse.channel?.properties?.tabs?.[0]?.data?.file_id
   ) {
-    determinedCanvasId = channelInfoResponse.channel.properties.meeting_notes.file_id;
+    determinedCanvasId = channelInfoResponse.channel.properties.tabs[0].data.file_id;
   }
 
   return determinedCanvasId ? await fetchCanvasContent(slackToken, determinedCanvasId) : null;
@@ -115,7 +116,7 @@ export async function fetchAndStoreMessages(
     return;
   }
 
-  await chrome.storage.local.set({ lastMatchingMessage: null, canvasContent: null });
+  await chrome.storage.local.set({ lastMatchingMessage: null });
 
   const results = await Promise.allSettled([
     fetch(`${SLACK_CONVERSATIONS_HISTORY_URL}?channel=${channelId}&limit=${MAX_MESSAGES}`, {
@@ -131,40 +132,60 @@ export async function fetchAndStoreMessages(
 
   const channelInfoResponse = results[1].status === 'fulfilled' ? results[1].value : { ok: false };
 
-  const canvasContent = await determineAndFetchCanvasContent(
+  const canvasData = await determineAndFetchCanvasContent(
     slackToken,
     canvasFileId,
     channelInfoResponse
   );
 
-  if (canvasContent) {
-    await chrome.storage.local.set({ canvasContent });
-  }
-
   if (historyResponse.ok) {
-    const messages = historyResponse.messages.map((msg: SlackMessage) => ({
+    let allMessages = historyResponse.messages.map((msg: SlackMessage) => ({
       text: cleanSlackMessageText(msg.text),
-      ts: msg.ts,
+      ts: String(Math.floor(Number(msg.ts) * 1000)),
       user: msg.user,
       matchType: null,
     }));
-    await chrome.storage.local.set({ messages });
+
+    if (canvasData) {
+      // Assign a new timestamp to canvasData.ts that is slightly greater than the current time
+      canvasData.ts = String(Date.now() + 1);
+
+      allMessages.push({
+        text: cleanSlackMessageText(canvasData.content),
+        ts: canvasData.ts,
+        user: 'canvas',
+        matchType: null,
+      });
+    }
+
+    allMessages.sort((a: ProcessedMessage, b: ProcessedMessage) => Number(b.ts) - Number(a.ts));
+
+    // Filter out duplicate messages based on timestamp
+    const uniqueMessages = allMessages.filter(
+      (message: { ts: number }, index: number, self: any[]) =>
+        index === self.findIndex((m: { ts: number }) => Number(m.ts) === Number(message.ts))
+    );
+
+    if (uniqueMessages.length > MAX_MESSAGES) {
+      allMessages = uniqueMessages.slice(0, MAX_MESSAGES);
+    } else {
+      allMessages = uniqueMessages;
+    }
+
+    await chrome.storage.local.set({ messages: allMessages });
 
     const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
       await getPhrasesFromStorage();
 
-    const { message: determinedMessage, canvasContent: determinedCanvasContent } =
-      determineMergeStatus({
-        allowedPhrases: currentAllowedPhrases,
-        disallowedPhrases: currentDisallowedPhrases,
-        exceptionPhrases: currentExceptionPhrases,
-        canvasContent: cleanSlackMessageText(canvasContent ?? ''),
-        messages,
-      });
+    const { message: determinedMessage } = determineMergeStatus({
+      messages: allMessages,
+      allowedPhrases: currentAllowedPhrases,
+      disallowedPhrases: currentDisallowedPhrases,
+      exceptionPhrases: currentExceptionPhrases,
+    });
 
     await chrome.storage.local.set({
       lastMatchingMessage: determinedMessage,
-      canvasContent: determinedCanvasContent,
     });
 
     await updateIconBasedOnCurrentMessages();

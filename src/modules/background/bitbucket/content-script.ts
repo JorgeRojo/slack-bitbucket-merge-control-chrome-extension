@@ -10,7 +10,7 @@ import { Logger } from '@src/modules/common/utils/Logger';
 import { toErrorType } from '@src/modules/common/utils/type-helpers';
 
 /**
- * Registra el script de contenido para Bitbucket
+ * Registers the content script for Bitbucket
  */
 export async function registerBitbucketContentScript(): Promise<void> {
   const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
@@ -48,7 +48,7 @@ export async function registerBitbucketContentScript(): Promise<void> {
 }
 
 /**
- * Actualiza el botón de fusión basado en el último estado conocido
+ * Updates the merge button based on the last known state
  */
 export function updateMergeButtonFromLastKnownMergeState(): void {
   chrome.storage.local.get(

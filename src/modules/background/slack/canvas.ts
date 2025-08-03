@@ -5,12 +5,12 @@ import { Logger } from '@src/modules/common/utils/Logger';
 import { toErrorType } from '@src/modules/common/utils/type-helpers';
 
 /**
- * Fetches canvas content from Slack API
+ * Fetches canvas content and its last modified timestamp from Slack API
  */
 export async function fetchCanvasContent(
   slackToken: string,
   canvasId: string
-): Promise<string | null> {
+): Promise<{ content: string; ts: string } | null> {
   try {
     const response = await fetch(`${SLACK_CANVAS_GET_DOCUMENT_URL}?file=${canvasId}`, {
       headers: { Authorization: `Bearer ${slackToken}` },
@@ -19,19 +19,17 @@ export async function fetchCanvasContent(
 
     if (data.ok && data.file && data.file.title_blocks) {
       const titleBlocks = data.file.title_blocks;
+      const lastModifiedTimestamp = data.file.updated
+        ? String(Number(data.file.updated) * 1000)
+        : '0';
 
       const extractTextFromRichText = (elements: any[]): string => {
         return elements
           .map((element: any) => {
             if (element.type === 'text' && element.text) {
               return element.text;
-            } else if (element.type === 'rich_text_section' && element.elements) {
-              return extractTextFromRichText(element.elements);
-            } else if (element.type === 'rich_text_list' && element.elements) {
-              return extractTextFromRichText(element.elements);
-            } else if (element.type === 'rich_text_preformatted' && element.elements) {
-              return extractTextFromRichText(element.elements);
-            } else if (element.type === 'rich_text_quote' && element.elements) {
+            } else if (element.elements) {
+              // Recursively extract text from nested elements
               return extractTextFromRichText(element.elements);
             }
             return '';
@@ -39,9 +37,9 @@ export async function fetchCanvasContent(
           .join('\n');
       };
 
-      const canvasText = titleBlocks
+      const canvasText = [...titleBlocks, ...(data.file.blocks || [])]
         .map((block: any) => {
-          if (block.type === 'rich_text' && block.elements) {
+          if (block.elements) {
             return extractTextFromRichText(block.elements);
           } else if (block.type === 'text' && block.text) {
             return block.text;
@@ -49,7 +47,8 @@ export async function fetchCanvasContent(
           return '';
         })
         .join('\n');
-      return canvasText;
+
+      return { content: canvasText, ts: lastModifiedTimestamp };
     }
     return null;
   } catch (error) {

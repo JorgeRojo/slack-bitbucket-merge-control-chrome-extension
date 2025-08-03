@@ -10,7 +10,6 @@ import {
 } from '@src/modules/background/slack';
 import {
   APP_STATUS,
-  ERROR_MESSAGES,
   MERGE_STATUS,
   RECONNECTION_DELAY_MS,
   SLACK_CONNECTIONS_OPEN_URL,
@@ -77,7 +76,6 @@ export async function connectToSlackSocketMode(): Promise<void> {
       await chrome.storage.local.set({
         lastWebSocketConnectTime: Date.now(),
       });
-      Logger.log('WebSocket successfully connected');
 
       setupWebSocketCheckAlarm();
     };
@@ -99,11 +97,8 @@ export async function connectToSlackSocketMode(): Promise<void> {
     };
 
     rtmWebSocket.onclose = async () => {
-      Logger.log('WebSocket connection closed');
-
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
 
-      Logger.log('WebSocket closed. Scheduling reconnection...');
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
@@ -130,7 +125,6 @@ export function setupWebSocketCheckAlarm(): void {
     chrome.alarms.create(WEBSOCKET_CHECK_ALARM, {
       periodInMinutes: WEBSOCKET_CHECK_INTERVAL,
     });
-    Logger.log(`Alarm set to check WebSocket every ${WEBSOCKET_CHECK_INTERVAL} minutes`);
   });
 }
 
@@ -138,10 +132,7 @@ export function setupWebSocketCheckAlarm(): void {
  * Checks the WebSocket connection status and reconnects if necessary
  */
 export async function checkWebSocketConnection(): Promise<void> {
-  Logger.log('Checking WebSocket connection status...');
-
   if (!rtmWebSocket || rtmWebSocket.readyState !== WebSocket.OPEN) {
-    Logger.log('WebSocket is not connected. Attempting to reconnect...');
     connectToSlackSocketMode();
     return;
   }
@@ -154,17 +145,12 @@ export async function checkWebSocketConnection(): Promise<void> {
   const connectionAge = currentTime - (lastWebSocketConnectTime || 0);
 
   if (connectionAge > WEBSOCKET_MAX_AGE) {
-    Logger.log('Old WebSocket connection. Reconnecting to refresh it...');
     rtmWebSocket.close();
     setTimeout(connectToSlackSocketMode, 1000);
   } else {
-    Logger.log('WebSocket connection active and recent.');
-
     try {
       rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
-      Logger.log('Ping sent to Slack server');
-    } catch (error) {
-      Logger.error(toErrorType(error), ERROR_MESSAGES.SENDING_PING);
+    } catch {
       await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       rtmWebSocket.close();
       setTimeout(connectToSlackSocketMode, 1000);
