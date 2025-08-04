@@ -292,3 +292,100 @@ code {
   background-color: rgba(231, 76, 60, 0.1);
   color: var(--ft-color-error);
 }
+
+/* Enhanced styles for improved help documentation */
+.text-hint {
+  background: #f0f8ff;
+  padding: 12px;
+  border-left: 4px solid #007cba;
+  margin: 12px 0;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #2c3e50;
+}
+
+.text-hint strong {
+  color: #1a5490;
+}
+
+h4 {
+  font-size: 15px;
+  font-weight: var(--ft-font-weight-bold);
+  margin-top: 20px;
+  margin-bottom: 8px;
+  color: var(--ft-color-darkest);
+  border-left: 3px solid var(--ft-color-primary);
+  padding-left: 10px;
+}
+
+/* Improved spacing for nested lists */
+.list-compact .list-compact {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* Better visual hierarchy for sections */
+h2 {
+  margin-top: 30px;
+  padding-top: 10px;
+}
+
+h2:first-of-type {
+  margin-top: 0;
+}
+
+/* Enhanced code blocks */
+code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  background-color: #f8f9fa;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  color: #d63384;
+}
+
+/* Status indicators styling */
+.list-item strong {
+  display: inline-block;
+  min-width: 120px;
+}
+
+/* Improved link styling in help context */
+.card a.link {
+  color: #0066cc;
+  font-weight: normal;
+}
+
+.card a.link:hover {
+  color: #004499;
+}
+
+/* Better spacing for step-by-step instructions */
+.card ol > .list-item {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.card ol > .list-item:last-child {
+  border-bottom: none;
+}
+
+/* Highlight important warnings */
+.text-hint strong:contains("⚠️") {
+  color: #e74c3c;
+}
+
+/* Improved readability for long content */
+.content-wrapper {
+  line-height: 1.6;
+}
+
+/* Better visual separation for troubleshooting sections */
+h4 + .list-compact {
+  background-color: #fafafa;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
