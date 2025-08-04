@@ -6,7 +6,7 @@ import { fetchChannelInfo } from '@src/modules/background/slack/api';
 import { fetchCanvasContent } from '@src/modules/background/slack/canvas';
 import {
   cleanSlackMessageText,
-  determineAndFetchCanvasContent,
+  determineAndFetchAllCanvasContent,
   fetchAndStoreMessages,
   processAndStoreMessage,
 } from '@src/modules/background/slack/messages';
@@ -205,32 +205,44 @@ describe('Slack Messages Module', () => {
     });
   });
 
-  describe('determineAndFetchCanvasContent', () => {
-    test('should use provided canvas file ID', async () => {
+  describe('determineAndFetchAllCanvasContent', () => {
+    test('should use provided canvas file ID and return single canvas', async () => {
       (fetchCanvasContent as any).mockResolvedValue({ content: 'Canvas content', ts: '123456789' });
 
-      const result = await determineAndFetchCanvasContent('xoxb-test-token', 'F12345', {
+      const result = await determineAndFetchAllCanvasContent('xoxb-test-token', 'F12345', {
         ok: true,
       });
 
       expect(fetchCanvasContent).toHaveBeenCalledWith('xoxb-test-token', 'F12345');
-      expect(result).toEqual({ content: 'Canvas content', ts: '123456789' });
+      expect(result).toEqual([{ content: 'Canvas content', ts: '123456789', fileId: 'F12345' }]);
     });
 
-    test('should use canvas ID from channel info if not provided directly', async () => {
-      (fetchCanvasContent as any).mockResolvedValue({
-        content: 'Channel canvas content',
-        ts: '987654321',
-      });
+    test('should fetch all canvas from channel tabs when no specific file ID provided', async () => {
+      (fetchCanvasContent as any)
+        .mockResolvedValueOnce({ content: 'Canvas 1 content', ts: '123456789' })
+        .mockResolvedValueOnce({ content: 'Canvas 2 content', ts: '987654321' });
 
-      const result = await determineAndFetchCanvasContent('xoxb-test-token', undefined, {
+      const result = await determineAndFetchAllCanvasContent('xoxb-test-token', undefined, {
         ok: true,
         channel: {
           properties: {
             tabs: [
               {
+                type: 'canvas',
                 data: {
                   file_id: 'F67890',
+                },
+              },
+              {
+                type: 'canvas',
+                data: {
+                  file_id: 'F11111',
+                },
+              },
+              {
+                type: 'files',
+                data: {
+                  file_id: 'F22222',
                 },
               },
             ],
@@ -239,17 +251,73 @@ describe('Slack Messages Module', () => {
       });
 
       expect(fetchCanvasContent).toHaveBeenCalledWith('xoxb-test-token', 'F67890');
-      expect(result).toEqual({ content: 'Channel canvas content', ts: '987654321' });
+      expect(fetchCanvasContent).toHaveBeenCalledWith('xoxb-test-token', 'F11111');
+      expect(fetchCanvasContent).toHaveBeenCalledTimes(2);
+      expect(result).toEqual([
+        { content: 'Canvas 1 content', ts: '123456789', fileId: 'F67890' },
+        { content: 'Canvas 2 content', ts: '987654321', fileId: 'F11111' },
+      ]);
     });
 
-    test('should return null if no canvas ID is available', async () => {
-      const result = await determineAndFetchCanvasContent('xoxb-test-token', undefined, {
+    test('should return empty array if no canvas tabs are available', async () => {
+      const result = await determineAndFetchAllCanvasContent('xoxb-test-token', undefined, {
         ok: true,
-        channel: {},
+        channel: {
+          properties: {
+            tabs: [
+              {
+                type: 'files',
+                data: {
+                  file_id: 'F22222',
+                },
+              },
+            ],
+          },
+        },
       });
 
       expect(fetchCanvasContent).not.toHaveBeenCalled();
-      expect(result).toBeNull();
+      expect(result).toEqual([]);
+    });
+
+    test('should return empty array if channel info is not ok', async () => {
+      const result = await determineAndFetchAllCanvasContent('xoxb-test-token', undefined, {
+        ok: false,
+      });
+
+      expect(fetchCanvasContent).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
+    });
+
+    test('should handle canvas fetch failures gracefully', async () => {
+      (fetchCanvasContent as any)
+        .mockResolvedValueOnce({ content: 'Canvas 1 content', ts: '123456789' })
+        .mockResolvedValueOnce(null); // Second canvas fails
+
+      const result = await determineAndFetchAllCanvasContent('xoxb-test-token', undefined, {
+        ok: true,
+        channel: {
+          properties: {
+            tabs: [
+              {
+                type: 'canvas',
+                data: {
+                  file_id: 'F67890',
+                },
+              },
+              {
+                type: 'canvas',
+                data: {
+                  file_id: 'F11111',
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      expect(fetchCanvasContent).toHaveBeenCalledTimes(2);
+      expect(result).toEqual([{ content: 'Canvas 1 content', ts: '123456789', fileId: 'F67890' }]);
     });
   });
 
@@ -261,7 +329,7 @@ describe('Slack Messages Module', () => {
       expect(fetchChannelInfo).not.toHaveBeenCalled();
     });
 
-    test('should fetch and store messages successfully', async () => {
+    test('should fetch and store messages with multiple canvas successfully', async () => {
       // Mock fetch response
       (global.fetch as any).mockResolvedValue({
         json: vi.fn().mockResolvedValue({
@@ -280,8 +348,15 @@ describe('Slack Messages Module', () => {
           properties: {
             tabs: [
               {
+                type: 'canvas',
                 data: {
                   file_id: 'F12345',
+                },
+              },
+              {
+                type: 'canvas',
+                data: {
+                  file_id: 'F67890',
                 },
               },
             ],
@@ -289,8 +364,10 @@ describe('Slack Messages Module', () => {
         },
       });
 
-      // Mock fetchCanvasContent response
-      (fetchCanvasContent as any).mockResolvedValue({ content: 'Canvas content', ts: '789000' });
+      // Mock fetchCanvasContent responses
+      (fetchCanvasContent as any)
+        .mockResolvedValueOnce({ content: 'Canvas 1 content', ts: '789000' })
+        .mockResolvedValueOnce({ content: 'Canvas 2 content', ts: '999000' });
 
       await fetchAndStoreMessages('xoxb-test-token', 'C12345');
 
@@ -302,12 +379,24 @@ describe('Slack Messages Module', () => {
         expect.any(Object)
       );
       expect(fetchChannelInfo).toHaveBeenCalledWith('xoxb-test-token', 'C12345');
-      expect(fetchCanvasContent).toHaveBeenCalled();
+      expect(fetchCanvasContent).toHaveBeenCalledTimes(2);
+      expect(fetchCanvasContent).toHaveBeenCalledWith('xoxb-test-token', 'F12345');
+      expect(fetchCanvasContent).toHaveBeenCalledWith('xoxb-test-token', 'F67890');
 
-      // Verify that chrome.storage.local.set was called at least once with messages
+      // Verify that chrome.storage.local.set was called with messages including canvas content
       const setCalls = vi.mocked(chrome.storage.local.set).mock.calls;
       const messagesCall = setCalls.find(call => call[0] && 'messages' in call[0]);
       expect(messagesCall).toBeDefined();
+
+      const storedMessages = (messagesCall![0] as ChromeStorageMock).messages;
+      expect(storedMessages).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ text: 'Message 1', user: 'U123' }),
+          expect.objectContaining({ text: 'Message 2', user: 'U456' }),
+          expect.objectContaining({ text: 'Canvas 1 content', user: 'canvas-F12345' }),
+          expect.objectContaining({ text: 'Canvas 2 content', user: 'canvas-F67890' }),
+        ])
+      );
 
       // Verify other function calls
       expect(updateIconBasedOnCurrentMessages).toHaveBeenCalled();

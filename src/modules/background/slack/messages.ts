@@ -82,25 +82,49 @@ export async function processAndStoreMessage(message: SlackMessage): Promise<voi
 }
 
 /**
- * Determines and fetches canvas content based on file ID or channel info
+ * Determines and fetches all canvas content from channel tabs
  */
-export async function determineAndFetchCanvasContent(
+export async function determineAndFetchAllCanvasContent(
   slackToken: string,
   canvasFileId: string | undefined,
   channelInfoResponse: any
-): Promise<{ content: string; ts: string } | null> {
-  let determinedCanvasId: string | null = null;
+): Promise<{ content: string; ts: string; fileId: string }[]> {
+  const canvasContents: { content: string; ts: string; fileId: string }[] = [];
 
+  // If a specific canvas file ID is provided, fetch only that one
   if (canvasFileId) {
-    determinedCanvasId = canvasFileId;
-  } else if (
-    channelInfoResponse.ok &&
-    channelInfoResponse.channel?.properties?.tabs?.[0]?.data?.file_id
-  ) {
-    determinedCanvasId = channelInfoResponse.channel.properties.tabs[0].data.file_id;
+    const canvasData = await fetchCanvasContent(slackToken, canvasFileId);
+    if (canvasData) {
+      canvasContents.push({
+        content: canvasData.content,
+        ts: canvasData.ts,
+        fileId: canvasFileId,
+      });
+    }
+    return canvasContents;
   }
 
-  return determinedCanvasId ? await fetchCanvasContent(slackToken, determinedCanvasId) : null;
+  // Otherwise, fetch all canvas from channel tabs
+  if (channelInfoResponse.ok && channelInfoResponse.channel?.properties?.tabs) {
+    const tabs = channelInfoResponse.channel.properties.tabs;
+
+    // Filter tabs to get only canvas types
+    const canvasTabs = tabs.filter((tab: any) => tab.type === 'canvas' && tab.data?.file_id);
+
+    // Fetch content for each canvas
+    for (const tab of canvasTabs) {
+      const canvasData = await fetchCanvasContent(slackToken, tab.data.file_id);
+      if (canvasData) {
+        canvasContents.push({
+          content: canvasData.content,
+          ts: canvasData.ts,
+          fileId: tab.data.file_id,
+        });
+      }
+    }
+  }
+
+  return canvasContents;
 }
 
 /**
@@ -131,7 +155,7 @@ export async function fetchAndStoreMessages(
 
   const channelInfoResponse = results[1].status === 'fulfilled' ? results[1].value : { ok: false };
 
-  const canvasData = await determineAndFetchCanvasContent(
+  const allCanvasData = await determineAndFetchAllCanvasContent(
     slackToken,
     canvasFileId,
     channelInfoResponse
@@ -144,14 +168,19 @@ export async function fetchAndStoreMessages(
       user: msg.user,
     }));
 
-    if (canvasData) {
-      // Assign a new timestamp to canvasData.ts that is slightly greater than the current time
-      canvasData.ts = String(Date.now() + 1);
+    // Add all canvas content as messages
+    if (allCanvasData.length > 0) {
+      const currentTime = Date.now();
 
-      allMessages.push({
-        text: cleanSlackMessageText(canvasData.content),
-        ts: canvasData.ts,
-        user: 'canvas',
+      allCanvasData.forEach((canvasData, index) => {
+        // Assign unique timestamps to each canvas, slightly greater than current time
+        const canvasTimestamp = String(currentTime + index + 1);
+
+        allMessages.push({
+          text: cleanSlackMessageText(canvasData.content),
+          ts: canvasTimestamp,
+          user: `canvas-${canvasData.fileId}`,
+        });
       });
     }
 

@@ -16,8 +16,8 @@ describe('Slack Index', () => {
   test('should export all message functions', () => {
     expect(slackIndex.cleanSlackMessageText).toBe(slackMessages.cleanSlackMessageText);
     expect(slackIndex.processAndStoreMessage).toBe(slackMessages.processAndStoreMessage);
-    expect(slackIndex.determineAndFetchCanvasContent).toBe(
-      slackMessages.determineAndFetchCanvasContent
+    expect(slackIndex.determineAndFetchAllCanvasContent).toBe(
+      slackMessages.determineAndFetchAllCanvasContent
     );
     expect(slackIndex.fetchAndStoreMessages).toBe(slackMessages.fetchAndStoreMessages);
   });

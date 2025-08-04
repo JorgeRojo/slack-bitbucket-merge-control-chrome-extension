@@ -7,7 +7,7 @@ export { fetchAllChannels, resolveChannelId, fetchAndStoreTeamId, fetchChannelIn
 export {
   cleanSlackMessageText,
   processAndStoreMessage,
-  determineAndFetchCanvasContent,
+  determineAndFetchAllCanvasContent,
   fetchAndStoreMessages,
 } from './messages';
 
