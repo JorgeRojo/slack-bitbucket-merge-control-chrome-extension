@@ -131,7 +131,7 @@ describe('popup.js', () => {
       teamId: 'T123456',
       lastKnownMergeState: {
         mergeStatus: MERGE_STATUS.ALLOWED,
-        lastSlackMessage: { text: 'Test message', ts: '1234567890' },
+        lastSlackMessage: { text: 'Test message', ts: '1234567890', user: 'U12345' },
         appStatus: APP_STATUS.OK,
       },
     });
@@ -366,7 +366,7 @@ describe('popup.js', () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
           mergeStatus: MERGE_STATUS.ALLOWED,
-          lastSlackMessage: { text: 'Merge approved', ts: '1234567890' },
+          lastSlackMessage: { text: 'Merge approved', ts: '1234567890', user: 'U12345' },
           appStatus: APP_STATUS.OK,
         },
       });
@@ -384,7 +384,7 @@ describe('popup.js', () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
           mergeStatus: MERGE_STATUS.DISALLOWED,
-          lastSlackMessage: { text: 'Do not merge', ts: '1234567890' },
+          lastSlackMessage: { text: 'Do not merge', ts: '1234567890', user: 'U67890' },
           appStatus: APP_STATUS.OK,
         },
       });
@@ -402,7 +402,7 @@ describe('popup.js', () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
           mergeStatus: MERGE_STATUS.EXCEPTION,
-          lastSlackMessage: { text: 'Merge with caution', ts: '1234567890' },
+          lastSlackMessage: { text: 'Merge with caution', ts: '1234567890', user: 'U11111' },
           appStatus: APP_STATUS.OK,
         },
       });
@@ -420,7 +420,7 @@ describe('popup.js', () => {
       mockStorage.local.get.mockResolvedValue({
         lastKnownMergeState: {
           mergeStatus: 'unknown-status',
-          lastSlackMessage: { text: 'Unknown message', ts: '1234567890' },
+          lastSlackMessage: { text: 'Unknown message', ts: '1234567890', user: 'U99999' },
           appStatus: APP_STATUS.OK,
         },
       });
@@ -428,6 +428,67 @@ describe('popup.js', () => {
       await domContentLoadedHandler();
 
       expect(mockStatusIcon.className).toBe(MERGE_STATUS.UNKNOWN);
+    });
+
+    test('should display "Canvas:" prefix for canvas messages', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: MERGE_STATUS.ALLOWED,
+          lastSlackMessage: {
+            text: 'Canvas content allows merge',
+            ts: '1234567890',
+            user: 'canvas-F12345',
+          },
+          appStatus: APP_STATUS.OK,
+        },
+      });
+
+      await domContentLoadedHandler();
+
+      expect(mockStatusIcon.className).toBe(MERGE_STATUS.ALLOWED);
+      expect(mockMatchingMessageDiv.textContent).toBe('Canvas: Canvas content allows merge');
+      expect(mockMatchingMessageDiv.style.display).toBe('block');
+    });
+
+    test('should display "Message:" prefix for regular messages', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: MERGE_STATUS.DISALLOWED,
+          lastSlackMessage: {
+            text: 'Regular message blocks merge',
+            ts: '1234567890',
+            user: 'U12345',
+          },
+          appStatus: APP_STATUS.OK,
+        },
+      });
+
+      await domContentLoadedHandler();
+
+      expect(mockStatusIcon.className).toBe(MERGE_STATUS.DISALLOWED);
+      expect(mockMatchingMessageDiv.textContent).toBe('Message: Regular message blocks merge');
+      expect(mockMatchingMessageDiv.style.display).toBe('block');
+    });
+
+    test('should handle canvas messages with different file IDs', async () => {
+      mockStorage.local.get.mockResolvedValue({
+        lastKnownMergeState: {
+          mergeStatus: MERGE_STATUS.EXCEPTION,
+          lastSlackMessage: {
+            text: 'Canvas with exception',
+            ts: '1234567890',
+            user: 'canvas-F67890',
+          },
+          appStatus: APP_STATUS.OK,
+        },
+      });
+
+      await domContentLoadedHandler();
+
+      expect(mockStatusIcon.className).toBe(MERGE_STATUS.EXCEPTION);
+      expect(mockMatchingMessageDiv.textContent).toBe('Canvas: Canvas with exception');
+      expect(mockMatchingMessageDiv.style.display).toBe('block');
+      expect(mockSlackChannelLink.style.display).toBe('block');
     });
 
     test('should show loading UI when no merge state exists', async () => {

@@ -78,6 +78,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+/**
+ * Determines the source type of a message based on the user field
+ */
+function getMessageSourceType(message: ProcessedMessage): 'Canvas' | 'Message' {
+  return message.user.startsWith('canvas-') ? 'Canvas' : 'Message';
+}
+
 function updateUI({
   statusIcon,
   statusText,
@@ -120,7 +127,8 @@ function updateUI({
   });
 
   if (matchingMessage && matchingMessageDiv) {
-    matchingMessageDiv.textContent = `Message: ${matchingMessage.text}`;
+    const sourceType = getMessageSourceType(matchingMessage);
+    matchingMessageDiv.textContent = `${sourceType}: ${matchingMessage.text}`;
     matchingMessageDiv.style.display = 'block';
   }
 }
