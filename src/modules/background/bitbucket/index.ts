@@ -6,11 +6,7 @@ import {
   MERGE_STATUS,
   MESSAGE_ACTIONS,
 } from '@src/modules/common/constants';
-import {
-  MergeDecisionSource,
-  MergeStatusInfo,
-  ProcessedMessage,
-} from '@src/modules/common/types/app';
+import { MergeStatusInfo, ProcessedMessage } from '@src/modules/common/types/app';
 import { Logger } from '@src/modules/common/utils/Logger';
 import { toErrorType } from '@src/modules/common/utils/type-helpers';
 
@@ -30,48 +26,25 @@ export async function updateContentScriptMergeState(
     messages: currentMessages = [],
     featureEnabled,
     lastKnownMergeState = { mergeStatus: MERGE_STATUS.UNKNOWN },
-    canvasContent,
-  } = (await chrome.storage.local.get([
-    'messages',
-    'featureEnabled',
-    'lastKnownMergeState',
-    'canvasContent',
-  ])) as {
+  } = (await chrome.storage.local.get(['messages', 'featureEnabled', 'lastKnownMergeState'])) as {
     messages?: ProcessedMessage[];
     featureEnabled?: boolean;
     lastKnownMergeState?: MergeStatusInfo;
-    canvasContent?: string | null;
   };
 
   const appStatus = lastKnownMergeState?.appStatus as APP_STATUS | undefined;
 
-  const lastSlackMessage =
-    currentMessages && currentMessages.length > 0 ? currentMessages[0] : null;
-
   const { currentAllowedPhrases, currentDisallowedPhrases, currentExceptionPhrases } =
     await getPhrasesFromStorage();
 
-  let mergeStatusForContentScript: MERGE_STATUS = MERGE_STATUS.UNKNOWN;
-  let matchingMessageForContentScript: ProcessedMessage | null = null;
-  let decisionSource: MergeDecisionSource = 'message';
-  let determinedCanvasContent: string | null = null;
-
-  const {
-    status,
-    message,
-    source,
-    canvasContent: newCanvasContent,
-  } = determineMergeStatus({
+  const { status, message } = determineMergeStatus({
     messages: currentMessages,
     allowedPhrases: currentAllowedPhrases,
     disallowedPhrases: currentDisallowedPhrases,
     exceptionPhrases: currentExceptionPhrases,
-    canvasContent: canvasContent,
   });
-  mergeStatusForContentScript = status;
-  matchingMessageForContentScript = message;
-  decisionSource = source;
-  determinedCanvasContent = newCanvasContent === undefined ? null : newCanvasContent;
+
+  let mergeStatusForContentScript = status;
 
   const errorStatuses: APP_STATUS[] = [
     APP_STATUS.UNKNOWN_ERROR,
@@ -91,12 +64,10 @@ export async function updateContentScriptMergeState(
         mergeStatusForContentScript === MERGE_STATUS.DISALLOWED ||
         mergeStatusForContentScript === MERGE_STATUS.EXCEPTION,
       mergeStatus: mergeStatusForContentScript,
-      lastSlackMessage: matchingMessageForContentScript,
+      lastSlackMessage: message,
       channelName: channelName,
-      featureEnabled: featureEnabled, // Corrected: should be featureEnabled directly
+      featureEnabled: featureEnabled,
       appStatus: appStatus,
-      source: decisionSource,
-      canvasContent: determinedCanvasContent === undefined ? null : determinedCanvasContent,
     } as MergeStatusInfo,
   });
 
@@ -123,7 +94,7 @@ export async function updateContentScriptMergeState(
       await chrome.tabs.sendMessage(bitbucketTabId, {
         action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
         payload: {
-          lastSlackMessage: lastSlackMessage,
+          lastSlackMessage: message,
           channelName: channelName,
           isMergeDisabled: effectiveIsMergeDisabled,
           mergeStatus: effectiveMergeStatus,

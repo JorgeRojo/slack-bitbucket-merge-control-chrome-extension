@@ -21,50 +21,40 @@ describe('Slack Canvas Utils', () => {
   });
 
   describe('fetchCanvasContent', () => {
-    test('should fetch and return canvas content successfully', async () => {
+    test('should fetch and return canvas content and timestamp successfully', async () => {
       mockFetchResponses([
         {
           response: {
             ok: true,
             file: {
+              updated: 1678886400,
               title_blocks: [
                 { type: 'rich_text', elements: [{ type: 'text', text: 'Canvas Content 1' }] },
                 { type: 'text', text: 'Canvas Content 2' },
+              ],
+              blocks: [
                 {
-                  type: 'rich_text',
+                  type: 'section',
                   elements: [
-                    {
-                      type: 'rich_text_section',
-                      elements: [{ type: 'text', text: 'Section Content' }],
-                    },
+                    { type: 'rich_text', elements: [{ type: 'text', text: 'Section Content' }] },
                   ],
                 },
                 {
-                  type: 'rich_text',
+                  type: 'rich_text_list',
                   elements: [
                     {
-                      type: 'rich_text_list',
+                      type: 'rich_text_list_item',
                       elements: [{ type: 'text', text: 'List Item' }],
                     },
                   ],
                 },
                 {
-                  type: 'rich_text',
-                  elements: [
-                    {
-                      type: 'rich_text_preformatted',
-                      elements: [{ type: 'text', text: 'Preformatted Text' }],
-                    },
-                  ],
+                  type: 'rich_text_preformatted',
+                  elements: [{ type: 'text', text: 'Preformatted Text' }],
                 },
                 {
-                  type: 'rich_text',
-                  elements: [
-                    {
-                      type: 'rich_text_quote',
-                      elements: [{ type: 'text', text: 'Quoted Text' }],
-                    },
-                  ],
+                  type: 'rich_text_quote',
+                  elements: [{ type: 'text', text: 'Quoted Text' }],
                 },
               ],
             },
@@ -72,10 +62,16 @@ describe('Slack Canvas Utils', () => {
         },
       ]);
 
-      const content = await fetchCanvasContent('token', 'canvasId');
-      expect(content).toBe(
-        'Canvas Content 1\nCanvas Content 2\nSection Content\nList Item\nPreformatted Text\nQuoted Text'
-      );
+      const result = await fetchCanvasContent('token', 'canvasId');
+      expect(result).toEqual({
+        content: `Canvas Content 1
+Canvas Content 2
+Section Content
+List Item
+Preformatted Text
+Quoted Text`,
+        ts: '1678886400000',
+      });
     });
 
     test('should return null if fetch fails', async () => {

@@ -22,7 +22,7 @@ import { Logger } from '@src/modules/common/utils/Logger';
 import { toErrorType } from '@src/modules/common/utils/type-helpers';
 
 /**
- * Manejadores de mensajes para las acciones de la extensión
+ * Message handlers for extension actions
  */
 export const messageHandlers: Record<
   string,

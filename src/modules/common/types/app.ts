@@ -13,8 +13,6 @@ export interface MergeStatusInfo {
   mergeStatus: MERGE_STATUS;
   lastSlackMessage?: ProcessedMessage;
   appStatus?: APP_STATUS;
-  source?: MergeDecisionSource;
-  canvasContent?: string | null | undefined;
   isMergeDisabled?: boolean;
 }
 
