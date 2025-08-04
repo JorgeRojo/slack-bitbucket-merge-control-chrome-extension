@@ -28,7 +28,7 @@ describe('Bitbucket Integration', () => {
   const mockChannelName = 'test-channel';
   const mockTabId = 123;
   const mockMessages = [
-    { text: 'test message', ts: '123456789', user: 'U123', matchType: null },
+    { text: 'test message', ts: '123456789', user: 'U123' },
   ] as ProcessedMessage[];
   const mockLastKnownMergeState = {
     mergeStatus: MERGE_STATUS.UNKNOWN,

@@ -6,7 +6,6 @@ export interface ProcessedMessage {
   text: string;
   ts: string;
   user: string;
-  matchType: string | null;
 }
 
 export interface MergeStatusInfo {

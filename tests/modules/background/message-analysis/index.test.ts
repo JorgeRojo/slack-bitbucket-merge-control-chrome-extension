@@ -41,13 +41,11 @@ describe('Message Analysis', () => {
       text: 'This is a test message.',
       ts: '1678886401.000',
       user: 'user1',
-      matchType: null,
     };
     const mockMessage2: ProcessedMessage = {
       text: 'Another message here.',
       ts: '1678886402.000',
       user: 'user2',
-      matchType: null,
     };
 
     const defaultPhrases = {
@@ -70,7 +68,6 @@ describe('Message Analysis', () => {
           text: 'This message has an exception.',
           ts: '1678886403.000',
           user: 'user3',
-          matchType: null,
         },
         mockMessage1,
       ];
@@ -90,7 +87,6 @@ describe('Message Analysis', () => {
           text: 'This message is disallowed.',
           ts: '1678886403.000',
           user: 'user3',
-          matchType: null,
         },
         mockMessage1,
       ];
@@ -106,7 +102,7 @@ describe('Message Analysis', () => {
 
     test('should return ALLOWED if an allowed phrase is found in messages (including canvas)', () => {
       const messagesWithAllowed: ProcessedMessage[] = [
-        { text: 'This message is allowed.', ts: '1678886403.000', user: 'user3', matchType: null },
+        { text: 'This message is allowed.', ts: '1678886403.000', user: 'user3' },
         mockMessage1,
       ];
       const result = determineMergeStatus({
@@ -121,7 +117,7 @@ describe('Message Analysis', () => {
 
     test('should prioritize exception over disallowed in messages', () => {
       const messages: ProcessedMessage[] = [
-        { text: 'exception and disallowed', ts: '1678886403.000', user: 'user3', matchType: null },
+        { text: 'exception and disallowed', ts: '1678886403.000', user: 'user3' },
       ];
       const result = determineMergeStatus({
         messages: messages,
@@ -135,7 +131,7 @@ describe('Message Analysis', () => {
 
     test('should prioritize disallowed over allowed in messages', () => {
       const messages: ProcessedMessage[] = [
-        { text: 'disallowed and allowed', ts: '1678886403.000', user: 'user3', matchType: null },
+        { text: 'disallowed and allowed', ts: '1678886403.000', user: 'user3' },
       ];
       const result = determineMergeStatus({
         messages: messages,
@@ -167,9 +163,9 @@ describe('Message Analysis', () => {
 
     test('should prioritize the most recent message (highest ts) if multiple matches exist', () => {
       const messages: ProcessedMessage[] = [
-        { text: 'This is allowed', ts: '1678886400.000', user: 'userA', matchType: null },
-        { text: 'This is disallowed', ts: '1678886405.000', user: 'userB', matchType: null },
-        { text: 'This is an exception', ts: '1678886410.000', user: 'userC', matchType: null },
+        { text: 'This is allowed', ts: '1678886400.000', user: 'userA' },
+        { text: 'This is disallowed', ts: '1678886405.000', user: 'userB' },
+        { text: 'This is an exception', ts: '1678886410.000', user: 'userC' },
       ];
 
       const result = determineMergeStatus({
@@ -189,12 +185,11 @@ describe('Message Analysis', () => {
         text: 'This canvas is disallowed.',
         ts: '1678886415.000', // More recent than other messages
         user: 'canvas',
-        matchType: null,
       };
       const messages: ProcessedMessage[] = [
-        { text: 'This is allowed', ts: '1678886400.000', user: 'userA', matchType: null },
+        { text: 'This is allowed', ts: '1678886400.000', user: 'userA' },
         canvasMessage,
-        { text: 'This is an exception', ts: '1678886410.000', user: 'userC', matchType: null },
+        { text: 'This is an exception', ts: '1678886410.000', user: 'userC' },
       ];
 
       const result = determineMergeStatus({
@@ -218,7 +213,7 @@ describe('Message Analysis', () => {
 
     test('should return correct status based on stored messages', async () => {
       mockChromeStorageLocalGet.mockResolvedValue({
-        messages: [{ text: 'This message is allowed.', ts: '1', user: 'user1', matchType: null }],
+        messages: [{ text: 'This message is allowed.', ts: '1', user: 'user1' }],
       });
       (getPhrasesFromStorage as Mock).mockResolvedValue({
         currentAllowedPhrases: ['allowed'],
@@ -231,9 +226,7 @@ describe('Message Analysis', () => {
 
     test('should return correct status based on stored messages with exception', async () => {
       mockChromeStorageLocalGet.mockResolvedValue({
-        messages: [
-          { text: 'This message has an exception.', ts: '1', user: 'user1', matchType: null },
-        ],
+        messages: [{ text: 'This message has an exception.', ts: '1', user: 'user1' }],
       });
       (getPhrasesFromStorage as Mock).mockResolvedValue({
         currentAllowedPhrases: ['allowed'],
@@ -246,9 +239,7 @@ describe('Message Analysis', () => {
 
     test('should return correct status based on stored messages with disallowed', async () => {
       mockChromeStorageLocalGet.mockResolvedValue({
-        messages: [
-          { text: 'This message is disallowed.', ts: '1', user: 'user1', matchType: null },
-        ],
+        messages: [{ text: 'This message is disallowed.', ts: '1', user: 'user1' }],
       });
       (getPhrasesFromStorage as Mock).mockResolvedValue({
         currentAllowedPhrases: ['allowed'],

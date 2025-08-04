@@ -54,7 +54,6 @@ export async function processAndStoreMessage(message: SlackMessage): Promise<voi
     text: cleanSlackMessageText(message.text),
     ts: messageTs,
     user: message.user,
-    matchType: null,
   });
 
   messages.sort((a: ProcessedMessage, b: ProcessedMessage) => Number(b.ts) - Number(a.ts));
@@ -143,7 +142,6 @@ export async function fetchAndStoreMessages(
       text: cleanSlackMessageText(msg.text),
       ts: String(Math.floor(Number(msg.ts) * 1000)),
       user: msg.user,
-      matchType: null,
     }));
 
     if (canvasData) {
@@ -154,7 +152,6 @@ export async function fetchAndStoreMessages(
         text: cleanSlackMessageText(canvasData.content),
         ts: canvasData.ts,
         user: 'canvas',
-        matchType: null,
       });
     }
 
