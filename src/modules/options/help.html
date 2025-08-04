@@ -13,204 +13,458 @@
 
       <nav-links class="text-center mb-20"></nav-links>
 
-      <h2>Configuration</h2>
+      <!-- Quick Start Section -->
+      <h2>🚀 Quick Start Guide</h2>
       <div class="card">
-        <h3>1. Setting up your Slack App</h3>
-        <p>Before using the extension, you need to create and configure a Slack app:</p>
+        <p><strong>Follow these steps in order:</strong></p>
         <ol class="list">
           <li class="list-item">
-            <strong>Create a Slack App:</strong>
-            <ul class="list-compact">
-              <li class="list-item">
-                Go to the
-                <a href="https://api.slack.com/apps" target="_blank" class="link"
-                  >Slack API dashboard</a
-                >
-              </li>
-              <li class="list-item">Click "Create New App" and select "From scratch"</li>
-              <li class="list-item">Enter a name for your app and select your workspace</li>
-            </ul>
+            <strong>Step 1:</strong> Create and configure your Slack App 
+            <a href="#slack-setup" class="link">(detailed instructions below)</a>
           </li>
           <li class="list-item">
-            <strong>Configure Bot Permissions:</strong>
-            <ul class="list-compact">
-              <li class="list-item">
-                Navigate to <strong>OAuth & Permissions</strong> in the sidebar
-              </li>
-              <li class="list-item">
-                Under <strong>Bot Token Scopes</strong>, add these permissions:
-                <ul class="list-compact">
-                  <li class="list-item">
-                    <code>channels:history</code> (to read messages in public channels)
-                  </li>
-                  <li class="list-item">
-                    <code>groups:history</code> (to read messages in private channels)
-                  </li>
-                </ul>
-              </li>
-            </ul>
+            <strong>Step 2:</strong> Install the Chrome Extension and configure it with your tokens
           </li>
           <li class="list-item">
-            <strong>Set up Socket Mode:</strong>
-            <ul class="list-compact">
-              <li class="list-item">
-                Go to <strong>Socket Mode</strong> in the sidebar and enable it
-              </li>
-              <li class="list-item">This allows the extension to receive messages in real-time</li>
-            </ul>
+            <strong>Step 3:</strong> Configure Bitbucket integration settings
           </li>
           <li class="list-item">
-            <strong>Configure Event Subscriptions:</strong>
-            <ul class="list-compact">
-              <li class="list-item">Go to <strong>Event Subscriptions</strong> in the sidebar</li>
-              <li class="list-item">Toggle <strong>Enable Events</strong> to ON</li>
-              <li class="list-item">
-                Under <strong>Subscribe to bot events</strong>, add:
-                <ul class="list-compact">
-                  <li class="list-item"><code>message.channels</code> (for public channels)</li>
-                  <li class="list-item"><code>message.groups</code> (for private channels)</li>
-                </ul>
-              </li>
-            </ul>
+            <strong>Step 4:</strong> Test the connection and customize merge control phrases
+          </li>
+        </ol>
+        <div class="text-hint">
+          <strong>⚠️ Important:</strong> The extension requires both a Bot User OAuth Token (xoxb-) 
+          and an App-Level Token (xapp-) to function properly.
+        </div>
+      </div>
+
+      <!-- Slack App Setup -->
+      <h2 id="slack-setup">📱 Slack App Configuration</h2>
+      <div class="card">
+        <h3>Step 1: Create Your Slack App</h3>
+        <ol class="list">
+          <li class="list-item">
+            Go to the <a href="https://api.slack.com/apps" target="_blank" class="link">Slack API dashboard</a>
+          </li>
+          <li class="list-item">Click <strong>"Create New App"</strong> → <strong>"From scratch"</strong></li>
+          <li class="list-item">Enter a descriptive name (e.g., "Merge Control Bot")</li>
+          <li class="list-item">Select your workspace and click <strong>"Create App"</strong></li>
+        </ol>
+
+        <h3>Step 2: Configure Required Permissions</h3>
+        <div class="text-hint">
+          <strong>📋 Required Bot Token Scopes:</strong> These permissions allow the bot to read messages from channels and access canvas documents.
+        </div>
+        <ol class="list">
+          <li class="list-item">
+            Navigate to <strong>"OAuth & Permissions"</strong> in the left sidebar
           </li>
           <li class="list-item">
-            <strong>Generate Required Tokens:</strong>
+            Scroll down to <strong>"Bot Token Scopes"</strong> and add these permissions:
             <ul class="list-compact">
               <li class="list-item">
-                In <strong>Basic Information</strong> → <strong>App-Level Tokens</strong>:
-                <ul class="list-compact">
-                  <li class="list-item">Click "Generate Token"</li>
-                  <li class="list-item">Add the <code>connections:write</code> scope</li>
-                  <li class="list-item">
-                    Name your token and create it (this token starts with
-                    <code>xapp-</code>)
-                  </li>
-                </ul>
+                <code>channels:history</code> - Read messages in public channels
               </li>
               <li class="list-item">
-                In <strong>OAuth & Permissions</strong>:
-                <ul class="list-compact">
-                  <li class="list-item">
-                    Click "Install to Workspace" to generate the Bot User OAuth Token (starts with
-                    <code>xoxb-</code>)
-                  </li>
-                </ul>
+                <code>groups:history</code> - Read messages in private channels
+              </li>
+              <li class="list-item">
+                <code>channels:read</code> - View basic information about public channels
+              </li>
+              <li class="list-item">
+                <code>groups:read</code> - View basic information about private channels
+              </li>
+              <li class="list-item">
+                <code>files:read</code> - Access file information and content (required for Canvas)
               </li>
             </ul>
-          </li>
-          <li class="list-item">
-            <strong>IMPORTANT:</strong> After making all changes, reinstall your app to your
-            workspace from the <strong>OAuth & Permissions</strong> page
           </li>
         </ol>
 
-        <h3>2. Configuring the Chrome Extension</h3>
-        <p>After setting up your Slack app and installing the extension in Chrome:</p>
+        <h3>Step 3: Enable Socket Mode</h3>
+        <div class="text-hint">
+          <strong>🔌 Socket Mode:</strong> Enables real-time message reception without webhooks.
+        </div>
         <ol class="list">
           <li class="list-item">
-            <strong>Access Extension Options:</strong>
+            Go to <strong>"Socket Mode"</strong> in the left sidebar
+          </li>
+          <li class="list-item">
+            Toggle <strong>"Enable Socket Mode"</strong> to ON
+          </li>
+          <li class="list-item">
+            You'll see a notice about needing an App-Level Token - we'll create this next
+          </li>
+        </ol>
+
+        <h3>Step 4: Create App-Level Token</h3>
+        <div class="text-hint">
+          <strong>🔑 App-Level Token:</strong> Required for Socket Mode connections (starts with xapp-).
+        </div>
+        <ol class="list">
+          <li class="list-item">
+            Go to <strong>"Basic Information"</strong> in the left sidebar
+          </li>
+          <li class="list-item">
+            Scroll down to <strong>"App-Level Tokens"</strong>
+          </li>
+          <li class="list-item">
+            Click <strong>"Generate Token and Scopes"</strong>
+          </li>
+          <li class="list-item">
+            Enter a token name (e.g., "Socket Mode Token")
+          </li>
+          <li class="list-item">
+            Add the <code>connections:write</code> scope
+          </li>
+          <li class="list-item">
+            Click <strong>"Generate"</strong> and copy the token (starts with <code>xapp-</code>)
+          </li>
+          <li class="list-item">
+            <strong>⚠️ Save this token securely - you won't be able to see it again!</strong>
+          </li>
+        </ol>
+
+        <h3>Step 5: Configure Event Subscriptions</h3>
+        <div class="text-hint">
+          <strong>📨 Event Subscriptions:</strong> Tells Slack which events to send to your app.
+        </div>
+        <ol class="list">
+          <li class="list-item">
+            Go to <strong>"Event Subscriptions"</strong> in the left sidebar
+          </li>
+          <li class="list-item">
+            Toggle <strong>"Enable Events"</strong> to ON
+          </li>
+          <li class="list-item">
+            Scroll down to <strong>"Subscribe to bot events"</strong>
+          </li>
+          <li class="list-item">
+            Add these event types:
             <ul class="list-compact">
-              <li class="list-item">Right-click on the extension icon in your Chrome toolbar</li>
-              <li class="list-item">Select <strong>Options</strong> from the menu</li>
+              <li class="list-item">
+                <code>message.channels</code> - Messages posted to public channels
+              </li>
+              <li class="list-item">
+                <code>message.groups</code> - Messages posted to private channels
+              </li>
+              <li class="list-item">
+                <code>file_change</code> - Canvas and file changes (enables Canvas monitoring)
+              </li>
             </ul>
           </li>
           <li class="list-item">
-            <strong>Enter Slack Credentials:</strong>
+            Click <strong>"Save Changes"</strong>
+          </li>
+        </ol>
+
+        <h3>Step 6: Install App to Workspace</h3>
+        <ol class="list">
+          <li class="list-item">
+            Go back to <strong>"OAuth & Permissions"</strong>
+          </li>
+          <li class="list-item">
+            Click <strong>"Install to Workspace"</strong>
+          </li>
+          <li class="list-item">
+            Review the permissions and click <strong>"Allow"</strong>
+          </li>
+          <li class="list-item">
+            Copy the <strong>"Bot User OAuth Token"</strong> (starts with <code>xoxb-</code>)
+          </li>
+          <li class="list-item">
+            <strong>⚠️ Save this token securely!</strong>
+          </li>
+        </ol>
+
+        <h3>Step 7: Add Bot to Channel</h3>
+        <div class="text-hint">
+          <strong>👥 Channel Access:</strong> The bot must be added to the channel you want to monitor.
+        </div>
+        <ol class="list">
+          <li class="list-item">
+            Go to the Slack channel you want to monitor
+          </li>
+          <li class="list-item">
+            Type <code>/invite @YourBotName</code> (replace with your bot's name)
+          </li>
+          <li class="list-item">
+            Or click the channel name → <strong>"Settings"</strong> → <strong>"Add apps"</strong>
+          </li>
+          <li class="list-item">
+            Find and add your bot to the channel
+          </li>
+        </ol>
+      </div>
+
+      <!-- Chrome Extension Setup -->
+      <h2>🔧 Chrome Extension Configuration</h2>
+      <div class="card">
+        <h3>Slack Connection Settings</h3>
+        <ol class="list">
+          <li class="list-item">
+            Right-click the extension icon → <strong>"Options"</strong>
+          </li>
+          <li class="list-item">
+            Enter your tokens:
             <ul class="list-compact">
               <li class="list-item">
-                <strong>Slack Bot Token</strong>: Paste your Bot User OAuth Token (xoxb-...)
+                <strong>Slack Bot User OAuth Token:</strong> Paste your xoxb- token
               </li>
               <li class="list-item">
-                <strong>Slack App Token</strong>: Paste your App-Level Token (xapp-...)
+                <strong>Slack App-Level Token:</strong> Paste your xapp- token
               </li>
               <li class="list-item">
-                <strong>Channel Name</strong>: Enter the exact name of the channel to monitor (e.g.,
-                <code>general</code>, <code>my-private-channel</code>)
+                <strong>Channel Name:</strong> Enter the exact channel name (without #)
+              </li>
+            </ul>
+          </li>
+        </ol>
+
+        <h3>Bitbucket Integration Settings</h3>
+        <ol class="list">
+          <li class="list-item">
+            <strong>Bitbucket Pull Request URL Pattern:</strong>
+            <ul class="list-compact">
+              <li class="list-item">
+                Use * as wildcards for dynamic parts
+              </li>
+              <li class="list-item">
+                Example: <code>https://bitbucket.company.com/projects/*/repos/*/pull-requests/*/overview*</code>
               </li>
             </ul>
           </li>
           <li class="list-item">
-            <strong>Configure Bitbucket Integration:</strong>
+            <strong>Merge Button DOM Selector:</strong>
             <ul class="list-compact">
               <li class="list-item">
-                <strong>Bitbucket Pull Request URL Pattern</strong>: Enter the URL pattern that
-                matches your Bitbucket pull request pages
-                <ul class="list-compact">
-                  <li class="list-item">
-                    Example:
-                    <code
-                      >https://bitbucket.my-company.com/projects/*/repos/*/pull-requests/*/overview*</code
-                    >
-                  </li>
-                  <li class="list-item">
-                    The asterisks (*) act as wildcards to match different projects, repos, and PR
-                    numbers
-                  </li>
-                </ul>
+                CSS selector to find the merge button
               </li>
               <li class="list-item">
-                <strong>Merge Button DOM Selector</strong>: Enter the CSS selector that identifies
-                the merge button on Bitbucket pages
-                <ul class="list-compact">
-                  <li class="list-item">
-                    Example: <code>.merge-button</code> or
-                    <code>#pull-request-merge-button</code>
-                  </li>
-                </ul>
+                Default: <code>.merge-button-container > .merge-button</code>
               </li>
             </ul>
           </li>
+        </ol>
+
+        <h3>Merge Control Phrases</h3>
+        <div class="text-hint">
+          <strong>🔍 Search Priority:</strong> The extension searches phrases in this order:
+          <strong>Exception → Disallowed → Allowed</strong>
+        </div>
+        <ol class="list">
           <li class="list-item">
-            <strong>Save Your Configuration:</strong>
+            <strong>Exception Phrases (Highest Priority):</strong>
             <ul class="list-compact">
-              <li class="list-item">
-                Click the <strong>Save</strong> button to apply your settings
-              </li>
+              <li class="list-item">Override disallowed phrases with specific exceptions</li>
+              <li class="list-item">Example: "allowed to merge this task", "except project X"</li>
+              <li class="list-item">Result: ⚠️ Merge allowed with exceptions</li>
+            </ul>
+          </li>
+          <li class="list-item">
+            <strong>Disallowed Phrases (Medium Priority):</strong>
+            <ul class="list-compact">
+              <li class="list-item">Block merging when found</li>
+              <li class="list-item">Example: "not allowed to merge", "do not merge"</li>
+              <li class="list-item">Result: ❌ Merge not allowed</li>
+            </ul>
+          </li>
+          <li class="list-item">
+            <strong>Allowed Phrases (Lowest Priority):</strong>
+            <ul class="list-compact">
+              <li class="list-item">Allow merging when no blocking phrases found</li>
+              <li class="list-item">Example: "allowed to merge", "no restrictions"</li>
+              <li class="list-item">Result: ✅ Merge allowed</li>
             </ul>
           </li>
         </ol>
       </div>
 
-      <h2>Usage</h2>
+      <!-- Status Indicators -->
+      <h2>📊 Understanding Status Indicators</h2>
       <div class="card">
-        <p>
-          Once configured, the extension will receive messages in real-time from the specified
-          channel.
-        </p>
+        <h3>Merge Status Icons</h3>
         <ul class="list">
           <li class="list-item">
-            Click on the extension icon in your Chrome toolbar to open the popup and view the
-            current merge status and latest matching message.
+            <strong>✅ Allowed:</strong> Merge is permitted based on latest message
           </li>
           <li class="list-item">
-            On Bitbucket pull request pages, the merge button will be enabled or disabled based on
-            the configured phrases in Slack messages.
+            <strong>❌ Disallowed:</strong> Merge is blocked by disallowed phrases
           </li>
           <li class="list-item">
-            The extension checks for specific phrases in the Slack messages to determine if merging
-            is allowed:
-            <ul class="list-compact">
-              <li class="list-item">
-                <strong>Exception Phrases</strong>: Indicate that merging is generally disallowed
-                but with specific exceptions.
-              </li>
-              <li class="list-item">
-                <strong>Disallowed Phrases</strong>: Indicate that merging is not allowed.
-              </li>
-              <li class="list-item">
-                <strong>Allowed Phrases</strong>: Indicate that merging is generally allowed.
-              </li>
-            </ul>
+            <strong>⚠️ Exception:</strong> Merge allowed with specific exceptions
           </li>
           <li class="list-item">
-            The extension will display different indicators based on the merge status:
-            <ul class="list-compact">
-              <li class="list-item">✅ - Merge is allowed</li>
-              <li class="list-item">❌ - Merge is not allowed</li>
-              <li class="list-item">⚠️ - Merge is allowed with exceptions</li>
-              <li class="list-item">❓ - Status could not be determined</li>
-            </ul>
+            <strong>🔄 Loading:</strong> Connecting to Slack or fetching messages
           </li>
+          <li class="list-item">
+            <strong>❓ Unknown:</strong> No matching phrases found in recent messages
+          </li>
+          <li class="list-item">
+            <strong>⚙️ Config Needed:</strong> Missing required configuration
+          </li>
+          <li class="list-item">
+            <strong>🔴 Error:</strong> Connection or configuration error
+          </li>
+        </ul>
+
+        <h3>App Status Messages</h3>
+        <ul class="list">
+          <li class="list-item">
+            <strong>"Connected":</strong> Successfully connected to Slack
+          </li>
+          <li class="list-item">
+            <strong>"Configuration Error":</strong> Missing tokens or channel name
+          </li>
+          <li class="list-item">
+            <strong>"Token Error":</strong> Invalid or expired Slack tokens
+          </li>
+          <li class="list-item">
+            <strong>"Channel Not Found":</strong> Bot not added to specified channel
+          </li>
+          <li class="list-item">
+            <strong>"WebSocket Error":</strong> Connection to Slack lost
+          </li>
+        </ul>
+      </div>
+
+      <!-- Troubleshooting -->
+      <h2>🔧 Troubleshooting</h2>
+      <div class="card">
+        <h3>Common Issues and Solutions</h3>
+        
+        <h4>❌ "Configuration Error"</h4>
+        <ul class="list-compact">
+          <li class="list-item">Check that all required fields are filled in Options</li>
+          <li class="list-item">Verify tokens don't have extra spaces or characters</li>
+          <li class="list-item">Ensure channel name is exact (no # symbol)</li>
+        </ul>
+
+        <h4>❌ "Token Error"</h4>
+        <ul class="list-compact">
+          <li class="list-item">Verify Bot Token starts with "xoxb-"</li>
+          <li class="list-item">Verify App Token starts with "xapp-"</li>
+          <li class="list-item">Check if tokens have expired or been revoked</li>
+          <li class="list-item">Reinstall the app to workspace if needed</li>
+        </ul>
+
+        <h4>❌ "Channel Not Found"</h4>
+        <ul class="list-compact">
+          <li class="list-item">Ensure bot is added to the target channel</li>
+          <li class="list-item">Check channel name spelling (case sensitive)</li>
+          <li class="list-item">For private channels, bot must be explicitly invited</li>
+        </ul>
+
+        <h4>❌ "WebSocket Error"</h4>
+        <ul class="list-compact">
+          <li class="list-item">Check internet connection</li>
+          <li class="list-item">Verify Socket Mode is enabled in Slack app</li>
+          <li class="list-item">Ensure App-Level Token has connections:write scope</li>
+          <li class="list-item">Try clicking "Reconnect" in the extension popup</li>
+        </ul>
+
+        <h4>🔄 Extension Not Working on Bitbucket</h4>
+        <ul class="list-compact">
+          <li class="list-item">Check Bitbucket URL pattern matches your pages</li>
+          <li class="list-item">Verify merge button selector is correct</li>
+          <li class="list-item">Refresh the Bitbucket page after configuration changes</li>
+          <li class="list-item">Check browser console for JavaScript errors</li>
+        </ul>
+
+        <h4>📋 Canvas Not Being Monitored</h4>
+        <ul class="list-compact">
+          <li class="list-item">Ensure <code>files:read</code> permission is added to your Slack app</li>
+          <li class="list-item">Verify <code>file_change</code> event is subscribed in Event Subscriptions</li>
+          <li class="list-item">Reinstall the app to workspace after adding new permissions</li>
+          <li class="list-item">Check that Canvas is shared in the monitored channel</li>
+          <li class="list-item">Canvas must contain text content (images and other media are not analyzed)</li>
+        </ul>
+
+        <h3>Testing Your Setup</h3>
+        <ol class="list">
+          <li class="list-item">
+            Open the extension popup - should show current status
+          </li>
+          <li class="list-item">
+            <strong>Test Messages:</strong> Post a test message in your monitored channel
+          </li>
+          <li class="list-item">
+            <strong>Test Canvas:</strong> Create or update a Canvas in your monitored channel with merge control phrases
+          </li>
+          <li class="list-item">
+            Check if the message/Canvas content appears in the popup within a few seconds
+          </li>
+          <li class="list-item">
+            Visit a Bitbucket pull request page to test merge button control
+          </li>
+        </ol>
+
+        <h3>Getting Help</h3>
+        <p>If you're still experiencing issues:</p>
+        <ul class="list-compact">
+          <li class="list-item">Check the browser console for error messages</li>
+          <li class="list-item">Verify all Slack app permissions are correctly set</li>
+          <li class="list-item">Try recreating the Slack app with fresh tokens</li>
+          <li class="list-item">Contact your system administrator for organization-specific settings</li>
+        </ul>
+      </div>
+
+      <!-- Advanced Configuration -->
+      <h2>⚙️ Advanced Configuration</h2>
+      <div class="card">
+        <h3>Custom Phrase Patterns</h3>
+        <p>You can use more sophisticated patterns in your phrases:</p>
+        <ul class="list-compact">
+          <li class="list-item">
+            <strong>Partial matching:</strong> "merge" will match "allowed to merge today"
+          </li>
+          <li class="list-item">
+            <strong>Case insensitive:</strong> "MERGE" matches "merge" and "Merge"
+          </li>
+          <li class="list-item">
+            <strong>Multiple phrases:</strong> Each line is treated as a separate phrase
+          </li>
+        </ul>
+
+        <h3>Performance Considerations</h3>
+        <ul class="list-compact">
+          <li class="list-item">Extension checks last 20 messages for efficiency</li>
+          <li class="list-item">WebSocket connection auto-reconnects if dropped</li>
+          <li class="list-item">Channel information is cached to reduce API calls</li>
+        </ul>
+
+        <h3>Canvas Support</h3>
+        <div class="text-hint">
+          <strong>📋 Canvas Integration:</strong> The extension can monitor Slack Canvas documents for merge control phrases.
+        </div>
+        <ul class="list-compact">
+          <li class="list-item">
+            <strong>Real-time monitoring:</strong> Canvas changes are detected automatically via <code>file_change</code> events
+          </li>
+          <li class="list-item">
+            <strong>Content analysis:</strong> Canvas text content is analyzed using the same phrase matching logic as messages
+          </li>
+          <li class="list-item">
+            <strong>Required permission:</strong> <code>files:read</code> scope must be added to your Slack app
+          </li>
+          <li class="list-item">
+            <strong>Supported content:</strong> Text blocks, rich text, and title content within Canvas documents
+          </li>
+        </ul>
+
+        <h3>How Canvas Monitoring Works</h3>
+        <ol class="list-compact">
+          <li class="list-item">When a Canvas is updated in your monitored channel, Slack sends a <code>file_change</code> event</li>
+          <li class="list-item">The extension fetches the Canvas content using the Slack <code>files.info</code> API</li>
+          <li class="list-item">Text content is extracted from Canvas blocks and analyzed for merge control phrases</li>
+          <li class="list-item">The merge status is updated based on the Canvas content, just like with regular messages</li>
+        </ol>
+
+        <h3>Security Notes</h3>
+        <ul class="list-compact">
+          <li class="list-item">Tokens are stored locally in Chrome's secure storage</li>
+          <li class="list-item">No data is sent to external servers (except Slack API)</li>
+          <li class="list-item">Bot only reads messages, cannot post or modify</li>
         </ul>
       </div>
     </div>

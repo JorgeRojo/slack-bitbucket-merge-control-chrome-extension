@@ -12,7 +12,7 @@ This document describes the issue tracking system for the Slack-Bitbucket Merge 
 
 | ID | Title | Component | Priority | Date Requested |
 | -- | -- | -- | -- | -- |
-| [002](./features/002-update-helphtml-with-detailed-slack-app-configurat.md) | Update help.html with Detailed Slack App Configuration Guide | src/modules/options/help.html | High | 2025-07-30 |
+<!-- No features yet -->
 
 ## How to Add a New Issue
 
