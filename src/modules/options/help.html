@@ -19,7 +19,7 @@
         <p><strong>Follow these steps in order:</strong></p>
         <ol class="list">
           <li class="list-item">
-            <strong>Step 1:</strong> Create and configure your Slack App 
+            <strong>Step 1:</strong> Create and configure your Slack App
             <a href="#slack-setup" class="link">(detailed instructions below)</a>
           </li>
           <li class="list-item">
@@ -33,7 +33,7 @@
           </li>
         </ol>
         <div class="text-hint">
-          <strong>⚠️ Important:</strong> The extension requires both a Bot User OAuth Token (xoxb-) 
+          <strong>⚠️ Important:</strong> The extension requires both a Bot User OAuth Token (xoxb-)
           and an App-Level Token (xapp-) to function properly.
         </div>
       </div>
@@ -44,16 +44,22 @@
         <h3>Step 1: Create Your Slack App</h3>
         <ol class="list">
           <li class="list-item">
-            Go to the <a href="https://api.slack.com/apps" target="_blank" class="link">Slack API dashboard</a>
+            Go to the
+            <a href="https://api.slack.com/apps" target="_blank" class="link"
+              >Slack API dashboard</a
+            >
           </li>
-          <li class="list-item">Click <strong>"Create New App"</strong> → <strong>"From scratch"</strong></li>
+          <li class="list-item">
+            Click <strong>"Create New App"</strong> → <strong>"From scratch"</strong>
+          </li>
           <li class="list-item">Enter a descriptive name (e.g., "Merge Control Bot")</li>
           <li class="list-item">Select your workspace and click <strong>"Create App"</strong></li>
         </ol>
 
         <h3>Step 2: Configure Required Permissions</h3>
         <div class="text-hint">
-          <strong>📋 Required Bot Token Scopes:</strong> These permissions allow the bot to read messages from channels and access canvas documents.
+          <strong>📋 Required Bot Token Scopes:</strong> These permissions allow the bot to read
+          messages from channels and access canvas documents.
         </div>
         <ol class="list">
           <li class="list-item">
@@ -86,12 +92,8 @@
           <strong>🔌 Socket Mode:</strong> Enables real-time message reception without webhooks.
         </div>
         <ol class="list">
-          <li class="list-item">
-            Go to <strong>"Socket Mode"</strong> in the left sidebar
-          </li>
-          <li class="list-item">
-            Toggle <strong>"Enable Socket Mode"</strong> to ON
-          </li>
+          <li class="list-item">Go to <strong>"Socket Mode"</strong> in the left sidebar</li>
+          <li class="list-item">Toggle <strong>"Enable Socket Mode"</strong> to ON</li>
           <li class="list-item">
             You'll see a notice about needing an App-Level Token - we'll create this next
           </li>
@@ -99,24 +101,15 @@
 
         <h3>Step 4: Create App-Level Token</h3>
         <div class="text-hint">
-          <strong>🔑 App-Level Token:</strong> Required for Socket Mode connections (starts with xapp-).
+          <strong>🔑 App-Level Token:</strong> Required for Socket Mode connections (starts with
+          xapp-).
         </div>
         <ol class="list">
-          <li class="list-item">
-            Go to <strong>"Basic Information"</strong> in the left sidebar
-          </li>
-          <li class="list-item">
-            Scroll down to <strong>"App-Level Tokens"</strong>
-          </li>
-          <li class="list-item">
-            Click <strong>"Generate Token and Scopes"</strong>
-          </li>
-          <li class="list-item">
-            Enter a token name (e.g., "Socket Mode Token")
-          </li>
-          <li class="list-item">
-            Add the <code>connections:write</code> scope
-          </li>
+          <li class="list-item">Go to <strong>"Basic Information"</strong> in the left sidebar</li>
+          <li class="list-item">Scroll down to <strong>"App-Level Tokens"</strong></li>
+          <li class="list-item">Click <strong>"Generate Token and Scopes"</strong></li>
+          <li class="list-item">Enter a token name (e.g., "Socket Mode Token")</li>
+          <li class="list-item">Add the <code>connections:write</code> scope</li>
           <li class="list-item">
             Click <strong>"Generate"</strong> and copy the token (starts with <code>xapp-</code>)
           </li>
@@ -133,12 +126,8 @@
           <li class="list-item">
             Go to <strong>"Event Subscriptions"</strong> in the left sidebar
           </li>
-          <li class="list-item">
-            Toggle <strong>"Enable Events"</strong> to ON
-          </li>
-          <li class="list-item">
-            Scroll down to <strong>"Subscribe to bot events"</strong>
-          </li>
+          <li class="list-item">Toggle <strong>"Enable Events"</strong> to ON</li>
+          <li class="list-item">Scroll down to <strong>"Subscribe to bot events"</strong></li>
           <li class="list-item">
             Add these event types:
             <ul class="list-compact">
@@ -153,22 +142,14 @@
               </li>
             </ul>
           </li>
-          <li class="list-item">
-            Click <strong>"Save Changes"</strong>
-          </li>
+          <li class="list-item">Click <strong>"Save Changes"</strong></li>
         </ol>
 
         <h3>Step 6: Install App to Workspace</h3>
         <ol class="list">
-          <li class="list-item">
-            Go back to <strong>"OAuth & Permissions"</strong>
-          </li>
-          <li class="list-item">
-            Click <strong>"Install to Workspace"</strong>
-          </li>
-          <li class="list-item">
-            Review the permissions and click <strong>"Allow"</strong>
-          </li>
+          <li class="list-item">Go back to <strong>"OAuth & Permissions"</strong></li>
+          <li class="list-item">Click <strong>"Install to Workspace"</strong></li>
+          <li class="list-item">Review the permissions and click <strong>"Allow"</strong></li>
           <li class="list-item">
             Copy the <strong>"Bot User OAuth Token"</strong> (starts with <code>xoxb-</code>)
           </li>
@@ -179,21 +160,18 @@
 
         <h3>Step 7: Add Bot to Channel</h3>
         <div class="text-hint">
-          <strong>👥 Channel Access:</strong> The bot must be added to the channel you want to monitor.
+          <strong>👥 Channel Access:</strong> The bot must be added to the channel you want to
+          monitor.
         </div>
         <ol class="list">
-          <li class="list-item">
-            Go to the Slack channel you want to monitor
-          </li>
+          <li class="list-item">Go to the Slack channel you want to monitor</li>
           <li class="list-item">
             Type <code>/invite @YourBotName</code> (replace with your bot's name)
           </li>
           <li class="list-item">
             Or click the channel name → <strong>"Settings"</strong> → <strong>"Add apps"</strong>
           </li>
-          <li class="list-item">
-            Find and add your bot to the channel
-          </li>
+          <li class="list-item">Find and add your bot to the channel</li>
         </ol>
       </div>
 
@@ -202,9 +180,7 @@
       <div class="card">
         <h3>Slack Connection Settings</h3>
         <ol class="list">
-          <li class="list-item">
-            Right-click the extension icon → <strong>"Options"</strong>
-          </li>
+          <li class="list-item">Right-click the extension icon → <strong>"Options"</strong></li>
           <li class="list-item">
             Enter your tokens:
             <ul class="list-compact">
@@ -226,20 +202,19 @@
           <li class="list-item">
             <strong>Bitbucket Pull Request URL Pattern:</strong>
             <ul class="list-compact">
+              <li class="list-item">Use * as wildcards for dynamic parts</li>
               <li class="list-item">
-                Use * as wildcards for dynamic parts
-              </li>
-              <li class="list-item">
-                Example: <code>https://bitbucket.company.com/projects/*/repos/*/pull-requests/*/overview*</code>
+                Example:
+                <code
+                  >https://bitbucket.company.com/projects/*/repos/*/pull-requests/*/overview*</code
+                >
               </li>
             </ul>
           </li>
           <li class="list-item">
             <strong>Merge Button DOM Selector:</strong>
             <ul class="list-compact">
-              <li class="list-item">
-                CSS selector to find the merge button
-              </li>
+              <li class="list-item">CSS selector to find the merge button</li>
               <li class="list-item">
                 Default: <code>.merge-button-container > .merge-button</code>
               </li>
@@ -303,28 +278,20 @@
           <li class="list-item">
             <strong>⚙️ Config Needed:</strong> Missing required configuration
           </li>
-          <li class="list-item">
-            <strong>🔴 Error:</strong> Connection or configuration error
-          </li>
+          <li class="list-item"><strong>🔴 Error:</strong> Connection or configuration error</li>
         </ul>
 
         <h3>App Status Messages</h3>
         <ul class="list">
-          <li class="list-item">
-            <strong>"Connected":</strong> Successfully connected to Slack
-          </li>
+          <li class="list-item"><strong>"Connected":</strong> Successfully connected to Slack</li>
           <li class="list-item">
             <strong>"Configuration Error":</strong> Missing tokens or channel name
           </li>
-          <li class="list-item">
-            <strong>"Token Error":</strong> Invalid or expired Slack tokens
-          </li>
+          <li class="list-item"><strong>"Token Error":</strong> Invalid or expired Slack tokens</li>
           <li class="list-item">
             <strong>"Channel Not Found":</strong> Bot not added to specified channel
           </li>
-          <li class="list-item">
-            <strong>"WebSocket Error":</strong> Connection to Slack lost
-          </li>
+          <li class="list-item"><strong>"WebSocket Error":</strong> Connection to Slack lost</li>
         </ul>
       </div>
 
@@ -332,7 +299,6 @@
       <h2>🔧 Troubleshooting</h2>
       <div class="card">
         <h3>Common Issues and Solutions</h3>
-        
         <h4>❌ "Configuration Error"</h4>
         <ul class="list-compact">
           <li class="list-item">Check that all required fields are filled in Options</li>
@@ -373,23 +339,28 @@
 
         <h4>📋 Canvas Not Being Monitored</h4>
         <ul class="list-compact">
-          <li class="list-item">Ensure <code>files:read</code> permission is added to your Slack app</li>
-          <li class="list-item">Verify <code>file_change</code> event is subscribed in Event Subscriptions</li>
+          <li class="list-item">
+            Ensure <code>files:read</code> permission is added to your Slack app
+          </li>
+          <li class="list-item">
+            Verify <code>file_change</code> event is subscribed in Event Subscriptions
+          </li>
           <li class="list-item">Reinstall the app to workspace after adding new permissions</li>
           <li class="list-item">Check that Canvas is shared in the monitored channel</li>
-          <li class="list-item">Canvas must contain text content (images and other media are not analyzed)</li>
+          <li class="list-item">
+            Canvas must contain text content (images and other media are not analyzed)
+          </li>
         </ul>
 
         <h3>Testing Your Setup</h3>
         <ol class="list">
-          <li class="list-item">
-            Open the extension popup - should show current status
-          </li>
+          <li class="list-item">Open the extension popup - should show current status</li>
           <li class="list-item">
             <strong>Test Messages:</strong> Post a test message in your monitored channel
           </li>
           <li class="list-item">
-            <strong>Test Canvas:</strong> Create or update a Canvas in your monitored channel with merge control phrases
+            <strong>Test Canvas:</strong> Create or update a Canvas in your monitored channel with
+            merge control phrases
           </li>
           <li class="list-item">
             Check if the message/Canvas content appears in the popup within a few seconds
@@ -405,7 +376,9 @@
           <li class="list-item">Check the browser console for error messages</li>
           <li class="list-item">Verify all Slack app permissions are correctly set</li>
           <li class="list-item">Try recreating the Slack app with fresh tokens</li>
-          <li class="list-item">Contact your system administrator for organization-specific settings</li>
+          <li class="list-item">
+            Contact your system administrator for organization-specific settings
+          </li>
         </ul>
       </div>
 
@@ -435,29 +408,43 @@
 
         <h3>Canvas Support</h3>
         <div class="text-hint">
-          <strong>📋 Canvas Integration:</strong> The extension can monitor Slack Canvas documents for merge control phrases.
+          <strong>📋 Canvas Integration:</strong> The extension can monitor Slack Canvas documents
+          for merge control phrases.
         </div>
         <ul class="list-compact">
           <li class="list-item">
-            <strong>Real-time monitoring:</strong> Canvas changes are detected automatically via <code>file_change</code> events
+            <strong>Real-time monitoring:</strong> Canvas changes are detected automatically via
+            <code>file_change</code> events
           </li>
           <li class="list-item">
-            <strong>Content analysis:</strong> Canvas text content is analyzed using the same phrase matching logic as messages
+            <strong>Content analysis:</strong> Canvas text content is analyzed using the same phrase
+            matching logic as messages
           </li>
           <li class="list-item">
-            <strong>Required permission:</strong> <code>files:read</code> scope must be added to your Slack app
+            <strong>Required permission:</strong> <code>files:read</code> scope must be added to
+            your Slack app
           </li>
           <li class="list-item">
-            <strong>Supported content:</strong> Text blocks, rich text, and title content within Canvas documents
+            <strong>Supported content:</strong> Text blocks, rich text, and title content within
+            Canvas documents
           </li>
         </ul>
 
         <h3>How Canvas Monitoring Works</h3>
         <ol class="list-compact">
-          <li class="list-item">When a Canvas is updated in your monitored channel, Slack sends a <code>file_change</code> event</li>
-          <li class="list-item">The extension fetches the Canvas content using the Slack <code>files.info</code> API</li>
-          <li class="list-item">Text content is extracted from Canvas blocks and analyzed for merge control phrases</li>
-          <li class="list-item">The merge status is updated based on the Canvas content, just like with regular messages</li>
+          <li class="list-item">
+            When a Canvas is updated in your monitored channel, Slack sends a
+            <code>file_change</code> event
+          </li>
+          <li class="list-item">
+            The extension fetches the Canvas content using the Slack <code>files.info</code> API
+          </li>
+          <li class="list-item">
+            Text content is extracted from Canvas blocks and analyzed for merge control phrases
+          </li>
+          <li class="list-item">
+            The merge status is updated based on the Canvas content, just like with regular messages
+          </li>
         </ol>
 
         <h3>Security Notes</h3>

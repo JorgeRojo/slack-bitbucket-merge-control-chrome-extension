@@ -75,7 +75,7 @@ describe('Slack Messages Module', () => {
 
     // Mock determineMergeStatus
     (determineMergeStatus as any).mockReturnValue({
-      message: { text: 'test message', ts: '123456789', user: 'U123', matchType: 'allowed' },
+      message: { text: 'test message', ts: '123456789', user: 'U123' },
     });
   });
 
@@ -132,7 +132,7 @@ describe('Slack Messages Module', () => {
       vi.clearAllMocks();
 
       chrome.storage.local.get = vi.fn().mockResolvedValue({
-        messages: [{ ts: '123456789000', text: 'Test message', user: 'U123', matchType: null }],
+        messages: [{ ts: '123456789000', text: 'Test message', user: 'U123' }],
       } as ChromeStorageMock);
 
       await processAndStoreMessage(message);
@@ -153,7 +153,7 @@ describe('Slack Messages Module', () => {
       await processAndStoreMessage(message);
 
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
-        messages: [{ ts: '123456789000', text: 'Test message', user: 'U123', matchType: null }],
+        messages: [{ ts: '123456789000', text: 'Test message', user: 'U123' }],
       });
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         lastMatchingMessage: expect.any(Object),
@@ -169,7 +169,6 @@ describe('Slack Messages Module', () => {
         ts: String(i),
         text: `Message ${i}`,
         user: 'U123',
-        matchType: null,
       }));
 
       chrome.storage.local.get = vi.fn().mockResolvedValue({
@@ -192,8 +191,8 @@ describe('Slack Messages Module', () => {
 
       chrome.storage.local.get = vi.fn().mockResolvedValue({
         messages: [
-          { ts: '3000', text: 'Newest message', user: 'U123', matchType: null },
-          { ts: '1000', text: 'Oldest message', user: 'U123', matchType: null },
+          { ts: '3000', text: 'Newest message', user: 'U123' },
+          { ts: '1000', text: 'Oldest message', user: 'U123' },
         ],
       } as ChromeStorageMock);
 
