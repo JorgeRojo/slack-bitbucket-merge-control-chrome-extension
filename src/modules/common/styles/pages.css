@@ -373,7 +373,7 @@ code {
 }
 
 /* Highlight important warnings */
-.text-hint strong:contains("⚠️") {
+.text-hint strong:contains('⚠️') {
   color: #e74c3c;
 }
 
