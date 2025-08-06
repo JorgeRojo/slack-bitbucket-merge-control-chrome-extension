@@ -8,28 +8,28 @@ export function updateExtensionIcon(status: MERGE_STATUS): boolean {
   let smallIconPath: string, largeIconPath: string;
   switch (status) {
     case MERGE_STATUS.LOADING:
-      smallIconPath = 'images/icon16.png';
-      largeIconPath = 'images/icon48.png';
+      smallIconPath = chrome.runtime.getURL('images/icon16.png');
+      largeIconPath = chrome.runtime.getURL('images/icon48.png');
       break;
     case MERGE_STATUS.ALLOWED:
-      smallIconPath = 'images/icon16_enabled.png';
-      largeIconPath = 'images/icon48_enabled.png';
+      smallIconPath = chrome.runtime.getURL('images/icon16_enabled.png');
+      largeIconPath = chrome.runtime.getURL('images/icon48_enabled.png');
       break;
     case MERGE_STATUS.DISALLOWED:
-      smallIconPath = 'images/icon16_disabled.png';
-      largeIconPath = 'images/icon48_disabled.png';
+      smallIconPath = chrome.runtime.getURL('images/icon16_disabled.png');
+      largeIconPath = chrome.runtime.getURL('images/icon48_disabled.png');
       break;
     case MERGE_STATUS.EXCEPTION:
-      smallIconPath = 'images/icon16_exception.png';
-      largeIconPath = 'images/icon48_exception.png';
+      smallIconPath = chrome.runtime.getURL('images/icon16_exception.png');
+      largeIconPath = chrome.runtime.getURL('images/icon48_exception.png');
       break;
     case MERGE_STATUS.ERROR:
-      smallIconPath = 'images/icon16_error.png';
-      largeIconPath = 'images/icon48_error.png';
+      smallIconPath = chrome.runtime.getURL('images/icon16_error.png');
+      largeIconPath = chrome.runtime.getURL('images/icon48_error.png');
       break;
     default:
-      smallIconPath = 'images/icon16.png';
-      largeIconPath = 'images/icon48.png';
+      smallIconPath = chrome.runtime.getURL('images/icon16.png');
+      largeIconPath = chrome.runtime.getURL('images/icon48.png');
       break;
   }
 

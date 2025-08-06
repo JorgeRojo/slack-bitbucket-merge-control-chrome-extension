@@ -9,6 +9,8 @@ import {
 } from '@src/modules/common/constants';
 import { literals } from '@src/modules/common/literals';
 import { ChromeStorageItems } from '@src/modules/common/types/chrome';
+import '../common/styles/base.css';
+import '../common/styles/pages.css';
 
 function formatMultilineInput(text: string): string {
   return text
@@ -94,8 +96,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (result.bitbucketUrl) {
         bitbucketUrlInput.value = result.bitbucketUrl;
-      } else {
-        bitbucketUrlInput.value = DEFAULT_BITBUCKET_URL;
       }
 
       if (result.mergeButtonSelector) {

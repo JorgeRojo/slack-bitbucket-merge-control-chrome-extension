@@ -19,7 +19,8 @@
     "typescript": "^5.4.5",
     "vite": "^7.0.5",
     "vite-plugin-static-copy": "^3.1.1",
-    "vitest": "^3.2.4"
+    "vite-plugin-web-extension": "^4.4.5",
+    "@vitejs/plugin-react": "^4.3.1"
   },
   "type": "module",
   "scripts": {
@@ -32,5 +33,11 @@
     "build:tsc": "tsc",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7"
   }
 }

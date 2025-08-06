@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Slack-Bitbucket Merge Control",
+  "version": "1.1.52",
+  "description": "Reads Slack channel messages and controls Bitbucket merge button availability based on message content.",
+  "permissions": ["storage", "alarms", "scripting"],
+  "options_page": "options.html",
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "src/modules/popup/popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.bitbucket.org/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "128": "images/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "components/toggle-switch/toggle-switch.css",
+        "images/icon16.png",
+        "images/icon48.png",
+        "images/icon128.png",
+        "images/icon16_enabled.png",
+        "images/icon48_enabled.png",
+        "images/icon16_disabled.png",
+        "images/icon48_disabled.png",
+        "images/icon16_exception.png",
+        "images/icon48_exception.png",
+        "images/icon16_error.png",
+        "images/icon48_error.png",
+        "content.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

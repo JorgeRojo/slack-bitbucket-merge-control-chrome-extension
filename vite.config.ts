@@ -1,88 +1,8 @@
-import fs from 'fs/promises';
 import { resolve } from 'path';
-
-import { build } from 'esbuild';
-import { Plugin, defineConfig } from 'vite';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import webExtension from 'vite-plugin-web-extension';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-
-const entries = {
-  background: resolve(__dirname, 'src/modules/background/background.ts'),
-  popup: resolve(__dirname, 'src/modules/popup/popup.ts'),
-  options: resolve(__dirname, 'src/modules/options/options.ts'),
-  help: resolve(__dirname, 'src/modules/options/help.ts'),
-  content: resolve(__dirname, 'src/modules/content/content.ts'),
-};
-
-// Web components to be compiled as IIFE bundles
-const webComponents = {
-  'nav-links': resolve(__dirname, 'src/modules/common/components/nav-links/nav-links.ts'),
-  'toggle-switch': resolve(
-    __dirname,
-    'src/modules/common/components/toggle-switch/toggle-switch.ts'
-  ),
-};
-
-function generateIIFEFiles(): Plugin {
-  return {
-    name: 'generate-iife-files',
-    apply: 'build',
-    closeBundle: async () => {
-      try {
-        const files = await fs.readdir(resolve(__dirname, 'dist/assets'));
-        for (const file of files) {
-          if (file.startsWith('index-') && file.endsWith('.js')) {
-            await fs.unlink(resolve(__dirname, 'dist/assets', file));
-            console.log(`✅ Removed ${file}`);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error removing unnecessary files:', error);
-      }
-
-      // Build main entries
-      for (const [name, entry] of Object.entries(entries)) {
-        console.log(`Building ${name} as IIFE...`);
-
-        try {
-          await build({
-            entryPoints: [entry],
-            bundle: true,
-            outfile: resolve(__dirname, `dist/${name}.js`),
-            format: 'iife',
-            target: 'es2020',
-            platform: 'browser',
-            sourcemap: true,
-            minify: false,
-          });
-          console.log(`✅ ${name}.js built successfully!`);
-        } catch (error) {
-          console.error(`❌ Error building ${name}:`, error);
-        }
-      }
-
-      // Build web components
-      for (const [name, entry] of Object.entries(webComponents)) {
-        console.log(`Building web component ${name} as IIFE...`);
-
-        try {
-          await build({
-            entryPoints: [entry],
-            bundle: true,
-            outfile: resolve(__dirname, `dist/components/${name}/${name}.js`),
-            format: 'iife',
-            target: 'es2020',
-            platform: 'browser',
-            sourcemap: true,
-            minify: false,
-          });
-          console.log(`✅ components/${name}/${name}.js built successfully!`);
-        } catch (error) {
-          console.error(`❌ Error building web component ${name}:`, error);
-        }
-      }
-    },
-  };
-}
 
 export default defineConfig({
   resolve: {
@@ -90,29 +10,46 @@ export default defineConfig({
       '@src': resolve(__dirname, './src'),
       '@tests': resolve(__dirname, './tests'),
     },
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
   },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        index: resolve(__dirname, 'src/manifest.json'),
+        content: resolve(__dirname, 'src/modules/content/content.ts'),
       },
       output: {
-        assetFileNames: 'assets/[name]-[hash].[ext]',
+        entryFileNames: '[name].js',
       },
     },
   },
   plugins: [
-    generateIIFEFiles(),
+    react(),
+    webExtension({
+      manifest: resolve(__dirname, 'manifest.json'),
+    }),
     viteStaticCopy({
       targets: [
-        { src: 'src/manifest.json', dest: '.' },
-        { src: 'src/modules/popup/popup.html', dest: '.' },
-        { src: 'src/modules/options/options.html', dest: '.' },
-        { src: 'src/modules/options/help.html', dest: '.' },
-        { src: 'src/modules/common/styles', dest: '.' },
-        { src: 'src/modules/common/images', dest: '.' },
+        { src: 'src/modules/common/images/icon128_disabled.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon128_enabled.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon128_error.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon128_exception.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon128.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon16_disabled.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon16_enabled.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon16_error.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon16_exception.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon16.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon48_disabled.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon48_enabled.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon48_error.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon48_exception.png', dest: 'images' },
+        { src: 'src/modules/common/images/icon48.png', dest: 'images' },
+        { src: 'src/modules/common/styles/base.css', dest: 'styles' },
+        { src: 'src/modules/common/styles/pages.css', dest: 'styles' },
+        { src: 'src/modules/common/styles/popup.css', dest: 'styles' },
+        { src: 'src/modules/common/styles/variables.css', dest: 'styles' },
         {
           src: 'src/modules/common/components/toggle-switch/toggle-switch.css',
           dest: 'components/toggle-switch',

@@ -9,6 +9,7 @@
     "outDir": "./dist",
     "rootDir": ".",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "jsx": "react-jsx",
     "allowJs": true,
     "checkJs": false,
     "forceConsistentCasingInFileNames": true,

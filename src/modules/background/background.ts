@@ -6,10 +6,7 @@ import {
   connectToSlackSocketMode,
   setupWebSocketCheckAlarm,
 } from '@src/modules/background/websocket';
-import {
-  DEFAULT_MERGE_BUTTON_SELECTOR,
-  WEBSOCKET_CHECK_ALARM,
-} from '@src/modules/common/constants';
+import * as constants from '@src/modules/common/constants';
 
 // Message handler
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -22,7 +19,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Alarm handler
 chrome.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === WEBSOCKET_CHECK_ALARM) {
+  if (alarm.name === constants.WEBSOCKET_CHECK_ALARM) {
     checkWebSocketConnection();
   }
 });
@@ -37,10 +34,15 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 // Extension initialization
 if (typeof process === 'undefined' || process.env.NODE_ENV !== 'test') {
   chrome.runtime.onInstalled.addListener(() => {
-    chrome.storage.sync.get('mergeButtonSelector', result => {
+    chrome.storage.sync.get(['mergeButtonSelector', 'bitbucketUrl'], result => {
       if (!result.mergeButtonSelector) {
         chrome.storage.sync.set({
-          mergeButtonSelector: DEFAULT_MERGE_BUTTON_SELECTOR,
+          mergeButtonSelector: constants.DEFAULT_MERGE_BUTTON_SELECTOR,
+        });
+      }
+      if (!result.bitbucketUrl) {
+        chrome.storage.sync.set({
+          bitbucketUrl: constants.DEFAULT_BITBUCKET_URL,
         });
       }
     });
