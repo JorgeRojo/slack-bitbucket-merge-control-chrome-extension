@@ -12,7 +12,7 @@ This document describes the issue tracking system for the Slack-Bitbucket Merge 
 
 | ID | Title | Component | Priority | Date Requested |
 | -- | -- | -- | -- | -- |
-<!-- No features yet -->
+| [001](./features/001-refactor-ui-to-react-for-popup-and-options-pages.md) | Refactor UI to React for Popup and Options Pages | src/modules/options/* and src/modules/content/* | Medium | 2025-08-05 |
 
 ## How to Add a New Issue
 

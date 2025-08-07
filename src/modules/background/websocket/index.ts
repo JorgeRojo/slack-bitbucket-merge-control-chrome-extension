@@ -97,13 +97,10 @@ export async function connectToSlackSocketMode(): Promise<void> {
     };
 
     rtmWebSocket.onclose = async () => {
-      await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
-
       setTimeout(connectToSlackSocketMode, RECONNECTION_DELAY_MS);
     };
 
     rtmWebSocket.onerror = async error => {
-      await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       Logger.error(toErrorType(error), 'WebSocket', { type: 'connection' });
       rtmWebSocket?.close();
     };
@@ -151,7 +148,6 @@ export async function checkWebSocketConnection(): Promise<void> {
     try {
       rtmWebSocket.send(JSON.stringify({ type: 'ping' }));
     } catch {
-      await updateAppStatus(APP_STATUS.WEB_SOCKET_ERROR);
       rtmWebSocket.close();
       setTimeout(connectToSlackSocketMode, 1000);
     }

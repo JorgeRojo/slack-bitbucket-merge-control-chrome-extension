@@ -235,7 +235,7 @@ describe('WebSocket Module', () => {
     expect(handleCanvasChangedEvent).toHaveBeenCalledWith('F12345');
   });
 
-  test('WebSocket onclose handler should update app state', async () => {
+  test('WebSocket onclose handler should attempt to reconnect', async () => {
     vi.clearAllMocks();
 
     await connectToSlackSocketMode();
@@ -243,11 +243,11 @@ describe('WebSocket Module', () => {
     expect(mockWebSocket.onclose).toBeDefined();
     await mockWebSocket.onclose();
 
-    expect(updateAppStatus).toHaveBeenCalledWith(APP_STATUS.WEB_SOCKET_ERROR);
+    expect(updateAppStatus).not.toHaveBeenCalled();
     vi.runAllTimers();
   });
 
-  test('WebSocket onerror handler should log errors', async () => {
+  test('WebSocket onerror handler should log errors and close the connection', async () => {
     await connectToSlackSocketMode();
 
     vi.clearAllMocks();
@@ -257,7 +257,7 @@ describe('WebSocket Module', () => {
     const errorEvent = new Error('WebSocket error');
     await mockWebSocket.onerror(errorEvent);
 
-    expect(updateAppStatus).toHaveBeenCalledWith(APP_STATUS.WEB_SOCKET_ERROR);
+    expect(updateAppStatus).not.toHaveBeenCalled();
     expect(Logger.error).toHaveBeenCalled();
     expect(mockWebSocket.close).toHaveBeenCalled();
   });
