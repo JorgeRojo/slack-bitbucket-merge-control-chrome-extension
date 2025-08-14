@@ -172,6 +172,9 @@ jobs:
     needs: [prepare-release]
     if: needs.detect-pending-release.outputs.pending_release == 'false' && github.event.inputs.auto_publish == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
       - name: Get version from input
         run: |
@@ -222,14 +225,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to Chrome Web Store
-        uses: w3c/crx-upload@v2
+      - name: 'Authenticate to Google Cloud'
+        id: 'auth'
+        uses: 'google-github-actions/auth@v2'
         with:
-          extension_id: ${{ secrets.CHROME_EXTENSION_ID }}
-          client_id: ${{ secrets.CHROME_CLIENT_ID }}
-          client_secret: ${{ secrets.CHROME_CLIENT_SECRET }}
-          refresh_token: ${{ secrets.CHROME_REFRESH_TOKEN }}
-          zip_file: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
+          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+          token_format: 'access_token'
+          access_token_lifetime: '300s'
+
+      - name: Publish to Chrome Web Store
+        uses: Klemensas/chrome-extension-upload-action@v1
+        with:
+          app-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          token: ${{ steps.auth.outputs.access_token }}
+          file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
 
       - name: Create release summary
         run: |
@@ -244,6 +254,9 @@ jobs:
     needs: [detect-pending-release]
     if: needs.detect-pending-release.outputs.pending_release == 'true' && github.event.inputs.auto_publish == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
       - name: Get version from pending release
         run: |
@@ -294,14 +307,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to Chrome Web Store
-        uses: nathanph/gh-action-crx-pack@v1
+      - name: 'Authenticate to Google Cloud'
+        id: 'auth'
+        uses: 'google-github-actions/auth@v2'
         with:
-          extension_id: ${{ secrets.CHROME_EXTENSION_ID }}
-          client_id: ${{ secrets.CHROME_CLIENT_ID }}
-          client_secret: ${{ secrets.CHROME_CLIENT_SECRET }}
-          refresh_token: ${{ secrets.CHROME_REFRESH_TOKEN }}
-          zip_file: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
+          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+          token_format: 'access_token'
+          access_token_lifetime: '300s'
+
+      - name: Publish to Chrome Web Store
+        uses: Klemensas/chrome-extension-upload-action@v1
+        with:
+          app-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          token: ${{ steps.auth.outputs.access_token }}
+          file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
 
       - name: Create release summary
         run: |
