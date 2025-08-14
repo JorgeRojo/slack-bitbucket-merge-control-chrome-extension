@@ -295,7 +295,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to Chrome Web Store
-        uses: w3c/crx-upload@v2
+        uses: nathanph/gh-action-crx-pack@v1
         with:
           extension_id: ${{ secrets.CHROME_EXTENSION_ID }}
           client_id: ${{ secrets.CHROME_CLIENT_ID }}
