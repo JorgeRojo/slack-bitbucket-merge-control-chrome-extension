@@ -222,12 +222,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Publish to Chrome Web Store
+        uses: w3c/crx-upload@v2
+        with:
+          extension_id: ${{ secrets.CHROME_EXTENSION_ID }}
+          client_id: ${{ secrets.CHROME_CLIENT_ID }}
+          client_secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh_token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          zip_file: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
+
       - name: Create release summary
         run: |
           # Generate workflow summary
           echo "## 🚀 Release ${{ env.INPUT_VERSION }} Published!" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
           echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to Chrome Web Store" >> $GITHUB_STEP_SUMMARY
           echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
 
   publish-release-pending-version:
@@ -284,10 +294,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Publish to Chrome Web Store
+        uses: w3c/crx-upload@v2
+        with:
+          extension_id: ${{ secrets.CHROME_EXTENSION_ID }}
+          client_id: ${{ secrets.CHROME_CLIENT_ID }}
+          client_secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh_token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          zip_file: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
+
       - name: Create release summary
         run: |
           # Generate workflow summary
           echo "## 🚀 Release ${{ env.INPUT_VERSION }} Published!" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
           echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to Chrome Web Store" >> $GITHUB_STEP_SUMMARY
           echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY

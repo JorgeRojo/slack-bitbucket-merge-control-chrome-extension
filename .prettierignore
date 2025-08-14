@@ -1,5 +1,6 @@
 # Build output
 dist/
+src/manifest.json
 
 # Dependencies
 node_modules/
