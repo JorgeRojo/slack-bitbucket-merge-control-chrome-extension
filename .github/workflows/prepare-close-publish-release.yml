@@ -263,6 +263,10 @@ jobs:
           echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
           echo "- Published to Chrome Web Store" >> $GITHUB_STEP_SUMMARY
           echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+          echo "- **Chrome Web Store**: https://chrome.google.com/webstore/detail/${{ secrets.CHROME_EXTENSION_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Release**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
 
   publish-release-pending-version:
     needs: [detect-pending-release]
@@ -344,3 +348,7 @@ jobs:
           echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
           echo "- Published to Chrome Web Store" >> $GITHUB_STEP_SUMMARY
           echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+          echo "- **Chrome Web Store**: https://chrome.google.com/webstore/detail/${{ secrets.CHROME_EXTENSION_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Release**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY

@@ -56,6 +56,7 @@ export default [
       'tmp/**',
       'coverage/**',
       'node_modules/**',
+      'google-cloud-sdk/**',
       '*.log',
       '.DS_Store',
       'Thumbs.db',
