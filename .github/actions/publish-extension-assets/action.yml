@@ -14,6 +14,20 @@ runs:
       run: |
         # Create version tag 
         echo "TAG: ${{ inputs.input_version }} - Version ${{ inputs.version }}"
+
+        # Check if tag already exists locally
+        if git tag -l | grep -q "^${{ inputs.input_version }}$"; then
+          echo "Tag ${{ inputs.input_version }} already exists locally, deleting it first"
+          git tag -d ${{ inputs.input_version }}
+        fi
+
+        # Check if tag exists on remote
+        if git ls-remote --tags origin | grep -q "refs/tags/${{ inputs.input_version }}$"; then
+          echo "Tag ${{ inputs.input_version }} already exists on remote, deleting it first"
+          git push origin --delete ${{ inputs.input_version }} || echo "Failed to delete remote tag, continuing..."
+        fi
+
+        # Create new tag
         git tag -a ${{ inputs.input_version }} -m "Version ${{ inputs.version }}"
         git push origin ${{ inputs.input_version }} --no-verify
       shell: bash
