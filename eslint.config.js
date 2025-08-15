@@ -53,6 +53,7 @@ export default [
   {
     ignores: [
       'dist/**',
+      'tmp/**',
       'coverage/**',
       'node_modules/**',
       '*.log',
