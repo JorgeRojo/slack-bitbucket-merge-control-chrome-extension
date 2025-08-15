@@ -158,7 +158,22 @@ jobs:
           # Merge develop into master
           git checkout master
           git pull origin master -q
-          git merge develop --no-ff -m "Merge develop into master for release ${{ needs.validate-and-close-version.outputs.version }}"
+          
+          # Try to merge, if conflicts occur, resolve them automatically
+          if ! git merge develop --no-ff -m "Merge develop into master for release ${{ needs.validate-and-close-version.outputs.version }}"; then
+            echo "Merge conflicts detected, resolving automatically..."
+            
+            # For version conflicts, always use develop version
+            git checkout --theirs package.json package-lock.json src/manifest.json
+            
+            # For workflow file, use the current version (ours)
+            git checkout --ours .github/workflows/prepare-close-publish-release.yml
+            
+            # Add resolved files and complete merge
+            git add .
+            git commit -m "Merge develop into master for release ${{ needs.validate-and-close-version.outputs.version }}"
+          fi
+          
           git push origin master --no-verify
 
       - name: Create merge summary
