@@ -160,6 +160,7 @@ All project documentation is organized in the `documentation/` directory:
 - **[CODE_STYLE.md](./documentation/CODE_STYLE.md)** - Detailed coding style rules and best practices
 - **[RELEASE_PROCESS.md](./documentation/RELEASE_PROCESS.md)** - Complete release process and Git Flow documentation
 - **[TESTING_GUIDELINES.md](./documentation/TESTING_GUIDELINES.md)** - Testing strategies and guidelines including mocking patterns
+- **[BUILD_MODES.md](./documentation/BUILD_MODES.md)** - Development vs Production build configurations and optimizations
 - **[ISSUES_TRACKING.md](./documentation/ISSUES_TRACKING.md)** - Index of open bugs and feature requests
 
 ---
