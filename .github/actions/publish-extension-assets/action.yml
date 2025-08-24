@@ -41,7 +41,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Build extension
-      run: npm run build
+      run: NODE_ENV=production npm run build:prod
       shell: bash
 
     - name: Create release package

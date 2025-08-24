@@ -29,8 +29,10 @@
     "test:coverage": "vitest run --coverage",
     "prepare": "husky install",
     "build": "vite build",
+    "build:prod": "NODE_ENV=production vite build",
     "build:tsc": "tsc",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "build:analyze": "npm run build:prod"
   }
 }

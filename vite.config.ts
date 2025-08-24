@@ -51,8 +51,8 @@ function generateIIFEFiles(): Plugin {
             format: 'iife',
             target: 'es2020',
             platform: 'browser',
-            sourcemap: true,
-            minify: false,
+            sourcemap: process.env.NODE_ENV !== 'production',
+            minify: process.env.NODE_ENV === 'production',
           });
           console.log(`✅ ${name}.js built successfully!`);
         } catch (error) {
@@ -72,8 +72,8 @@ function generateIIFEFiles(): Plugin {
             format: 'iife',
             target: 'es2020',
             platform: 'browser',
-            sourcemap: true,
-            minify: false,
+            sourcemap: process.env.NODE_ENV !== 'production',
+            minify: process.env.NODE_ENV === 'production',
           });
           console.log(`✅ components/${name}/${name}.js built successfully!`);
         } catch (error) {
@@ -94,6 +94,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    minify: process.env.NODE_ENV === 'production',
+    sourcemap: process.env.NODE_ENV !== 'production',
+    reportCompressedSize: process.env.NODE_ENV === 'production',
     rollupOptions: {
       input: {
         index: resolve(__dirname, 'src/manifest.json'),
