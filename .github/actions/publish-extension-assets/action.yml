@@ -15,6 +15,9 @@ runs:
   steps:
     - name: Create tag
       run: |
+        # Configure git authentication
+        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+
         # Create version tag 
         echo "TAG: ${{ inputs.input_version }} - Version ${{ inputs.version }}"
 

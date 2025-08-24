@@ -158,7 +158,19 @@ jobs:
           # Merge develop into master
           git checkout master
           git pull origin master -q
-          git merge develop --no-ff -m "Merge develop into master for release ${{ needs.validate-and-close-version.outputs.version }}"
+          
+          # Try to merge, if conflicts occur, resolve them automatically
+          if ! git merge develop --no-ff -m "Merge develop into master for release ${{ needs.validate-and-close-version.outputs.version }}"; then
+            echo "Merge conflicts detected, resolving automatically..."
+            
+            # For version conflicts, always use develop version
+            git checkout --theirs package.json package-lock.json src/manifest.json
+            
+            # Add resolved files and complete merge
+            git add .
+            git commit -m "Merge develop into master for release ${{ needs.validate-and-close-version.outputs.version }}"
+          fi
+          
           git push origin master --no-verify
 
       - name: Create merge summary
@@ -173,7 +185,7 @@ jobs:
     if: needs.detect-pending-release.outputs.pending_release == 'false' && github.event.inputs.auto_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
+      contents: 'write'
       id-token: 'write'
     steps:
       - name: Get version from input
@@ -196,6 +208,7 @@ jobs:
       - uses: ./.github/actions/publish-extension-assets
         with:
           input_version: ${{ env.INPUT_VERSION }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.VERSION }}
 
       - name: Create GitHub Release
@@ -235,7 +248,7 @@ jobs:
           access_token_lifetime: '300s'
 
       - name: Publish to Chrome Web Store
-        uses: Klemensas/chrome-extension-upload-action@v2
+        uses: Klemensas/chrome-extension-upload-action@v1
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
           token: ${{ steps.auth.outputs.access_token }}
@@ -255,7 +268,7 @@ jobs:
     if: needs.detect-pending-release.outputs.pending_release == 'true' && github.event.inputs.auto_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
+      contents: 'write'
       id-token: 'write'
     steps:
       - name: Get version from pending release
@@ -278,6 +291,7 @@ jobs:
       - uses: ./.github/actions/publish-extension-assets
         with:
           input_version: ${{ env.INPUT_VERSION }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.VERSION }}
 
       - name: Create GitHub Release
@@ -317,7 +331,7 @@ jobs:
           access_token_lifetime: '300s'
 
       - name: Publish to Chrome Web Store
-        uses: Klemensas/chrome-extension-upload-action@v2
+        uses: Klemensas/chrome-extension-upload-action@v1
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
           token: ${{ steps.auth.outputs.access_token }}
