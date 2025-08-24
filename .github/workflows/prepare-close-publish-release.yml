@@ -188,6 +188,13 @@ jobs:
       contents: 'write'
       id-token: 'write'
     steps:
+      - name: Debug Chrome Extension ID
+        run: |
+          echo "CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}"
+          echo "CHROME_EXTENSION_ID length: ${#CHROME_EXTENSION_ID}"
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+
       - name: Get version from input
         run: |
           INPUT_VERSION="${{ github.event.inputs.version }}" 
