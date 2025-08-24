@@ -15,6 +15,72 @@ import {
   updateMergeButtonFromLastKnownMergeState,
 } from './content-script';
 
+interface SendMergeButtonUpdateParams {
+  mergeStatusForContentScript: MERGE_STATUS;
+  featureEnabled?: boolean;
+  message: ProcessedMessage | null;
+  channelName: string;
+  bitbucketTabId?: number | null;
+}
+
+async function sendMergeButtonUpdate({
+  mergeStatusForContentScript,
+  featureEnabled,
+  message,
+  channelName,
+  bitbucketTabId,
+}: SendMergeButtonUpdateParams): Promise<void> {
+  const effectiveMergeStatus =
+    featureEnabled === false ? MERGE_STATUS.ALLOWED : mergeStatusForContentScript;
+  const effectiveIsMergeDisabled =
+    featureEnabled === false
+      ? false
+      : mergeStatusForContentScript === MERGE_STATUS.DISALLOWED ||
+        mergeStatusForContentScript === MERGE_STATUS.EXCEPTION;
+
+  const messagePayload = {
+    action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
+    payload: {
+      lastSlackMessage: message,
+      channelName,
+      isMergeDisabled: effectiveIsMergeDisabled,
+      mergeStatus: effectiveMergeStatus,
+      featureEnabled,
+    },
+  };
+
+  if (bitbucketTabId) {
+    await sendMessageToTab(bitbucketTabId, messagePayload);
+  } else {
+    await sendMessageToAllBitbucketTabs(messagePayload);
+  }
+}
+
+async function sendMessageToTab(tabId: number, message: any): Promise<void> {
+  try {
+    await chrome.tabs.sendMessage(tabId, message);
+  } catch (error) {
+    Logger.error(toErrorType(error), 'Background', {
+      silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
+    });
+  }
+}
+
+async function sendMessageToAllBitbucketTabs(message: any): Promise<void> {
+  try {
+    const { bitbucketUrl } = await chrome.storage.sync.get('bitbucketUrl');
+    if (!bitbucketUrl) return;
+
+    const bitbucketRegex = new RegExp(bitbucketUrl.replace(/\*/g, '.*'));
+    const tabs = await chrome.tabs.query({});
+    const bitbucketTabs = tabs.filter(tab => tab.url && bitbucketRegex.test(tab.url));
+
+    await Promise.all(bitbucketTabs.map(tab => tab.id && sendMessageToTab(tab.id, message)));
+  } catch (error) {
+    Logger.error(toErrorType(error), 'Background');
+  }
+}
+
 /**
  * Updates the merge state in content scripts
  */
@@ -81,32 +147,13 @@ export async function updateContentScriptMergeState(
     });
   }
 
-  if (bitbucketTabId) {
-    try {
-      const effectiveMergeStatus =
-        featureEnabled === false ? MERGE_STATUS.ALLOWED : mergeStatusForContentScript;
-      const effectiveIsMergeDisabled =
-        featureEnabled === false
-          ? false
-          : mergeStatusForContentScript === MERGE_STATUS.DISALLOWED ||
-            mergeStatusForContentScript === MERGE_STATUS.EXCEPTION;
-
-      await chrome.tabs.sendMessage(bitbucketTabId, {
-        action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
-        payload: {
-          lastSlackMessage: message,
-          channelName: channelName,
-          isMergeDisabled: effectiveIsMergeDisabled,
-          mergeStatus: effectiveMergeStatus,
-          featureEnabled: featureEnabled,
-        },
-      });
-    } catch (error) {
-      Logger.error(toErrorType(error), 'Background', {
-        silentMessages: [ERROR_MESSAGES.RECEIVING_END_NOT_EXIST, ERROR_MESSAGES.CONNECTION_FAILED],
-      });
-    }
-  }
+  await sendMergeButtonUpdate({
+    mergeStatusForContentScript,
+    featureEnabled,
+    message,
+    channelName,
+    bitbucketTabId,
+  });
 }
 
 // Export functions from content-script module
