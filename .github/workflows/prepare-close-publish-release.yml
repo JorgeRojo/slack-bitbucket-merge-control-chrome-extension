@@ -238,20 +238,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 'Authenticate to Google Cloud'
-        id: 'auth'
-        uses: 'google-github-actions/auth@v2'
-        with:
-          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
-          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
-          token_format: 'access_token'
-          access_token_lifetime: '300s'
+      - name: Generate Chrome Web Store token
+        id: generate-token
+        run: |
+          echo '${{ secrets.CHROME_WEB_STORE_SERVICE_ACCOUNT }}' > service-account.json
+          curl https://sdk.cloud.google.com | bash
+          source $HOME/google-cloud-sdk/path.bash.inc
+          gcloud auth activate-service-account --key-file=service-account.json
+          TOKEN=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore)
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          rm service-account.json
 
       - name: Publish to Chrome Web Store
         uses: Klemensas/chrome-extension-upload-action@v1
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          token: ${{ steps.auth.outputs.access_token }}
+          token: ${{ steps.generate-token.outputs.token }}
           file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
 
       - name: Create release summary
@@ -321,20 +323,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 'Authenticate to Google Cloud'
-        id: 'auth'
-        uses: 'google-github-actions/auth@v2'
-        with:
-          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
-          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
-          token_format: 'access_token'
-          access_token_lifetime: '300s'
+      - name: Generate Chrome Web Store token
+        id: generate-token
+        run: |
+          echo '${{ secrets.CHROME_WEB_STORE_SERVICE_ACCOUNT }}' > service-account.json
+          curl https://sdk.cloud.google.com | bash
+          source $HOME/google-cloud-sdk/path.bash.inc
+          gcloud auth activate-service-account --key-file=service-account.json
+          TOKEN=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore)
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          rm service-account.json
 
       - name: Publish to Chrome Web Store
         uses: Klemensas/chrome-extension-upload-action@v1
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          token: ${{ steps.auth.outputs.access_token }}
+          token: ${{ steps.generate-token.outputs.token }}
           file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
 
       - name: Create release summary
