@@ -188,13 +188,6 @@ jobs:
       contents: 'write'
       id-token: 'write'
     steps:
-      - name: Debug Chrome Extension ID
-        run: |
-          echo "CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}"
-          echo "CHROME_EXTENSION_ID length: ${#CHROME_EXTENSION_ID}"
-        env:
-          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
-
       - name: Get version from input
         run: |
           INPUT_VERSION="${{ github.event.inputs.version }}" 
@@ -234,7 +227,7 @@ jobs:
             This release was created following Git Flow guidelines from the master branch.
 
             ### 📦 What's Included
-            - Chrome Extension ZIP file ready for Chrome Web Store
+            - Chrome Extension ZIP file ready for distribution
             - All features tested and validated
             - Production-ready build
 
@@ -245,32 +238,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-      - name: Generate Chrome Web Store token
-        id: generate-token
-        run: |
-          echo '${{ secrets.CHROME_WEB_STORE_SERVICE_ACCOUNT }}' > service-account.json
-          curl https://sdk.cloud.google.com | bash
-          source $HOME/google-cloud-sdk/path.bash.inc
-          gcloud auth activate-service-account --key-file=service-account.json
-          TOKEN=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore)
-          echo "token=$TOKEN" >> $GITHUB_OUTPUT
-          rm service-account.json
-
-      - name: Publish to Chrome Web Store
-        uses: Klemensas/chrome-extension-upload-action@v1
-        with:
-          app-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          token: ${{ steps.generate-token.outputs.token }}
-          file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
-
       - name: Create release summary
         run: |
           # Generate workflow summary
           echo "## 🚀 Release ${{ env.INPUT_VERSION }} Published!" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
           echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to Chrome Web Store" >> $GITHUB_STEP_SUMMARY
           echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
 
   publish-release-pending-version:
@@ -320,7 +293,7 @@ jobs:
             This release was created following Git Flow guidelines from the master branch.
 
             ### 📦 What's Included
-            - Chrome Extension ZIP file ready for Chrome Web Store
+            - Chrome Extension ZIP file ready for distribution
             - All features tested and validated
             - Production-ready build
 
@@ -331,30 +304,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-      - name: Generate Chrome Web Store token
-        id: generate-token
-        run: |
-          echo '${{ secrets.CHROME_WEB_STORE_SERVICE_ACCOUNT }}' > service-account.json
-          curl https://sdk.cloud.google.com | bash
-          source $HOME/google-cloud-sdk/path.bash.inc
-          gcloud auth activate-service-account --key-file=service-account.json
-          TOKEN=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore)
-          echo "token=$TOKEN" >> $GITHUB_OUTPUT
-          rm service-account.json
-
-      - name: Publish to Chrome Web Store
-        uses: Klemensas/chrome-extension-upload-action@v1
-        with:
-          app-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          token: ${{ steps.generate-token.outputs.token }}
-          file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
-
       - name: Create release summary
         run: |
           # Generate workflow summary
           echo "## 🚀 Release ${{ env.INPUT_VERSION }} Published!" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
           echo "- Chrome extension package created" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to Chrome Web Store" >> $GITHUB_STEP_SUMMARY
           echo "- Release URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY

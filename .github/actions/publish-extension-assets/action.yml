@@ -46,7 +46,7 @@ runs:
 
     - name: Create release package
       run: |
-        # Create ZIP package for Chrome Web Store
+        # Create ZIP package for distribution
         mkdir -p release-package
         cp -r dist/* release-package/
         cd release-package
