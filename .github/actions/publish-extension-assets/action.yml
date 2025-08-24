@@ -15,6 +15,9 @@ runs:
   steps:
     - name: Create tag
       run: |
+        # Configure git to use token
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        
         # Create version tag 
         echo "TAG: ${{ inputs.input_version }} - Version ${{ inputs.version }}"
 
