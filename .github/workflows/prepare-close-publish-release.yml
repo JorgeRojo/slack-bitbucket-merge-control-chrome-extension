@@ -247,8 +247,8 @@ jobs:
           echo '${{ secrets.CHROME_WEB_STORE_SERVICE_ACCOUNT }}' > service-account.json
           curl https://sdk.cloud.google.com | bash
           source $HOME/google-cloud-sdk/path.bash.inc
-          gcloud auth activate-service-account --key-file=service-account.json --scopes=https://www.googleapis.com/auth/chromewebstore
-          TOKEN=$(gcloud auth print-access-token)
+          gcloud auth activate-service-account --key-file=service-account.json
+          TOKEN=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore)
           echo "token=$TOKEN" >> $GITHUB_OUTPUT
           rm service-account.json
 
@@ -336,8 +336,8 @@ jobs:
           echo '${{ secrets.CHROME_WEB_STORE_SERVICE_ACCOUNT }}' > service-account.json
           curl https://sdk.cloud.google.com | bash
           source $HOME/google-cloud-sdk/path.bash.inc
-          gcloud auth activate-service-account --key-file=service-account.json --scopes=https://www.googleapis.com/auth/chromewebstore
-          TOKEN=$(gcloud auth print-access-token)
+          gcloud auth activate-service-account --key-file=service-account.json
+          TOKEN=$(gcloud auth print-access-token --scopes=https://www.googleapis.com/auth/chromewebstore)
           echo "token=$TOKEN" >> $GITHUB_OUTPUT
           rm service-account.json
 
