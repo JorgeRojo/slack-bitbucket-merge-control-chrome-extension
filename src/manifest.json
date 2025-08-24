@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Slack-Bitbucket Merge Control",
-  "version": "1.1.71",
+  "version": "1.1.73",
   "description": "Reads Slack channel messages and controls Bitbucket merge button availability based on message content.",
   "permissions": [
     "storage",
