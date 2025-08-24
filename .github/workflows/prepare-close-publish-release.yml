@@ -241,19 +241,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 'Authenticate to Google Cloud'
-        id: 'auth'
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
-          token_format: 'access_token'
-          access_token_lifetime: '300s'
-
       - name: Publish to Chrome Web Store
         uses: Klemensas/chrome-extension-upload-action@v1
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          token: ${{ steps.auth.outputs.access_token }}
+          token: ${{ secrets.CHROME_WEB_STORE_TOKEN }}
           file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
 
       - name: Create release summary
@@ -327,19 +319,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 'Authenticate to Google Cloud'
-        id: 'auth'
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
-          token_format: 'access_token'
-          access_token_lifetime: '300s'
-
       - name: Publish to Chrome Web Store
         uses: Klemensas/chrome-extension-upload-action@v1
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          token: ${{ steps.auth.outputs.access_token }}
+          token: ${{ secrets.CHROME_WEB_STORE_TOKEN }}
           file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
 
       - name: Create release summary
