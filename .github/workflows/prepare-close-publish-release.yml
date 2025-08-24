@@ -212,6 +212,7 @@ jobs:
         with:
           input_version: ${{ env.INPUT_VERSION }}
           version: ${{ env.VERSION }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         id: create_release
@@ -297,6 +298,7 @@ jobs:
         with:
           input_version: ${{ env.INPUT_VERSION }}
           version: ${{ env.VERSION }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         id: create_release
