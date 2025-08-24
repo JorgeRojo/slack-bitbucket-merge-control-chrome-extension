@@ -211,7 +211,19 @@ describe('Bitbucket Integration', () => {
     expect(Logger.error).toHaveBeenCalled();
   });
 
-  test('should handle null bitbucketTabId', async () => {
+  test('should send message to all Bitbucket tabs when no tabId provided', async () => {
+    // Mock chrome.storage.sync.get for bitbucketUrl
+    global.chrome.storage.sync = {
+      get: vi.fn().mockResolvedValue({ bitbucketUrl: 'https://bitbucket.org/*' }),
+    } as any;
+
+    // Mock chrome.tabs.query to return Bitbucket tabs
+    global.chrome.tabs.query = vi.fn().mockResolvedValue([
+      { id: 1, url: 'https://bitbucket.org/repo1/pull-requests/1' },
+      { id: 2, url: 'https://bitbucket.org/repo2/pull-requests/2' },
+      { id: 3, url: 'https://github.com/repo/pull/1' }, // Non-Bitbucket tab
+    ]);
+
     await updateContentScriptMergeState(mockChannelName, null);
 
     // Verify storage was updated
@@ -220,7 +232,106 @@ describe('Bitbucket Integration', () => {
     // Verify runtime message was sent
     expect(chrome.runtime.sendMessage).toHaveBeenCalled();
 
-    // Verify tab message was NOT sent
+    // Verify tab messages were sent to Bitbucket tabs only
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledTimes(2);
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(1, {
+      action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
+      payload: expect.objectContaining({
+        lastSlackMessage: mockMessages[0],
+        channelName: mockChannelName,
+        isMergeDisabled: false,
+        mergeStatus: MERGE_STATUS.ALLOWED,
+        featureEnabled: true,
+      }),
+    });
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(2, {
+      action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
+      payload: expect.objectContaining({
+        lastSlackMessage: mockMessages[0],
+        channelName: mockChannelName,
+        isMergeDisabled: false,
+        mergeStatus: MERGE_STATUS.ALLOWED,
+        featureEnabled: true,
+      }),
+    });
+  });
+
+  test('should handle feature disabled with multiple tabs', async () => {
+    // Set feature disabled
+    global.chrome.storage.local.get = vi.fn().mockResolvedValue({
+      messages: mockMessages,
+      featureEnabled: false,
+      lastKnownMergeState: mockLastKnownMergeState,
+    });
+
+    // Mock chrome.storage.sync.get for bitbucketUrl
+    global.chrome.storage.sync = {
+      get: vi.fn().mockResolvedValue({ bitbucketUrl: 'https://bitbucket.org/*' }),
+    } as any;
+
+    // Mock chrome.tabs.query to return Bitbucket tabs
+    global.chrome.tabs.query = vi.fn().mockResolvedValue([
+      { id: 1, url: 'https://bitbucket.org/repo1/pull-requests/1' },
+      { id: 2, url: 'https://bitbucket.org/repo2/pull-requests/2' },
+    ]);
+
+    (determineMergeStatus as any).mockReturnValue({
+      status: MERGE_STATUS.DISALLOWED,
+      message: mockMessages[0],
+    });
+
+    await updateContentScriptMergeState(mockChannelName, null);
+
+    // Verify both tabs received ALLOWED status despite feature being disabled
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledTimes(2);
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(1, {
+      action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
+      payload: expect.objectContaining({
+        isMergeDisabled: false,
+        mergeStatus: MERGE_STATUS.ALLOWED,
+        featureEnabled: false,
+      }),
+    });
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(2, {
+      action: MESSAGE_ACTIONS.UPDATE_MERGE_BUTTON,
+      payload: expect.objectContaining({
+        isMergeDisabled: false,
+        mergeStatus: MERGE_STATUS.ALLOWED,
+        featureEnabled: false,
+      }),
+    });
+  });
+
+  test('should handle no bitbucketUrl configured', async () => {
+    // Mock chrome.storage.sync.get to return no bitbucketUrl
+    global.chrome.storage.sync = {
+      get: vi.fn().mockResolvedValue({}),
+    } as any;
+
+    await updateContentScriptMergeState(mockChannelName, null);
+
+    // Verify storage was updated
+    expect(chrome.storage.local.set).toHaveBeenCalled();
+
+    // Verify runtime message was sent
+    expect(chrome.runtime.sendMessage).toHaveBeenCalled();
+
+    // Verify no tab messages were sent
     expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+  });
+
+  test('should handle tabs.query error', async () => {
+    // Mock chrome.storage.sync.get for bitbucketUrl
+    global.chrome.storage.sync = {
+      get: vi.fn().mockResolvedValue({ bitbucketUrl: 'https://bitbucket.org/*' }),
+    } as any;
+
+    // Make tabs.query throw an error
+    global.chrome.tabs.query = vi.fn().mockRejectedValue(new Error('Query failed'));
+
+    await updateContentScriptMergeState(mockChannelName, null);
+
+    // Verify error was logged
+    expect(Logger.error).toHaveBeenCalled();
   });
 });
