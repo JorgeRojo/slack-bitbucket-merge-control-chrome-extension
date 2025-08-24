@@ -173,7 +173,7 @@ jobs:
     if: needs.detect-pending-release.outputs.pending_release == 'false' && github.event.inputs.auto_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
+      contents: 'write'
       id-token: 'write'
     steps:
       - name: Get version from input
@@ -196,6 +196,7 @@ jobs:
       - uses: ./.github/actions/publish-extension-assets
         with:
           input_version: ${{ env.INPUT_VERSION }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.VERSION }}
 
       - name: Create GitHub Release
@@ -255,7 +256,7 @@ jobs:
     if: needs.detect-pending-release.outputs.pending_release == 'true' && github.event.inputs.auto_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
+      contents: 'write'
       id-token: 'write'
     steps:
       - name: Get version from pending release
@@ -278,6 +279,7 @@ jobs:
       - uses: ./.github/actions/publish-extension-assets
         with:
           input_version: ${{ env.INPUT_VERSION }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.VERSION }}
 
       - name: Create GitHub Release
