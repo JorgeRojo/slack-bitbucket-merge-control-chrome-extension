@@ -254,9 +254,7 @@ jobs:
         uses: Klemensas/chrome-extension-upload-action@v1
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          refresh-token: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
-          client-id: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
-          client-secret: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+          token: ${{ steps.generate-token.outputs.token }}
           file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
 
       - name: Create release summary
@@ -342,9 +340,7 @@ jobs:
         uses: Klemensas/chrome-extension-upload-action@v1
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          refresh-token: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
-          client-id: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
-          client-secret: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+          token: ${{ steps.generate-token.outputs.token }}
           file-name: ./slack-bitbucket-merge-control-chrome-extension-${{ env.VERSION }}.zip
 
       - name: Create release summary
