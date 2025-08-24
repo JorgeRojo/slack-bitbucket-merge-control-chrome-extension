@@ -235,7 +235,7 @@ jobs:
           access_token_lifetime: '300s'
 
       - name: Publish to Chrome Web Store
-        uses: Klemensas/chrome-extension-upload-action@v1
+        uses: Klemensas/chrome-extension-upload-action@v2
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
           token: ${{ steps.auth.outputs.access_token }}
@@ -317,7 +317,7 @@ jobs:
           access_token_lifetime: '300s'
 
       - name: Publish to Chrome Web Store
-        uses: Klemensas/chrome-extension-upload-action@v1
+        uses: Klemensas/chrome-extension-upload-action@v2
         with:
           app-id: ${{ secrets.CHROME_EXTENSION_ID }}
           token: ${{ steps.auth.outputs.access_token }}

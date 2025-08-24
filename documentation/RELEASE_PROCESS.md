@@ -16,16 +16,6 @@ This document describes the automated release process for the Slack-Bitbucket Me
 4. Choose whether to automatically publish the release
 5. Click "Run workflow"
 
-### Hotfix Process
-
-1. Go to the "Actions" tab in GitHub
-2. Select "Hotfix Workflow"
-3. Choose "create" action and enter hotfix name
-4. Implement your fix on the created branch
-5. Use "merge" action to create a PR to master
-6. After merge, use "cherry-pick" action to apply to develop
-7. Finally, use "cleanup" action to remove the hotfix branch
-
 ## Git Flow Overview
 
 The project follows Git Flow principles with the following branch structure:
@@ -37,7 +27,6 @@ The project follows Git Flow principles with the following branch structure:
 
 ### Temporary Branches
 
-- **`hotfix/*`**: Emergency fixes for production issues (created from `master`)
 - **Feature branches**: New features and improvements (created from `develop`)
 
 ## Release Workflow Details
@@ -129,18 +118,7 @@ validate-and-close-version  <-- (Only if no pending release)
 - Fails with clear error messages if manual release is attempted
 - Enforces the use of the automated release process
 
-### 3. `hotfix.yml` 🚨
-
-**Purpose**: Complete hotfix lifecycle management
-
-**Actions**:
-
-- `create`: Create hotfix branch from master
-- `merge`: Create PR to merge hotfix to master
-- `cherry-pick`: Apply hotfix changes to develop
-- `cleanup`: Delete hotfix branch after completion
-
-### 4. `setup-branch-protection.yml` 🔒
+### 3. `setup-branch-protection.yml` 🔒
 
 **Purpose**: Configure branch protection rules
 
@@ -178,44 +156,6 @@ If you previously created a release but didn't publish it:
    - Skip validation and merge steps
    - Create a GitHub release for the pending version
 
-### 3. Hotfix Process
-
-For emergency fixes to production:
-
-1. Create a hotfix branch:
-
-   ```bash
-   # Using GitHub Actions
-   Actions → Hotfix Workflow → create
-   Input: hotfix_name (e.g., critical-security-fix)
-   ```
-
-2. Implement and test the fix
-
-3. Merge the hotfix:
-
-   ```bash
-   # Using GitHub Actions
-   Actions → Hotfix Workflow → merge
-   Input: hotfix_name, version (e.g., v1.0.1)
-   ```
-
-4. Apply to develop:
-
-   ```bash
-   # Using GitHub Actions
-   Actions → Hotfix Workflow → cherry-pick
-   Input: hotfix_name
-   ```
-
-5. Clean up:
-
-   ```bash
-   # Using GitHub Actions
-   Actions → Hotfix Workflow → cleanup
-   Input: hotfix_name
-   ```
-
 ## Version Numbering
 
 The project follows semantic versioning (MAJOR.MINOR.PATCH):
@@ -223,26 +163,6 @@ The project follows semantic versioning (MAJOR.MINOR.PATCH):
 - **MAJOR**: Incremented for incompatible API changes
 - **MINOR**: Incremented for adding functionality in a backward-compatible manner
 - **PATCH**: Incremented for backward-compatible bug fixes
-
-## Emergency Procedures
-
-### Critical Production Issue
-
-1. Run `hotfix.yml` → `create`
-2. Implement fix on hotfix branch
-3. Run `hotfix.yml` → `merge`
-4. Review and merge PR immediately
-5. Deploy to production
-6. Run `hotfix.yml` → `cherry-pick`
-7. Run `hotfix.yml` → `cleanup`
-
-### Rollback
-
-If hotfix causes issues:
-
-1. Revert merge commit on master
-2. Deploy reverted version
-3. Create new hotfix with proper solution
 
 ## Setup Requirements
 
@@ -282,6 +202,5 @@ If you encounter issues with the workflow:
 4. Review the workflow summary after completion
 5. Verify the GitHub release after publication
 6. For feature development, always create branches from develop
-7. For hotfixes, create branches from master and cherry-pick to develop
 
 For additional help, please create an issue in the GitHub repository.
