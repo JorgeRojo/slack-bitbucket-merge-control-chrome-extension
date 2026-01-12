@@ -70,7 +70,7 @@ Section Content
 List Item
 Preformatted Text
 Quoted Text`,
-        ts: '1678886400000',
+        ts: '1678886400',
       });
     });
 

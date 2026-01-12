@@ -132,7 +132,7 @@ describe('Slack Messages Module', () => {
       vi.clearAllMocks();
 
       chrome.storage.local.get = vi.fn().mockResolvedValue({
-        messages: [{ ts: '123456789000', text: 'Test message', user: 'U123' }],
+        messages: [{ ts: '123456789', text: 'Test message', user: 'U123' }],
       } as ChromeStorageMock);
 
       await processAndStoreMessage(message);
@@ -153,7 +153,7 @@ describe('Slack Messages Module', () => {
       await processAndStoreMessage(message);
 
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
-        messages: [{ ts: '123456789000', text: 'Test message', user: 'U123' }],
+        messages: [{ ts: '123456789', text: 'Test message', user: 'U123' }],
       });
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         lastMatchingMessage: expect.any(Object),
@@ -179,7 +179,7 @@ describe('Slack Messages Module', () => {
 
       // Verify only MAX_MESSAGES were stored
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
-        messages: expect.arrayContaining([expect.objectContaining({ ts: '999999999000' })]),
+        messages: expect.arrayContaining([expect.objectContaining({ ts: '999999999' })]),
       });
 
       const setCall = vi.mocked(chrome.storage.local.set).mock.calls[0][0] as ChromeStorageMock;
@@ -191,17 +191,17 @@ describe('Slack Messages Module', () => {
 
       chrome.storage.local.get = vi.fn().mockResolvedValue({
         messages: [
-          { ts: '3000', text: 'Newest message', user: 'U123' },
-          { ts: '1000', text: 'Oldest message', user: 'U123' },
+          { ts: '3', text: 'Newest message', user: 'U123' },
+          { ts: '1', text: 'Oldest message', user: 'U123' },
         ],
       } as ChromeStorageMock);
 
       await processAndStoreMessage(message);
 
       const setCall = vi.mocked(chrome.storage.local.set).mock.calls[0][0] as ChromeStorageMock;
-      expect(setCall.messages![0].ts).toBe('3000'); // Newest first
-      expect(setCall.messages![1].ts).toBe('2000');
-      expect(setCall.messages![2].ts).toBe('1000');
+      expect(setCall.messages![0].ts).toBe('3'); // Newest first
+      expect(setCall.messages![1].ts).toBe('2');
+      expect(setCall.messages![2].ts).toBe('1');
     });
   });
 
@@ -366,8 +366,8 @@ describe('Slack Messages Module', () => {
 
       // Mock fetchCanvasContent responses
       (fetchCanvasContent as any)
-        .mockResolvedValueOnce({ content: 'Canvas 1 content', ts: '789000' })
-        .mockResolvedValueOnce({ content: 'Canvas 2 content', ts: '999000' });
+        .mockResolvedValueOnce({ content: 'Canvas 1 content', ts: '789' })
+        .mockResolvedValueOnce({ content: 'Canvas 2 content', ts: '999' });
 
       await fetchAndStoreMessages('xoxb-test-token', 'C12345');
 
