@@ -19,9 +19,7 @@ export async function fetchCanvasContent(
 
     if (data.ok && data.file && data.file.title_blocks) {
       const titleBlocks = data.file.title_blocks;
-      const lastModifiedTimestamp = data.file.updated
-        ? String(Number(data.file.updated) * 1000)
-        : '0';
+      const lastModifiedTimestamp = data.file.updated ? String(data.file.updated) : '0';
 
       const extractTextFromRichText = (elements: any[]): string => {
         return elements

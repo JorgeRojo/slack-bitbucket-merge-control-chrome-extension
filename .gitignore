@@ -22,4 +22,5 @@ yarn-error.log*
 # Google Cloud SDK
 /google-cloud-sdk
 
- 
+# IDs
+/.vscode
