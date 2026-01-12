@@ -13,6 +13,14 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Delete existing release if exists
+      run: |
+        # Delete existing release if it exists
+        gh release delete ${{ inputs.input_version }} --yes || echo "Release does not exist"
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+
     - name: Create tag
       run: |
         # Configure git authentication
