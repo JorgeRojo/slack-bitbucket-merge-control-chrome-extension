@@ -213,7 +213,7 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.INPUT_VERSION }}
           name: Release ${{ env.INPUT_VERSION }}
@@ -280,7 +280,7 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.INPUT_VERSION }}
           name: Release ${{ env.INPUT_VERSION }}
