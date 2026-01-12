@@ -221,6 +221,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          fail_on_unmatched_files: true
           body: |
             ## 🚀 Release ${{ env.INPUT_VERSION }}
 
@@ -287,6 +288,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          fail_on_unmatched_files: true
           body: |
             ## 🚀 Release ${{ env.INPUT_VERSION }}
 
