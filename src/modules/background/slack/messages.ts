@@ -38,7 +38,7 @@ export async function processAndStoreMessage(message: SlackMessage): Promise<voi
     return;
   }
 
-  const messageTs = String(Math.floor(Number(message.ts) * 1000));
+  const messageTs = message.ts;
 
   let messages = (await chrome.storage.local.get('messages')).messages || [];
 
@@ -164,21 +164,16 @@ export async function fetchAndStoreMessages(
   if (historyResponse.ok) {
     let allMessages = historyResponse.messages.map((msg: SlackMessage) => ({
       text: cleanSlackMessageText(msg.text),
-      ts: String(Math.floor(Number(msg.ts) * 1000)),
+      ts: msg.ts,
       user: msg.user,
     }));
 
     // Add all canvas content as messages
     if (allCanvasData.length > 0) {
-      const currentTime = Date.now();
-
-      allCanvasData.forEach((canvasData, index) => {
-        // Assign unique timestamps to each canvas, slightly greater than current time
-        const canvasTimestamp = String(currentTime + index + 1);
-
+      allCanvasData.forEach(canvasData => {
         allMessages.push({
           text: cleanSlackMessageText(canvasData.content),
-          ts: canvasTimestamp,
+          ts: canvasData.ts,
           user: `canvas-${canvasData.fileId}`,
         });
       });
